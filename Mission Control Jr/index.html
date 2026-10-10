@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#101920" />
+  <title>Mission Control Jr. — Before the Storm</title>
+  <link rel="stylesheet" href="./demo.css" />
+</head>
+<body>
+  <div id="world" aria-label="Interactive Mars outpost"></div>
+  <div id="vignette"></div>
+  <section id="landing">
+    <div class="landing-copy">
+      <p class="eyebrow">MERIDIAN EXPEDITION / SOL 12</p>
+      <h1>MISSION<br><span>CONTROL JR.</span><i>03:47 UTC · MARS</i></h1>
+      <h2>Before the Storm</h2>
+      <p class="intro-copy">Four people. One fragile outpost.<br>A dust front is coming. What you do now<br>will decide what remains when it passes.</p>
+      <button id="begin" disabled>Preparing the outpost…</button>
+      <div class="landing-links"><a href="./campaign.html">Thirty-sol campaign ↗</a><a href="./models.html">Model gallery ↗</a></div>
+      <p class="landing-note">A complete playable mission · Headphones recommended<br>WASD to move · Drag to look · E to interact</p>
+    </div>
+    <div class="mission-stamp"><span>35.8° N / 148.2° E</span><b>OUTPOST MERIDIAN</b><span>CREW 04 / SIGNAL NOMINAL</span></div>
+    <div id="load-status" role="status">Loading mission hardware</div>
+  </section>
+  <div id="hud" hidden>
+    <header id="topbar"><div class="brand"><b>O / Z</b><span>MERIDIAN<br><small>BEFORE THE STORM</small></span></div><div id="vitals"></div><div class="toolbar"><button id="look">Mouse look</button><button id="journal">Journal</button><button id="pause">Pause / audio</button></div></header>
+    <aside id="mission-panel"><p class="eyebrow">MISSION CONTROL</p><h2 id="objective"></h2><p id="forecast"></p><div id="tasks"></div><p class="eyebrow nav-title">WALK TO A LOCATION</p><div id="navigation"></div><div id="inventory"></div></aside>
+    <div id="crosshair" aria-hidden="true">+</div>
+    <div id="world-labels"></div>
+    <section id="interaction" hidden><span id="target-kind"></span><h3 id="target-title"></h3><p id="target-description"></p><div id="action-buttons"></div><div id="job-track" hidden><i id="job-bar"></i></div><p id="action-help"></p></section>
+    <section id="radio" hidden><div class="radio-top"><span>◉ CREW RADIO</span><div><button id="skip-voice" aria-label="Skip voice line">Skip</button><button id="replay-voice" aria-label="Replay voice line">Replay</button></div></div><b id="speaker"></b><p id="subtitle" aria-live="polite"></p></section>
+    <footer id="controls">WASD / ARROWS <b>MOVE</b> · DRAG <b>LOOK</b> · E <b>INTERACT</b> · ESC <b>PAUSE</b><span>Click a location to walk there · Walk away to cancel a repair</span></footer>
+    <div id="toast" role="status" hidden></div>
+  </div>
+  <section id="dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title" hidden><div class="dialog-card"><p class="eyebrow" id="dialog-eyebrow">MERIDIAN CONTROL</p><h2 id="dialog-title"></h2><div id="dialog-body"></div><div id="dialog-actions"></div></div></section>
+  <script type="module" src="./demo.js"></script>
+</body>
+</html>

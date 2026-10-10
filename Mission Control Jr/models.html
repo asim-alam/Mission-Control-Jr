@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mission Control Jr. — Model Gallery</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 40px; color: #e6eaec; background: #0d1116; font-family: system-ui, sans-serif; }
+    header { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 28px; }
+    .eyebrow { margin: 0 0 8px; font-size: 11px; color: #e8a16b; letter-spacing: 3px; }
+    h1 { margin: 0; font-weight: 500; font-size: 30px; }
+    header p { color: #91a0ac; margin: 12px 0 0; }
+    a { color: #8ddace; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    main { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 18px; }
+    article { background: #161d24; border: 1px solid #2a343f; border-radius: 12px; overflow: hidden; }
+    .view { height: 350px; cursor: grab; touch-action: none; }
+    .view:active { cursor: grabbing; }
+    canvas { width: 100%; height: 100%; display: block; }
+    .details { padding: 20px; border-top: 1px solid #2a343f; }
+    h2 { margin: 0 0 10px; font-size: 18px; font-weight: 500; }
+    .details p { color: #91a0ac; font-size: 13px; line-height: 1.6; min-height: 42px; margin: 0 0 16px; }
+    .status { color: #d99a6c; font-size: 12px; padding: 12px; }
+    footer { margin-top: 20px; font-size: 12px; color: #7d8a96; }
+    @media(max-width: 800px) { body { padding: 20px; } main { grid-template-columns: 1fr; } header { display: block; } header>a { display: inline-block; margin-top: 16px; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div><p class="eyebrow">MISSION CONTROL JR. / MISSION HARDWARE</p><h1>Built for the next frontier.</h1><p>Thirteen original GLBs, including animated crew and interactive equipment.</p></div>
+    <a href="./index.html">Return to the mission →</a>
+  </header>
+  <main>
+    <article data-model="astronaut"><div class="view" aria-label="Astronaut 3D preview"></div><div class="details"><h2>01 / EVA astronaut</h2><p>Pressure suit, curved visor, life-support pack and chest instruments.</p><a download="astronaut.glb">Download astronaut.glb ↓</a><span class="status">Loading…</span></div></article>
+    <article data-model="habitat"><div class="view" aria-label="Habitat 3D preview"></div><div class="details"><h2>02 / Meridian habitat</h2><p>Armored pressure barrel, docking hatch, portholes and radiator array.</p><a download="habitat.glb">Download habitat.glb ↓</a><span class="status">Loading…</span></div></article>
+    <article data-model="rover"><div class="view" aria-label="Rover 3D preview"></div><div class="details"><h2>03 / Survey rover</h2><p>Six-wheel suspension, sample containers and a stereo-camera mast.</p><a download="rover.glb">Download rover.glb ↓</a><span class="status">Loading…</span></div></article>
+    <article data-model="astronaut-animated"><div class="view" aria-label="Animated astronaut 3D preview"></div><div class="details"><h2>04 / Animated crew</h2><p>Separate limbs with embedded Idle, Walk and Repair animation clips.</p><a download="astronaut-animated.glb">Download astronaut-animated.glb ↓</a><span class="status">Loading…</span></div></article>
+    <article data-model="solar-array"><div class="view" aria-label="Solar collector 3D preview"></div><div class="details"><h2>05 / Solar collector</h2><p>Meter-scale tracking array with a separate panel hinge for in-game movement.</p><a download="solar-array.glb">Download solar-array.glb ↓</a><span class="status">Loading…</span></div></article>
+    <article data-model="airlock"><div class="view" aria-label="Airlock 3D preview"></div><div class="details"><h2>06 / Pressure airlock</h2><p>Armored frame and individually named sliding door panels.</p><a download="airlock.glb">Download airlock.glb ↓</a><span class="status">Loading…</span></div></article>
+  </main>
+  <section aria-label="All model downloads"><h2 style="margin-top:35px">All mission assets</h2><div id="downloads" style="display:flex;flex-wrap:wrap;gap:18px;font-size:13px;line-height:2"></div></section>
+  <footer>Drag to orbit · Scroll to zoom · Each GLB includes its geometry and materials.</footer>
+  <script type="module" src="./model-preview.js"></script>
+</body>
+</html>

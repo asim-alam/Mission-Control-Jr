@@ -1,0 +1,21 @@
+{
+  "intro":{"speaker":"Elena Reyes · Commander","voice":"zira","text":"Jin, welcome to Meridian. A dust front is closing in. Check the habitat terminal, restore our collectors, and get the crew behind a sealed airlock. We are counting on you."},
+  "diagnosis":{"speaker":"Jin Park · Engineer","voice":"david","text":"Collectors are contaminated, and the reserve battery is dead. I can clean the array, salvage the rover battery, and rebuild the power connection. The clock is running."},
+  "panel-clean":{"speaker":"Amara Okafor · Biologist","voice":"zira","text":"Collector output is rising. Keep going. Every watt gives our oxygen recycler more time."},
+  "solar-complete":{"speaker":"Elena Reyes · Commander","voice":"zira","text":"All three collectors are online. Good work. The rover has a reserve battery in its rear service bay. Recover it before the front arrives."},
+  "battery":{"speaker":"Jin Park · Engineer","voice":"david","text":"Reserve battery recovered. Taking it to the power junction. The habitat still needs a stable connection."},
+  "install":{"speaker":"Jin Park · Engineer","voice":"david","text":"Battery seated. The three connectors must read one, two, three. Then I can engage the relay."},
+  "repair":{"speaker":"Elena Reyes · Commander","voice":"zira","text":"Habitat power is stable. Return to the diagnostic terminal and choose our reserve allocation. Oxygen first, or keep the science systems running. Your call."},
+  "life":{"speaker":"Luca Moreau · Medic","voice":"david","text":"Oxygen reserves are full. That gives everyone a margin. The front is here. Get to the airlock, Jin."},
+  "research":{"speaker":"Luca Moreau · Medic","voice":"david","text":"Science systems remain powered, but we have limited oxygen. We can get through this if you reach shelter quickly. The front is here."},
+  "storm":{"speaker":"Elena Reyes · Commander","voice":"zira","text":"Visibility is collapsing. Stop exterior work and return to the marked airlock. Whatever is unfinished, we deal with it later. Get inside."},
+  "shelter":{"speaker":"Amara Okafor · Biologist","voice":"zira","text":"You are inside. Water tanks are shielding the sleep area. Use the shelter console to seal the airlock and account for the crew."},
+  "sealed":{"speaker":"Luca Moreau · Medic","voice":"david","text":"Seal confirmed. All four of us are here. Stay calm, watch the reserves, and transmit our status when the front has passed."},
+  "prepared":{"speaker":"Elena Reyes · Commander","voice":"zira","text":"Meridian to Earth. All four crew are safe. Collectors restored, power stable, oxygen reserves secure. Today, preparation made the difference. Mission Control Jr. holds."},
+  "survived":{"speaker":"Elena Reyes · Commander","voice":"zira","text":"Meridian to Earth. All crew survived, but our reserves are depleted. We must review the unfinished preparations before the next mission. We made it. Barely."},
+  "evacuated":{"speaker":"Elena Reyes · Commander","voice":"zira","text":"Meridian to Earth. Initiating emergency evacuation. The outpost cannot sustain life support. We will preserve the mission logs so the next crew can learn from our decisions."},
+  "elena":{"speaker":"Elena Reyes · Commander","voice":"zira","text":"A good mission protects its people. Look at the diagnostics, prepare with evidence, and finish one task at a time. I will keep the crew ready for shelter."},
+  "amara":{"speaker":"Amara Okafor · Biologist","voice":"zira","text":"Our recycler depends on steady power. Clean collectors help now. A working battery helps when sunlight disappears. Restoring both gives us a much better chance."},
+  "luca":{"speaker":"Luca Moreau · Medic","voice":"david","text":"Fatigue makes small mistakes dangerous. Take a breath, check your connectors, and do not trade away the oxygen margin without understanding the cost."},
+  "water":{"speaker":"Amara Okafor · Biologist","voice":"zira","text":"These water tanks store our drinking supply. Around the sleep area, they also add shielding. Here, every kilogram has more than one job."}
+}

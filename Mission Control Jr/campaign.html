@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#c98a5a" />
+    <title>Mission Control Jr. — Thirty Sols</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div id="game-container" aria-hidden="true"></div>
+    <div id="ui">
+      <button id="mute" aria-label="Mute audio" aria-pressed="false">🔊</button>
+      <div id="title" class="panel center">
+        <h1>MISSION CONTROL JR.</h1>
+        <h3>Thirty Sols: Outpost Meridian</h3>
+        <p>Four astronauts. Thirty sols on Mars. Each sol you set the crew's focus, and each event asks you to choose. Watch your power, oxygen, water, food, radiation shielding, equipment and morale. Think like a scientist and prepare for what is coming.</p>
+        <button id="start">Begin Mission</button>
+      </div>
+      <div id="hud" hidden>
+        <div id="left" class="panel"><div id="sol"></div><div id="resources"></div></div>
+        <div id="right" class="panel"><div id="crew"></div><div id="log" aria-live="polite"></div></div>
+        <div id="work" class="panel"></div>
+      </div>
+      <div id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-heading" hidden>
+        <div class="panel center"><div id="modal-body"></div><div id="modal-buttons"></div></div>
+      </div>
+    </div>
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>
