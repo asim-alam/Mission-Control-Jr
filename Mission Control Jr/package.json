@@ -9,7 +9,8 @@
     "build": "vite build",
     "preview": "vite preview --host 127.0.0.1",
     "test": "node --test",
-    "models": "node scripts/generate-models.js"
+    "models": "node scripts/generate-models.js",
+    "models:mission2": "node scripts/generate-expedition-models.js"
   },
   "dependencies": {
     "three": "0.186.1"

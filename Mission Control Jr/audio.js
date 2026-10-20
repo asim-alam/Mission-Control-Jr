@@ -28,6 +28,8 @@ export function setMuted(value) {
   if (master) master.gain.setTargetAtTime(muted ? 0 : 0.12, context.currentTime, 0.03);
 }
 
+export function disposeAudio(){context?.close();}
+
 export function playBeep() {
   if (muted || !context) return;
   const tone = context.createOscillator();

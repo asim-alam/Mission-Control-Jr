@@ -29,7 +29,7 @@ function game(random = () => 0.99) {
   };
   const context = vm.createContext({
     EVENTS, WORK, document, shelter: { visible: false },
-    playBeep() {}, startAudio() {}, Math: Object.assign(Object.create(Math), { random }),
+    playBeep() {}, startAudio() {}, completeChapter() {}, openJourney() {}, Math: Object.assign(Object.create(Math), { random }),
   });
   vm.runInContext(controller + `
     globalThis.game = {
@@ -126,7 +126,7 @@ test('mission completion keeps the HUD on Sol 30 and blocks further work', () =>
   const finalState = JSON.stringify(api.state);
   api.chooseWork(WORK[0]);
   assert.equal(JSON.stringify(api.state), finalState);
-  elements.get('modal-buttons').children[0].onclick();
+  elements.get('modal-buttons').children.find(button=>button.textContent==='Begin a new mission').onclick();
   assert.equal(api.state.sol, 1);
   assert.equal(api.state.ended, false);
 });

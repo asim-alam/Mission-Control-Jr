@@ -4,10 +4,11 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { MODEL_ASSETS } from './outpost.js';
 import { DEMO_ASSETS } from './demo-assets.js';
+import { EXPEDITION_ASSETS } from './expedition-assets.js';
 
 // Stable names remain independent of the build's hashed asset filenames.
 const missionNames={habitat:'habitat',rover:'rover-dynamic',crew:'astronaut-animated',solar:'solar-array',battery:'battery',terminal:'terminal',junction:'junction',airlock:'airlock',interior:'habitat-interior',water:'water-tank',tool:'eva-tool'};
-const allAssets=[...MODEL_ASSETS,...Object.entries(DEMO_ASSETS).map(([key,url])=>({name:missionNames[key],url}))];
+const allAssets=[...MODEL_ASSETS,...Object.entries(DEMO_ASSETS).map(([key,url])=>({name:missionNames[key],url})),...EXPEDITION_ASSETS];
 const uniqueAssets=[...new Map(allAssets.map(a=>[a.name,a])).values()];
 for(const asset of uniqueAssets){const link=document.createElement('a');link.href=asset.url.href;link.download=asset.name+'.glb';link.textContent=asset.name+'.glb ↓';document.getElementById('downloads').appendChild(link);}
 

@@ -10,3 +10,4 @@
 #navigation button{min-height:33px}
 @media(max-width:650px){#mission-panel{max-height:calc(100dvh - 155px)}#tasks{font-size:9px;line-height:1.8}#forecast{margin:4px 0 8px}.nav-title{margin-top:12px}}
 #world-labels{position:absolute;inset:0;pointer-events:none;z-index:-1}
+.toolbar #view[aria-pressed=true]{border-color:#a6ead4;color:#a6ead4;background:#23463e}

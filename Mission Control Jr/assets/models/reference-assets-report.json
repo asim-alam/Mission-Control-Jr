@@ -1,0 +1,617 @@
+[
+  {
+    "source": "mars_-_olympus_mons.glb",
+    "derivative": "reference-olympus-mons.glb",
+    "attribution": {
+      "author": "SebastianSosnowski (https://sketchfab.com/SebastianSosnowski)",
+      "license": "CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)",
+      "source": "https://sketchfab.com/3d-models/mars-olympus-mons-53679864b41a43b0ae0459ce99d6adf0",
+      "title": "Mars - Olympus Mons"
+    },
+    "sourceBytes": 4204940,
+    "derivativeBytes": 3672664,
+    "externalResources": [],
+    "sourceDrawCalls": 2,
+    "derivativeDrawCalls": 2,
+    "sourceMeshes": 2,
+    "sourceNodes": 6,
+    "sourceTriangles": 10662,
+    "embeddedTextureCount": 3,
+    "triangles": 10662,
+    "materials": 2,
+    "images": [
+      {
+        "sourceSize": [
+          1024,
+          1024
+        ],
+        "outputSize": [
+          1024,
+          1024
+        ],
+        "outputBytes": 271540
+      },
+      {
+        "sourceSize": [
+          1024,
+          1024
+        ],
+        "outputSize": [
+          1024,
+          1024
+        ],
+        "outputBytes": 1042833
+      },
+      {
+        "sourceSize": [
+          1024,
+          1024
+        ],
+        "outputSize": [
+          1024,
+          1024
+        ],
+        "outputBytes": 1963578
+      }
+    ],
+    "bounds": {
+      "min": [
+        -0.9500000476837158,
+        -0.1896793246269226,
+        -0.9500000476837158
+      ],
+      "max": [
+        0.9500942826271057,
+        0.1246933713555336,
+        0.9500353336334229
+      ],
+      "size": [
+        1.9000943303108215,
+        0.3143726959824562,
+        1.9000353813171387
+      ],
+      "center": [
+        0.00004711747169494629,
+        -0.032492976635694504,
+        0.000017642974853515625
+      ]
+    },
+    "fit": {
+      "scaleFor4MeterFootprint": 2.105158641963671,
+      "centerOnGroundOffset": [
+        -0.00004711747169494629,
+        0.1896793246269226,
+        -0.000017642974853515625
+      ]
+    },
+    "extensionsUsed": [],
+    "requiredExtensions": [],
+    "sourceExtensionsUsed": [],
+    "sourceRequiredExtensions": [],
+    "validation": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    }
+  },
+  {
+    "source": "perseverance_-_nasa_mars_landing_2021.glb",
+    "derivative": "reference-perseverance.glb",
+    "attribution": {
+      "author": "Thomas Flynn (https://sketchfab.com/nebulousflynn)",
+      "license": "CC0-1.0 (http://creativecommons.org/publicdomain/zero/1.0/)",
+      "source": "https://sketchfab.com/3d-models/perseverance-nasa-mars-landing-2021-c1c94e1f69df45eeae4a0a1d0d27e85b",
+      "title": "Perseverance - NASA Mars Landing 2021"
+    },
+    "sourceBytes": 14909440,
+    "derivativeBytes": 10938348,
+    "externalResources": [],
+    "sourceDrawCalls": 249,
+    "derivativeDrawCalls": 48,
+    "sourceMeshes": 249,
+    "sourceNodes": 317,
+    "sourceTriangles": 199304,
+    "embeddedTextureCount": 24,
+    "triangles": 199304,
+    "materials": 48,
+    "images": [
+      {
+        "sourceSize": [
+          1024,
+          1024
+        ],
+        "outputSize": [
+          1024,
+          1024
+        ],
+        "outputBytes": 117355
+      },
+      {
+        "sourceSize": [
+          1024,
+          1024
+        ],
+        "outputSize": [
+          1024,
+          1024
+        ],
+        "outputBytes": 151997
+      },
+      {
+        "sourceSize": [
+          1024,
+          1024
+        ],
+        "outputSize": [
+          1024,
+          1024
+        ],
+        "outputBytes": 138685
+      },
+      {
+        "sourceSize": [
+          1024,
+          1024
+        ],
+        "outputSize": [
+          1024,
+          1024
+        ],
+        "outputBytes": 130153
+      },
+      {
+        "sourceSize": [
+          1024,
+          1024
+        ],
+        "outputSize": [
+          1024,
+          1024
+        ],
+        "outputBytes": 225762
+      },
+      {
+        "sourceSize": [
+          256,
+          256
+        ],
+        "outputSize": [
+          256,
+          256
+        ],
+        "outputBytes": 4348
+      },
+      {
+        "sourceSize": [
+          256,
+          256
+        ],
+        "outputSize": [
+          256,
+          256
+        ],
+        "outputBytes": 17199
+      },
+      {
+        "sourceSize": [
+          256,
+          256
+        ],
+        "outputSize": [
+          256,
+          256
+        ],
+        "outputBytes": 8980
+      },
+      {
+        "sourceSize": [
+          1024,
+          1024
+        ],
+        "outputSize": [
+          1024,
+          1024
+        ],
+        "outputBytes": 654953
+      },
+      {
+        "sourceSize": [
+          512,
+          512
+        ],
+        "outputSize": [
+          512,
+          512
+        ],
+        "outputBytes": 38889
+      },
+      {
+        "sourceSize": [
+          512,
+          512
+        ],
+        "outputSize": [
+          512,
+          512
+        ],
+        "outputBytes": 43767
+      },
+      {
+        "sourceSize": [
+          512,
+          512
+        ],
+        "outputSize": [
+          512,
+          512
+        ],
+        "outputBytes": 42383
+      },
+      {
+        "sourceSize": [
+          1024,
+          1024
+        ],
+        "outputSize": [
+          1024,
+          1024
+        ],
+        "outputBytes": 120371
+      },
+      {
+        "sourceSize": [
+          1024,
+          1024
+        ],
+        "outputSize": [
+          1024,
+          1024
+        ],
+        "outputBytes": 199810
+      },
+      {
+        "sourceSize": [
+          128,
+          128
+        ],
+        "outputSize": [
+          128,
+          128
+        ],
+        "outputBytes": 229
+      },
+      {
+        "sourceSize": [
+          64,
+          64
+        ],
+        "outputSize": [
+          64,
+          64
+        ],
+        "outputBytes": 116
+      },
+      {
+        "sourceSize": [
+          1024,
+          1024
+        ],
+        "outputSize": [
+          1024,
+          1024
+        ],
+        "outputBytes": 586634
+      },
+      {
+        "sourceSize": [
+          512,
+          512
+        ],
+        "outputSize": [
+          512,
+          512
+        ],
+        "outputBytes": 38889
+      },
+      {
+        "sourceSize": [
+          1024,
+          512
+        ],
+        "outputSize": [
+          1024,
+          512
+        ],
+        "outputBytes": 40414
+      },
+      {
+        "sourceSize": [
+          1024,
+          1024
+        ],
+        "outputSize": [
+          1024,
+          1024
+        ],
+        "outputBytes": 68148
+      },
+      {
+        "sourceSize": [
+          1024,
+          512
+        ],
+        "outputSize": [
+          1024,
+          512
+        ],
+        "outputBytes": 126797
+      },
+      {
+        "sourceSize": [
+          1024,
+          1024
+        ],
+        "outputSize": [
+          1024,
+          1024
+        ],
+        "outputBytes": 113146
+      },
+      {
+        "sourceSize": [
+          512,
+          512
+        ],
+        "outputSize": [
+          512,
+          512
+        ],
+        "outputBytes": 35687
+      },
+      {
+        "sourceSize": [
+          512,
+          512
+        ],
+        "outputSize": [
+          512,
+          512
+        ],
+        "outputBytes": 23704
+      }
+    ],
+    "bounds": {
+      "min": [
+        -1.352290391921997,
+        0.0007781386375427246,
+        -1.7363221645355225
+      ],
+      "max": [
+        1.352290391921997,
+        2.233003616333008,
+        2.352452516555786
+      ],
+      "size": [
+        2.704580783843994,
+        2.232225477695465,
+        4.088774681091309
+      ],
+      "center": [
+        0,
+        1.1168908774852753,
+        0.30806517601013184
+      ]
+    },
+    "fit": {
+      "scaleFor4MeterFootprint": 0.9782881943820846,
+      "centerOnGroundOffset": [
+        0,
+        -0.0007781386375427246,
+        -0.30806517601013184
+      ]
+    },
+    "extensionsUsed": [],
+    "requiredExtensions": [],
+    "sourceExtensionsUsed": [],
+    "sourceRequiredExtensions": [],
+    "validation": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    }
+  },
+  {
+    "source": "mars_rover.glb",
+    "derivative": "reference-mars-rover.glb",
+    "attribution": {
+      "author": "Gregori Vorontsov (https://sketchfab.com/vorontsov)",
+      "license": "CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)",
+      "source": "https://sketchfab.com/3d-models/mars-rover-df65512e57f848fe8107823ad0a45e7d",
+      "title": "Mars Rover"
+    },
+    "sourceBytes": 44703808,
+    "derivativeBytes": 7497972,
+    "externalResources": [],
+    "sourceDrawCalls": 2,
+    "derivativeDrawCalls": 1,
+    "sourceMeshes": 2,
+    "sourceNodes": 7,
+    "sourceTriangles": 57310,
+    "embeddedTextureCount": 4,
+    "triangles": 57308,
+    "materials": 2,
+    "images": [
+      {
+        "sourceSize": [
+          4096,
+          4096
+        ],
+        "outputSize": [
+          1024,
+          1024
+        ],
+        "outputBytes": 880559
+      },
+      {
+        "sourceSize": [
+          4096,
+          4096
+        ],
+        "outputSize": [
+          1024,
+          1024
+        ],
+        "outputBytes": 1210833
+      },
+      {
+        "sourceSize": [
+          4096,
+          4096
+        ],
+        "outputSize": [
+          1024,
+          1024
+        ],
+        "outputBytes": 1299335
+      },
+      {
+        "sourceSize": [
+          1024,
+          1024
+        ],
+        "outputSize": [
+          1024,
+          1024
+        ],
+        "outputBytes": 649875
+      }
+    ],
+    "bounds": {
+      "min": [
+        -80500,
+        -0.32213589549064636,
+        -156056.5
+      ],
+      "max": [
+        80500,
+        59609.66796875,
+        156318.359375
+      ],
+      "size": [
+        161000,
+        59609.99010464549,
+        312374.859375
+      ],
+      "center": [
+        0,
+        29804.672916427255,
+        130.9296875
+      ]
+    },
+    "fit": {
+      "scaleFor4MeterFootprint": 0.00001280512781343289,
+      "centerOnGroundOffset": [
+        0,
+        0.32213589549064636,
+        -130.9296875
+      ]
+    },
+    "extensionsUsed": [
+      "KHR_materials_specular"
+    ],
+    "requiredExtensions": [],
+    "sourceExtensionsUsed": [
+      "KHR_materials_specular"
+    ],
+    "sourceRequiredExtensions": [],
+    "validation": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": [
+        {
+          "code": "UNUSED_OBJECT",
+          "message": "This object may be unused.",
+          "severity": 2,
+          "pointer": "/materials/1"
+        }
+      ]
+    }
+  },
+  {
+    "source": "mars.glb",
+    "derivative": "reference-mars-globe.glb",
+    "attribution": {
+      "author": "Akshat (https://sketchfab.com/shooter24994)",
+      "license": "CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)",
+      "source": "https://sketchfab.com/3d-models/mars-9c7bbc64d8c74acfa9ec344c0fc10e1a",
+      "title": "Mars"
+    },
+    "sourceBytes": 5706016,
+    "derivativeBytes": 286380,
+    "externalResources": [],
+    "sourceDrawCalls": 1,
+    "derivativeDrawCalls": 1,
+    "sourceMeshes": 1,
+    "sourceNodes": 5,
+    "sourceTriangles": 5888,
+    "embeddedTextureCount": 1,
+    "triangles": 5888,
+    "materials": 1,
+    "images": [
+      {
+        "sourceSize": [
+          4096,
+          2048
+        ],
+        "outputSize": [
+          1024,
+          512
+        ],
+        "outputBytes": 110502
+      }
+    ],
+    "bounds": {
+      "min": [
+        -99.99986267089844,
+        -100,
+        -99.99982452392578
+      ],
+      "max": [
+        99.99994659423828,
+        100,
+        99.99989318847656
+      ],
+      "size": [
+        199.99980926513672,
+        200,
+        199.99971771240234
+      ],
+      "center": [
+        0.000041961669921875,
+        0,
+        0.000034332275390625
+      ]
+    },
+    "fit": {
+      "scaleFor4MeterFootprint": 0.02000001907350452,
+      "centerOnGroundOffset": [
+        -0.000041961669921875,
+        100,
+        -0.000034332275390625
+      ]
+    },
+    "extensionsUsed": [],
+    "requiredExtensions": [],
+    "sourceExtensionsUsed": [
+      "KHR_materials_pbrSpecularGlossiness"
+    ],
+    "sourceRequiredExtensions": [
+      "KHR_materials_pbrSpecularGlossiness"
+    ],
+    "validation": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    }
+  }
+]

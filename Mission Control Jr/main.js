@@ -1,7 +1,8 @@
 import * as THREE from 'three';
+import {connectChapter,completeChapter,openJourney,journeyPaused} from './campaign-bridge.js';
 import { EVENTS, WORK } from './story.js';
 import { buildOutpost } from './outpost.js';
-import { startAudio, setMuted, playBeep } from './audio.js';
+import { startAudio, setMuted, playBeep, disposeAudio } from './audio.js';
 
 // ---------- Scene ----------
 const container = document.getElementById('game-container');
@@ -110,6 +111,8 @@ window.addEventListener('resize', () => {
 
 // ---------- Audio ----------
 let muted = false;
+connectChapter('extended',value=>setMuted(value||muted));
+addEventListener('pagehide',()=>{disposeAudio();renderer.setAnimationLoop(null);renderer.dispose();});
 document.getElementById('mute').onclick = () => {
   muted = !muted;
   setMuted(muted);
@@ -276,9 +279,10 @@ function ending() {
     title = 'Costly Victory';
     text = `${alive} of 4 astronauts came home. The mission survived, but not everyone did.`;
   }
+  completeChapter('extended',{outcome:title,success:alive>0});
   showModal(`<h2 id="modal-heading">${title}</h2><p>${text}</p><p class="small">Preparations made: ${prep}/4 · Final morale ${Math.round(r.morale)}</p>
     <p class="lesson">Successful space exploration requires scientific thinking, careful preparation, and caring for your crew.</p>`,
-    [{ label: 'Begin a new mission', onClick: () => { hideModal(); newGame(); } }]);
+    [{ label: 'Return to expedition journey', onClick:openJourney },{ label: 'Begin a new mission', onClick: () => { hideModal(); newGame(); } }]);
 }
 
 // ---------- UI ----------
@@ -345,6 +349,7 @@ timer.connect(document);
 let angle = 0.6;
 renderer.setAnimationLoop((time) => {
   timer.update(time);
+  if(journeyPaused)return;
   const dt = Math.min(timer.getDelta(), 0.1);
   angle += dt * 0.05;
   camera.position.set(Math.cos(angle) * 22, 9, Math.sin(angle) * 22);

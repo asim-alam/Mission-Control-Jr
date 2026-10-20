@@ -1,4 +1,7 @@
 import * as THREE from 'three';
+import {connectChapter,completeChapter,goToChapter,openJourney,journeyPaused} from './campaign-bridge.js';
+import {attachArrivalContext} from './surface-orbit-link.js';
+attachArrivalContext();
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DEMO_ASSETS } from './demo-assets.js';
 import { createMission, act, advance, objective, PREPARATION_SECONDS } from './mission.js';
@@ -28,7 +31,12 @@ const audio=new MissionAudio((id,line)=> {
   $('radio').hidden=false;$('speaker').textContent=line.speaker;$('subtitle').textContent=line.text;
   journal.unshift({speaker:line.speaker,text:line.text});
 },()=>{$('radio').hidden=true;});
-const player=new Player(camera,renderer.domElement,()=>interact(),()=>togglePause(),()=>audio.effect('step'));
+const player=new Player(camera,renderer.domElement,()=>interact(),()=>togglePause(),()=>audio.effect('step'),renderView);
+function renderView() {
+  const third=player.view==='third';$('view').textContent=`View: ${third?'Third':'First'} person`;
+  $('view').setAttribute('aria-pressed',String(third));
+}
+let audioBeforeJourney=false;connectChapter('storm',value=>{if(value){audioBeforeJourney=!!audio.paused;player.release();player.route=[];player.enabled=false;audio.pause(true);audio.context?.suspend();}else{audio.context?.resume().catch(()=>{});audio.pause(audioBeforeJourney);}});
 const loader=new GLTFLoader(),textures=new THREE.TextureLoader();
 const obstacle=(x,z,w,d)=>({minX:x-w/2,maxX:x+w/2,minZ:z-d/2,maxZ:z+d/2});
 const outsideObstacles=[obstacle(0,0,9.6,5.5),obstacle(9,-5,4.7,3.9),obstacle(5,5,1.1,1),obstacle(-1.5,4.7,.9,.8),obstacle(5.6,-.7,.6,2.5)];
@@ -50,7 +58,7 @@ for(let i=0;i<dustPositions.length;i++)dustPositions[i]=(Math.random()-.5)*60;
 dustGeometry.setAttribute('position',new THREE.BufferAttribute(dustPositions,3));
 const dustMaterial=new THREE.PointsMaterial({color:0xd9ae84,size:.09,transparent:true,opacity:.02,depthWrite:false});
 const dust=new THREE.Points(dustGeometry,dustMaterial);exterior.add(dust);
-let airlock,rover,roverLid,batteryObject,installedBattery,toolObject,roomConsole,connectorVisuals=[];
+let airlock,rover,roverLid,batteryObject,installedBattery,toolObject,roomConsole,avatar,avatarMixer,avatarAnimations,avatarTool,avatarMode='Idle',connectorVisuals=[];
 
 function cloneAsset(gltf,parent,position,yaw=0,scale=1) {
   const model=gltf.scene.clone(true),materials=new Map();model.position.set(...position);model.rotation.y=yaw;model.scale.setScalar(scale);
@@ -79,13 +87,14 @@ function togglePause() {
     ${Object.entries(audio.volumes).map(([name,value])=>`<label>${name[0].toUpperCase()+name.slice(1)} volume <input aria-label="${name} volume" type="range" min="0" max="1" step="0.05" value="${value}" data-volume="${name}"></label>`).join('')}
     <label><span>Mute all audio</span><input id="master-mute" type="checkbox" ${audio.muted?'checked':''}></label>
     <label><span>Reduce motion and particles</span><input id="reduce-motion" type="checkbox" ${reducedMotion?'checked':''}></label>
-    <p><strong>Controls:</strong> WASD / arrows to move, drag to look, E to interact. Navigation buttons walk you to equipment. Escape pauses; Mouse look captures the pointer.</p>`,[
+    <p><strong>Controls:</strong> WASD / arrows to move, drag to look, E to interact. V or the View button switches first person / third person. Navigation buttons walk you to equipment. Escape pauses; Mouse look captures the pointer.</p>`,[
     {label:'Resume mission',run:closeDialog},{label:'Restart mission',run:()=>startMission()}]);
   $('dialog-body').querySelectorAll('[data-volume]').forEach(input=>input.oninput=()=>audio.settings({[input.dataset.volume]:Number(input.value)}));
   $('master-mute').onchange=e=>audio.setMuted(e.target.checked);$('reduce-motion').onchange=e=>{reducedMotion=e.target.checked;};
 }
 let reducedMotion=false;
 $('pause').onclick=togglePause;$('look').onclick=()=>player.capture();
+$('view').onclick=()=>{if(player.enabled)player.toggleView();};
 $('skip-voice').onclick=()=>audio.skip();$('replay-voice').onclick=()=>audio.replay();
 $('journal').onclick=()=>showDialog('Mission journal',`<p>Current objective: <strong>${objective(mission)}</strong></p>${mission.log.map(text=>`<p>• ${text}</p>`).join('')}${journal.map(entry=>`<div class="journal-entry"><b>${entry.speaker}</b><p>${entry.text}</p></div>`).join('')}`,[{label:'Return to mission',run:closeDialog}], 'EXPEDITION RECORD');
 addEventListener('keydown',e=>{if(e.code==='KeyJ'&&player.enabled)$('journal').click();});
@@ -105,8 +114,8 @@ function renderNavigation() {
 }
 const reachRay=new THREE.Raycaster();
 function nearby(s) {
-  if(!s||!s.parent.visible||Math.hypot(camera.position.x-s.point.x,camera.position.z-s.point.z)>3.05)return false;
-  const origin=new THREE.Vector3(camera.position.x,1.15,camera.position.z),target=new THREE.Vector3(s.point.x,1.15,s.point.z),direction=target.sub(origin);
+  if(!s||!s.parent.visible||Math.hypot(player.position.x-s.point.x,player.position.z-s.point.z)>3.05)return false;
+  const origin=new THREE.Vector3(player.position.x,mission.inside?1.33:1.15,player.position.z),target=new THREE.Vector3(s.point.x,origin.y,s.point.z),direction=target.sub(origin);
   reachRay.set(origin,direction.clone().normalize());reachRay.far=direction.length();
   const hit=reachRay.intersectObjects(s.parent.children,true).find(hit=>hit.object.isMesh);
   if(!hit)return true;
@@ -156,7 +165,7 @@ function interact() {
   else if(s.id==='room-console')perform(mission.sealed?'report':'seal');
   else if(s.id==='water'){audio.say('water');toast('Drinking supply and shielding for the sleep area.');}
 }
-const distance=s=>Math.hypot(camera.position.x-s.point.x,camera.position.z-s.point.z);
+const distance=s=>Math.hypot(player.position.x-s.point.x,player.position.z-s.point.z);
 function chooseAllocation() {
   showDialog('What gets the reserve power?',`<p>The repaired battery can support oxygen reserves or keep the science systems running through the front.</p><p><strong>Life support:</strong> fill oxygen reserves and protect the crew's margin.</p><p><strong>Science systems:</strong> preserve research operations with less oxygen in reserve.</p>`,[
     {label:'Prioritize life support',run:()=>{closeDialog();perform('allocate','life');}},
@@ -215,7 +224,8 @@ function completeEntry() {
 function updateVisuals() {
   if(!ready)return;
   batteryObject.visible=mission.bayOpen&&!mission.battery&&!mission.installed;installedBattery.visible=mission.installed;
-  toolObject.visible=!!job;
+  toolObject.visible=!!job&&player.view==='first';
+  avatarTool.visible=!!job&&player.view==='third';
   panels.forEach((p,i)=>{p.dust.material.opacity=mission.cleaned[i]?0:job?.index===i?.72*(1-job.time/job.duration):.72;});
   connectorVisuals.forEach((v,i)=>{v.rotation.z=mission.connector[i]*Math.PI/2;});
   habitatLamp.intensity=mission.repaired?12:1.5;
@@ -226,13 +236,13 @@ function startMission() {
   exterior.visible=true;interior.visible=false;$('landing').hidden=true;$('hud').hidden=false;
   airlock.getObjectByName('door_left').position.x=-.5;airlock.getObjectByName('door_right').position.x=.5;
   for(const c of crew){c.model.position.copy(c.base);c.model.rotation.y=0;c.station.point.x=c.base.x;c.station.point.z=c.base.z;}
-  renderNavigation();renderMission();renderInteraction(true);updateVisuals();
+  renderView();renderNavigation();renderMission();renderInteraction(true);updateVisuals();
   audio.say('intro');
-  showDialog('Engineer, you have the outpost.',`<p>You are <strong>Jin Park</strong>. A dust front is approaching Meridian. Keep the four-person crew safe.</p><p>Start at the <strong>habitat diagnostic terminal</strong>, then restore solar output, recover the rover battery, and reconnect power.</p><p><strong>WASD / arrows:</strong> walk. <strong>Drag:</strong> look around. <strong>E:</strong> interact. Navigation buttons guide you to a location; you still operate the equipment yourself.</p><p>The six-minute preparation clock starts after diagnostics. It pauses in menus. You can shelter early, but your choices affect the result.</p>`,[{label:'Start EVA',run:closeDialog}], 'SOL 12 / MISSION BRIEF');
+  showDialog('Engineer, you have the outpost.',`<p>You are <strong>Jin Park</strong>. A dust front is approaching Meridian. Keep the four-person crew safe.</p><p>Start at the <strong>habitat diagnostic terminal</strong>, then restore solar output, recover the rover battery, and reconnect power.</p><p><strong>WASD / arrows:</strong> walk. <strong>Drag:</strong> look around. <strong>E:</strong> interact. <strong>V / View button:</strong> switch between first person and third person to see your astronaut. Navigation buttons guide you to a location; you still operate the equipment yourself.</p><p>The six-minute preparation clock starts after diagnostics. It pauses in menus. You can shelter early, but your choices affect the result.</p>`,[{label:'Start EVA',run:closeDialog}], 'SOL 12 / MISSION BRIEF');
 }
 function showEnding() {
   if(endingShown)return;endingShown=true;job=null;toolObject.visible=false;player.release();audio.say(mission.outcome,true);
-  const prepared=mission.outcome==='prepared',evacuated=mission.outcome==='evacuated';
+  const prepared=mission.outcome==='prepared',evacuated=mission.outcome==='evacuated';if(prepared)completeChapter('storm',{outcome:'Meridian protected',success:true});
   showDialog(prepared?'Meridian holds.':evacuated?'Emergency evacuation.':'Everyone made it. Barely.',
     `<p>${prepared?'All four astronauts are safe. Your repairs and life-support reserves protected the outpost.':evacuated?'The crew activates the emergency evacuation plan. Unsecured life support makes Meridian unsafe.':'All four astronauts reached shelter, but incomplete preparation or reduced oxygen reserves left little margin.'}</p>
     <div class="report-row"><span>Solar collectors</span><b>${mission.cleaned.filter(Boolean).length} / 3 restored</b></div>
@@ -240,12 +250,14 @@ function showEnding() {
     <div class="report-row"><span>Reserve priority</span><b>${mission.allocation==='life'?'Life support':mission.allocation==='research'?'Science systems':'Unallocated'}</b></div>
     <div class="report-row"><span>Airlock</span><b>${mission.sealed?'Sealed':'Unsecured'}</b></div>
     <p>Scientific thinking, preparation, and care for your crew shape the next mission.</p>`,[
-    {label:'Replay mission',run:startMission},{label:'Thirty-sol campaign',run:()=>location.href='./campaign.html'},
-    {label:'Return to menu',run:()=>{audio.stop();closeDialog();mission=createMission();player.enabled=false;exterior.visible=true;interior.visible=false;$('hud').hidden=true;$('landing').hidden=false;}}
+    ...(prepared?[{label:'Continue · Tracks in the Dust',run:()=>goToChapter('rover')}]:[]),
+    {label:'Replay mission',run:startMission},{label:'Thirty-sol campaign',run:()=>goToChapter('extended')},
+    {label:'Expedition journey',run:openJourney}
   ], 'EXPEDITION DEBRIEF');
   audio.pause(false);
 }
 $('begin').onclick=startMission;
+addEventListener('pagehide',()=>{audio.stop();audio.context?.close();player.release();renderer.setAnimationLoop(null);renderer.dispose();});
 
 const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();
 renderer.domElement.addEventListener('click',e=>{
@@ -304,6 +316,10 @@ try {
     insideObstacles.push(obstacle(pos[0],pos[2],.5,.5));
   }
   toolObject=cloneAsset(assets.tool,camera,[.29,-.4,-.7],-.3,.55);toolObject.visible=false;
+  avatar=cloneAsset(assets.crew,scene,[0,0,9],Math.PI,.96);avatar.name='Jin Park / player';avatar.visible=false;
+  avatarMixer=new THREE.AnimationMixer(avatar);
+  avatarAnimations=Object.fromEntries(assets.crew.animations.map(clip=>[clip.name,avatarMixer.clipAction(clip)]));avatarAnimations.Idle?.play();
+  avatarTool=cloneAsset(assets.tool,avatar.getObjectByName('arm_right')||avatar,[0,-.78,.10],Math.PI,.55);avatarTool.visible=false;
   ready=true;$('begin').disabled=false;$('begin').textContent='Begin Mission →';$('load-status').textContent='MISSION CONTROL JR. ONLINE / ALL SYSTEMS LOADED';
 } catch(error) {
   console.error(error);$('load-status').textContent='Mission assets could not load. Check the terminal server and reload.';
@@ -313,8 +329,8 @@ try {
 const timer=new THREE.Timer();timer.connect(document);let uiClock=0,alarmClock=0,brushClock=0;
 renderer.setAnimationLoop(time=> {
   timer.update(time);const dt=Math.min(timer.getDelta(),.05);clock+=dt;
-  const paused=!$('dialog').hidden||document.hidden||!!transition;
-  if(transition&&$('dialog').hidden&&!document.hidden){
+  const paused=journeyPaused||!$('dialog').hidden||document.hidden||!!transition;
+  if(transition&&$('dialog').hidden&&!document.hidden&&!journeyPaused){
     transition.elapsed+=dt;const openness=Math.min(1,transition.elapsed/.85);
     airlock.getObjectByName('door_left').position.x=-.5-openness;
     airlock.getObjectByName('door_right').position.x=.5+openness;
@@ -324,7 +340,19 @@ renderer.setAnimationLoop(time=> {
   else {
     player.enabled=!paused&&!mission.ended;
     player.obstacles=mission.inside?insideObstacles:[...outsideObstacles,...crew.map(c=>obstacle(c.model.position.x,c.model.position.z,.5,.5))];
-    const moving=player.update(dt);camera.position.y=(mission.inside?1.88:1.68)+(moving&&!reducedMotion?Math.sin(clock*13)*.025:0);
+    const moving=player.update(dt,false);player.position.y=mission.inside?1.88:1.68;
+    player.cameraObjects=(mission.inside?interior:exterior).children;
+    scene.updateMatrixWorld(true);player.syncCamera(moving&&!reducedMotion?Math.sin(clock*13)*.025:0);
+    if(avatar) {
+      avatar.visible=player.view==='third'&&player.cameraDistance>.75;
+      avatar.position.set(player.position.x,mission.inside?.18:0,player.position.z);
+      const facing=job?Math.atan2(job.station.point.x-player.position.x,job.station.point.z-player.position.z):player.facing;
+      const turn=Math.atan2(Math.sin(facing-avatar.rotation.y),Math.cos(facing-avatar.rotation.y));
+      avatar.rotation.y+=turn*Math.min(1,dt*12);
+      const mode=job?'Repair':moving?'Walk':'Idle';
+      if(mode!==avatarMode){avatarAnimations[avatarMode]?.fadeOut(.2);avatarAnimations[mode]?.reset().fadeIn(.2).play();avatarMode=mode;}
+      if(!paused&&!mission.ended)avatarMixer.update(dt*(mode==='Walk'?1.7:1));
+    }
     const event=advance(mission,dt,paused);if(event)audio.say(event,true);if(mission.ended)showEnding();
     if(job&&!paused) {
       if(!nearby(job.station)){job=null;toolObject.visible=false;toast('Cleaning cancelled: you moved away.');renderInteraction(true);}
@@ -357,12 +385,12 @@ renderer.setAnimationLoop(time=> {
     roverLid.rotation.x=THREE.MathUtils.lerp(roverLid.rotation.x,mission.bayOpen?-1.25:0,Math.min(1,dt*4));
     for(const c of crew) {
       let mode='Idle';
-      if(c.station.id==='amara'&&!mission.storm&&camera.position.distanceTo(c.model.position)>4&&mission.started&&!paused) {
+      if(c.station.id==='amara'&&!mission.storm&&player.position.distanceTo(c.model.position)>4&&mission.started&&!paused) {
         c.model.position.x=c.base.x+Math.sin(clock*.4)*.65;c.model.rotation.y=Math.cos(clock*.4)>0?Math.PI/2:-Math.PI/2;mode='Walk';
       }
       if(job&&c.station.id==='amara')mode='Repair';
       if(mode!==c.mode){c.animations[c.mode]?.fadeOut(.3);c.animations[mode]?.reset().fadeIn(.3).play();c.mode=mode;}
-      if(player.enabled&&camera.position.distanceTo(c.model.position)<5)c.model.rotation.y=Math.atan2(camera.position.x-c.model.position.x,camera.position.z-c.model.position.z);
+      if(player.enabled&&player.position.distanceTo(c.model.position)<5)c.model.rotation.y=Math.atan2(player.position.x-c.model.position.x,player.position.z-c.model.position.z);
       c.station.point.x=c.model.position.x;c.station.point.z=c.model.position.z;
     }
     if(mission.inside&&!mission.sealed&&!transition){airlock.getObjectByName('door_left').position.x=-1.5;airlock.getObjectByName('door_right').position.x=1.5;}
@@ -377,7 +405,8 @@ renderer.setAnimationLoop(time=> {
     }
   }
   if(mission.storm&&!mission.inside&&!paused&&!mission.ended){alarmClock+=dt;if(alarmClock>12){audio.effect('alarm');alarmClock=0;}}
-  audio.update(camera.position,camera.rotation.y,weather,mission.inside);
+  if(avatar&&!mission.started)avatar.visible=false;
+  audio.update(mission.started?player.position:camera.position,mission.started?player.yaw:camera.rotation.y,weather,mission.inside);
   uiClock+=dt;if(uiClock>.25&&mission.started){renderMission();renderInteraction();if(selected)$('target-kind').textContent=`${selected.kind} / ${distance(selected).toFixed(1)} M`;uiClock=0;}
   renderer.render(scene,camera);
 });

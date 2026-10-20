@@ -1,16 +1,24 @@
 # Prototype verification — 10 October 2026
 
-- Full automated suite: **37 tests passed**. Covers the original campaign fixes,
+- Full automated suite: **40 tests passed**. Covers the original campaign fixes,
   mission prerequisites, rewards, inventory, dialogue responses, pause and timing,
   restart, all three outcomes, GLB loading, exported animation, and navigation.
+- First-person and third-person guided walking both complete the repair routes
+  without crossing collision bounds. View changes preserve player position and
+  routes; a wall test confirms the follow camera shortens its distance safely.
+- Browser checks confirmed the V shortcut and View button, third-person diagnostics
+  and solar cleaning, returning to first person with progress preserved, and
+  third-person airlock entry and shelter-console access. No browser warnings or
+  errors were reported during these checks. The existing animated crew GLB also
+  supplies Jin's Idle, Walk, and Repair animations.
 - After adding airlock and tank collision bounds, the four navigation/player
   checks were rerun and passed. Simulated movement reaches every repair station
   without crossing obstacle boundaries.
 - All **13 original GLB files** pass the glTF validator with zero errors. Moving
   equipment retains its named nodes; the crew GLB contains working Idle, Walk,
   and Repair clips. Each file embeds its geometry and materials.
-- All **19 OGG dialogue clips** are bundled and readable. FFprobe confirms clip
-  durations of 8.20–15.96 seconds, totaling approximately 225.64 seconds.
+- All **19 Kokoro OGG dialogue clips** are bundled and readable. FFprobe confirms
+  clip durations of 6.40–12.60 seconds, totaling approximately 186.60 seconds.
 - Production build succeeds with all three pages, models, textures and audio.
   Asset references are relative so the build can be hosted beneath a directory.
 - Browser verification completed the full repair route and the **Meridian holds**

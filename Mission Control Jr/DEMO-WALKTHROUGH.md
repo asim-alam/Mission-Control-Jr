@@ -18,5 +18,7 @@ dialogue, and Pause / audio to demonstrate mute and reduced motion.
 
 For a short presentation, navigation buttons handle walking around obstacles;
 the player still performs all repairs. Use WASD and drag to show free exploration.
+Press V or the View button to show Jin walking and repairing in third person;
+switch back to first person at any time. Both views work inside the shelter.
 Headphones help demonstrate positional machinery and the storm audio transition.
 The preparation clock pauses in menus, so explanation time does not cost reserves.
