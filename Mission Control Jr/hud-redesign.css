@@ -1,0 +1,464 @@
+/* Shared low-profile, contextual HUD language for every playable chapter. */
+:root {
+  --ui-bg: #0f1923;
+  --ui-bg-raised: #172431;
+  --ui-line: #2b3b4b;
+  --ui-text: #eef2f5;
+  --ui-text-muted: #a9b6c2;
+  --ui-accent: #ff9a5c;
+  --ui-good: #6fe3c8;
+  --ui-warn: #ffc857;
+  --ui-danger: #ff7a6b;
+  --amber: var(--ui-accent);
+  --mint: var(--ui-good);
+  --orange: var(--ui-accent);
+  --line: var(--ui-line);
+--hud-line: var(--ui-line);
+--hud-text: var(--ui-text);
+--hud-teal: var(--ui-good);
+--hud-action: var(--ui-accent);
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+}
+
+button { min-height: 44px; border-radius: 11px; }
+button:focus-visible, a:focus-visible { outline: 2px solid var(--ui-warn); outline-offset: 3px; }
+.hud-mode-button { min-width: 48px; min-height: 44px; padding: 7px 10px !important; border-radius: 11px !important; color: var(--ui-text-muted) !important; }
+.hud-mode-button[aria-pressed="true"] { color: var(--ui-warn) !important; border-color: var(--ui-warn) !important; }
+
+/* Mission 1 and 3 share the same compact shell and glanceable resource row. */
+#hud #topbar { height: 48px; padding-inline: 14px; gap: 10px; background: rgb(7 16 23 / 78%); border-color: var(--ui-line); }
+#hud .brand { gap: 9px; }
+#hud .brand>b { font-size: 14px; letter-spacing: 1.4px; }
+#hud .brand>span { font-size: 9px; letter-spacing: 1.3px; line-height: 1.35; }
+#hud .brand small { font-size: 7px; }
+#hud #vitals { gap: 7px; align-items: center; }
+#hud #vitals .vital-chip { width: 55px; height: 40px; padding: 4px 6px; display: grid; grid-template-columns: 17px 1fr; grid-template-rows: 1fr 3px; align-items: center; gap: 1px 4px; border: 1px solid transparent; border-radius: 11px; background: rgb(230 244 245 / 5%); opacity: .7; transition: opacity .2s, border-color .2s; }
+#hud #vitals .vital-chip .vital-icon { grid-row: 1; color: var(--ui-good); font: 12px 'JetBrains Mono', monospace; }
+#hud #vitals .vital-chip b { grid-row: 1; display: inline; margin: 0; color: var(--ui-text); font: 700 12px 'JetBrains Mono', monospace; }
+#hud #vitals .vital-chip i { grid-column: 1 / -1; display: block; width: 100%; height: 3px; border-radius: 5px; background: var(--ui-good); }
+#hud #vitals .vital-chip[data-state="warning"] { opacity: 1; border-color: rgb(255 208 128 / 48%); }
+#hud #vitals .vital-chip[data-state="warning"] i, #hud #vitals .vital-chip[data-state="warning"] .vital-icon { color: var(--ui-warn); background-color: var(--ui-warn); }
+#hud #vitals .vital-chip[data-state="danger"] { opacity: 1; border-color: rgb(255 173 116 / 60%); }
+#hud #vitals .vital-chip[data-state="danger"] i, #hud #vitals .vital-chip[data-state="danger"] .vital-icon { color: var(--ui-accent); background-color: var(--ui-accent); }
+#hud .toolbar { gap: 4px; }
+#hud .toolbar button { min-width: 44px; min-height: 44px; padding: 5px 9px; border-radius: 11px; background: rgb(18 34 43 / 73%); border-color: var(--ui-line); color: var(--ui-text); font-size: 10px; }
+
+/* Before the Storm: a 280 × 88 px collapsed objective with the timer in view. */
+#hud #mission-panel { top: 60px; left: 16px; width: 280px; height: 100px; min-height: 100px; padding: 10px 13px; border: 1px solid var(--ui-line); border-radius: 12px; background: var(--ui-bg); }
+#hud #mission-panel .mission-summary { position: relative; display: grid; grid-template-rows: 15px 23px 20px; gap: 2px; align-items: center; padding-right: 51px; }
+#hud #mission-panel .summary-head { display: flex; align-items: center; justify-content: space-between; gap: 5px; white-space: nowrap; }
+#hud #mission-step { font: 9px 'JetBrains Mono', monospace; letter-spacing: .7px; color: var(--ui-accent); }
+#hud #objective { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 16px; margin: 0; }
+#hud #forecast { margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--ui-warn); font: 9px 'JetBrains Mono', monospace; }
+#hud #next-action { margin: 0; color: var(--ui-text-muted); font: 9px 'JetBrains Mono', monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#hud #tasks-toggle-card { position: static; width: 44px; min-width: 44px; height: 44px; padding: 4px; font: 10px 'JetBrains Mono', monospace; }
+#hud #mission-panel:not(.expanded):after { content: ''; position: absolute; left: 13px; right: 13px; bottom: 8px; height: 3px; border-radius: 4px; background: linear-gradient(90deg, var(--ui-good) var(--mission-progress, 0%), rgb(230 244 245 / 16%) var(--mission-progress, 0%)); }
+#hud #mission-panel:not(.expanded) #tasks, #hud #mission-panel:not(.expanded) .nav-title, #hud #mission-panel:not(.expanded) #navigation, #hud #mission-panel:not(.expanded) #inventory { display: none; }
+#hud #mission-panel.expanded { height: auto; min-height: 0; max-height: min(68dvh, 700px); overflow: auto; }
+#hud #mission-panel.expanded .mission-summary { padding-bottom: 9px; border-bottom: 1px solid var(--ui-line); }
+#hud #mission-panel.expanded #tasks { margin-top: 8px; }
+#hud #mission-panel.expanded #navigation { max-height: 30dvh; overflow: auto; }
+#hud #tasks { font-size: 11px; line-height: 1.8; }
+#hud #mission-panel .nav-title { margin: 14px 0 6px; }
+#hud #navigation button { min-height: 44px; border-radius: 10px; }
+
+/* On-foot/vehicle action prompts are corner anchored and only shown in range. */
+#hud #interaction { top: auto; right: 16px; bottom: 16px; left: auto; transform: none; width: min(280px, calc(100vw - 32px)); max-height: 35dvh; overflow: auto; padding: 12px 14px; border: 1px solid var(--ui-line); border-radius: 14px; background: var(--ui-bg); }
+#hud #target-title { font-size: 15px; }
+#hud #action-buttons button, #hud #mission-actions button { min-height: 44px; border-radius: 10px; }
+#hud #vehicle-instruments { left: 16px; bottom: 16px; min-width: 0; max-width: 225px; padding: 8px 11px; gap: 9px; border: 1px solid var(--ui-line); border-radius: 14px; background: var(--ui-bg); }
+#hud #vehicle-instruments .speed b { font: 700 23px 'JetBrains Mono', monospace; }
+#hud #vehicle-instruments>div:nth-child(2) { min-width: 0; font-size: 9px; }
+#hud #map-panel { right: 16px; bottom: 16px; width: min(190px, 30vw); border: 1px solid var(--ui-line); border-radius: 14px; background: var(--ui-bg); }
+#hud #map-panel button { min-width: 44px; min-height: 44px; }
+#hud #radio { left: auto; right: 16px; top: 60px; bottom: auto; transform: none; width: min(390px, calc(100vw - 32px)); padding: 10px 13px; border: 1px solid var(--ui-line); border-left: 2px solid var(--ui-accent); border-radius: 14px; background: var(--ui-bg); }
+#hud #radio button { min-height: 44px; }
+#hud #controls { display: block; height: auto; min-height: 0; bottom: 5px; left: 50%; right: auto; transform: translateX(-50%); width: max-content; max-width: calc(100vw - 32px); padding: 7px 11px; border: 1px solid var(--ui-line); border-radius: 999px; background: rgb(9 19 26 / 72%); font-size: 9px; letter-spacing: .3px; opacity: 1; transition: opacity 1s; }
+#hud #controls.controls-faded { opacity: 0; }
+#minimal-forecast { display: none; }
+body:has(#world) #hud.minimal-hud ~ #minimal-forecast { display: block; position: fixed; z-index: 30; top: 58px; left: 16px; margin: 0; padding: 9px 12px; border: 1px solid var(--ui-line); border-radius: 11px; background: var(--ui-bg); color: var(--ui-warn); font: 11px 'JetBrains Mono', monospace; }
+#hud #toast { top: 58px; border: 1px solid var(--ui-line); border-radius: 12px; background: var(--ui-bg); }
+
+/* Tracks in the Dust uses the same compact mission card; the checklist opens on T. */
+#hud #mission-panel:not(.expanded) #phase-note, #hud #mission-panel:not(.expanded) #tasks, #hud #mission-panel:not(.expanded) #mission-actions, #hud #mission-panel:not(.expanded) #inventory, #hud #mission-panel:not(.expanded) .episode-back { display: none; }
+#hud #mission-panel:not(.expanded) { top: 60px; left: 16px; width: 280px; height: 88px; min-height: 88px; padding: 10px 13px; border-radius: 12px; background: var(--ui-bg); }
+#hud #mission-panel:not(.expanded) .panel-heading { float: right; width: auto; }
+#hud #mission-panel:not(.expanded) .panel-heading .eyebrow { font: 9px 'JetBrains Mono', monospace; letter-spacing: 1px; }
+#hud #mission-panel:not(.expanded) #close-tasks { display: none; }
+#hud #mission-panel:not(.expanded) #objective-progress { width: calc(100% - 58px); margin: 3px 0 0; }
+#hud #mission-panel:not(.expanded) h2 { width: calc(100% - 4px); margin: 4px 0 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 16px; }
+#hud #mission-panel:not(.expanded) #task-distance { width: calc(100% - 2px); margin: 1px 0 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font: 10px 'JetBrains Mono', monospace; }
+#hud #mission-panel.expanded { width: min(310px, calc(100vw - 32px)); max-height: min(68dvh, 700px); overflow: auto; border-radius: 12px; background: var(--ui-bg); }
+#hud #mission-panel.expanded #close-tasks { min-width: 44px; min-height: 44px; }
+#hud #mission-panel.expanded #objective { margin: 8px 0; }
+#hud #mission-panel.expanded #mission-actions button { min-height: 44px; }
+#hud #world-labels { z-index: 2; }
+#hud #objective-marker { position: absolute; z-index: 3; transform: translate(-50%, -100%); padding: 7px 10px; border: 1px solid rgb(255 173 116 / 60%); border-radius: 10px; background: rgb(10 20 28 / 82%); color: #fff; font: 10px 'JetBrains Mono', monospace; white-space: nowrap; text-shadow: 0 1px 3px #000; }
+#hud #interaction { left: auto; right: 16px; bottom: 16px; width: min(280px, calc(100vw - 32px)); max-height: 28dvh; }
+#hud.foot #vehicle-instruments { left: 16px; bottom: 16px; }
+#hud #controls { display: block; }
+
+/* Orbital arrival: the planet and spacecraft remain the visual focus. */
+body:has(#space) header { height: 48px; padding-inline: 14px; gap: 12px; background: rgb(7 16 23 / 78%); }
+body:has(#space) .brand { font-size: 16px; letter-spacing: 2px; }
+body:has(#space) .brand small { font-size: 6px; margin-top: 2px; }
+body:has(#space) nav { gap: 4px; }
+body:has(#space) nav button { min-height: 44px; padding: 5px 9px; border-radius: 11px; font-size: 10px; }
+body:has(#space) #hud { inset: 48px 0 0; }
+body:has(#space) #progress { left: 16px; top: 12px; gap: 4px; }
+body:has(#space) #progress span { padding: 7px 8px; border-radius: 9px; background: var(--ui-bg); }
+body:has(#space) #progress span:not(.current) { display: none; }
+body:has(#space) #telemetry { right: 16px; top: 16px; }
+body:has(#space) #telemetry strong { margin: 4px 0; }
+body:has(#space) #objective { top: 56px; left: 16px; bottom: auto; width: 286px; max-width: calc(100vw - 32px); max-height: 40dvh; padding: 11px 13px; border: 1px solid var(--ui-line); border-left: 2px solid var(--ui-accent); border-radius: 12px; background: var(--ui-bg); }
+body:has(#space) #objective h2 { font-size: 16px; margin: 4px 0; }
+body:has(#space) #objective:not(.expanded) #task-instruction { display: none; }
+body:has(#space) #objective:not(.expanded) .objective-actions { margin-top: 5px; }
+body:has(#space) #objective:not(.expanded) .objective-actions button { min-height: 44px; }
+body:has(#space) #objective.expanded { max-height: min(60dvh, 620px); overflow: auto; }
+body:has(#space) #objective.expanded #task-instruction { display: block; }
+body:has(#space) #objective:not(.expanded) { padding: 9px 12px; }
+body:has(#space) #objective:not(.expanded) h2 { line-height: 1.2; margin: 2px 0 3px; }
+body:has(#space) #objective:not(.expanded) .objective-top button { min-height: 44px; }
+body:has(#space) #objective:not(.expanded) #distance { line-height: 1.35; }
+body:has(#space) #objective:not(.expanded) .objective-actions { margin-top: 4px; }
+body:has(#space) #controls-hint { bottom: 6px; left: 50%; transform: translateX(-50%); padding: 7px 11px; border: 1px solid var(--ui-line); border-radius: 999px; background: rgb(9 19 26 / 72%); transition: opacity .8s; }
+body:has(#space) #controls-hint.controls-faded { opacity: 0; }
+body:has(#space) #orbital-radio { right: 16px; bottom: 16px; width: min(350px, calc(100vw - 32px)); max-height: min(150px, 24dvh); overflow: auto; padding: 9px 12px; border-radius: 14px; background: var(--ui-bg); }
+body:has(#space) #orbital-radio p { font-size: 10px; line-height: 1.45; margin: 5px 0 0; }
+body:has(#space) #orbital-radio #radio-state { margin-top: 4px; }
+body:has(#space) #orbital-radio button { min-height: 44px; padding-inline: 7px; }
+
+/* Display modes leave Power + storm forecast for minimal HUD, or clear all HUD for photos. */
+#hud.minimal-hud .brand, #hud.minimal-hud .toolbar, #hud.minimal-hud #mission-panel, #hud.minimal-hud #interaction, #hud.minimal-hud #vehicle-instruments, #hud.minimal-hud #map-panel, #hud.minimal-hud #world-labels, #hud.minimal-hud #crosshair, #hud.minimal-hud #radio, #hud.minimal-hud #controls, #hud.minimal-hud #toast { display: none !important; }
+#hud.minimal-hud #topbar { height: 48px; justify-content: flex-end; background: transparent; border: 0; }
+#hud.minimal-hud #vitals { display: flex; }
+#hud.minimal-hud #vitals .vital-chip:not(.vital-essential) { display: none; }
+#hud.minimal-hud .toolbar { display: flex !important; position: fixed; top: 8px; right: 8px; z-index: 50; }
+#hud.minimal-hud .toolbar button:not(.hud-mode-button) { display: none !important; }
+#hud.minimal-hud .hud-mode-button[data-hud-mode="minimal-hud"] { position: fixed; top: 8px; right: 8px; }
+#hud.minimal-hud .hud-mode-button[data-hud-mode="photo-mode"] { position: fixed; top: 8px; right: 64px; }
+#hud.minimal-hud #forecast { position: fixed; top: 58px; left: 16px; display: block; width: auto; padding: 9px 12px; border: 1px solid var(--ui-line); border-radius: 11px; background: var(--ui-bg); }
+#hud.photo-mode, #hud.photo-mode * { visibility: hidden !important; }
+#hud.photo-mode .hud-mode-button { visibility: visible !important; position: fixed; top: 8px; }
+#hud.photo-mode .hud-mode-button[data-hud-mode="minimal-hud"] { right: 64px; }
+#hud.photo-mode .hud-mode-button[data-hud-mode="photo-mode"] { right: 8px; }
+body:has(#space) #hud.minimal-hud #telemetry { display: block; }
+body:has(#space) #hud.minimal-hud #telemetry>span, body:has(#space) #hud.minimal-hud #telemetry small { display: none; }
+body:has(#space) #hud.minimal-hud #progress, body:has(#space) #hud.minimal-hud #objective, body:has(#space) #hud.minimal-hud #marker, body:has(#space) #hud.minimal-hud #controls-hint, body:has(#space) #hud.minimal-hud ~ #orbital-radio { display: none !important; }
+body:has(#space):has(#hud.minimal-hud) header .brand, body:has(#space):has(#hud.minimal-hud) header #chapter, body:has(#space):has(#hud.minimal-hud) header nav button:not(.hud-mode-button) { display: none !important; }
+body:has(#space):has(#hud.minimal-hud) header nav { position: fixed; top: 56px; right: 8px; z-index: 50; }
+body:has(#space) #hud.photo-mode, body:has(#space) #hud.photo-mode ~ #orbital-radio, body:has(#space) #hud.photo-mode ~ #station-overview-marker { visibility: hidden !important; }
+body:has(#space):has(#hud.photo-mode) header { visibility: hidden; }
+body:has(#space) #hud.photo-mode .hud-mode-button { visibility: visible !important; position: fixed; top: 56px; }
+body:has(#space) #hud.photo-mode .hud-mode-button[data-hud-mode="minimal-hud"] { right: 64px; }
+body:has(#space) #hud.photo-mode .hud-mode-button[data-hud-mode="photo-mode"] { right: 8px; }
+
+@media (max-width: 760px) {
+  #hud #topbar { min-height: 48px; height: auto; flex-wrap: wrap; padding: 4px 8px; }
+  #hud .brand>span { display: none; }
+  #hud #vitals { margin-left: auto; }
+  #hud .toolbar { flex-wrap: wrap; justify-content: flex-end; }
+  #hud .toolbar button { min-height: 44px; padding-inline: 7px; font-size: 9px; }
+  #hud #mission-panel:not(.expanded), #hud #mission-panel { top: 60px; left: 8px; }
+  #hud #vehicle-instruments { left: 8px; bottom: 8px; max-width: 180px; }
+  #hud #map-panel { right: 8px; bottom: 8px; width: 120px; }
+  #hud #interaction { right: 8px; bottom: 8px; width: min(245px, calc(100vw - 16px)); }
+  #hud #radio { top: 58px; right: 8px; }
+  body:has(#space) header { min-height: 48px; height: auto; flex-wrap: wrap; padding: 3px 8px; }
+  body:has(#space) nav { flex-wrap: wrap; justify-content: flex-end; }
+  body:has(#space) nav button { min-height: 44px; padding-inline: 7px; font-size: 9px; }
+  body:has(#space) #hud { top: 56px; }
+  body:has(#space) #objective { top: 58px; left: 8px; }
+  body:has(#space) #telemetry { top: 10px; right: 8px; max-width: 170px; }
+  body:has(#space) #controls-hint { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; }
+}
+
+/* Shared opaque accessibility palette: scene lighting stays in the 3D world, never in UI surfaces. */
+html { font-family: 'Space Grotesk', 'Segoe UI', sans-serif; color: var(--ui-text); }
+button, input, select { font: inherit; }
+button, a, input, select { touch-action: manipulation; }
+button { min-height: 44px; border-radius: 8px; }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--ui-warn); outline-offset: 3px; }
+.hud-mode-button, #hud .toolbar button, body:has(#space) nav button { background: var(--ui-bg-raised) !important; color: var(--ui-text) !important; border: 1px solid var(--ui-line) !important; }
+#hud #topbar, body:has(#space) header, #campaign-bar { background: var(--ui-bg) !important; border-color: var(--ui-line) !important; }
+#hud #mission-panel, #hud #interaction, #hud #vehicle-instruments, #hud #map-panel, #hud #radio, #hud #toast,
+body:has(#space) #objective, body:has(#space) #orbital-radio, body:has(#space) #progress span,
+#loading-scene, #minimal-forecast {
+  background: var(--ui-bg) !important; color: var(--ui-text); border: 1px solid var(--ui-line) !important;
+  border-radius: 12px; box-shadow: 0 4px 12px rgb(0 0 0 / 35%);
+}
+#hud #radio, body:has(#space) #objective { border-left: 1px solid var(--ui-line) !important; }
+#hud #vitals .vital-chip { background: var(--ui-bg-raised); border-color: var(--ui-line); opacity: 1; }
+#hud #vitals .vital-chip[data-state="healthy"] { color: var(--ui-good); }
+#hud #vitals .vital-chip[data-state="warning"] { color: var(--ui-warn); }
+#hud #vitals .vital-chip[data-state="danger"] { color: var(--ui-danger); }
+#hud #mission-panel:not(.expanded):after { background: linear-gradient(90deg, var(--ui-good) var(--mission-progress, 0%), var(--ui-line) var(--mission-progress, 0%)); }
+#hud #objective-marker, #hud .world-label, body:has(#space) #marker small { background: var(--ui-bg-raised); color: var(--ui-text); border-color: var(--ui-line); text-shadow: none; }
+#hud #mission-panel.expanded, #hud #mission-panel:not(.expanded) { background: var(--ui-bg) !important; }
+#hud #mission-panel:not(.expanded) .mission-summary { display: grid; grid-template-columns: minmax(0, 1fr) 52px; grid-template-rows: auto auto auto; gap: 2px 8px; padding-right: 0; }
+#hud #mission-panel:not(.expanded) .summary-head { grid-column: 1; grid-row: 1; justify-content: flex-start; }
+#hud #mission-panel:not(.expanded) #objective { grid-column: 1 / -1; grid-row: 2; }
+#hud #mission-panel:not(.expanded) #next-action { grid-column: 1 / -1; grid-row: 3; }
+#hud #mission-panel #tasks-toggle-card { position: static; grid-column: 2; grid-row: 1; width: 52px; height: 44px; }
+#hud:has(#tasks-toggle-card) #mission-panel:not(.expanded) { height: 106px; min-height: 106px; }
+#hud:has(#tasks-toggle-card) #mission-panel:not(.expanded) .mission-summary { height: 86px; }
+#hud #mission-panel:not(.expanded):after { bottom: 7px; }
+#hud #controls, body:has(#space) #controls-hint { background: var(--ui-bg-raised); color: var(--ui-text-muted); border: 1px solid var(--ui-line); }
+
+.panel, #title, #left, #right, #work { background: var(--ui-bg) !important; color: var(--ui-text); border: 1px solid var(--ui-line); border-radius: 12px; box-shadow: 0 4px 12px rgb(0 0 0 / 35%); }
+#hud .toolbar button, body:has(#space) nav button, .hud-mode-button { border-radius: 8px !important; }
+#hud button, #dialog button, #modal button, #campaign-bar button, .journey-content button, body:has(#space) button { background: var(--ui-bg-raised) !important; color: var(--ui-text) !important; border-color: var(--ui-line) !important; }
+#hud button.primary, #dialog button.primary, #modal button.primary, .journey-content button.primary, body:has(#space) button.primary { background: var(--ui-accent) !important; color: #101821 !important; border-color: var(--ui-accent) !important; }
+#hud button:hover:enabled, #dialog button:hover:enabled, #modal button:hover:enabled, .journey-content button:hover:enabled, body:has(#space) button:hover:enabled { background: #24394a !important; }
+#hud button, #modal button, #dialog button, #campaign-bar button { min-height: 44px !important; }
+
+#dialog-body h3, .learning-summary h3 { color: var(--ui-text); font-size: 15px; }
+.learning-summary { margin: 14px 0; padding: 12px 14px; background: var(--ui-bg-raised); border: 1px solid var(--ui-line); border-radius: 12px; }
+.learning-summary p { margin: 6px 0; }
+.briefing-transcript { margin: 2px 0 !important; padding: 0 !important; }
+abbr[title] { text-decoration: underline dotted; text-underline-offset: 3px; cursor: help; }
+#hud #toast { top: 118px; background: var(--ui-bg) !important; }
+#hud:has(#radio:not([hidden])) #toast { display: none; }
+#hud .toolbar, body:has(#space) nav { max-width: 58vw; overflow-x: auto; scrollbar-width: none; }
+#hud .toolbar::-webkit-scrollbar, body:has(#space) nav::-webkit-scrollbar { display: none; }
+@media (max-width: 650px) {
+  #hud #topbar { gap: 4px; padding-inline: 6px; }
+  #hud .toolbar { max-width: 50vw; }
+  #hud #vitals { gap: 3px; }
+  #hud #vitals .vital-chip { width: 44px; }
+  #hud #mission-panel:not(.expanded) { left: 6px; width: min(280px, calc(100vw - 12px)); top: 56px; }
+  #hud #interaction { right: 6px; bottom: 6px; width: min(280px, calc(100vw - 12px)); }
+  body:has(#space) header { padding-inline: 6px; gap: 4px; }
+  body:has(#space) nav { max-width: 56vw; }
+  #hud #toast { top: auto; bottom: 114px; }
+}
+@media print {
+  body { overflow: visible !important; background: #fff !important; color: #111 !important; }
+  #world, #vignette, #landing, #hud, #controls, #campaign-bar, #journey, #transition, #space, #opening, #modal { display: none !important; }
+  #dialog:not([hidden]) { display: block !important; position: static !important; inset: auto !important; padding: 0 !important; background: #fff !important; color: #111 !important; }
+  #dialog .dialog-card { width: 100% !important; max-height: none !important; overflow: visible !important; padding: 0 !important; background: #fff !important; color: #111 !important; border: 0 !important; box-shadow: none !important; }
+  #dialog-title, #dialog-body, #dialog-body p, #dialog-body h3, #dialog-body strong { color: #111 !important; }
+  #dialog-actions { display: none !important; }
+  #dialog-body canvas { max-width: 100%; }
+}
+
+/* Invisible, accessible scrolling shared across every chapter and menu. */
+*, *::before, *::after { scrollbar-width: none; -ms-overflow-style: none; }
+*::-webkit-scrollbar { display: none; width: 0; height: 0; }
+* { scrollbar-gutter: auto; }
+.scroll-hidden { overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; -ms-overflow-style: none; scrollbar-gutter: auto; }
+.scroll-hidden::-webkit-scrollbar { display: none; width: 0; height: 0; }
+
+/* Mission 2's default objective is a compact, non-scrollable summary. */
+#hud #mission-panel:not(.expanded) { width: min(280px, calc(100vw - 16px)); height: auto !important; min-height: 0 !important; max-height: none !important; overflow: visible !important; padding: 10px 13px 12px !important; }
+#hud #mission-panel:not(.expanded) .panel-heading { display: flex; align-items: center; justify-content: flex-start; width: 100%; float: none !important; }
+#hud #mission-panel:not(.expanded) .panel-heading .eyebrow { margin: 0 !important; text-align: left !important; font: 9px 'JetBrains Mono', monospace; letter-spacing: 1px; }
+#hud #mission-panel:not(.expanded) #close-tasks { display: none !important; }
+#hud #mission-panel:not(.expanded) #objective { display: block; width: 100%; margin: 3px 0 0; font-size: 16px; line-height: 1.25; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+#hud #mission-panel:not(.expanded) #task-distance { display: block; width: 100%; margin: 2px 0 0; font: 10px 'JetBrains Mono', monospace; line-height: 1.35; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#hud #mission-panel:not(.expanded) #objective-progress { display: block; width: 100%; height: 3px; margin: 6px 0 0; }
+#hud #mission-panel:not(.expanded) #phase-note, #hud #mission-panel:not(.expanded) #tasks, #hud #mission-panel:not(.expanded) #mission-actions, #hud #mission-panel:not(.expanded) #inventory, #hud #mission-panel:not(.expanded) .episode-back { display: none !important; }
+#hud #mission-panel.expanded { max-height: min(68dvh, 700px) !important; overflow-y: auto !important; overscroll-behavior: contain; }
+#hud #mission-panel.expanded #navigation { max-height: 32dvh; overflow-y: auto; }
+#hud #mission-panel .panel-heading #stage-count { margin-left: 0; }
+
+/* A radio subtitle wraps naturally; controls share one compact header row. */
+#hud #radio { width: min(380px, calc(100vw - 32px)) !important; min-width: 0 !important; height: auto !important; max-height: none !important; overflow: visible !important; padding: 10px 13px !important; }
+#hud #radio .radio-top { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; margin: 0 0 5px; }
+#hud #radio .radio-top > div { display: flex; gap: 5px; }
+#hud #radio .radio-top button { min-height: 44px !important; padding: 0 10px; }
+#hud #speaker { display: block; }
+#hud #subtitle { margin: 4px 0 0; font-size: 12px; line-height: 1.45; overflow-wrap: anywhere; }
+#hud #mission-panel:not(.expanded) .panel-heading .eyebrow { display: flex; gap: 4px; }
+#hud #mission-panel:not(.expanded) .panel-heading .eyebrow span { font: inherit; color: inherit; }
+
+/* Arrival's secondary controls live in an explicit menu; the bar stays 48px. */
+body:has(#space) header { height: 48px !important; min-height: 48px !important; padding-inline: 12px !important; flex-wrap: nowrap !important; }
+body:has(#space) #chapter { font-size: 9px; letter-spacing: 1.2px; white-space: nowrap; }
+body:has(#space) nav { display: flex; align-items: center; gap: 5px; max-width: none; overflow: visible; }
+body:has(#space) nav > button { min-height: 44px; padding: 4px 11px; }
+body:has(#space) #menu-controls { position: absolute; z-index: 30; top: calc(100% + 7px); right: 54px; display: grid; grid-template-columns: repeat(2, minmax(110px, 1fr)); gap: 5px; width: min(300px, calc(100vw - 20px)); padding: 8px; border: 1px solid var(--ui-line); border-radius: 12px; background: var(--ui-bg); box-shadow: 0 8px 22px rgb(0 0 0 / 45%); }
+body:has(#space) #menu-controls[hidden] { display: none !important; }
+body:has(#space) #menu-controls button { min-height: 44px; }
+
+/* The opening copy owns its own scroll region while the orbit canvas stays fixed. */
+body:has(#space) #opening { position: fixed; z-index: 8; top: 60px; bottom: 12px; left: clamp(14px, 6vw, 110px); right: auto; width: min(570px, calc(100vw - 28px)); max-width: none; padding: 14px 18px 26px; overflow-y: auto; overscroll-behavior: contain; background: linear-gradient(90deg, rgb(7 16 23 / 96%), rgb(7 16 23 / 84%) 78%, rgb(7 16 23 / 44%)); }
+body:has(#space) #opening h1 { font-size: clamp(46px, 6.2vw, 82px); line-height: .94; margin: 15px 0 12px; }
+body:has(#space) #opening .eyebrow { margin-bottom: 7px; }
+body:has(#space) #opening .opening-copy { font-size: clamp(16px, 1.8vw, 21px); line-height: 1.45; margin: 10px 0; }
+body:has(#space) #opening .fine { max-width: 54ch; margin: 12px 0; font-size: 11px; line-height: 1.55; }
+body:has(#space) #opening .opening-actions { margin-top: 14px; }
+body:has(#space) #opening .opening-actions button { min-height: 48px; padding: 0 18px; }
+body:has(#space):has(#opening:not([hidden])) #station-overview-marker { display: none !important; }
+body:has(#space) #opening-stamp { z-index: 2; }
+
+/* The connected-story page now shows a restrained moving Meridian scene. */
+#home-scene { position: fixed; z-index: 0; inset: 48px 0 0; overflow: hidden; background: #9c654e; pointer-events: none; opacity: 0; transition: opacity .7s ease; }
+#home-scene.ready { opacity: 1; }
+#home-scene canvas { display: block; width: 100%; height: 100%; }
+#journey { z-index: 2; background: linear-gradient(90deg, rgb(5 13 19 / 96%) 0%, rgb(5 13 19 / 83%) 44%, rgb(5 13 19 / 55%) 100%); }
+#journey:before { display: none; }
+.journey-content { max-width: 1400px; padding-top: clamp(36px, 6vh, 68px); }
+#journey-title { font-size: clamp(48px, 7.4vw, 100px); line-height: 1.02; letter-spacing: -2px; }
+#journey-intro { max-width: 660px; color: #e0e8ec; }
+.chapter { background: #101d28; border-color: #60727d; color: #eef2f5; }
+.chapter p, #extended p, .save-note { color: #c0ccd3; }
+#extended { background: #101d28; border-color: #60727d; }
+#journey .learning-mode button, #journey .learning-mode a, .journey-actions button, #extended button { background: #172634; color: #f1f4f6; border: 1px solid #73818b; }
+#journey .journey-actions .primary { background: #ff9a5c; color: #101821; border-color: #ff9a5c; }
+body.home-scene-fallback #home-scene { opacity: 1; background: #9c654e url('./game-glb-preview.jpg') center 52% / 155% auto no-repeat; }
+body.home-scene-fallback #home-scene canvas { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  #home-scene { transition: none; }
+}
+
+/* The Mission 2 briefing shows its complete transcript in the ordinary scroll area. */
+#dialog .ui-card:has(.briefing-transcript) { width: min(860px, calc(100vw - 48px)) !important; max-width: 860px !important; max-height: min(90dvh, 680px) !important; gap: 11px !important; }
+#dialog .ui-card:has(.briefing-transcript) #dialog-actions { position: sticky; bottom: 0; flex-shrink: 0; margin: auto -1px -1px; padding: 12px 0 0; background: var(--ui-bg); }
+#dialog .ui-card:has(.briefing-transcript) #dialog-body p { max-width: none; font-size: 18px; line-height: 1.65; }
+.briefing-transcript { margin: 2px 0 !important; padding: 0 !important; }
+
+@media (max-width: 760px) {
+  #journey { inset: 48px 0 0; }
+  .journey-content { padding: 30px 5vw 45px; }
+  #journey-title { font-size: clamp(42px, 12vw, 68px); }
+  body:has(#space) #chapter { display: none; }
+  body:has(#space) header { padding-inline: 6px !important; }
+  body:has(#space) nav { margin-left: auto; }
+  body:has(#space) nav > button { min-height: 44px; padding-inline: 8px; font-size: 10px; }
+  body:has(#space) #opening { left: 8px; top: 58px; bottom: 8px; width: min(520px, calc(100vw - 16px)); padding: 13px 15px 26px; }
+  body:has(#space) #opening h1 { font-size: clamp(45px, 11vw, 66px); }
+}
+
+@media (max-width: 480px) {
+  #home-scene { top: 48px; }
+  .chapter { padding: 18px; }
+  body:has(#space) .brand { font-size: 13px; }
+  body:has(#space) nav { gap: 3px; }
+  body:has(#space) nav > button { min-width: 44px; padding-inline: 6px; font-size: 9px; }
+  #dialog .ui-card:has(.briefing-transcript) { max-height: calc(100dvh - 24px) !important; padding: 20px !important; }
+}
+
+/* Keep the orbital planet visible; keep a soft readability gradient on home. */
+body:has(#space) .film-grain { background: linear-gradient(0deg, rgb(7 18 28 / 26%), transparent 34%); opacity: .45; }
+body:has(#space) #opening { background: transparent !important; }
+#journey { background: linear-gradient(90deg, rgb(5 13 19 / 84%) 0%, rgb(5 13 19 / 68%) 45%, rgb(5 13 19 / 22%) 100%) !important; }
+#journey .eyebrow { color: #743a1c; text-shadow: 0 1px 2px rgb(255 255 255 / 40%); }
+#journey-title { color: #f7f8f7; text-shadow: 0 2px 9px rgb(5 13 19 / 75%); }
+#journey-intro { text-shadow: 0 1px 5px rgb(5 13 19 / 85%); }
+
+/* One shared dialog shell: the full-viewport scrim never doubles as a card. */
+#dialog.ui-scrim,
+#modal.ui-scrim,
+#transition.ui-scrim {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 100 !important;
+  display: grid !important;
+  place-items: center !important;
+  box-sizing: border-box !important;
+  width: auto !important;
+  max-width: none !important;
+  max-height: none !important;
+  overflow: auto !important;
+  padding: 24px !important;
+  background: rgb(5 9 14 / 88%) !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+#dialog.ui-scrim[hidden], #modal.ui-scrim[hidden], #transition.ui-scrim[hidden] { display: none !important; }
+#transition.ui-scrim--below-header { inset: 48px 0 0 !important; }
+#dialog .ui-card,
+#modal .ui-card,
+#transition .ui-card,
+#modal > .panel.ui-card {
+  box-sizing: border-box !important;
+  width: min(640px, 100%) !important;
+  max-width: 720px !important;
+  min-width: 0 !important;
+  max-height: calc(100dvh - 48px) !important;
+  overflow: auto !important;
+  padding: 32px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 16px !important;
+  background: var(--ui-bg) !important;
+  color: var(--ui-text) !important;
+  border: 1px solid var(--ui-line) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 45%) !important;
+  backdrop-filter: none !important;
+}
+#dialog .ui-card > *, #modal .ui-card > *, #transition .ui-card > * { min-width: 0; max-width: 100%; }
+.ui-card .eyebrow { margin: 0; font: 600 12px/1.2 'JetBrains Mono', monospace; letter-spacing: .12em; color: var(--ui-accent); }
+.ui-card h2 { margin: 0; font-size: 28px; line-height: 1.2; color: var(--ui-text); }
+.ui-card p { margin: 0; font-size: 16px; line-height: 1.6; max-width: 62ch; color: var(--ui-text-muted); }
+.ui-card #dialog-body, .ui-card #modal-body { display: grid; gap: 12px; min-width: 0; max-width: 100%; overflow-wrap: anywhere; color: var(--ui-text-muted); font-size: 15px; line-height: 1.6; }
+.ui-card #dialog-body > *, .ui-card #modal-body > * { max-width: 100%; }
+.ui-card .readout { box-sizing: border-box; max-width: 100%; padding: 8px 16px; background: var(--ui-bg-raised); border: 1px solid var(--ui-line); border-radius: 8px; }
+.ui-card .readout > div { display: flex; justify-content: space-between; gap: 16px; padding: 10px 0; }
+.ui-card .readout > div + div { border-top: 1px solid var(--ui-line); }
+.ui-card #modal-body dl, .ui-card #dialog-body dl {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 0 16px;
+  box-sizing: border-box; max-width: 100%; margin: 0; padding: 8px 16px;
+  background: var(--ui-bg-raised); border: 1px solid var(--ui-line); border-radius: 8px;
+}
+.ui-card #modal-body dl dt, .ui-card #dialog-body dl dt,
+.ui-card #modal-body dl dd, .ui-card #dialog-body dl dd { min-width: 0; padding: 10px 0; overflow-wrap: anywhere; }
+.ui-card #modal-body dl dt + dd, .ui-card #dialog-body dl dt + dd { text-align: right; }
+.ui-card #modal-body dl dt:nth-of-type(n + 2), .ui-card #dialog-body dl dt:nth-of-type(n + 2) { border-top: 1px solid var(--ui-line); }
+.ui-card #modal-body dl dd:nth-of-type(n + 2), .ui-card #dialog-body dl dd:nth-of-type(n + 2) { border-top: 1px solid var(--ui-line); }
+.ui-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px; min-width: 0; max-width: 100%; }
+.ui-actions button { flex: 0 1 auto !important; min-height: 48px !important; max-width: 100%; padding: 0 24px !important; border-radius: 8px !important; white-space: normal; }
+.ui-dialog-caption { margin: 0; padding-top: 12px; border-top: 1px solid var(--ui-line); color: var(--ui-text-muted); font-size: 13px; line-height: 1.5; }
+#dialog:not([hidden]) ~ #hud #radio, #modal:not([hidden]) ~ #orbital-radio { display: none !important; }
+body:has(#dialog:not([hidden])) #hud #radio,
+body:has(#modal:not([hidden])) #orbital-radio { display: none !important; }
+@media (max-width: 480px) {
+  #dialog.ui-scrim, #modal.ui-scrim, #transition.ui-scrim { padding: 16px !important; }
+  #dialog .ui-card, #modal .ui-card, #transition .ui-card, #modal > .panel.ui-card { padding: 20px !important; max-height: calc(100dvh - 32px) !important; }
+  .ui-card h2 { font-size: 24px; }
+  .ui-card p { font-size: 15px; }
+}
+
+/* Mission feedback lives in a shared bottom rail. Keep the play space and
+   the instrument/action cards clear in every chapter. */
+#hud #toast,
+body:has(#space) #hud #toast {
+  top: auto !important;
+  bottom: 72px !important;
+  left: 50% !important;
+  right: auto !important;
+  transform: translateX(-50%) !important;
+  width: min(610px, calc(100vw - 32px));
+  max-width: 610px;
+  max-height: min(18dvh, 128px);
+  overflow: auto;
+  z-index: 40;
+  pointer-events: none;
+}
+
+/* Surface chapters reserve the centre-bottom instrument strip and footer. */
+body:has(#world) #hud #toast {
+  bottom: 156px !important;
+}
+
+@media (max-width: 760px) {
+  #hud #toast,
+  body:has(#space) #hud #toast { bottom: 78px !important; width: min(610px, calc(100vw - 24px)); }
+  /* Keep the right interaction card's column clear on compact displays. */
+  body:has(#world) #hud #toast {
+    bottom: 156px !important;
+    left: 8px !important;
+    transform: none !important;
+    width: min(360px, calc(100vw - 220px));
+    max-width: calc(100vw - 220px);
+  }
+}

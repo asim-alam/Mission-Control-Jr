@@ -140,3 +140,9 @@ test('conditional rover shelter and fungus events follow prior choices', () => {
   api.state.flags.roverSalvaged = true;
   assert.equal(api.currentEvent().choices.length, 3);
 });
+
+test('Kestrel survey adds the Sol 8 route option only when the connected mission was successful',()=>{
+  const {api}=game();api.state.sol=8;assert.equal(api.currentEvent().choices.length,3);
+  api.state.flags.kestrelSurveyed=true;assert.equal(api.currentEvent().choices.length,4);
+  api.resolveChoice(api.currentEvent().choices[3]);assert.equal(api.state.flags.kestrelRouteUsed,true);
+});

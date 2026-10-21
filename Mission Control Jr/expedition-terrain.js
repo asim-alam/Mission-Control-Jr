@@ -1,7 +1,7 @@
 // Fictional, authored training terrain. Distances are metres; operational limits are game rules.
 export const HOME={x:10,z:10}, RIDGE={x:40,z:-160}, HAZARD={x:32,z:-126,r:11};
 export const BOUNDS={minX:-100,maxX:110,minZ:-198,maxZ:40};
-export const OUTPOST_SOLIDS=[{minX:-13.7,maxX:-10.3,minZ:11.5,maxZ:14.5},{minX:4.5,maxX:5.5,minZ:6.5,maxZ:7.5},{minX:-4.5,maxX:-3.5,minZ:5.5,maxZ:6.5},{minX:-13.5,maxX:-4.5,minZ:4,maxZ:6.5},{minX:18.7,maxX:23.3,minZ:13.7,maxZ:18.3},{minX:2.3,maxX:3.7,minZ:7.3,maxZ:8.7}];
+export const OUTPOST_SOLIDS=[{minX:-13.7,maxX:-10.3,minZ:11.5,maxZ:14.5},{minX:4.5,maxX:5.5,minZ:6.5,maxZ:7.5},{minX:-4.5,maxX:-3.5,minZ:5.5,maxZ:6.5},{minX:-13.5,maxX:-4.5,minZ:4,maxZ:6.5},{minX:18.7,maxX:23.3,minZ:13.7,maxZ:18.3}];
 export const ROUTES={
   direct:{name:'Direct line',note:'Shortest; uncertain pale ground on the final approach.',surface:'Mixed / uncertain',points:[HOME,{x:12,z:-35},{x:25,z:-85},{x:32,z:-126},{x:40,z:-150}]},
   wash:{name:'North wash',note:'Longer; gentle gravel corridor with a firm perimeter approach.',surface:'Mostly firm',points:[HOME,{x:12,z:-16},{x:-34,z:-28},{x:-40,z:-80},{x:-15,z:-116},{x:7,z:-134},{x:40,z:-150}]},

@@ -1,8 +1,33 @@
 import { defineConfig } from 'vite';
 import { fileURLToPath } from 'node:url';
 
+const chapterRoutes = new Set(['/orbit', '/storm', '/rover', '/extended']);
+function rewriteChapterRoutes(_request, _response, next) {
+  if (_request.url) {
+    const url = new URL(_request.url, 'http://localhost');
+    if (chapterRoutes.has(url.pathname)) _request.url = `/index.html${url.search}`;
+  }
+  next();
+}
+
+function cleanChapterRoutes() {
+  return {
+    name: 'mission-control-clean-chapter-routes',
+    configureServer(server) { server.middlewares.use(rewriteChapterRoutes); },
+    configurePreviewServer(server) { server.middlewares.use(rewriteChapterRoutes); },
+    generateBundle() {
+      this.emitFile({
+        type: 'asset',
+        fileName: '_redirects',
+        source: '/orbit /index.html 200\n/storm /index.html 200\n/rover /index.html 200\n/extended /index.html 200\n',
+      });
+    },
+  };
+}
+
 export default defineConfig({
   base: './',
+  plugins: [cleanChapterRoutes()],
   build: {
     rolldownOptions: {
       input: {

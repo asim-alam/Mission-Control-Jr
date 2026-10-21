@@ -8,10 +8,14 @@ import { createMission, act, advance, objective, PREPARATION_SECONDS } from './m
 import { Player } from './player.js';
 import { MissionAudio } from './demo-audio.js';
 import lines from './dialogue-lines.json';
+import { installHudPresentation } from './hud-presentation.js';
+import { installHiddenScrollUI } from './scroll-ui.js';
+installHiddenScrollUI();
 
 const $=id=>document.getElementById(id);
 let mission=createMission(),ready=false,selected=null,job=null,transition=null,clock=0,toastTimer,endingShown=false;
 const journal=[],stations=[],mixers=[],crew=[],panels=[];
+let panelCollapseTimer;
 const renderer=new THREE.WebGLRenderer({antialias:true});
 renderer.setPixelRatio(Math.min(devicePixelRatio,1.75));renderer.setSize(innerWidth,innerHeight);
 renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;
@@ -87,17 +91,29 @@ function togglePause() {
     ${Object.entries(audio.volumes).map(([name,value])=>`<label>${name[0].toUpperCase()+name.slice(1)} volume <input aria-label="${name} volume" type="range" min="0" max="1" step="0.05" value="${value}" data-volume="${name}"></label>`).join('')}
     <label><span>Mute all audio</span><input id="master-mute" type="checkbox" ${audio.muted?'checked':''}></label>
     <label><span>Reduce motion and particles</span><input id="reduce-motion" type="checkbox" ${reducedMotion?'checked':''}></label>
-    <p><strong>Controls:</strong> WASD / arrows to move, drag to look, E to interact. V or the View button switches first person / third person. Navigation buttons walk you to equipment. Escape pauses; Mouse look captures the pointer.</p>`,[
+    <p><strong>Controls:</strong> WASD / arrows to move, drag to look, E to interact. V or the View button switches first person / third person. T opens the checklist and walk-to menu. F2 keeps Power and the storm timer; F3 clears the HUD for a photo. Press ? for controls. Escape pauses; Mouse look captures the pointer.</p>`,[
     {label:'Resume mission',run:closeDialog},{label:'Restart mission',run:()=>startMission()}]);
   $('dialog-body').querySelectorAll('[data-volume]').forEach(input=>input.oninput=()=>audio.settings({[input.dataset.volume]:Number(input.value)}));
   $('master-mute').onchange=e=>audio.setMuted(e.target.checked);$('reduce-motion').onchange=e=>{reducedMotion=e.target.checked;};
 }
 let reducedMotion=false;
 $('pause').onclick=togglePause;$('look').onclick=()=>player.capture();
+$('tasks-toggle').onclick=toggleTasks;$('tasks-toggle-card').onclick=toggleTasks;
+function toggleTasks(force) {
+  const panel=$('mission-panel'),expanded=force??!panel.classList.contains('expanded');
+  panel.classList.toggle('expanded',expanded);
+  $('tasks-toggle').setAttribute('aria-expanded',String(expanded));
+  $('tasks-toggle-card').setAttribute('aria-expanded',String(expanded));
+  scheduleTasksCollapse();
+}
+function scheduleTasksCollapse(){clearTimeout(panelCollapseTimer);if($('mission-panel').classList.contains('expanded'))panelCollapseTimer=setTimeout(()=>toggleTasks(false),5000);}
+$('mission-panel').addEventListener('pointermove',()=>{if($('mission-panel').classList.contains('expanded'))scheduleTasksCollapse();});
+$('mission-panel').addEventListener('focusin',()=>{if($('mission-panel').classList.contains('expanded'))scheduleTasksCollapse();});
 $('view').onclick=()=>{if(player.enabled)player.toggleView();};
 $('skip-voice').onclick=()=>audio.skip();$('replay-voice').onclick=()=>audio.replay();
 $('journal').onclick=()=>showDialog('Mission journal',`<p>Current objective: <strong>${objective(mission)}</strong></p>${mission.log.map(text=>`<p>• ${text}</p>`).join('')}${journal.map(entry=>`<div class="journal-entry"><b>${entry.speaker}</b><p>${entry.text}</p></div>`).join('')}`,[{label:'Return to mission',run:closeDialog}], 'EXPEDITION RECORD');
-addEventListener('keydown',e=>{if(e.code==='KeyJ'&&player.enabled)$('journal').click();});
+addEventListener('keydown',e=>{if(e.code==='KeyJ'&&player.enabled)$('journal').click();if(e.code==='KeyT'&&player.enabled)toggleTasks();});
+installHudPresentation({hud:$('hud'),toolbar:document.querySelector('#topbar .toolbar'),onHelp:()=>{if(player.enabled)togglePause();},onJourney:openJourney});
 
 function navigateTo(s) {
   if(!player.enabled||job)return;
@@ -167,7 +183,8 @@ function interact() {
 }
 const distance=s=>Math.hypot(player.position.x-s.point.x,player.position.z-s.point.z);
 function chooseAllocation() {
-  showDialog('What gets the reserve power?',`<p>The repaired battery can support oxygen reserves or keep the science systems running through the front.</p><p><strong>Life support:</strong> fill oxygen reserves and protect the crew's margin.</p><p><strong>Science systems:</strong> preserve research operations with less oxygen in reserve.</p>`,[
+  // Caption-only decision context. Existing recorded dialogue keys are left untouched to keep voice/subtitle sync.
+  showDialog('What gets the reserve power?',`<p>The repaired battery can support oxygen reserves or keep the science systems running through the front.</p><p><strong>Amara:</strong> “The hydroponics and soil experiment needs power to keep its measurements going. I am also tracking a pale fungus; we will study it before anyone considers it food.”</p><p><strong>Luca:</strong> “Air reserve protects all four of us if the storm lasts longer than forecast.”</p><p><strong>Life support:</strong> add oxygen reserve and protect the crew's margin. <strong>Science:</strong> keep the experiment running with a thinner oxygen reserve. Either choice has a cost.</p>`,[
     {label:'Prioritize life support',run:()=>{closeDialog();perform('allocate','life');}},
     {label:'Keep science systems running',run:()=>{closeDialog();perform('allocate','research');}},
     {label:'Decide later',run:closeDialog}], 'MISSION DECISION');
@@ -176,7 +193,7 @@ let lastInteractionKey='';
 function renderInteraction(force=false) {
   const s=selected,near=nearby(s),key=`${s?.id}|${near}|${mission.diagnosed}|${mission.cleaned}|${mission.bayOpen}|${mission.battery}|${mission.installed}|${mission.connector}|${mission.repaired}|${mission.allocation}|${mission.sealed}|${Math.floor(mission.insideAge)}|${!!job}`;
   if(!force&&key===lastInteractionKey)return;lastInteractionKey=key;
-  $('interaction').hidden=!s||!mission.started||mission.ended;if(!s)return;
+  $('interaction').hidden=!s||!mission.started||mission.ended||!near;if(!s)return;
   $('target-kind').textContent=`${s.kind} / ${distance(s).toFixed(1)} M`;$('target-title').textContent=s.title;
   let description='',buttons=[];
   const action=(label,fn,extra=false)=>buttons.push(button(label,fn,!near||!!job||extra));
@@ -207,8 +224,14 @@ function renderMission() {
   $('objective').textContent=objective(mission);
   const time=Math.max(0,Math.ceil(PREPARATION_SECONDS-mission.elapsed));
   $('forecast').textContent=mission.inside?(mission.sealed?'Airlock secure · storm passage in progress':'Shelter reached · airlock unsealed'):mission.storm?'DUST FRONT ARRIVED · Return to shelter':`Dust front ETA ${Math.floor(time/60)}:${String(time%60).padStart(2,'0')} · mission time pauses in menus`;
-  $('vitals').innerHTML=[['POWER',mission.resources.power],['OXYGEN',mission.resources.oxygen],['MORALE',mission.resources.morale]].map(([label,value])=>`<span class="${value<30?'danger':''}">${label}<b>${Math.round(value)}%</b></span>`).join('')+'<span>CREW<b>04 / 04</b></span>';
+  $('minimal-forecast').textContent=$('forecast').textContent;
   const tasks=[['Diagnostics',mission.diagnosed],['Collectors '+mission.cleaned.filter(Boolean).length+'/3',mission.cleaned.every(Boolean)],['Reserve battery',mission.battery||mission.installed],['Power connection',mission.repaired],['Reserve allocation',!!mission.allocation],['Airlock secured',mission.sealed]];
+  const firstOpen=tasks.findIndex(([,done])=>!done);$('mission-step').textContent=`OBJECTIVE ${firstOpen<0?6:firstOpen+1} OF 6`;
+  const nextId=mission.inside?'room-console':!mission.diagnosed?'terminal':mission.cleaned.some(done=>!done)?`solar${mission.cleaned.findIndex(done=>!done)}`:!mission.battery&&!mission.installed?'rover':!mission.installed||!mission.repaired?'junction':!mission.allocation?'terminal':'airlock';
+  const nextTarget=stations.find(s=>s.id===nextId);$('next-action').textContent=mission.ended?'Mission record complete':nextTarget?`${nextTarget.title} · ${Math.round(distance(nextTarget))} m · E interact`:'Return to shelter';
+  const completeCount=tasks.filter(([,done])=>done).length;$('mission-panel').style.setProperty('--mission-progress',`${completeCount/tasks.length*100}%`);
+  const vital=(icon,label,value,essential=false)=>{const n=Math.round(value),state=n<20?'danger':n<40?'warning':'healthy';return `<span class="vital-chip ${essential?'vital-essential':''}" data-state="${state}" role="img" aria-label="${label} ${n} percent" title="${label} ${n}%"><span class="vital-icon" aria-hidden="true">${icon}</span><b>${n}%</b><i style="width:${n}%"></i></span>`;};
+  $('vitals').innerHTML=vital('⚡','Power',mission.resources.power,true)+vital('O₂','Oxygen',mission.resources.oxygen)+vital('♡','Morale',mission.resources.morale)+'<span class="vital-chip" role="img" aria-label="Four crew members safe" title="Crew 4 of 4"><span class="vital-icon" aria-hidden="true">♙</span><b>4/4</b><i style="width:100%"></i></span>';
   $('tasks').innerHTML=tasks.map(([name,done])=>`<div class="${done?'done':''}">${done?'✓':'○'} ${name}</div>`).join('');
   $('inventory').textContent=mission.battery?'INVENTORY / RESERVE BATTERY + EVA BRUSH':mission.installed?'EQUIPPED / EVA BRUSH · BATTERY INSTALLED':'EQUIPPED / EVA CLEANING BRUSH';
 }
@@ -234,6 +257,7 @@ function startMission() {
   if(!ready)return;closeDialog();audio.stop();audio.start();mission=createMission();act(mission,'start');
   journal.length=0;endingShown=false;job=null;transition=null;selected=null;lastInteractionKey='';alarmClock=0;brushClock=0;player.reset();player.bounds={minX:-18,maxX:18,minZ:-18,maxZ:18};player.obstacles=outsideObstacles;
   exterior.visible=true;interior.visible=false;$('landing').hidden=true;$('hud').hidden=false;
+  toggleTasks(false);$('controls').classList.remove('controls-faded');setTimeout(()=>{if(mission.started)$('controls').classList.add('controls-faded');},30000);
   airlock.getObjectByName('door_left').position.x=-.5;airlock.getObjectByName('door_right').position.x=.5;
   for(const c of crew){c.model.position.copy(c.base);c.model.rotation.y=0;c.station.point.x=c.base.x;c.station.point.z=c.base.z;}
   renderView();renderNavigation();renderMission();renderInteraction(true);updateVisuals();
@@ -242,15 +266,19 @@ function startMission() {
 }
 function showEnding() {
   if(endingShown)return;endingShown=true;job=null;toolObject.visible=false;player.release();audio.say(mission.outcome,true);
-  const prepared=mission.outcome==='prepared',evacuated=mission.outcome==='evacuated';if(prepared)completeChapter('storm',{outcome:'Meridian protected',success:true});
+  const prepared=mission.outcome==='prepared',evacuated=mission.outcome==='evacuated';completeChapter('storm',{outcome:mission.outcome,success:true,carry:{stormOutcome:mission.outcome,allocation:mission.allocation||'none',batteryTaken:mission.battery===false,cleanedCollectors:mission.cleaned.filter(Boolean).length}});
+  // The journal records cause and effect in player language; no game values or outcome rules change here.
+  journal.unshift({speaker:'SYSTEM NOTE',text:`Cleaned ${mission.cleaned.filter(Boolean).length} collectors increased available solar input. Dust later reduced input and power fell to ${Math.round(mission.resources.power)}%.`});
+  journal.unshift({speaker:'DECISION RECORD',text:`Reserve power went to ${mission.allocation==='life'?'oxygen and life support':'Amara’s hydroponics and soil experiment'}; oxygen ended at ${Math.round(mission.resources.oxygen)}%.`});
+  const detailsMode=(()=>{try{return localStorage.getItem('mission-control-jr.learning-mode.v1')==='details';}catch{return false;}})();
   showDialog(prepared?'Meridian holds.':evacuated?'Emergency evacuation.':'Everyone made it. Barely.',
     `<p>${prepared?'All four astronauts are safe. Your repairs and life-support reserves protected the outpost.':evacuated?'The crew activates the emergency evacuation plan. Unsecured life support makes Meridian unsafe.':'All four astronauts reached shelter, but incomplete preparation or reduced oxygen reserves left little margin.'}</p>
     <div class="report-row"><span>Solar collectors</span><b>${mission.cleaned.filter(Boolean).length} / 3 restored</b></div>
     <div class="report-row"><span>Battery and relay</span><b>${mission.repaired?'Stable':'Incomplete'}</b></div>
     <div class="report-row"><span>Reserve priority</span><b>${mission.allocation==='life'?'Life support':mission.allocation==='research'?'Science systems':'Unallocated'}</b></div>
     <div class="report-row"><span>Airlock</span><b>${mission.sealed?'Sealed':'Unsecured'}</b></div>
-    <p>Scientific thinking, preparation, and care for your crew shape the next mission.</p>`,[
-    ...(prepared?[{label:'Continue · Tracks in the Dust',run:()=>goToChapter('rover')}]:[]),
+    <section class="learning-summary"><h3>Decision → System → Crew → Mission</h3><p><b>Decision:</b> ${mission.allocation==='life'?'Life support received the reserve power.':'The hydroponics and soil experiment received the reserve power.'}</p><p><b>System:</b> cleaning restored ${mission.cleaned.filter(Boolean).length} / 3 collectors; dust in the air reduced the solar input. ${detailsMode?`Power: ${Math.round(mission.resources.power)}%. Oxygen: ${Math.round(mission.resources.oxygen)}%.`:'Less sunlight means less power to share.'}</p><p><b>Crew:</b> ${prepared?'all four have a strong shelter margin.':evacuated?'the crew evacuated when the outpost was no longer safe.':'the crew sheltered with less margin.'}</p><p><b>Mission:</b> ${mission.battery===false?'the rover battery supported the habitat, leaving Rover Two to start with reduced charge.':'Rover Two retains its charged spare.'}</p></section><p><strong>If you had chosen differently:</strong> ${mission.allocation==='life'?'Keeping the science systems powered would preserve Amara’s experiment but leave less oxygen in reserve.':'Prioritizing life support would create a larger oxygen reserve but interrupt the experiment.'}</p><p><strong>Real NASA connection:</strong> dust storms can lower solar input, and rover teams conserve energy when the array output falls. <a href="https://www.jpl.nasa.gov/news/nasa-mars-rovers-braving-severe-dust-storms/" target="_blank" rel="noopener">NASA/JPL dust-storm operations</a></p><p>Amara’s soil experiment is logged for the next chapter. The older rover recovery record remains open in Meridian’s archive.</p>`,[
+    {label:`Continue · ${evacuated?'Recovery traverse':'Tracks in the Dust'}`,run:()=>goToChapter('rover')},
     {label:'Replay mission',run:startMission},{label:'Thirty-sol campaign',run:()=>goToChapter('extended')},
     {label:'Expedition journey',run:openJourney}
   ], 'EXPEDITION DEBRIEF');
@@ -340,7 +368,7 @@ renderer.setAnimationLoop(time=> {
   else {
     player.enabled=!paused&&!mission.ended;
     player.obstacles=mission.inside?insideObstacles:[...outsideObstacles,...crew.map(c=>obstacle(c.model.position.x,c.model.position.z,.5,.5))];
-    const moving=player.update(dt,false);player.position.y=mission.inside?1.88:1.68;
+    const moving=player.update(dt,false);if(moving&&$('mission-panel').classList.contains('expanded'))toggleTasks(false);player.position.y=mission.inside?1.88:1.68;
     player.cameraObjects=(mission.inside?interior:exterior).children;
     scene.updateMatrixWorld(true);player.syncCamera(moving&&!reducedMotion?Math.sin(clock*13)*.025:0);
     if(avatar) {

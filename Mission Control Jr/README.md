@@ -2,6 +2,8 @@
 
 **Play the unified Meridian expedition at http://127.0.0.1:5173/.** One campaign screen connects **Arrival at Mars → Before the Storm → Tracks in the Dust**, followed by the optional **Thirty Sols** command simulation. Chapter debriefs lead into the next story transition, with saved completion records and a Journey menu. Legacy chapter HTML links redirect into this campaign. See [UNIFIED-CAMPAIGN.md](UNIFIED-CAMPAIGN.md) for current behavior.
 
+For a fast judging route, choose **Quick demo · 5–7 min** on the first screen to show power, oxygen, shelter and a crew decision. Every chapter remains available from its card. The explanations toggle switches between plain-language and system-number notes without changing simulation values. Mission 2’s debrief can be printed or saved as a PDF from the browser print dialog. NASA learning references are in [Sources and credits](./sources.html) and the complete objectives are in [LEARNING-OBJECTIVES.md](./LEARNING-OBJECTIVES.md).
+
 Mars now dwarfs the station in the orbital view. Seven bundled Commander Elena voice clips provide the arrival briefing and milestone updates, with subtitles, skip, replay, mute, and automatic pause when Journey opens. Surface missions retain their existing recorded voices.
 
 A playable Mars prototype with first-person and third-person views. You are engineer Jin Park: diagnose a
@@ -28,7 +30,7 @@ Mission 2 controls: WASD/arrows drive or walk; Space brakes; P sets/releases the
 parking brake after stopping; E interacts or exits; V switches view; Shift toggles
 Eco; M toggles the minimap; T opens Tasks; Help explains controls. Mouse wheel or +/− zooms. Expand the map while parked. To reverse, stop, release S, and press S again.
 
-The HUD shows one compact current objective by default. Open Details for instructions or Tasks for the full checklist. The supplied concept rover is on the east equipment pad; approach to inspect it and switch the display to Perseverance. The small Mars globe is beside the operations terminal.
+The HUD shows one compact current objective by default. Open Details for instructions or Tasks for the full checklist. The supplied concept rover is on the east equipment pad; approach to inspect it and switch the display to Perseverance. The Mars globe remains available in the operations terminal's optional reference archive and in the orbital Mars atlas; it is no longer a prop in the surface scene.
 All five readiness checks include a real steering/stopping test. Resource units,
 terrain response, reserve rules, and scoring are educational game simplifications.
 See `MISSION-2-WALKTHROUGH.md` for the complete presentation route and

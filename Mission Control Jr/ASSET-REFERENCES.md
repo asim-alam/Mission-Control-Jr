@@ -60,7 +60,7 @@ Measured derivative bounds, before placement:
 - Olympus: size `[1.9000943, 0.3143727, 1.9000354]`, center `[0.0000471, -0.0324930, 0.0000176]`, minimum Y `-0.1896793`. For a four-meter table footprint use scale `2.1051586`. Label it **“Olympus Mons · terrain reference model · scale illustrative.”** Do not use the supplied artistic terrain as a validated elevation dataset or assume its vertical scale is quantitative.
 - Perseverance: size `[2.7045808, 2.2322255, 4.0887747]`, center `[0, 1.1168909, 0.3080652]`, minimum Y `0.0007781`. For a four-meter exhibit footprint use scale `0.9782882`. Label it **“Perseverance · robotic rover reference.”** It has no seats for Jin and Amara.
 - Mars Rover: size `[161000, 59609.9901, 312374.8594]`, center `[0, 29804.6729, 130.9297]`, minimum Y `-0.3221359`. Its authoring units are exceptionally large; a four-meter footprint needs scale `0.00001280513`. Always normalize this model before integrating it. Label it **“Mars rover concept · robotic reference.”** Do not silently identify it as Rover Two or NASA's Perseverance.
-- Mars globe: a sphere approximately 200 authoring units across, with 5,888 triangles. Its global map was visually inspected; it has polar caps and planet-scale surface features. Fit it to a 1–2 meter navigation-table globe with the same Box3 helper. Label it **“Mars · planet reference · scale illustrative.”** It is useful as a physically visible briefing/navigation exhibit, not as ground geometry, a mountain, or a second Mars in the sky. The embedded texture is not documented as a validated cartographic dataset.
+- Mars globe: a sphere approximately 200 authoring units across, with 5,888 triangles. Its global map was visually inspected; it has polar caps and planet-scale surface features. Use it in the orbital Mars view or optional 3D reference archive; it is no longer rendered as a physical prop in either surface chapter. The embedded texture is not documented as a validated cartographic dataset.
 
 ## Physically visible integration
 
@@ -68,7 +68,7 @@ Measured derivative bounds, before placement:
 
 The normalized robotic Mars Rover occupies a reachable equipment pad east of Meridian, clearly distinguished from the crewed expedition vehicle. Approach it to inspect and switch the display to Perseverance. Only one detailed robotic model occupies the pad at a time. Olympus is confined to its optional labeled archive view; do not enlarge it into the traversable terrain.
 
-The Mars globe sits on a navigation pedestal beside the operations terminal and rotates slowly. Rover labels/credits remain available through nearby interaction and the reference-details panel.
+The surface globe prop, pedestal, sign, and collision boundary are removed. Its archive display remains available on demand from the operations terminal; the orbital Mars atlas also remains available through its existing controls. Rover labels/credits remain available through nearby interaction and the reference-details panel.
 
 Keep display collisions simple: one circle/box around the pad, never raycast every exhibit triangle for walking or vehicle physics. Disable castShadow on dense reference meshes unless the performance budget justifies it. Use the existing lightweight crewed rover for driving physics, steering, seats, and wheel animation.
 

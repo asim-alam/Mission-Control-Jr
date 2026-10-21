@@ -4,7 +4,9 @@ export const SAVE_KEY='mission-control-jr.episodes.v1';
 export const SERVICE={spare:{x:-4,z:8.1},battery:{x:10,z:13},wheels:{x:12.5,z:10},camera:{x:10,z:7},comms:{x:5,z:9}};
 export function reportStations(m){const p=ROUTES[m.route||'wash'].points;return m.route==='wash'?[p[2],p[3]]:[p[1],p[2]];}
 export function inspectionPoint(m){return m.route==='rim'?{x:59,z:-132}:m.route==='direct'?{x:25,z:-105}:{x:7,z:-134};}
-export function createExpedition(){return {phase:'briefing',started:false,briefAccepted:false,spareCollected:false,walker:{x:6,z:12},reports:[false,false],detour:false,dataTransferred:false,checks:{battery:false,wheels:false,camera:false,comms:false,brakes:false},pinFound:false,cameraFound:false,route:null,reason:false,driving:false,aboard:false,brakeStart:0,brakeTurn:0,brakeMoved:false,vehicle:createRoverState(),battery:100,oxygen:100,elapsed:0,hazard:false,reported:false,photos:{context:false,close:false},frames:{},observation:false,sample:false,scienceComplete:false,returned:false,ended:false,outcome:null,assisted:false,checkpoint:null,eco:false,drivingSeconds:0,overspeed:0,collisions:0,slipSeconds:0,marginReviewed:false,optionalReviewed:false,trail:[],events:[],waypoint:0,overspeedAge:0};}
+export const TRAVERSE_QUESTION='Do the layered rocks at Kestrel Ridge justify a longer expedition?';
+export function createExpedition(){return {phase:'briefing',started:false,briefAccepted:false,spareCollected:false,walker:{x:6,z:12},reports:[false,false],detour:false,dataTransferred:false,checks:{battery:false,wheels:false,camera:false,comms:false,brakes:false},pinFound:false,cameraFound:false,route:null,reason:false,driving:false,aboard:false,brakeStart:0,brakeTurn:0,brakeMoved:false,vehicle:createRoverState(),battery:100,oxygen:100,returnReserve:20,elapsed:0,hazard:false,reported:false,photos:{context:false,close:false},frames:{},observation:false,sample:false,scienceComplete:false,returned:false,ended:false,outcome:null,assisted:false,checkpoint:null,eco:false,drivingSeconds:0,overspeed:0,collisions:0,slipSeconds:0,marginReviewed:false,optionalReviewed:false,trail:[],events:[],waypoint:0,overspeedAge:0};}
+export function applyStormCarry(m,carry){if(carry?.stormOutcome==='survived'||carry?.stormOutcome==='evacuated'){m.campaignOutcome=carry.stormOutcome;m.battery=carry.stormOutcome==='survived'?88:84;m.returnReserve=24;}return m;}
 export function event(m,type,text){m.events.push({type,text,time:m.elapsed,x:m.vehicle.x,z:m.vehicle.z,battery:m.battery,oxygen:m.oxygen});if(m.events.length>300)m.events.shift();}
 export function checkpoint(m){if(!m.vehicle.parking||Math.abs(m.vehicle.speed)>.05||surfaceAt(m.vehicle.x,m.vehicle.z)==='loose')return;const {checkpoint:old,...data}=m;m.checkpoint=JSON.parse(JSON.stringify(data));}
 export function retry(m){if(!m.checkpoint)return null;const next=JSON.parse(JSON.stringify(m.checkpoint));next.assisted=true;next.ended=false;next.outcome=null;next.vehicle.speed=0;next.vehicle.parking=true;next.checkpoint=JSON.parse(JSON.stringify(m.checkpoint));event(next,'retry','Checkpoint practice restored the simulation, including its recorded reserves.');return next;}
@@ -39,7 +41,7 @@ export function task2(m){
   return task(7,'Bring the evidence home','Follow the surveyed wash. Stop at the Meridian ring and set P.','dock','Secure Rover Two at Meridian',HOME,13);
 }
 export function objective2(m){return task2(m).title;}
-export function finish2(m,suspended=false){m.ended=true;m.vehicle.speed=0;m.vehicle.parking=true;m.driving=false;m.outcome=suspended?'suspended':m.battery<20||m.oxygen<20?'margin':m.scienceComplete?'success':'abort';event(m,'ending',m.outcome);}
+export function finish2(m,suspended=false){m.ended=true;m.vehicle.speed=0;m.vehicle.parking=true;m.driving=false;m.outcome=suspended?'suspended':m.battery<(m.returnReserve||20)||m.oxygen<(m.returnReserve||20)?'margin':m.scienceComplete?'success':'abort';event(m,'ending',m.outcome);}
 export function act2(m,type,value){
   const no=message=>({ok:false,message});if(m.ended)return no('Review the debrief or retry a checkpoint.');
   const nearBase=distance(m.vehicle,HOME)<28,parked=m.vehicle.parking&&Math.abs(m.vehicle.speed)<.05;
@@ -108,7 +110,7 @@ export function act2(m,type,value){
     m.observation=true;m.scienceComplete=true;message='Location-linked observation complete. Both units documented; formation remains uncertain.';line='science';
   }else if(type==='sample'){
     if(m.phase!=='science'||!m.scienceComplete||m.aboard)return no('Document the context on foot before collecting.');if(m.sample)return no('The fragment is already labeled.');
-    const f=forecast(m,18,1);m.optionalReviewed=true;if(f.battery<20||f.oxygen<20)return no('Optional work would breach the forecast return margin. Preserve the record and return.');
+    const f=forecast(m,18,1),margin=m.returnReserve||20;m.optionalReviewed=true;if(f.battery<margin||f.oxygen<margin)return no('Optional work would breach the forecast return margin. Preserve the record and return.');
     m.sample=true;m.battery-=1;m.oxygen-=1.8;m.elapsed+=18;message='Loose fragment collected and linked to the recorded contact. Work cost: 18 simulated seconds.';
   }else if(type==='return'){
     if(!['outbound','science'].includes(m.phase))return no('The expedition has not departed.');
@@ -137,6 +139,6 @@ export function advance2(m,dt,telemetry,paused=false){
 }
 export function assessment2(m){
   const navigation=m.drivingSeconds>0?(Math.max(0,10-m.collisions*2)+10*(1-Math.min(1,m.overspeed/m.drivingSeconds)))*Math.min(1,(m.drivenMetres||0)/100):0;
-  const parts=[['Readiness',Object.values(m.checks).filter(Boolean).length*4,20],['Plan & adapt',(m.reason?5:0)+(m.marginReviewed?5:0)+(m.hazard?5:0),15],['Safe navigation',navigation,20],['Reserves',(m.optionalReviewed?5:0)+(m.returned&&m.battery>=20?5:0)+(m.returned&&m.oxygen>=20?5:0),15],['Science',(m.photos.context?5:0)+(m.photos.close?5:0)+(m.observation?5:0),15],['Communication',(m.route?2:0)+(m.reported?2:0)+(m.returned?1:0),5],['Safe return',m.returned?10:0,10]];
+  const margin=m.returnReserve||20,parts=[['Readiness',Object.values(m.checks).filter(Boolean).length*4,20],['Plan & adapt',(m.reason?5:0)+(m.marginReviewed?5:0)+(m.hazard?5:0),15],['Safe navigation',navigation,20],['Reserves',(m.optionalReviewed?5:0)+(m.returned&&m.battery>=margin?5:0)+(m.returned&&m.oxygen>=margin?5:0),15],['Science',(m.photos.context?5:0)+(m.photos.close?5:0)+(m.observation?5:0),15],['Communication',(m.route?2:0)+(m.reported?2:0)+(m.returned?1:0),5],['Safe return',m.returned?10:0,10]];
   return {parts,total:Math.round(parts.reduce((s,p)=>s+p[1],0))};
 }

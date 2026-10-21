@@ -5,7 +5,7 @@ canvas { display: block; }
 [hidden] { display: none !important; }
 #ui { position: fixed; inset: 0; pointer-events: none; color: #f3e6d8; }
 #ui button, .panel { pointer-events: auto; }
-.panel { background: rgba(20,12,10,.85); border: 1px solid rgba(95,224,200,.35); border-radius: 10px; padding: 14px; backdrop-filter: blur(4px); }
+.panel { background: rgba(20,12,10,.85); border: 1px solid rgba(95,224,200,.35); border-radius: 10px; padding: 14px; }
 .center { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); width: min(560px,90vw); max-height: 90dvh; overflow-y: auto; text-align: center; }
 h1 { font-family: Orbitron, system-ui, sans-serif; letter-spacing: 6px; color: #ffb27a; margin: 0; }
 h2, h3 { font-family: Orbitron, system-ui, sans-serif; color: #5fe0c8; }
@@ -26,8 +26,8 @@ button:focus-visible { outline: 2px solid #ffb27a; outline-offset: 3px; }
 #work { position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); width: min(920px, calc(100% - 24px)); text-align: center; }
 #work:empty { display: none; }
 #work h3 { margin: 0 0 6px; font-size: 14px; }
-#modal { position: fixed; inset: 0; background: rgba(0,0,0,.45); pointer-events: auto; z-index: 10; }
-#modal-buttons button { display: block; width: 100%; margin: 6px 0; }
+
+
 .small { font-size: 12px; opacity: .7; }
 .lesson { color: #ffb27a; font-style: italic; }
 @media (max-width: 680px) {

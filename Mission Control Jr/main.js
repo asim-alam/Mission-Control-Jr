@@ -3,6 +3,9 @@ import {connectChapter,completeChapter,openJourney,journeyPaused} from './campai
 import { EVENTS, WORK } from './story.js';
 import { buildOutpost } from './outpost.js';
 import { startAudio, setMuted, playBeep, disposeAudio } from './audio.js';
+import {readMissionCarry} from './journey-state.js';
+import {installHiddenScrollUI} from './scroll-ui.js';
+installHiddenScrollUI();
 
 // ---------- Scene ----------
 const container = document.getElementById('game-container');
@@ -125,6 +128,7 @@ document.getElementById('mute').onclick = () => {
 // ---------- Game state ----------
 const RES = ['power', 'oxygen', 'water', 'food', 'radiation', 'equipment', 'morale'];
 const RES_LABEL = { power: 'Power', oxygen: 'Oxygen', water: 'Water', food: 'Food', radiation: 'Rad Shield', equipment: 'Equipment', morale: 'Morale' };
+let carriedMission={stormOutcome:null,successfulTraverse:false};try{carriedMission=readMissionCarry(localStorage);}catch{/* Direct play remains available without browser storage. */}
 let state;
 let stormLevel = 0;
 
@@ -133,14 +137,17 @@ function newGame() {
   hideModal();
   state = {
     sol: 1,
-    res: { power: 70, oxygen: 75, water: 70, food: 65, radiation: 20, equipment: 70, morale: 70 },
+    res: { power: 70, oxygen: carriedMission.stormOutcome==='prepared'?80:75, water: 70, food: 65, radiation: 20, equipment: 70, morale: 70 },
     crew: [
       { name: 'Cmdr. Elena Reyes', role: 'Commander', hp: 100, fatigue: 10 },
       { name: 'Dr. Amara Okafor', role: 'Biologist', hp: 100, fatigue: 10 },
       { name: 'Jin Park', role: 'Engineer', hp: 100, fatigue: 10 },
       { name: 'Dr. Luca Moreau', role: 'Medic', hp: 100, fatigue: 10 },
     ],
-    flags: {},
+    flags: {
+      ...(carriedMission.stormOutcome==='prepared'?{stormReady:true}:{}),
+      ...(carriedMission.successfulTraverse?{kestrelSurveyed:true}:{}),
+    },
     log: [],
     ended: false,
   };
@@ -230,6 +237,10 @@ function currentEvent() {
   if (state.eventDone === state.sol) return null;
   const ev = EVENTS[state.sol];
   if (!ev) return null;
+  let choices=ev.choices;
+  if (state.sol === 8 && state.flags.kestrelSurveyed) {
+    choices = [...choices, { label: 'Use Kestrel survey to choose a safer approach', fx: { equipment: 10, power: 5 }, flag: 'kestrelRouteUsed', note: 'The later field survey helped the crew compare routes before the EVA.' }];
+  }
   if (ev.storm) {
     return {
       title: `Sol ${state.sol} — Dust Storm`,
@@ -254,7 +265,7 @@ function currentEvent() {
       choices: [{ label: 'Continue', fx: safe ? { food: 25, morale: 10 } : { morale: -10 }, hurt: safe ? 0 : 25, hurtCount: 2, hurtReason: 'fungus poisoning', note: safe ? 'Science fed the crew.' : 'A hard lesson in rigor.' }],
     };
   }
-  return { ...ev, choices: ev.choices.filter((c) => !c.cond || c.cond(state)) };
+  return { ...ev, choices: choices.filter((c) => !c.cond || c.cond(state)) };
 }
 
 function ending() {
@@ -280,8 +291,11 @@ function ending() {
     text = `${alive} of 4 astronauts came home. The mission survived, but not everyone did.`;
   }
   completeChapter('extended',{outcome:title,success:alive>0});
-  showModal(`<h2 id="modal-heading">${title}</h2><p>${text}</p><p class="small">Preparations made: ${prep}/4 · Final morale ${Math.round(r.morale)}</p>
-    <p class="lesson">Successful space exploration requires scientific thinking, careful preparation, and caring for your crew.</p>`,
+  const review=state.log.slice(-3).reverse().map(line=>`<li>${line}</li>`).join('');
+  let explanation='A crew can use work plans and shelter choices to protect supplies and stay healthy.';try{if(localStorage.getItem('mission-control-jr.learning-mode.v1')==='details')explanation=`Current resources: power ${Math.round(r.power)}, oxygen ${Math.round(r.oxygen)}, water ${Math.round(r.water)}, food ${Math.round(r.food)}, equipment ${Math.round(r.equipment)}, morale ${Math.round(r.morale)}. Choices connect these systems; the values are simplified game units.`;}catch{}
+  showModal(`<h2 id="modal-heading">Commander’s Exam · ${title}</h2><p>${text}</p><p class="small">Preparations made: ${prep}/4 · Final morale ${Math.round(r.morale)}</p>
+    <section class="learning-summary"><h3>Decision review</h3><ol>${review||'<li>No major decision was recorded.</li>'}</ol><p><b>What you practiced:</b> link power, life support, food, water, crew health, and radiation planning. Each resource choice changes the options that remain later.</p><p>${explanation}</p><p><b>If you had chosen differently:</b> another work assignment or shelter choice would shift resource levels and could change crew health by the end of the exercise.</p><p><b>Real NASA connection:</b> NASA develops regenerative systems to recycle air and water for long missions. <a href="https://www.nasa.gov/directorates/stmd/game-changing-development-program/next-generation-life-support-ngls/" target="_blank" rel="noopener">NASA Next Generation Life Support</a></p></section>
+    <p class="lesson">This is a simplified training game. Its resource values are not operational mission-planning data.</p>`,
     [{ label: 'Return to expedition journey', onClick:openJourney },{ label: 'Begin a new mission', onClick: () => { hideModal(); newGame(); } }]);
 }
 

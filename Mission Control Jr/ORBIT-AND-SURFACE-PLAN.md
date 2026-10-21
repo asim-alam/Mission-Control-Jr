@@ -8,7 +8,7 @@ Design and implementation plan · 20 October 2026
 
 Extend the existing Three.js/Vite project, its characters, recorded dialogue system, first/third-person cameras, and Mission 2 state machine. Retain Mission 1: Before the Storm and Mission 2: Tracks in the Dust. The thirty-sol resource campaign remains a separate mode.
 
-Implemented now: remove the enlarged Olympus Mons mesh, presentation base, sign, map symbol, walking/vehicle collision boundary, and camera obstruction from Mission 2. Preserve the original asset and its credited optional archive display. The existing small Mars globe and robotic rover exhibit remain. All 71 existing tests pass; the production build succeeds with the existing shared-loader chunk-size advisory.
+Implemented now: the Olympus Mons display and Mars navigation globe have both been removed from the Mission 2 surface, along with their surface collision/obstruction. Their credited archive models remain available; the Mars atlas remains in orbit. The robotic rover exhibit remains. The earlier Olympus-only verification was superseded by the later surface-prop removal; the current run contains 88 existing tests and builds with the shared-loader chunk-size advisory.
 
 The larger relay/science/EVA chapter described below remains planned. A playable arrival chapter now supplies the orbital/station foundation, with a complete objective-driven mission and a cinematic transition into the existing surface game.
 
@@ -87,7 +87,7 @@ The same packet ID and player-created photograph thumbnails must appear at the s
 
 | Artifact | Decision | Use and constraints |
 | --- | --- | --- |
-| Supplied `mars.glb` / optimized `reference-mars-globe.glb` | Reuse first | Orbital planet and navigation globe; normalize bounds, preserve Akshat's credit. The existing 1024-pixel map suits the first prototype, not close scientific terrain inspection. |
+| Supplied `mars.glb` / optimized `reference-mars-globe.glb` | Reuse first | Orbital planet and optional 3D archive reference; normalize bounds, preserve Akshat's credit. The surface navigation pedestal has been removed. The existing 1024-pixel map suits the first prototype, not close scientific terrain inspection. |
 | `reference-olympus-mons.glb` | Archive only | Remove from surface, retain labeled optional geographic reference. Its presentation plinth and illustrative scale make it unsuitable as nearby ground. |
 | Existing crewed Rover Two and animated astronaut | Reuse | Jin/Amara, vehicle controls, suit shell. Add floating/handrail poses procedurally where needed; do not replace crewed physics with a robotic rover mesh. |
 | Supplied concept rover and Perseverance | Reuse | Existing reachable east equipment pad; switch one at a time. Use a simple instrument comparison interaction. Heavy Perseverance remains loaded on demand. |

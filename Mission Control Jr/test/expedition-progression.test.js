@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {SERVICE,reportStations,inspectionPoint,task2,createExpedition,act2,retry,finish2} from '../mission2.js';
+import {SERVICE,reportStations,inspectionPoint,task2,createExpedition,act2,retry,finish2,applyStormCarry} from '../mission2.js';
 import {HOME,RIDGE} from '../expedition-terrain.js';
 import {prepared,fieldArrival} from './expedition-fixtures.js';
 import {readiness} from './expedition-fixtures.js';
@@ -29,4 +29,12 @@ test('return requires parking, terminal transfer and a separate final crew count
 test('interrupted fieldwork checkpoint and clean restart preserve independent progress',()=>{
   const m=fieldArrival(prepared());act2(m,'science');act2(m,'exit');act2(m,'photo','context');finish2(m,true);const restored=retry(m);assert.equal(restored.phase,'science');assert.equal(restored.photos.context,false);assert.equal(restored.aboard,true);assert.ok(restored.assisted);
   const fresh=createExpedition();assert.equal(fresh.phase,'briefing');assert.deepEqual(fresh.reports,[false,false]);assert.equal(fresh.spareCollected,false);assert.equal(fresh.dataTransferred,false);restored.reports[0]=false;assert.equal(m.reports[0],true);
+});
+test('storm outcomes carry charge and a conservative return rule into the traverse',()=>{
+  const prepared=applyStormCarry(createExpedition(),{stormOutcome:'prepared'});
+  const survived=applyStormCarry(createExpedition(),{stormOutcome:'survived'});
+  const evacuated=applyStormCarry(createExpedition(),{stormOutcome:'evacuated'});
+  assert.equal(prepared.battery,100);assert.equal(prepared.returnReserve,20);
+  assert.equal(survived.battery,88);assert.equal(survived.returnReserve,24);
+  assert.equal(evacuated.battery,84);assert.equal(evacuated.returnReserve,24);
 });

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {createJourney,finishChapter,nextStoryChapter,storyComplete,readJourney,saveJourney,JOURNEY_KEY} from '../journey-state.js';
+import {createJourney,finishChapter,nextStoryChapter,storyComplete,readJourney,readMissionCarry,saveJourney,JOURNEY_KEY} from '../journey-state.js';
 
 test('connected expedition advances through arrival, storm and rover and retains chapter results',()=>{
   const state=createJourney();assert.equal(nextStoryChapter(state),'orbit');
@@ -16,6 +16,13 @@ test('chapter practice never marks earlier chapters complete and progress surviv
   const items=new Map(),storage={setItem:(key,value)=>items.set(key,value),getItem:key=>items.get(key)};assert.equal(saveJourney(state,storage),true);assert.deepEqual(readJourney(storage),state);
   items.set(JOURNEY_KEY,JSON.stringify({version:1,current:'bad',completed:['bad','rover','rover'],records:{rover:{score:999,outcome:'success'}}}));const restored=readJourney(storage);assert.equal(restored.current,'orbit');assert.deepEqual(restored.completed,['rover']);assert.equal(restored.records.rover.score,100);
   items.set(JOURNEY_KEY,'broken');assert.deepEqual(readJourney(storage),createJourney());assert.equal(saveJourney(state,undefined),false);assert.deepEqual(readJourney(undefined),createJourney());
+});
+test('storm and traverse carry-over notes survive progress saves without changing outcome ids',()=>{
+  const state=createJourney();finishChapter(state,'storm',{outcome:'survived',carry:{stormOutcome:'survived',allocation:'research',cleanedCollectors:2}});finishChapter(state,'rover',{outcome:'success',score:82,carry:{mission2Outcome:'success',scienceComplete:true}});
+  const items=new Map(),storage={setItem:(key,value)=>items.set(key,value),getItem:key=>items.get(key)};saveJourney(state,storage);const restored=readJourney(storage);
+  assert.equal(restored.records.storm.carry.stormOutcome,'survived');assert.equal(restored.records.rover.carry.mission2Outcome,'success');
+  assert.equal(restored.records.storm.outcome,'survived');assert.equal(restored.records.rover.outcome,'success');
+  assert.deepEqual(readMissionCarry(storage),{stormOutcome:'survived',successfulTraverse:true});
 });
 test('every orbital briefing subtitle has a bundled Vorbis voice clip',()=>{
   const lines=JSON.parse(readFileSync(new URL('../dialogue-lines-orbit.json',import.meta.url)));assert.equal(Object.keys(lines).length,7);
