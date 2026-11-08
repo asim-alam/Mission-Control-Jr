@@ -1,0 +1,150 @@
+{
+  "productId": "AVGVISIB_85S_060M_201608",
+  "datasetId": "LRO-L-LOLA-4-GDR-V1.0",
+  "productVersion": "V1.05",
+  "sourceUrl": "https://imbrium.mit.edu/EXTRAS/ILLUMINATION/IMG/AVGVISIB_85S_060M_201608.IMG",
+  "labelUrl": "https://imbrium.mit.edu/EXTRAS/ILLUMINATION/IMG/AVGVISIB_85S_060M_201608.LBL",
+  "sampleType": "LSB_INTEGER",
+  "sampleBits": 16,
+  "width": 5058,
+  "height": 5058,
+  "projection": "south polar stereographic, lunar sphere radius 1737.4 km; ME/DE421",
+  "scaleFactor": 4e-05,
+  "offset": 0,
+  "productDescription": "Fraction of simulated hourly timesteps with any solar-disc visibility over a lunar 18.6-year nutation cycle. Values are long-term averages, not a forecast.",
+  "retrievedAt": "2026-11-07T20:02:42+00:00",
+  "patches": [
+    {
+      "id": "polar-patch",
+      "centerRow1Based": 2529,
+      "centerSample1Based": 2529,
+      "pixels": [
+        5,
+        5
+      ],
+      "pixelSizeMeters": 60,
+      "rawDigitalNumbers": [
+        0,
+        16114,
+        16155,
+        0,
+        6467,
+        0,
+        15273,
+        0,
+        6953,
+        6862,
+        13539,
+        0,
+        0,
+        6746,
+        0,
+        11915,
+        8883,
+        7575,
+        6880,
+        7118,
+        0,
+        0,
+        7632,
+        0,
+        0
+      ],
+      "meanFraction": 0.2209792,
+      "rangeBytes": [
+        25558068,
+        25598541
+      ],
+      "rawFile": "data/raw/lunar-illumination/polar-patch.bin",
+      "sha256": "3468a05172a80461b97329d73fabfdc3e606c20ac333f7f3004c090d3bc82e9a"
+    },
+    {
+      "id": "nearby-patch",
+      "centerRow1Based": 2500,
+      "centerSample1Based": 2600,
+      "pixels": [
+        5,
+        5
+      ],
+      "pixelSizeMeters": 60,
+      "rawDigitalNumbers": [
+        4116,
+        3970,
+        3823,
+        3710,
+        3570,
+        3809,
+        3718,
+        3607,
+        3467,
+        3334,
+        3532,
+        3406,
+        3289,
+        3192,
+        3026,
+        3256,
+        3160,
+        3025,
+        2905,
+        2750,
+        2997,
+        2891,
+        2779,
+        2667,
+        2536
+      ],
+      "meanFraction": 0.132056,
+      "rangeBytes": [
+        25264846,
+        25305319
+      ],
+      "rawFile": "data/raw/lunar-illumination/nearby-patch.bin",
+      "sha256": "e045bfb04d6595663af036ad73c004c14633c56ca9a2f37ec3b9c4e99f17ab99"
+    },
+    {
+      "id": "ridge-patch",
+      "centerRow1Based": 2700,
+      "centerSample1Based": 2400,
+      "pixels": [
+        5,
+        5
+      ],
+      "pixelSizeMeters": 60,
+      "rawDigitalNumbers": [
+        8085,
+        7956,
+        8229,
+        8195,
+        8239,
+        8277,
+        8405,
+        8419,
+        4279,
+        8764,
+        8521,
+        8522,
+        8611,
+        9228,
+        9076,
+        8669,
+        8607,
+        9306,
+        9709,
+        9461,
+        8797,
+        8546,
+        9443,
+        10156,
+        9658
+      ],
+      "meanFraction": 0.3442528,
+      "rangeBytes": [
+        27287646,
+        27328119
+      ],
+      "rawFile": "data/raw/lunar-illumination/ridge-patch.bin",
+      "sha256": "f2fd59dd23c844f81d4661476e14f0f89065e0471c874703e7ad71f26ab80aa9"
+    }
+  ]
+}

@@ -1,0 +1,796 @@
+[
+  {
+    "id": "lunar-habitat",
+    "bytes": 50204,
+    "triangles": 392,
+    "draws": 24,
+    "materials": 4,
+    "boundsMeters": [
+      4.6,
+      3.05,
+      3.625
+    ],
+    "errors": 0,
+    "warnings": 0,
+    "messages": [
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/0/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/1/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/2/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/3/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/4/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/5/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/6/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/7/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/8/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/9/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/10/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/11/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/12/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/13/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/14/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/15/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/16/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/17/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/18/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/19/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/20/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/21/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/22/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/23/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "NODE_EMPTY",
+        "message": "Empty node encountered.",
+        "severity": 2,
+        "pointer": "/nodes/25"
+      },
+      {
+        "code": "NODE_EMPTY",
+        "message": "Empty node encountered.",
+        "severity": 2,
+        "pointer": "/nodes/26"
+      },
+      {
+        "code": "NODE_EMPTY",
+        "message": "Empty node encountered.",
+        "severity": 2,
+        "pointer": "/nodes/27"
+      }
+    ]
+  },
+  {
+    "id": "polar-solar-mast",
+    "bytes": 16884,
+    "triangles": 136,
+    "draws": 7,
+    "materials": 4,
+    "boundsMeters": [
+      2,
+      1.795,
+      1.1
+    ],
+    "errors": 0,
+    "warnings": 0,
+    "messages": [
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/0/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/1/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/2/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/3/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/4/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/5/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/6/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "NODE_EMPTY",
+        "message": "Empty node encountered.",
+        "severity": 2,
+        "pointer": "/nodes/2"
+      },
+      {
+        "code": "NODE_EMPTY",
+        "message": "Empty node encountered.",
+        "severity": 2,
+        "pointer": "/nodes/11"
+      }
+    ]
+  },
+  {
+    "id": "battery-cart",
+    "bytes": 19732,
+    "triangles": 188,
+    "draws": 7,
+    "materials": 5,
+    "boundsMeters": [
+      1.1,
+      1.325,
+      0.7
+    ],
+    "errors": 0,
+    "warnings": 0,
+    "messages": [
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/0/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/1/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/2/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/3/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/4/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/5/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/6/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "NODE_EMPTY",
+        "message": "Empty node encountered.",
+        "severity": 2,
+        "pointer": "/nodes/8"
+      }
+    ]
+  },
+  {
+    "id": "cable-reel",
+    "bytes": 16864,
+    "triangles": 204,
+    "draws": 4,
+    "materials": 3,
+    "boundsMeters": [
+      0.7,
+      0.79,
+      0.68
+    ],
+    "errors": 0,
+    "warnings": 0,
+    "messages": [
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/0/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/1/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/2/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/3/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "NODE_EMPTY",
+        "message": "Empty node encountered.",
+        "severity": 2,
+        "pointer": "/nodes/6"
+      }
+    ]
+  },
+  {
+    "id": "lunar-terrain-patch",
+    "bytes": 3648,
+    "triangles": 18,
+    "draws": 2,
+    "materials": 1,
+    "boundsMeters": [
+      44,
+      3.2,
+      40
+    ],
+    "errors": 0,
+    "warnings": 0,
+    "messages": [
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/0/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "NODE_EMPTY",
+        "message": "Empty node encountered.",
+        "severity": 2,
+        "pointer": "/nodes/3"
+      },
+      {
+        "code": "NODE_EMPTY",
+        "message": "Empty node encountered.",
+        "severity": 2,
+        "pointer": "/nodes/4"
+      }
+    ]
+  },
+  {
+    "id": "dust-control-rack",
+    "bytes": 25400,
+    "triangles": 156,
+    "draws": 13,
+    "materials": 6,
+    "boundsMeters": [
+      1.7,
+      1.7,
+      0.99
+    ],
+    "errors": 0,
+    "warnings": 0,
+    "messages": [
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/0/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/1/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/2/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/3/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/4/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/5/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/6/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/7/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/8/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/9/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/10/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/11/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/12/primitives/0/attributes/TEXCOORD_0"
+      }
+    ]
+  },
+  {
+    "id": "boot-tray",
+    "bytes": 8380,
+    "triangles": 48,
+    "draws": 4,
+    "materials": 3,
+    "boundsMeters": [
+      1.4,
+      0.157,
+      0.8
+    ],
+    "errors": 0,
+    "warnings": 0,
+    "messages": [
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/0/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/1/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/2/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/3/primitives/0/attributes/TEXCOORD_0"
+      }
+    ]
+  },
+  {
+    "id": "filter-cassette",
+    "bytes": 21236,
+    "triangles": 132,
+    "draws": 11,
+    "materials": 4,
+    "boundsMeters": [
+      0.6,
+      0.765,
+      0.26
+    ],
+    "errors": 0,
+    "warnings": 0,
+    "messages": [
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/0/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/1/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/2/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/3/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/4/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/5/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/6/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/7/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/8/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/9/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/10/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "NODE_EMPTY",
+        "message": "Empty node encountered.",
+        "severity": 2,
+        "pointer": "/nodes/11"
+      }
+    ]
+  },
+  {
+    "id": "lunar-airlock",
+    "bytes": 15932,
+    "triangles": 96,
+    "draws": 8,
+    "materials": 4,
+    "boundsMeters": [
+      3.4,
+      2.67,
+      4.115
+    ],
+    "errors": 0,
+    "warnings": 0,
+    "messages": [
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/0/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/1/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/2/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/3/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/4/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/5/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/6/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/7/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "NODE_EMPTY",
+        "message": "Empty node encountered.",
+        "severity": 2,
+        "pointer": "/nodes/11"
+      },
+      {
+        "code": "NODE_EMPTY",
+        "message": "Empty node encountered.",
+        "severity": 2,
+        "pointer": "/nodes/12"
+      }
+    ]
+  },
+  {
+    "id": "lunar-relay-mast",
+    "bytes": 19864,
+    "triangles": 380,
+    "draws": 4,
+    "materials": 4,
+    "boundsMeters": [
+      0.92,
+      2.58,
+      0.98
+    ],
+    "errors": 0,
+    "warnings": 0,
+    "messages": [
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/0/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/1/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/2/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/3/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "NODE_EMPTY",
+        "message": "Empty node encountered.",
+        "severity": 2,
+        "pointer": "/nodes/2"
+      },
+      {
+        "code": "NODE_EMPTY",
+        "message": "Empty node encountered.",
+        "severity": 2,
+        "pointer": "/nodes/8"
+      }
+    ]
+  },
+  {
+    "id": "field-probe",
+    "bytes": 18964,
+    "triangles": 216,
+    "draws": 5,
+    "materials": 3,
+    "boundsMeters": [
+      0.761,
+      1.28,
+      0.852
+    ],
+    "errors": 0,
+    "warnings": 0,
+    "messages": [
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/0/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/1/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/2/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/3/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "message": "This object may be unused.",
+        "severity": 2,
+        "pointer": "/meshes/4/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "NODE_EMPTY",
+        "message": "Empty node encountered.",
+        "severity": 2,
+        "pointer": "/nodes/7"
+      }
+    ]
+  }
+]

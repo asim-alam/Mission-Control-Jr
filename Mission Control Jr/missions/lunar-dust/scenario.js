@@ -1,0 +1,3 @@
+export const lunarDustScenario={id:'horizon-dust-v1',version:1,kind:'fictional equipment-handling training informed by NASA EDS work',sourceId:'nasa-blue-ghost-eds-2025',initialEnergyWh:350,capacityWh:500,minimumRecoveryWh:180,initialAirReserve:100,essentialW:60,rackW:160,cyclePumpW:120,
+ manualPanelSeconds:600,manualOtherSeconds:300,rackSeconds:300,normalCycleSeconds:120,conserveCycleSeconds:240,cleanThreshold:20,
+ limitation:'The EDS-inspired rack treats a fictional rigid panel, not an entire suit. Dust amounts, cleaning, filter, power and air-cycle values are authored; there is no wind-driven lunar storm.'};

@@ -1,6 +1,6 @@
 export const PREPARATION_SECONDS = 360;
 export function createMission() {
-  return {started:false,diagnosed:false,cleaned:[false,false,false],battery:false,installed:false,
+  return {started:false,diagnosed:false,cleaned:[false,false,false],battery:false,installed:false,batteryRecovered:false,batteryInstalled:false,experimentData:0,
     connector:[0,0,0],bayOpen:false,repaired:false,allocation:null,inside:false,sealed:false,storm:false,
     elapsed:0,stormAge:0,insideAge:0,ended:false,outcome:null,
     resources:{power:34,oxygen:77,morale:72},talked:[],responded:[],log:[]};
@@ -21,7 +21,7 @@ export function record(m,text) {m.log.unshift(text);m.log=m.log.slice(0,30);}
 export function finish(m) {
   if(m.ended)return;
   const prepared=m.cleaned.every(Boolean)&&m.repaired;
-  m.outcome=!m.inside||!m.sealed?'evacuated':prepared&&m.allocation==='life'?'prepared':'survived';
+  m.outcome=!m.inside||!m.sealed||m.resources.oxygen<=0?'evacuated':prepared&&m.allocation==='life'&&m.resources.oxygen>=75?'prepared':'survived';
   m.ended=true;
   record(m,m.outcome==='prepared'?'All four crew safe. Preparation protected Meridian.':m.outcome==='survived'?'Crew safe; reserves depleted. Review your preparation.':'Emergency evacuation initiated. Meridian must be abandoned.');
 }
@@ -48,11 +48,11 @@ export function act(m,type,value) {
     if(!m.diagnosed)return no('Inspect the habitat terminal first.');
     if(!m.bayOpen)return no('Open the rover service bay first.');
     if(m.battery||m.installed)return no('Reserve battery already recovered.');
-    m.battery=true;line='battery';message='Reserve battery added to inventory.';
+    m.battery=true;m.batteryRecovered=true;line='battery';message='Reserve battery added to inventory.';
   } else if(type==='install') {
     if(m.installed)return no('Battery already fitted.');
     if(!m.battery)return no('Recover the reserve battery from the rover first.');
-    m.installed=true;m.battery=false;line='install';message='Battery fitted. Align connectors to 1 / 2 / 3.';
+    m.installed=true;m.batteryInstalled=true;m.battery=false;line='install';message='Battery fitted. Align connectors to 1 / 2 / 3.';
   } else if(type==='rotate') {
     if(!m.installed)return no('Fit the battery first.');
     if(m.repaired)return no('Connection is already stable.');
@@ -67,8 +67,7 @@ export function act(m,type,value) {
     if(!m.repaired||!m.cleaned.every(Boolean))return no('Restore the collectors and repair the power junction first.');
     if(m.allocation)return no('Reserves are already allocated.');
     if(!['life','research'].includes(value))return no('Unknown allocation.');
-    m.allocation=value;m.resources.oxygen=value==='life'?95:55;
-    m.resources.morale=value==='life'?84:75;line=value==='life'?'life':'research';
+    m.allocation=value;line=value==='life'?'life':'research';
     message=value==='life'?'Oxygen reserves prioritized. Crew ready for shelter.':'Science systems retained. Oxygen reserves are limited.';
     m.storm=true;m.stormAge=0;
   } else if(type==='enter') {
@@ -103,8 +102,12 @@ export function advance(m,dt,paused=false) {
   if(!m.storm&&m.elapsed>=PREPARATION_SECONDS){m.storm=true;m.stormAge=0;record(m,'Dust front arrived before preparations were complete.');return 'storm';}
   if(m.storm) {
     m.stormAge+=dt;
-    m.resources.power=Math.max(0,m.resources.power-dt*(m.repaired?.055:.2));
-    if(!m.sealed)m.resources.oxygen=Math.max(0,m.resources.oxygen-dt*.55);
+    // Educational percent-units: running systems consume a finite battery.
+    // In a partial final tick, only the fraction supplied by the battery works.
+    const demand=dt*(m.repaired?.055:.2), supplied=demand?Math.min(1,m.resources.power/demand):0;
+    m.resources.power=Math.max(0,m.resources.power-demand);
+    m.resources.oxygen=Math.max(0,Math.min(100,m.resources.oxygen-dt*(m.sealed?.08:.55)+(m.sealed&&m.repaired&&m.allocation==='life'?dt*.18*supplied:0)));
+    if(m.sealed&&m.repaired&&m.allocation==='research')m.experimentData+=dt*supplied;
     if(m.inside&&m.sealed){m.insideAge+=dt;if(m.insideAge>=16){finish(m);return m.outcome;}}
     if((m.stormAge>=100&&!m.sealed)||m.resources.oxygen<=0){finish(m);return m.outcome;}
   } else if(!m.repaired)m.resources.power=Math.max(0,m.resources.power-dt*.018);

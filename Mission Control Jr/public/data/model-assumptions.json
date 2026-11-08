@@ -1,0 +1,115 @@
+{
+  "description": "Authored training parameters. These values are educational game design, not NASA measurements or operational limits.",
+  "version": 1,
+  "solar-shelter": {
+    "startingBatteryWh": 140,
+    "batteryCapacityWh": 400,
+    "essentialLoadW": 180,
+    "recorderLoadW": 240,
+    "portableWaterBags": 3,
+    "initialKgPerBag": 5,
+    "moveTimeSeconds": 120,
+    "hazardIntervalSeconds": [
+      480,
+      1080
+    ],
+    "ordinaryHabitatFactor": 0.6,
+    "twoBagFactor": 0.35,
+    "threeBagFactor": 0.2,
+    "limitation": "Exposure points and protection factors are qualitative game rules. The DONKI event supplies historical context only."
+  },
+  "greenhouse": {
+    "startingBatteryWh": 3600,
+    "batteryCapacityWh": 4000,
+    "essentialLoadW": 60,
+    "lightWPerTray": 100,
+    "pumpW": 20,
+    "generationWByLitPeriod": [
+      220,
+      205
+    ],
+    "initialWaterKg": 12,
+    "waterKgPerTrayPerLitPeriod": 1,
+    "growthProgressPerFullLitPeriod": 0.15,
+    "faultFlowFraction": 0.6,
+    "repairSeconds": 1800,
+    "repairEnergyWh": 40,
+    "referencePhotoperiod": "16 hours light and 8 hours dark from NASA OSD-269 metadata; 24-hour training period is an approximation.",
+    "limitation": "Growth, stress, energy, water, fault, yield and initial maturity are authored and are not measurements of Mars crop performance."
+  },
+  "earth-delay": {
+    "startingBatteryWh": 120,
+    "batteryCapacityWh": 200,
+    "essentialLoadW": 80,
+    "processorLoadW": 35,
+    "optionalExperimentW": 40,
+    "earthProcessingSeconds": 180,
+    "faultAirLossUnitsPerSecond": 0.09,
+    "conservedAirLossUnitsPerSecond": 0.025,
+    "cropStressPerUnservedSecond": 0.00004,
+    "cropStressReliefPerServedSecond": 0.000002,
+    "oneWayReference": "JPL Horizons Mars/Earth center down-leg time for 2026-11-14; used for both legs as an approximation.",
+    "limitation": "Processing time, pump faults, repair procedures, air-reserve units, crop-stress mapping and equipment are fictional training assumptions."
+  },
+  "thirty-sols-radiation": {
+    "startingShieldPreparationPoints": 20,
+    "waterShelterPreparationBonus": 35,
+    "roverShelterPreparationBonus": 25,
+    "stormBaseExposurePoints": 70,
+    "minimumExposurePoints": 10,
+    "crewConditionLossPerFiveExposurePoints": 1,
+    "minimumCrewCondition": 1,
+    "readyForNextTaskConditionThreshold": 50,
+    "limitation": "Exposure points, crew-condition changes, and the 50-point ready-for-next-task threshold are authored, non-medical game scales. Water and rover shelter strategies have different modeled effects; the exercise never reduces crew condition to zero."
+  },
+  "lunar-sunlight": {
+    "startingBatteryWh": 500,
+    "batteryCapacityWh": 800,
+    "essentialLoadW": 200,
+    "optionalScienceW": 120,
+    "panelRatedW": 450,
+    "availableCableM": 50,
+    "routeLengthM": {
+      "near": 18,
+      "ridge": 42
+    },
+    "shadowSeconds": {
+      "near": [
+        2400,
+        6000
+      ],
+      "ridge": [
+        4200,
+        5400
+      ]
+    },
+    "generationMapping": "panelRatedW * (0.8 + longTermReferenceFraction / 2)",
+    "limitation": "The two LOLA 5-by-5 pixel samples are separate sites used as analogs, not fictional adjacent pads. Short shadow times, mapping, loads and terrain are authored."
+  },
+  "lunar-dust": {
+    "initialEnergyWh": 350,
+    "minimumRecoveryWh": 180,
+    "essentialLoadW": 60,
+    "rackLoadW": 160,
+    "cyclePumpW": 120,
+    "rackSeconds": 300,
+    "manualPanelSeconds": 600,
+    "manualOtherSeconds": 300,
+    "normalCycleSeconds": 120,
+    "conserveCycleSeconds": 240,
+    "limitation": "The dust quantities, cleaning, filter and air-cycle values are authored. NASA reported an EDS demonstration on rigid glass and radiator surfaces; this is not a whole-suit cleaner."
+  },
+  "lunar-relay": {
+    "initialRoverWh": 360,
+    "idleW": 25,
+    "driveW": 180,
+    "probeW": 80,
+    "relayW": 18,
+    "relayAllocationWh": 35,
+    "ridgeZMetres": 60,
+    "ridgeHeightMetres": 8,
+    "relayHeightMetres": 10,
+    "oneWayReference": "JPL Horizons Moon/Earth center down-leg time, 2026-11-14.",
+    "limitation": "The local ridge is a two-dimensional fictional line-of-sight teaching model; it is not a validated radio link budget."
+  }
+}

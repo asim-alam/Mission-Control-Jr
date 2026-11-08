@@ -1,6 +1,6 @@
-# Mission Control Jr. — Connected Mars Missions
+# Mission Control Jr. — Mars and Moon Expedition
 
-**Play the unified Meridian expedition at http://127.0.0.1:5173/.** One campaign screen connects **Arrival at Mars → Before the Storm → Tracks in the Dust**, followed by the optional **Thirty Sols** command simulation. Chapter debriefs lead into the next story transition, with saved completion records and a Journey menu. Legacy chapter HTML links redirect into this campaign. See [UNIFIED-CAMPAIGN.md](UNIFIED-CAMPAIGN.md) for current behavior.
+**Play the Mars and Moon training campaigns at http://127.0.0.1:5173/.** The Mars story now has six chapters, from arrival through an Earth-delay decision. The separate Moon campaign has three lunar-outpost missions. **Thirty Sols** remains an optional command simulation. Each campaign tracks progress separately; chapter practice and the mission sampler let judges explore choices without changing completion. See [the expansion plan](MISSION-EXPANSION-PLAN.md) for mission scripts and [implementation status](docs/mission-expansion/implementation-status.md) for verification evidence and open release gates.
 
 For a fast judging route, choose **Quick demo · 5–7 min** on the first screen to show power, oxygen, shelter and a crew decision. Every chapter remains available from its card. The explanations toggle switches between plain-language and system-number notes without changing simulation values. Mission 2’s debrief can be printed or saved as a PDF from the browser print dialog. NASA learning references are in [Sources and credits](./sources.html) and the complete objectives are in [LEARNING-OBJECTIVES.md](./LEARNING-OBJECTIVES.md).
 
@@ -152,3 +152,9 @@ The older `scripts/generate-voices.ps1` remains available as a Windows SAPI
 fallback. Regeneration tools are optional: generated GLBs and voice clips ship
 with the game.
 
+
+### Mars and Moon expansion
+
+Run `npm ci`, `npm test`, then `npm run dev` to play locally; `npm run build` creates the static `dist/` build. If an existing `node_modules` was copied from another platform and the native Vite binding fails, run `npm ci` on the target platform. The campaign menu offers six Mars story missions, three separate lunar training missions and the Thirty Sols exercise. Direct static-host links can use `index.html?mission=lunar-sunlight` (and the other stable IDs in `mission-registry.js`); relative paths support deployment below a subdirectory.
+
+Rebuild original expansion models with `npm run models:survival` and `npm run models:lunar`, and regenerate the normalized archived inputs with `npm run data:normalize`. Source records and assumptions are bundled under `public/data/` and copied into the production build. The mission numbers and physical constants are simplified educational models; see the Sources & Credits page for actual NASA context and limits.

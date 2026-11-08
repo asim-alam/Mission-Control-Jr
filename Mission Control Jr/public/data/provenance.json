@@ -1,0 +1,206 @@
+[
+  {
+    "id": "donki-sep-2024-05-10-goes",
+    "basisKind": "observation",
+    "title": "DONKI Solar Energetic Particle event",
+    "agency": "NASA CCMC",
+    "sourceUrl": "https://ccmc.gsfc.nasa.gov/DONKI/view/SEP/30677/-1",
+    "recordId": "2024-05-10T13:35:00-SEP-001",
+    "version": "1",
+    "observationTime": "2024-05-10T13:35Z",
+    "retrievedAt": "2026-11-07T19:32:52Z",
+    "location": "GOES-P: SEISS",
+    "units": {
+      "energy": ">10 MeV"
+    },
+    "qualityNotes": [
+      "Catalog record near Earth; not a measurement at Mars."
+    ],
+    "rawFile": "data/raw/donki-sep-2024-05.json",
+    "sha256": "30c225b9a0fabee1ece4e0b56d0ccdbfe54f0b85e2a58815a885517db1fe4cfe",
+    "transforms": [
+      "Select event by sepID; retain event time and instrument."
+    ],
+    "usedBy": [
+      "solar-shelter"
+    ],
+    "limitation": "Historical context only; the training hazard and shielding factors are authored, not a Mars forecast or a medical dose."
+  },
+  {
+    "id": "horizons-mars-earth-2026-11-14",
+    "basisKind": "derived",
+    "title": "JPL Horizons observer ephemeris, Mars from Earth",
+    "agency": "NASA JPL",
+    "sourceUrl": "https://ssd.jpl.nasa.gov/api/horizons.api?format=text&COMMAND=%27499%27&OBJ_DATA=%27YES%27&MAKE_EPHEM=%27YES%27&EPHEM_TYPE=%27OBSERVER%27&CENTER=%27500%40399%27&START_TIME=%272026-11-14%27&STOP_TIME=%272026-11-16%27&STEP_SIZE=%271%20d%27&QUANTITIES=%2721%27",
+    "recordId": "499 / 500@399 / quantity 21",
+    "version": "Horizons API 1.2; mar099 / DE441",
+    "observationTime": "2026-11-14T00:00:00Z",
+    "retrievedAt": "2026-11-07T19:32:44Z",
+    "location": "Earth and Mars centers",
+    "units": {
+      "oneWayLightTime": "minutes"
+    },
+    "qualityNotes": [
+      "Ephemeris prediction; surface locations and two-way asymmetry are approximated."
+    ],
+    "rawFile": "data/raw/horizons-mars-earth-2026-11.txt",
+    "sha256": "b325bc75a092ffdd2e4bd9a19cb488757579383540c26fd8bb30c74d032f9d26",
+    "transforms": [
+      "Select 2026-Nov-14 00:00 row; convert minutes to seconds in the scenario."
+    ],
+    "usedBy": [
+      "earth-delay"
+    ],
+    "limitation": "Center-to-center down-leg light time approximates both directions; Earth processing time is authored."
+  },
+  {
+    "id": "osdr-osd-269",
+    "basisKind": "reference",
+    "title": "Microbiological and nutritional analysis of lettuce crops grown on the International Space Station-VEG03A",
+    "agency": "NASA OSDR",
+    "sourceUrl": "https://osdr.nasa.gov/bio/repo/data/studies/OSD-269",
+    "recordId": "OSD-269",
+    "version": "Metadata API response; unversioned retrieval",
+    "observationTime": null,
+    "retrievedAt": "2026-11-07T19:47:17Z",
+    "location": "ISS Veggie and ground control",
+    "units": {
+      "photoperiod": "hours light:hours dark"
+    },
+    "qualityNotes": [
+      "OSDR study metadata documents a 16:8 light-dark protocol."
+    ],
+    "rawFile": "data/raw/osdr-osd-269.json",
+    "sha256": "51471828f2e6352c7c3d7af4bc34994a15b8cb91af3cc37fe666fe43d72a5d29",
+    "transforms": [
+      "Extract a 16:8 light:dark protocol value; convert hours to seconds."
+    ],
+    "usedBy": [
+      "greenhouse"
+    ],
+    "limitation": "ISS lettuce study; fictional Mars yield, water, energy, stress and growth rates are not measured by this record."
+  },
+  {
+    "id": "nasa-life-support-baseline",
+    "basisKind": "reference",
+    "title": "Life Support Baseline Values and Assumptions Document",
+    "agency": "NASA",
+    "sourceUrl": "https://ntrs.nasa.gov/citations/20210024855",
+    "recordId": "20210024855",
+    "version": "NASA/TP-2015-218570/REV2",
+    "observationTime": null,
+    "retrievedAt": "2026-11-07T19:47:46Z",
+    "location": null,
+    "units": {},
+    "qualityNotes": [
+      "Reference context only; no numerical BVAD values are used by the game."
+    ],
+    "rawFile": "data/raw/ntrs-20210024855.json",
+    "sha256": "e7a44dfa001f656563303b8205be7be1d726527d019c0a8ac8419040d32b2f8b",
+    "transforms": [],
+    "usedBy": [
+      "greenhouse"
+    ],
+    "limitation": "This document supplies life-support context, not the game’s fictional daily budget."
+  },
+  {
+    "id": "lola-south-polar-illumination",
+    "basisKind": "derived",
+    "title": "LOLA average south polar solar illumination",
+    "agency": "NASA LRO LOLA",
+    "sourceUrl": "https://pgda.gsfc.nasa.gov/products/69",
+    "recordId": "AVGVISIB_85S_060M_201608",
+    "version": "V1.05",
+    "observationTime": null,
+    "retrievedAt": "2026-11-07T20:02:42+00:00",
+    "location": "Lunar south polar stereographic raster",
+    "units": {
+      "illumination": "fraction of modeled timesteps"
+    },
+    "qualityNotes": [
+      "5 by 5 pixel windows; 60 m per pixel; source label and byte-range excerpts are bundled."
+    ],
+    "rawFile": "data/raw/lunar-illumination/patches.json",
+    "sha256": "447fcccc4990fc11bf248d65813f891c935c1f8d9bc1703f68458bbcd99fc72e",
+    "transforms": [
+      "Read little-endian signed 16-bit pixels, apply 0.00004 scale, average each 5-by-5 window."
+    ],
+    "usedBy": [
+      "lunar-sunlight"
+    ],
+    "limitation": "Long-term modeled averages do not predict illumination during the fictional training window; the example windows are not claimed to be adjacent."
+  },
+  {
+    "id": "nasa-blue-ghost-eds-2025",
+    "basisKind": "reference",
+    "title": "Blue Ghost Begins Surface Operations, Captures Descent Video, Sunrise",
+    "agency": "NASA",
+    "sourceUrl": "https://www.nasa.gov/blogs/missions/2025/03/04/blue-ghost-begins-surface-operations-captures-descent-video-sunrise/",
+    "recordId": "NASA Blue Ghost surface operations, 2025-03-04",
+    "version": "Unversioned web page",
+    "observationTime": null,
+    "retrievedAt": "2026-11-08T02:36:55Z",
+    "location": "Lunar surface",
+    "units": {},
+    "qualityNotes": [
+      "Article reports dust removal from glass and thermal radiator surfaces."
+    ],
+    "rawFile": "data/raw/nasa-blue-ghost-eds-2025.html",
+    "sha256": "217f9ffcfb19fe05812990e49dc40bcd9b770448c0e0160ae043ed06b888e4d3",
+    "transforms": [],
+    "usedBy": [
+      "lunar-dust"
+    ],
+    "limitation": "Technology inspiration only. The game rack, dust, cleaning rates, filter and air-cycle parameters are authored; it is not a demonstrated whole-suit cleaner."
+  },
+  {
+    "id": "horizons-moon-earth-2026-11-14",
+    "basisKind": "derived",
+    "title": "JPL Horizons observer ephemeris, Moon from Earth",
+    "agency": "NASA JPL",
+    "sourceUrl": "https://ssd.jpl.nasa.gov/api/horizons.api?format=text&COMMAND=%27301%27&OBJ_DATA=%27YES%27&MAKE_EPHEM=%27YES%27&EPHEM_TYPE=%27OBSERVER%27&CENTER=%27500%40399%27&START_TIME=%272026-11-14%27&STOP_TIME=%272026-11-16%27&STEP_SIZE=%271%20d%27&QUANTITIES=%2721%27",
+    "recordId": "301 / 500@399 / quantity 21",
+    "version": "Horizons API 1.2; DE441",
+    "observationTime": "2026-11-14T00:00:00Z",
+    "retrievedAt": "2026-11-08T02:41:18Z",
+    "location": "Earth and Moon centers",
+    "units": {
+      "oneWayLightTime": "minutes"
+    },
+    "qualityNotes": [
+      "Ephemeris calculation; surface locations are approximated."
+    ],
+    "rawFile": "data/raw/horizons-moon-earth-2026-11.txt",
+    "sha256": "25e6d37f4ca8f61e3b4a50ccb888e031fba6fe3d282c6be33f6bf29128f42f54",
+    "transforms": [
+      "Select 2026-Nov-14 00:00 row; convert minutes to seconds."
+    ],
+    "usedBy": [
+      "lunar-relay"
+    ],
+    "limitation": "Center-to-center light time approximates the fictional surface route; link blockage is an authored geometry model."
+  },
+  {
+    "id": "nasa-lunar-propagation",
+    "basisKind": "reference",
+    "title": "Lunar Surface Propagation",
+    "agency": "NASA Glenn",
+    "sourceUrl": "https://www.nasa.gov/glenn/glenn-expertise-space-exploration/scan/lunar-surface-propagation/",
+    "recordId": "NASA Glenn Lunar Surface Propagation",
+    "version": "Unversioned web page",
+    "observationTime": null,
+    "retrievedAt": "2026-11-08T02:41:19Z",
+    "location": "Lunar surface",
+    "units": {},
+    "qualityNotes": [
+      "Background on lunar surface communications."
+    ],
+    "rawFile": "data/raw/nasa-lunar-propagation.html",
+    "sha256": "4eb3e30f5e902958272d09f9654ebee757014654df5af3e1e1a38e71ad195bcf",
+    "transforms": [],
+    "usedBy": [
+      "lunar-relay"
+    ],
+    "limitation": "The fictional ridge geometry and relay budget are teaching assumptions rather than a validated radio-link calculation."
+  }
+]

@@ -1,16 +1,63 @@
-export const JOURNEY_KEY='mission-control-jr.journey.v1';
-export const CHAPTERS=[
-  {id:'orbit',number:'01',sol:'SOL 11',title:'Arrival at Mars',file:'orbit.html',tag:'DOCK · RESTORE · DESCEND',description:'Reach Asteria, restore the relay, and bring Jin safely to Outpost Meridian.'},
-  {id:'storm',number:'02',sol:'SOL 12',title:'Before the Storm',file:'storm.html',tag:'DIAGNOSE · REPAIR · PROTECT',description:'A dust front is approaching. Protect the four-person crew and keep Meridian running.'},
-  {id:'rover',number:'03',sol:'SOL 16',title:'Tracks in the Dust',file:'mission2.html',tag:'PLAN · EXPLORE · RETURN',description:'Drive with Amara to Kestrel Ridge, document the evidence, and bring the crew home.'},
-  {id:'extended',number:'04',sol:'THIRTY SOLS',title:'Commander’s Exam',file:'campaign.html',tag:'COMMAND · ADAPT · SUSTAIN',description:'Run Meridian for a month. Balance crew work, resources, and radiation preparation.'},
-];
-export const storyChapters=CHAPTERS.slice(0,3);
-export const chapterById=id=>CHAPTERS.find(chapter=>chapter.id===id);
-export const createJourney=()=>({version:1,current:'orbit',completed:[],records:{}});
-export function readJourney(storage){try{const saved=JSON.parse(storage.getItem(JOURNEY_KEY)||'null');if(saved?.version!==1)return createJourney();const state=createJourney();state.current=chapterById(saved.current)?.id||'orbit';state.completed=CHAPTERS.filter(chapter=>Array.isArray(saved.completed)&&saved.completed.includes(chapter.id)).map(chapter=>chapter.id);for(const id of state.completed){const record=saved.records?.[id];if(record&&typeof record==='object'){const carry=record.carry&&typeof record.carry==='object'?Object.fromEntries(Object.entries(record.carry).filter(([,v])=>['string','number','boolean'].includes(typeof v)).slice(0,12)):{};state.records[id]={outcome:String(record.outcome||'Complete').slice(0,80),assisted:!!record.assisted,score:Number.isFinite(record.score)?Math.max(0,Math.min(100,record.score)):null,...(Object.keys(carry).length?{carry}:{})};}}return state;}catch{return createJourney();}}
+import {MISSIONS,missionById,missionsFor} from './mission-registry.js';
+export const JOURNEY_KEY='mission-control-jr.journey.v1'; // Retain the storage key to migrate existing saves in place.
+export const CHAPTERS=MISSIONS;
+export const storyChapters=missionsFor('mars');
+export const chapterById=missionById;
+export const createJourney=()=>({version:2,current:'orbit',selectedCampaign:'mars',campaigns:{mars:{current:'orbit'},moon:{current:'lunar-sunlight'}},completed:[],records:{},attempts:{}});
+export function completionStatus(record){
+  if(record?.mastered)return '✓ GOAL MET';
+  if(record?.success)return '✓ COMPLETE · TRY ANOTHER PLAN';
+  return 'SAFE STOP · REPLAY AVAILABLE';
+}
+
+// Bound untrusted save data without truncating carry at twelve fields.
+function safeValue(value,depth=0){
+  if(value===null||typeof value==='boolean')return value;
+  if(typeof value==='string')return value.slice(0,500);
+  if(typeof value==='number')return Number.isFinite(value)?value:null;
+  if(depth>=4)return null;
+  if(Array.isArray(value))return value.slice(0,50).map(v=>safeValue(v,depth+1));
+  if(value&&typeof value==='object')return Object.fromEntries(Object.entries(value).filter(([k])=>!['__proto__','prototype','constructor'].includes(k)).slice(0,100).map(([k,v])=>[k,safeValue(v,depth+1)]));
+  return null;
+}
+function cleanRecord(record){
+  const attemptCompleted=typeof record?.attemptCompleted==='boolean'?record.attemptCompleted:record?.completed!==false;
+  const success=typeof record?.success==='boolean'?record.success:attemptCompleted;
+  return {outcome:String(record?.outcome||'Complete').slice(0,80),assisted:!!record?.assisted,score:Number.isFinite(record?.score)?Math.max(0,Math.min(100,record.score)):null,completed:attemptCompleted,attemptCompleted,success,mastered:record?.mastered===true,...(record?.carry&&typeof record.carry==='object'?{carry:safeValue(record.carry)}:{})};
+}
+export function readJourney(storage){
+  try{
+    const saved=JSON.parse(storage.getItem(JOURNEY_KEY)||'null');
+    if(!saved || ![1,2].includes(saved.version))return createJourney();
+    const state=createJourney();
+    state.current=missionById(saved.current)?.id||'orbit';
+    state.selectedCampaign=['mars','moon'].includes(saved.selectedCampaign)?saved.selectedCampaign:'mars';
+    for(const campaign of ['mars','moon']){
+      const current=missionById(saved.campaigns?.[campaign]?.current);
+      if(current?.campaign===campaign)state.campaigns[campaign].current=current.id;
+    }
+    state.completed=MISSIONS.filter(m=>Array.isArray(saved.completed)&&saved.completed.includes(m.id)).map(m=>m.id);
+    for(const id of state.completed)if(saved.records?.[id]&&typeof saved.records[id]==='object')state.records[id]=cleanRecord(saved.records[id]);
+    for(const mission of MISSIONS){const attempts=saved.attempts?.[mission.id];if(Array.isArray(attempts))state.attempts[mission.id]=attempts.slice(-20).map(v=>safeValue(v));}
+    return state;
+  }catch{return createJourney();}
+}
 export function saveJourney(state,storage){try{storage.setItem(JOURNEY_KEY,JSON.stringify(state));return true;}catch{return false;}}
 export function readMissionCarry(storage){const journey=readJourney(storage),storm=journey.records.storm?.carry||{},rover=journey.records.rover?.carry||{};return {stormOutcome:['prepared','survived','evacuated'].includes(storm.stormOutcome)?storm.stormOutcome:null,successfulTraverse:rover.mission2Outcome==='success'};}
-export function finishChapter(state,id,result={}){if(!chapterById(id)||result.success===false)return false;if(!state.completed.includes(id))state.completed.push(id);const carry=result.carry&&typeof result.carry==='object'?Object.fromEntries(Object.entries(result.carry).filter(([,v])=>['string','number','boolean'].includes(typeof v)).slice(0,12)):undefined;state.records[id]={outcome:String(result.outcome||'Complete').slice(0,80),assisted:!!result.assisted,score:Number.isFinite(result.score)?Math.max(0,Math.min(100,result.score)):null,...(carry?{carry}:{})};return true;}
-export function nextStoryChapter(state){return storyChapters.find(chapter=>!state.completed.includes(chapter.id))?.id||'extended';}
-export const storyComplete=state=>storyChapters.every(chapter=>state.completed.includes(chapter.id));
+export function finishChapter(state,id,result={}){
+  if(!missionById(id))return false;
+  state.attempts ||= {};
+  const attemptCompleted=typeof result.attemptCompleted==='boolean'?result.attemptCompleted:result.success!==false;
+  const success=typeof result.success==='boolean'?result.success:attemptCompleted;
+  const mastered=attemptCompleted&&success&&result.mastered===true;
+  const normalized={...result,completed:attemptCompleted,attemptCompleted,success,mastered};
+  const attempt=cleanRecord(normalized);
+  (state.attempts[id] ||= []).push(attempt);state.attempts[id]=state.attempts[id].slice(-20);
+  if(!attemptCompleted)return false;
+  if(!state.completed.includes(id))state.completed.push(id);
+  const prior=state.records[id];
+  if(!prior || !prior.mastered || attempt.mastered)state.records[id]=cleanRecord(normalized);
+  return success;
+}
+export function nextStoryChapter(state,campaign='mars'){return missionsFor(campaign).find(chapter=>!state.completed.includes(chapter.id))?.id||(campaign==='mars'?'extended':null);}
+export const storyComplete=(state,campaign='mars')=>missionsFor(campaign).every(chapter=>state.completed.includes(chapter.id));

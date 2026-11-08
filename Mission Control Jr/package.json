@@ -10,7 +10,10 @@
     "preview": "vite preview --host 127.0.0.1",
     "test": "node --test",
     "models": "node scripts/generate-models.js",
-    "models:mission2": "node scripts/generate-expedition-models.js"
+    "models:mission2": "node scripts/generate-expedition-models.js",
+    "models:survival": "node scripts/generate-survival-models.js",
+    "data:normalize": "node scripts/normalize-nasa-data.mjs",
+    "models:lunar": "node scripts/generate-lunar-models.js"
   },
   "dependencies": {
     "three": "0.186.1"

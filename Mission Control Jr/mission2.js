@@ -1,11 +1,14 @@
 import {HOME,RIDGE,HAZARD,ROUTES,distance,returnForecast,surfaceAt} from './expedition-terrain.js';
 import {createRoverState} from './rover-controller.js';
+import {createMessage,updateMessage} from './simulation/messages.js';
 export const SAVE_KEY='mission-control-jr.episodes.v1';
 export const SERVICE={spare:{x:-4,z:8.1},battery:{x:10,z:13},wheels:{x:12.5,z:10},camera:{x:10,z:7},comms:{x:5,z:9}};
 export function reportStations(m){const p=ROUTES[m.route||'wash'].points;return m.route==='wash'?[p[2],p[3]]:[p[1],p[2]];}
 export function inspectionPoint(m){return m.route==='rim'?{x:59,z:-132}:m.route==='direct'?{x:25,z:-105}:{x:7,z:-134};}
 export const TRAVERSE_QUESTION='Do the layered rocks at Kestrel Ridge justify a longer expedition?';
-export function createExpedition(){return {phase:'briefing',started:false,briefAccepted:false,spareCollected:false,walker:{x:6,z:12},reports:[false,false],detour:false,dataTransferred:false,checks:{battery:false,wheels:false,camera:false,comms:false,brakes:false},pinFound:false,cameraFound:false,route:null,reason:false,driving:false,aboard:false,brakeStart:0,brakeTurn:0,brakeMoved:false,vehicle:createRoverState(),battery:100,oxygen:100,returnReserve:20,elapsed:0,hazard:false,reported:false,photos:{context:false,close:false},frames:{},observation:false,sample:false,scienceComplete:false,returned:false,ended:false,outcome:null,assisted:false,checkpoint:null,eco:false,drivingSeconds:0,overspeed:0,collisions:0,slipSeconds:0,marginReviewed:false,optionalReviewed:false,trail:[],events:[],waypoint:0,overspeedAge:0};}
+export function createExpedition(){return {phase:'briefing',started:false,briefAccepted:false,spareCollected:false,walker:{x:6,z:12},reports:[false,false],detour:false,dataTransferred:false,earthStatus:null,earthFieldReport:null,checks:{battery:false,wheels:false,camera:false,comms:false,brakes:false},pinFound:false,cameraFound:false,route:null,reason:false,driving:false,aboard:false,brakeStart:0,brakeTurn:0,brakeMoved:false,vehicle:createRoverState(),battery:100,oxygen:100,returnReserve:20,elapsed:0,hazard:false,reported:false,photos:{context:false,close:false},frames:{},observation:false,sample:false,scienceComplete:false,returned:false,ended:false,outcome:null,assisted:false,checkpoint:null,eco:false,drivingSeconds:0,overspeed:0,collisions:0,slipSeconds:0,marginReviewed:false,optionalReviewed:false,trail:[],events:[],waypoint:0,overspeedAge:0};}
+function earthPacket(id,time,payload){const packet=createMessage({id,createdAt:time,outboundSeconds:720,processingSeconds:0,inboundSeconds:0,payload});updateMessage(packet,time,true);return packet;}
+function updateEarthPackets(m){for(const packet of [m.earthStatus,m.earthFieldReport])if(packet)updateMessage(packet,m.elapsed,true);}
 export function applyStormCarry(m,carry){if(carry?.stormOutcome==='survived'||carry?.stormOutcome==='evacuated'){m.campaignOutcome=carry.stormOutcome;m.battery=carry.stormOutcome==='survived'?88:84;m.returnReserve=24;}return m;}
 export function event(m,type,text){m.events.push({type,text,time:m.elapsed,x:m.vehicle.x,z:m.vehicle.z,battery:m.battery,oxygen:m.oxygen});if(m.events.length>300)m.events.shift();}
 export function checkpoint(m){if(!m.vehicle.parking||Math.abs(m.vehicle.speed)>.05||surfaceAt(m.vehicle.x,m.vehicle.z)==='loose')return;const {checkpoint:old,...data}=m;m.checkpoint=JSON.parse(JSON.stringify(data));}
@@ -81,7 +84,7 @@ export function act2(m,type,value){
     if(!nearBase||!parked)return no('Return to the Meridian apron, stop, and set P before logging departure.');
     if(!m.aboard)return no('Board the rover with Amara first.');
     if(!Object.values(m.checks).every(Boolean))return no('Readiness is incomplete.');
-    m.route=value.route;m.reason=true;m.marginReviewed=true;m.phase='outbound';m.waypoint=1;m.trail=[{x:m.vehicle.x,z:m.vehicle.z}];checkpoint(m);message='Departure report logged. Drive the selected corridor; change course if the evidence changes.';line='departure';
+    m.route=value.route;m.reason=true;m.marginReviewed=true;m.phase='outbound';m.waypoint=1;m.trail=[{x:m.vehicle.x,z:m.vehicle.z}];m.earthStatus=earthPacket('departure-status',m.elapsed,'Departure status');checkpoint(m);message='Departure report logged. Drive the selected corridor; change course if the evidence changes.';line='departure';
   }else if(type==='report'){
     const i=m.reports.findIndex(done=>!done);if(m.phase!=='outbound'||i<0)return no('Both outbound station reports are already complete.');
     if(distance(m.vehicle,reportStations(m)[i])>13)return no('Reach the current report station; another checkpoint cannot substitute for it.');
@@ -111,7 +114,7 @@ export function act2(m,type,value){
   }else if(type==='sample'){
     if(m.phase!=='science'||!m.scienceComplete||m.aboard)return no('Document the context on foot before collecting.');if(m.sample)return no('The fragment is already labeled.');
     const f=forecast(m,18,1),margin=m.returnReserve||20;m.optionalReviewed=true;if(f.battery<margin||f.oxygen<margin)return no('Optional work would breach the forecast return margin. Preserve the record and return.');
-    m.sample=true;m.battery-=1;m.oxygen-=1.8;m.elapsed+=18;message='Loose fragment collected and linked to the recorded contact. Work cost: 18 simulated seconds.';
+    m.sample=true;m.battery-=1;m.oxygen-=1.8;m.elapsed+=18;updateEarthPackets(m);message='Loose fragment collected and linked to the recorded contact. Work cost: 18 simulated seconds.';
   }else if(type==='return'){
     if(!['outbound','science'].includes(m.phase))return no('The expedition has not departed.');
     if(Math.abs(m.vehicle.speed)>.05||!m.vehicle.parking)return no('Park before revising the return route.');
@@ -122,14 +125,14 @@ export function act2(m,type,value){
     m.phase='postdrive';message='Luca: rover secured at Meridian. Dismount and transfer the expedition record at the operations terminal.';line='dock';checkpoint(m);
   }else if(type==='transfer'||type==='crew'){
     if(m.phase!=='postdrive'||m.aboard||distance(m.walker,SERVICE.comms)>3)return no('Dismount and approach the operations terminal at Meridian.');
-    if(type==='transfer'){if(m.dataTransferred)return no('The expedition record is already transferred.');m.dataTransferred=true;message=`Field record transferred: ${Object.values(m.photos).filter(Boolean).length} images, ${m.reports.filter(Boolean).length} route reports, ${m.events.length} log entries. Confirm both crew to close the mission.`;}
+    if(type==='transfer'){if(m.dataTransferred)return no('The expedition record is already transferred.');m.dataTransferred=true;m.earthFieldReport=earthPacket('field-record',m.elapsed,'Field record');message=`Field record transferred locally and sent toward Earth: ${Object.values(m.photos).filter(Boolean).length} images, ${m.reports.filter(Boolean).length} route reports, ${m.events.length} log entries. Confirm both crew to close the mission.`;}
     else {if(!m.dataTransferred)return no('Transfer the field record before the final crew count.');m.returned=true;finish2(m);message='Luca: Jin and Amara accounted for. Elena: evidence received. Your decisions are ready for debrief.';line=m.outcome;}
   }else return no('Unknown expedition action.');
   event(m,type,message);return {ok:true,message,line};
 }
 export function advance2(m,dt,telemetry,paused=false){
   if(paused||!m.started||m.ended||!['outbound','science','return'].includes(m.phase))return;
-  m.elapsed+=dt;m.oxygen=Math.max(0,m.oxygen-dt*.1);m.battery=Math.max(0,m.battery-dt*.012-telemetry.metres*(m.eco?.83:1)*({firm:.075,rough:.12,loose:.225}[telemetry.surface]||.075)-(telemetry.poweredSlip?dt*.18:0));
+  m.elapsed+=dt;updateEarthPackets(m);m.oxygen=Math.max(0,m.oxygen-dt*.1);m.battery=Math.max(0,m.battery-dt*.012-telemetry.metres*(m.eco?.83:1)*({firm:.075,rough:.12,loose:.225}[telemetry.surface]||.075)-(telemetry.poweredSlip?dt*.18:0));
   if(telemetry.metres>0.001){m.drivingSeconds+=dt;m.drivenMetres=(m.drivenMetres||0)+telemetry.metres;const limit={firm:12,rough:8,loose:4}[telemetry.surface];if(telemetry.speed>limit){m.overspeedAge+=dt;if(m.overspeedAge>2)m.overspeed+=dt;}else m.overspeedAge=0;}
   if(telemetry.collision){m.collisions++;event(m,'collision','Vehicle clearance contact. Stop, reassess, and reverse into clear ground.');}
   if(telemetry.poweredSlip)m.slipSeconds+=dt;

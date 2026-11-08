@@ -3,11 +3,14 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 import { EVENTS, WORK } from '../story.js';
+import {modeledStormExposure,remainingCrewCondition} from '../simulation/legacy-exposure.js';
+import {selectDecisionReview} from '../simulation/decision-review.js';
 
 // Exercise the actual mission controller without requiring WebGL or audio.
 const main = readFileSync(new URL('../main.js', import.meta.url), 'utf8');
 const controller = main.slice(main.indexOf('// ---------- Game state'), main.indexOf('// ---------- Loop'));
 function game(random = () => 0.99) {
+  const completions=[];
   class Element {
     children = [];
     style = {};
@@ -28,8 +31,8 @@ function game(random = () => 0.99) {
     createElement: () => new Element(),
   };
   const context = vm.createContext({
-    EVENTS, WORK, document, shelter: { visible: false },
-    playBeep() {}, startAudio() {}, completeChapter() {}, openJourney() {}, Math: Object.assign(Object.create(Math), { random }),
+    EVENTS, WORK, modeledStormExposure, remainingCrewCondition, selectDecisionReview, document, shelter: { visible: false }, roverShelter:{visible:false},
+    playBeep() {}, startAudio() {}, completeChapter(...args) { completions.push(args); }, openJourney() {}, Math: Object.assign(Object.create(Math), { random }),
   });
   vm.runInContext(controller + `
     globalThis.game = {
@@ -39,15 +42,16 @@ function game(random = () => 0.99) {
     };
     newGame();
   `, context);
-  return { ...context.game, api: context.game, elements, context };
+  return { ...context.game, api: context.game, elements, context, completions };
 }
 
 test('restart clears storm, shelter, event resolution and ending state', () => {
   const { api, context, elements } = game();
-  vm.runInContext('stormLevel = 1; shelter.visible = true; state.eventDone = 3; state.ended = true;', context);
+  vm.runInContext('stormLevel = 1; shelter.visible = true; roverShelter.visible = true; state.eventDone = 3; state.ended = true;', context);
   api.newGame();
   assert.equal(api.storm, 0);
   assert.equal(context.shelter.visible, false);
+  assert.equal(context.roverShelter.visible,false);
   assert.equal(api.state.sol, 1);
   assert.equal(api.state.ended, false);
   assert.equal(api.state.eventDone, undefined);
@@ -77,25 +81,37 @@ test('fungus poisoning injures two different crew members with the correct cause
   assert.equal(api.state.log.filter(line => line.includes('fungus poisoning')).length, 2);
 });
 
-test('radiation affects the entire unshielded crew, and shelter prevents it', () => {
-  for (const shielded of [false, true]) {
-    const { api } = game();
-    api.state.sol = 27;
-    api.state.flags.shelterBuilt = shielded;
+test('water, rover, and no added shelter leave distinct nonzero modeled exposure', () => {
+  for (const [shelterType,prep,exposure,condition] of [['water',55,15,97],['rover',45,25,95],[null,20,50,90]]) {
+    const { api } = game();api.state.sol=27;api.state.shelterType=shelterType;api.state.res.radiation=prep;
     api.resolveChoice(api.currentEvent().choices[0]);
-    assert.ok(api.state.crew.every(c => c.hp === (shielded ? 100 : 50)));
+    assert.ok(api.state.crew.every(c=>c.hp===condition));assert.equal(api.state.exposurePoints,exposure);
   }
 });
 
-test('fatal event immediately ends the mission and refreshes crew display', () => {
+test('shelter reallocates water and greenhouse work yields a delayed supplement',()=>{
+  const {api}=game();api.state.sol=24;const before=api.state.res.water;
+  api.resolveChoice(api.currentEvent().choices[0]);assert.equal(api.state.res.water,before);assert.equal(api.state.shieldWater,15);assert.equal(api.state.shelterType,'water');
+  const g=game().api;const initialFood=g.state.res.food;g.chooseWork(WORK[2]);assert.ok(g.state.res.food<initialFood);assert.equal(g.state.cropProgress,1);
+  g.chooseWork(WORK[2]);g.state.eventDone=3;g.chooseWork(WORK[4]);assert.equal(g.state.cropProgress,0);assert.ok(g.state.log.some(line=>line.includes('fresh-food supplement')));
+});
+test('water and rover shelter choices show distinct physical protection at the outpost',()=>{
+ const water=game(),rover=game();water.api.state.sol=24;rover.api.state.sol=24;rover.api.state.flags.roverSalvaged=true;
+ water.api.resolveChoice(water.api.currentEvent().choices.find(choice=>choice.shelterType==='water'));
+ rover.api.resolveChoice(rover.api.currentEvent().choices.find(choice=>choice.shelterType==='rover'));
+ assert.equal(water.context.shelter.visible,true);assert.equal(water.context.roverShelter.visible,false);assert.equal(rover.context.shelter.visible,false);assert.equal(rover.context.roverShelter.visible,true);
+});
+
+test('cumulative training hazards never reduce crew condition to zero or end the exercise with deaths', () => {
   const { api, elements } = game();
   api.state.sol = 27;
   api.state.crew.forEach(c => { c.hp = 10; });
   api.resolveChoice(api.currentEvent().choices[0]);
-  assert.equal(api.state.ended, true);
-  assert.match(elements.get('modal-body').innerHTML, /Silent Outpost/);
-  assert.match(elements.get('crew').innerHTML, /HP 0/);
-  assert.equal(elements.get('work').children.length, 0);
+  assert.equal(api.state.ended, false);
+  assert.ok(api.state.crew.every(c=>c.hp>=1));
+  assert.doesNotMatch(api.state.log.join(' '),/did not survive|death/i);
+  assert.match(elements.get('crew').innerHTML,/Condition 1/);
+  assert.ok(elements.get('work').children.length>0);
 });
 
 test('exhaustion injures the tired astronaut instead of a rested colleague', () => {
@@ -129,6 +145,14 @@ test('mission completion keeps the HUD on Sol 30 and blocks further work', () =>
   elements.get('modal-buttons').children.find(button=>button.textContent==='Begin a new mission').onclick();
   assert.equal(api.state.sol, 1);
   assert.equal(api.state.ended, false);
+});
+
+test('Thirty Sols records a completed recovery attempt without claiming success or mastery',()=>{
+  const {api,elements,completions}=game();api.state.sol=30;api.state.crew.forEach(c=>{c.hp=20;});
+  api.chooseWork(WORK[4]);
+  assert.match(elements.get('modal-body').innerHTML,/Recovery Needed/);
+  const result=completions.find(([id])=>id==='extended')?.[1];
+  assert.equal(result.attemptCompleted,true);assert.equal(result.success,false);assert.equal(result.mastered,false);
 });
 
 test('conditional rover shelter and fungus events follow prior choices', () => {

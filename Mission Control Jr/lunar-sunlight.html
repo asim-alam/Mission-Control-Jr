@@ -1,0 +1,9 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#07141d"><title>Chasing the Sun · Mission Control Jr.</title><link rel="stylesheet" href="./expansion.css"></head>
+<body><div id="world" aria-label="Three-dimensional lunar south-pole training outpost"></div>
+<header><div><small>MISSION CONTROL JR. / HORIZON · LUNAR TRAINING</small><h1>Chasing the Sun</h1></div><div class="header-actions"><button id="pause">Pause</button><button id="journey">Journey</button></div></header>
+<main id="hud"><section class="panel metrics" aria-label="Mission resources"><div><span>Energy</span><strong id="energy">—</strong></div><div><span>Air reserve</span><strong id="air">—</strong></div><div><span>Solar output</span><strong id="exposure">—</strong></div><p id="clock"></p></section>
+<section class="panel task"><p class="eyebrow">CURRENT TASK</p><h2 id="objective">Loading mission…</h2><p id="notice" role="status" aria-live="polite"></p><div id="station-actions"></div></section>
+<section class="panel locations"><p class="eyebrow">WALK TO A STATION</p><div id="locations"></div><p>WASD or arrow keys to walk · drag to look · E to use nearby equipment</p></section></main>
+<div id="dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title"><div class="card"><p class="eyebrow" id="dialog-label">HORIZON / LUNAR TRAINING</p><h2 id="dialog-title"></h2><div id="dialog-body"></div><div id="dialog-actions"></div></div></div>
+<script type="module" src="./missions/lunar-sunlight/ui.js"></script></body></html>

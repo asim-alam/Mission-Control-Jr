@@ -1,15 +1,24 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {createJourney,finishChapter,nextStoryChapter,storyComplete,readJourney,readMissionCarry,saveJourney,JOURNEY_KEY} from '../journey-state.js';
+import {createJourney,completionStatus,finishChapter,nextStoryChapter,storyComplete,readJourney,readMissionCarry,saveJourney,JOURNEY_KEY} from '../journey-state.js';
+import {journeyUrl,missionFromUrl} from '../mission-routes.js';
+import {missionById,MISSIONS} from '../mission-registry.js';
 
 test('connected expedition advances through arrival, storm and rover and retains chapter results',()=>{
   const state=createJourney();assert.equal(nextStoryChapter(state),'orbit');
   assert.equal(finishChapter(state,'storm',{success:false}),false);assert.deepEqual(state.completed,[]);
   finishChapter(state,'orbit',{assisted:true,outcome:'Arrival qualified'});assert.equal(nextStoryChapter(state),'storm');
   finishChapter(state,'storm',{outcome:'Meridian protected'});assert.equal(nextStoryChapter(state),'rover');
-  finishChapter(state,'rover',{score:91,outcome:'success'});assert.equal(storyComplete(state),true);assert.equal(nextStoryChapter(state),'extended');assert.equal(state.records.rover.score,91);
+  finishChapter(state,'rover',{score:91,outcome:'success'});assert.equal(storyComplete(state),false);assert.equal(nextStoryChapter(state),'solar-shelter');assert.equal(state.records.rover.score,91);
   finishChapter(state,'rover',{score:94});assert.equal(state.completed.length,3);assert.equal(state.records.rover.score,94);
+  for(const id of ['solar-shelter','greenhouse','earth-delay'])finishChapter(state,id,{outcome:'complete'});assert.equal(storyComplete(state),true);assert.equal(nextStoryChapter(state),'extended');
+  assert.equal(nextStoryChapter(state,'moon'),'lunar-sunlight');finishChapter(state,'lunar-sunlight',{outcome:'complete'});assert.equal(nextStoryChapter(state,'moon'),'lunar-dust');assert.equal(storyComplete(state,'moon'),false);
+});
+test('mission links preserve a static subdirectory and recognize old direct routes',()=>{
+ const url=journeyUrl('https://example.org/mission-control/index.html','lunar-dust');assert.equal(url.href,'https://example.org/mission-control/index.html?mission=lunar-dust');
+ assert.equal(missionFromUrl(url.href,missionById),'lunar-dust');assert.equal(missionFromUrl('https://example.org/mission-control/storm',missionById),'storm');assert.equal(missionFromUrl('https://example.org/mission-control/index.html#strom',missionById),'storm');
+ for(const mission of MISSIONS){assert.equal(missionFromUrl(`https://example.org/mission-control/${mission.id}`,missionById),mission.id);assert.ok(Array.isArray(mission.prerequisites));assert.ok(Array.isArray(mission.learningTags));assert.ok(Array.isArray(mission.sourceIds));assert.ok(mission.assetBundle);}
 });
 test('chapter practice never marks earlier chapters complete and progress survives storage round trip',()=>{
   const state=createJourney();state.current='rover';finishChapter(state,'rover',{score:85});assert.equal(nextStoryChapter(state),'orbit');
@@ -23,6 +32,21 @@ test('storm and traverse carry-over notes survive progress saves without changin
   assert.equal(restored.records.storm.carry.stormOutcome,'survived');assert.equal(restored.records.rover.carry.mission2Outcome,'success');
   assert.equal(restored.records.storm.outcome,'survived');assert.equal(restored.records.rover.outcome,'success');
   assert.deepEqual(readMissionCarry(storage),{stormOutcome:'survived',successfulTraverse:true});
+});
+test('v1 saves migrate without losing extended carry; suspended attempts do not grant completion',()=>{
+  const items=new Map(),storage={setItem:(key,value)=>items.set(key,value),getItem:key=>items.get(key)};
+  const carry=Object.fromEntries(Array.from({length:18},(_,i)=>[`fact${i}`,i]));
+  items.set(JOURNEY_KEY,JSON.stringify({version:1,current:'storm',completed:['storm'],records:{storm:{outcome:'survived',carry}}}));
+  const state=readJourney(storage);assert.equal(state.version,2);assert.equal(state.records.storm.carry.fact17,17);
+  finishChapter(state,'rover',{attemptCompleted:false,success:false,outcome:'suspended'});assert.equal(state.completed.includes('rover'),false);assert.equal(state.attempts.rover[0].completed,false);assert.equal(state.attempts.rover[0].mastered,false);
+  assert.equal(finishChapter(state,'rover',{attemptCompleted:true,success:false,mastered:false,outcome:'safe-limited'}),false);assert.equal(state.completed.includes('rover'),true);assert.equal(state.attempts.rover[1].completed,true);assert.equal(state.attempts.rover[1].success,false);assert.equal(state.attempts.rover[1].mastered,false);assert.equal(state.records.rover.mastered,false);
+  finishChapter(state,'rover',{success:true,mastered:true,outcome:'success'});finishChapter(state,'rover',{success:true,mastered:false,outcome:'abort'});
+  assert.equal(state.records.rover.outcome,'success');saveJourney(state,storage);assert.deepEqual(readJourney(storage),state);
+});
+test('chapter cards distinguish goal completion from a safe stop and replay option',()=>{
+ assert.equal(completionStatus({success:true,mastered:true}),'✓ GOAL MET');
+ assert.equal(completionStatus({success:true,mastered:false}),'✓ COMPLETE · TRY ANOTHER PLAN');
+ assert.equal(completionStatus({success:false,mastered:false}),'SAFE STOP · REPLAY AVAILABLE');
 });
 test('every orbital briefing subtitle has a bundled Vorbis voice clip',()=>{
   const lines=JSON.parse(readFileSync(new URL('../dialogue-lines-orbit.json',import.meta.url)));assert.equal(Object.keys(lines).length,7);

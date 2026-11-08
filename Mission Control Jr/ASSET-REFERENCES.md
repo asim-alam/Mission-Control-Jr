@@ -85,3 +85,7 @@ The script writes only its four derivatives and inspection report in `assets/mod
 ## Orbital planet texture
 
 `assets/mars-orbit.webp` reuses the original **4096 × 2048** embedded diffuse JPEG from the user-supplied `mars.glb`, extracted through its diffuse material/texture/buffer-view references and encoded with Pillow as WebP at quality **88**, without resizing or altering the map. It provides a sharper orbital planet view than the optimized navigation-table globe texture. Credit: **Akshat**, [Mars on Sketchfab](https://sketchfab.com/3d-models/mars-9c7bbc64d8c74acfa9ec344c0fc10e1a), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), as stated in the supplied GLB's embedded metadata. Modification: embedded JPEG extracted and converted to WebP; the original GLB is unchanged. This artistic reference map is not a validated scientific or cartographic dataset.
+
+## Mission expansion models
+
+The original procedural generators `scripts/generate-survival-models.js` and `scripts/generate-lunar-models.js` create the project's fictional teaching hardware. Their generated GLBs in `assets/models/survival/` and `assets/models/lunar/` carry per-model metadata, dimensions, named nodes and collision-proxy descriptions. Generate them with `npm run models:survival` and `npm run models:lunar`; each directory's manifest records geometry counts and validator results. They are educational representations, not NASA flight hardware. Existing astronaut and rover models retain their credits above.

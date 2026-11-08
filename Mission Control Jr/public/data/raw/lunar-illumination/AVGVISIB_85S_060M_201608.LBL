@@ -1,0 +1,91 @@
+PDS_VERSION_ID            = "PDS3"
+PRODUCT_VERSION_ID        = "V1.05"
+DATA_SET_ID               = "LRO-L-LOLA-4-GDR-V1.0"
+PRODUCT_ID                = "AVGVISIB_85S_060M_201608"
+INSTRUMENT_HOST_NAME      = "LUNAR RECONNAISSANCE ORBITER"
+INSTRUMENT_NAME           = "LUNAR ORBITER LASER ALTIMETER"
+INSTRUMENT_ID             = "LOLA"
+MISSION_PHASE_NAME        = {"COMMISSIONING","NOMINAL MISSION","SCIENCE
+                              MISSION","EXTENDED SCIENCE MISSION"}
+TARGET_NAME               = MOON
+START_TIME                = 2009-07-13T17:33:17.246
+STOP_TIME                 = 2013-07-18T14:12:13
+PRODUCT_CREATION_TIME     = 2016-09-15T00:00:00
+PRODUCER_ID               = LRO_LOLA_TEAM
+PRODUCER_FULL_NAME        = "DAVID E. SMITH"
+PRODUCER_INSTITUTION_NAME = "GODDARD SPACE FLIGHT CENTER"
+DESCRIPTION               = "This data product is a map of the average
+   illumination by the solar disc of the Lunar South Pole at a resolution of
+   60 m/pix by 60 m/pix, true at the pole in polar stereographic
+   (spherical) projection.  The calculations are based on the LOLA elevation
+   map LDEM_85S_060M and are described in [MAZARICOETAL2011]. The values are
+   continuous between 0 (permanent shadow) and 1, and indicate the percentage
+   of timesteps where each pixel was sunlit (by any fraction of the solar
+   disc). Note a scaling was applied to fit the data in the INT16 value range.
+
+   This label describes an IMG file in the form of a binary resampling with
+   pixel registration.  "
+
+OBJECT                    = UNCOMPRESSED_FILE
+FILE_NAME                 = "AVGVISIB_85S_060M_201608.IMG"
+RECORD_TYPE               = FIXED_LENGTH
+FILE_RECORDS              = 5058
+RECORD_BYTES              = 10116
+^IMAGE                    = "AVGVISIB_85S_060M_201608.IMG"
+
+
+  OBJECT                  = IMAGE
+    NAME                  = AVERAGE_VISIBILITY
+    DESCRIPTION           = "Each sample is a binary value that indicates
+      whether that location is in permanent shadow (DN=0, scaling to 0)
+      or its average solar disc visibility (DN up to 25000, scaling to 1)."
+    LINES                 = 5058
+    LINE_SAMPLES          = 5058
+    DERIVED_MINIMUM       = 0
+    DERIVED_MAXIMUM       = 22111
+    SAMPLE_TYPE           = LSB_INTEGER
+    SAMPLE_BITS           = 16
+    UNIT                  = NONE
+    SCALING_FACTOR        = 0.00004
+    OFFSET                = 0.0
+
+/* NOTE:                                                                   */
+/* The conversion from Digital Number to the AVERAGE_VISIBILITY flag is:   */
+/* AVERAGE_VISIBILITY = (DN * SCALING_FACTOR) + OFFSET                     */
+
+  END_OBJECT              = IMAGE
+END_OBJECT                = UNCOMPRESSED_FILE
+
+OBJECT                    = IMAGE_MAP_PROJECTION
+ ^DATA_SET_MAP_PROJECTION     = "DSMAP_POLAR.CAT"
+ MAP_PROJECTION_TYPE          = "POLAR STEREOGRAPHIC"
+ KEYWORD_LATITUDE_TYPE        = "PLANETOCENTRIC"
+ MAP_RESOLUTION               = 505.389 <pix/deg>
+ A_AXIS_RADIUS                = 1737.4 <km>
+ B_AXIS_RADIUS                = 1737.4 <km>
+ C_AXIS_RADIUS                = 1737.4 <km>
+ FIRST_STANDARD_PARALLEL      = 'N/A'
+ SECOND_STANDARD_PARALLEL     = 'N/A'
+ POSITIVE_LONGITUDE_DIRECTION = "EAST"
+ CENTER_LATITUDE              = -90 <deg>
+ CENTER_LONGITUDE             = 0 <deg>
+ REFERENCE_LATITUDE           = 'N/A'
+ REFERENCE_LONGITUDE          = 'N/A'
+ LINE_FIRST_PIXEL             = 1
+ LINE_LAST_PIXEL              = 5058
+ SAMPLE_FIRST_PIXEL           = 1
+ SAMPLE_LAST_PIXEL            = 5058
+ MAP_PROJECTION_ROTATION      = 0.0
+ MAP_SCALE                    = 60 <m/pix>
+ MAXIMUM_LATITUDE             = -82.9 <deg>
+ MINIMUM_LATITUDE             = -90 <deg>
+ WESTERNMOST_LONGITUDE        = 'N/A'
+ EASTERNMOST_LONGITUDE        = 'N/A'
+ LINE_PROJECTION_OFFSET       = 2528.5 <pix>
+ SAMPLE_PROJECTION_OFFSET     = 2528.5 <pix>
+ COORDINATE_SYSTEM_TYPE       = "BODY-FIXED ROTATING"
+ COORDINATE_SYSTEM_NAME       = "MEAN EARTH/POLAR AXIS OF DE421"
+END_OBJECT                    = IMAGE_MAP_PROJECTION
+
+END
+

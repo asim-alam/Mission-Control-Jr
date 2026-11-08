@@ -45,8 +45,8 @@ export const EVENTS = {
     title: 'Sol 24 — Solar Particle Event Forecast',
     text: 'Earth reports a major solar flare. A radiation storm will hit Mars around Sol 27. The hab walls alone will not be enough.',
     choices: [
-      { label: 'Pack water tanks around the sleep area as shielding (−15 water)', fx: { water: -15, radiation: 35 }, flag: 'shelterBuilt', note: 'Water is an excellent radiation shield.' },
-      { label: 'Shelter inside the salvaged rover cabin', cond: (s) => s.flags.roverSalvaged, fx: { power: -10, radiation: 25 }, flag: 'shelterBuilt', note: 'Old hardware, put to new use.' },
+      { label: 'Move 15 water units around the sleep area as shielding', cond: (s) => s.res.water >= 15, fx: { radiation: 35 }, shieldWater: 15, shelterType: 'water', flag: 'shelterBuilt', note: 'The water stays in the shelter with less open access; the model still counts exposure.' },
+      { label: 'Shelter inside the salvaged rover cabin', cond: (s) => s.flags.roverSalvaged, fx: { power: -10, radiation: 25 }, shelterType: 'rover', flag: 'shelterBuilt', note: 'The rover cabin adds a different modeled protection level and uses power.' },
       { label: 'Trust the hab walls', fx: {}, note: 'Hope is not a plan.' },
     ],
   },
@@ -56,7 +56,7 @@ export const EVENTS = {
 export const WORK = [
   { id: 'power', label: 'Clean solar panels', fx: { power: 12 } },
   { id: 'life', label: 'Run O₂ / water recycling', fx: { oxygen: 8, water: 8, power: -4 } },
-  { id: 'farm', label: 'Tend the greenhouse', fx: { food: 8, morale: 2, water: -3 } },
+  { id: 'farm', label: 'Tend established greenhouse crops (−4 power, −3 water)', fx: { morale: 2, water: -3, power: -4 } },
   { id: 'repair', label: 'Maintain equipment', fx: { equipment: 12 } },
   { id: 'rest', label: 'Light duty & rest', fx: { morale: 6 }, rest: 20 },
 ];

@@ -71,9 +71,9 @@ test('Meridian home uses the requested headline and a low-rate disposable Three.
   assert.match(css, /home-scene-fallback/);
 });
 
-test('chapter navigation uses clean paths and removes the left shadow from home and orbit', () => {
+test('chapter navigation supports static entry paths and removes the left shadow from home and orbit', () => {
   const js = read('journey.js'), bridge = read('campaign-bridge.js'), css = read('hud-redesign.css'), storm = read('storm.html'), vite = read('vite.config.js');
-  assert.match(js, /const chapterPath=id=>`\/\$\{id\}`/);
+  assert.match(js, /const chapterPath=\(id,sampler=false\)=>journeyUrl\(location\.href,id,\{sampler\}\)\.href/);
   assert.match(js, /addEventListener\('popstate'/);
   assert.match(js, /function menu\(\{updatePath=true\}=\{\}\).*frame\.hidden=true/s);
   assert.match(js, /function resume\(\).*frame\.hidden=false/s);

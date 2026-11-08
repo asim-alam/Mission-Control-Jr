@@ -1,19 +1,27 @@
-# The Meridian Expedition — unified playable campaign
+# Mission Control Jr. — unified Mars and Moon campaigns
 
-Run `npm.cmd run dev` from the game folder and open **http://127.0.0.1:5173/**. Install with `npm.cmd ci` first only for a fresh extracted copy, while Vite is stopped. Production uses `npm.cmd run build`, then `npm.cmd run preview` and the printed local address.
+Run `npm run dev` from the game folder and open **http://127.0.0.1:5173/**. The current menu separates a six-chapter Mars story and a three-chapter lunar training assignment. Production uses `npm ci`, `npm test`, `npm run build`, then `npm run preview`. See [the mission expansion plan](MISSION-EXPANSION-PLAN.md) and its [current implementation status](docs/mission-expansion/implementation-status.md).
 
 ## Connected story
 
 1. **Arrival at Mars / Sol 11:** Jin docks with Asteria, diagnoses and repairs the relay, checks the field kit and transfer systems, verifies the lander and descends to Meridian.
 2. **Before the Storm / Sol 12:** the restored relay carries the warning. Jin restores outpost power and life-support reserves and protects the four-person crew. The fully prepared outcome opens the rover chapter.
 3. **Tracks in the Dust / Sol 16:** Jin and Amara prepare and test Rover Two, plan a traverse, make parked reports, inspect uncertain ground, record field science and return the crew and record to the outpost.
-4. **Thirty Sols / extended command simulation:** optional longer term decision training through the same campaign interface. Its separate simulated timeline is an extended exercise.
+4. **A Place to Hide / Sol 18:** move shielding supplies or use the rover cabin while managing water access, power, and modeled exposure.
+5. **The Greenhouse Promise / Sols 32–34:** support established crops through power and water trade-offs; harvest is a modest food supplement.
+6. **Earth Can’t Answer Yet / Sol 35:** repair locally, conserve while an actual modeled Earth packet travels, or suspend safely.
 
-Debriefs provide the next story transition. Journey pauses the active chapter; Return to active mission resumes it. Cards also allow independent practice, which does not award earlier chapters. All chapters use the same root URL with chapter hashes. Legacy HTML addresses redirect into the campaign. Internally, a single isolated scene frame loads one existing mission at a time, preserving their render/input code and stopping the old scene and audio when the chapter changes.
+Debriefs provide the next story transition. Journey pauses the active chapter; Return to active mission resumes it. Cards allow independent practice, which does not award earlier chapters. The registry defines stable routes; static hosts can use `index.html?mission=ID`. Active expansion chapters save versioned controller state locally. Internally, a single isolated scene frame loads one mission at a time and releases its renderer and assets when the chapter changes.
+
+## Separate lunar training assignment
+
+The Moon campaign takes place at fictional Horizon Outpost and has three chapters: **Chasing the Sun** (panel placement versus battery reserve), **Dust at the Door** (equipment handling, filtration, and airlock interlocks), and **Beyond the Ridge** (line of sight, relay setup, and return reserves). Lunar progress and carry are independent of Mars.
+
+**Thirty Sols** is an optional longer-term command simulation with its own timeline.
 
 ## Progress
 
-Campaign completion and outcome summaries save locally under `mission-control-jr.journey.v1`; a completed orbital checkpoint is imported when present. Arrival retains verified station procedures through its existing checkpoint. Surface scenes begin at their chapter entry after a page reload. While a chapter remains open, Journey preserves its live state. Storage failures leave the game playable with session-only campaign progress.
+Campaign completion and outcome summaries save locally under `mission-control-jr.journey.v1`; a completed orbital checkpoint is imported when present. Arrival retains verified station procedures through its existing checkpoint. The six expansion chapters retain a versioned active controller snapshot across reloads and offer continue/restart. Orbit retains its independent checkpoint. Storage failures leave gameplay available and explain that persistence is unavailable.
 
 ## Mars and station
 

@@ -1,6 +1,6 @@
 # Mission Control Jr. learning objectives
 
-This prototype uses language aimed at learners approximately 10–14 years old. The official challenge describes students but does not specify a precise age range. Game values and rates are deliberately simplified and are not operational mission-planning data.
+This prototype aims to use language for learners ages 7–12, the age range described by the challenge. Game values and rates are deliberately simplified and are not operational mission-planning data.
 
 ## What players practice
 
@@ -14,7 +14,7 @@ This prototype uses language aimed at learners approximately 10–14 years old. 
 
 ## NASA and partner-agency references
 
-- NASA Space Apps Challenge 2026, [Build a Junior Astronaut Mission Trainer](https://www.spaceappschallenge.org/2026/challenges/build-a-junior-astronaut-mission-trainer/): the challenge asks learners to balance outpost life support, radiation shielding, power and food production.
+- NASA Space Apps Challenge 2026, [Junior Astronaut Mission Trainer](https://www.spaceappschallenge.org/2026/challenges/junior-astronaut-mission-trainer/): the challenge asks learners to balance outpost life support, radiation shielding, power and food production.
 - NASA/JPL, [Mars rovers braving severe dust storms](https://www.jpl.nasa.gov/news/nasa-mars-rovers-braving-severe-dust-storms/): dust storms reduced solar-panel output and controllers conserved energy by suspending activities.
 - NASA Science, [Solar-panel dust accumulation and cleanings](https://science.nasa.gov/photojournal/solar-panel-dust-accumulation-and-cleanings/): deposited dust can reduce sunlight reaching solar arrays; wind can sometimes clear it.
 - NASA, [MOXIE](https://www.nasa.gov/space-technology-mission-directorate/tdm/mars-oxygen-in-situ-resource-utilization-experiment-moxie/): the technology demonstration extracts oxygen from carbon dioxide in Mars' atmosphere.

@@ -1,0 +1,59 @@
+{
+  "sep": {
+    "id": "2024-05-10T13:35:00-SEP-001",
+    "eventTime": "2024-05-10T13:35Z",
+    "instruments": [
+      {
+        "displayName": "GOES-P: SEISS >10 MeV"
+      }
+    ],
+    "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/SEP/30677/-1",
+    "versionId": 1
+  },
+  "marsLightTime": {
+    "date": "2026-11-14T00:00:00Z",
+    "oneWayMinutes": 11.01438304,
+    "target": "Mars (499)",
+    "observer": "Earth (399)",
+    "ephemeris": "mar099 / DE441"
+  },
+  "lettuceReference": {
+    "studyId": "OSD-269",
+    "title": "Microbiological and nutritional analysis of lettuce crops grown on the International Space Station-VEG03A",
+    "lightHours": 16,
+    "darkHours": 8,
+    "context": "ISS Veggie experiment; cultivation timing is a reference, not a Mars growth-rate measurement."
+  },
+  "lunarIllumination": {
+    "productId": "AVGVISIB_85S_060M_201608",
+    "pixelSizeMeters": 60,
+    "averagingYears": 18.6,
+    "patches": [
+      {
+        "id": "polar-patch",
+        "centerRow1Based": 2529,
+        "centerSample1Based": 2529,
+        "meanFraction": 0.2209792
+      },
+      {
+        "id": "nearby-patch",
+        "centerRow1Based": 2500,
+        "centerSample1Based": 2600,
+        "meanFraction": 0.132056
+      },
+      {
+        "id": "ridge-patch",
+        "centerRow1Based": 2700,
+        "centerSample1Based": 2400,
+        "meanFraction": 0.3442528
+      }
+    ]
+  },
+  "moonLightTime": {
+    "date": "2026-11-14T00:00:00Z",
+    "oneWayMinutes": 0.02254982,
+    "target": "Moon (301)",
+    "observer": "Earth (399)",
+    "ephemeris": "DE441"
+  }
+}

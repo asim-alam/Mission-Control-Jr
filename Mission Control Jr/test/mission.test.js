@@ -11,14 +11,23 @@ function prepare(choice='life'){
 }
 function shelter(m){assert.ok(act(m,'enter').ok);assert.ok(act(m,'seal').ok);for(let i=0;i<5;i++)advance(m,1);assert.ok(act(m,'report').ok);}
 
+test('early shelter records no battery recovery or allocation',()=>{
+  const m=begin();shelter(m);assert.equal(m.batteryRecovered,false);assert.equal(m.batteryInstalled,false);assert.equal(m.allocation,null);assert.equal(m.experimentData,0);
+});
+test('air processing needs power while research preserves observations',()=>{
+  const life=prepare('life'),research=prepare('research');act(life,'enter');act(life,'seal');act(research,'enter');act(research,'seal');
+  for(let i=0;i<5;i++){advance(life,1);advance(research,1);}assert.ok(life.resources.oxygen>research.resources.oxygen);assert.ok(research.experimentData>0);
+  const depleted=prepare('life');act(depleted,'enter');act(depleted,'seal');depleted.resources.power=0;const before=depleted.resources.oxygen;advance(depleted,1);assert.ok(depleted.resources.oxygen<before);
+});
+
 test('complete repairs and oxygen allocation produce the prepared ending',()=>{
-  const m=prepare();assert.equal(m.resources.oxygen,95);assert.equal(m.battery,false);
+  const m=prepare();assert.equal(m.resources.oxygen,77);assert.equal(m.battery,false);assert.equal(m.batteryRecovered,true);assert.equal(m.batteryInstalled,true);
   assert.equal(m.installed,true);assert.equal(m.resources.power,98);shelter(m);
   assert.equal(m.outcome,'prepared');assert.equal(objective(m),'Mission complete');
   assert.equal(act(m,'talk','elena').ok,false);
 });
 test('science allocation is a distinct crew survival outcome',()=>{
-  const m=prepare('research');assert.equal(m.resources.oxygen,55);shelter(m);assert.equal(m.outcome,'survived');
+  const m=prepare('research');assert.equal(m.resources.oxygen,77);shelter(m);assert.equal(m.outcome,'survived');assert.ok(m.experimentData>0);
 });
 test('early shelter and late failure are reachable without soft locks',()=>{
   const early=begin();shelter(early);assert.equal(early.outcome,'survived');
