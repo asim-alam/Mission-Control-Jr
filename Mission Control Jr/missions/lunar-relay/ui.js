@@ -1,51 +1,105 @@
-import {startPip} from '../../companion.js';startPip('lunar-relay');
-import {tuneScenario,reserveText} from '../../simulation/difficulty.js';
+// "Over the Hill" — story, trip plan, rover drives, Earth's live help and the debrief.
+import {runMission} from '../shared/controller.js';
+import {planCards, compareTable} from '../shared/hud.js';
+import {readHistory, pushHistory} from '../shared/runtime.js';
+import {tuneScenario} from '../../simulation/difficulty.js';
 import {lunarRelayScenario} from './scenario.js';
-import {learningDetail,learningMode,learningPrompt,learningChoices} from '../../simulation/learning.js';
-import {stationActionHandler} from '../../simulation/interactions.js';
-import {connectChapter,completeChapter,openJourney,journeyPaused} from '../../campaign-bridge.js';
-import {readJourney} from '../../journey-state.js';
 import {createMission} from './state.js';
-import {applyAction,advanceMission,getObjective,getResult,localLinkAvailable,returnForecast,serializeSnapshot,restoreSnapshot} from './actions.js';
-import {saveActiveAttempt,loadActiveAttempt,clearActiveAttempt} from '../../simulation/mission-storage.js';
-import {createScene} from './scene.js';
-const sampleMode=new URLSearchParams(location.search).get('sampler')==='1';const $=id=>document.getElementById(id);let carry={};try{carry=readJourney(localStorage).records['lunar-dust']?.carry||{};}catch{}
-let recoveredSnapshot=sampleMode?null:loadActiveAttempt('lunar-relay'),recoveredAttempt=!!recoveredSnapshot;let mission=recoveredSnapshot?restoreSnapshot(recoveredSnapshot):createMission({initialCarry:carry,scenario:tuneScenario('lunar-relay',lunarRelayScenario)}),world,modalOpen=true,checkpoint=null,comparison=null,reported=false,lastSaveAt=0;
-const button=(label,run,disabled=false)=>{const b=document.createElement('button');b.textContent=label;b.disabled=disabled;b.onclick=run;return b;};
-function modal(title,body,actions,showAll=false){const prompt=learningPrompt('lunar-relay'),detail=learningDetail('lunar-relay');let content=body;if(prompt)content+=`<aside class="decision-tip"><b>Think about it</b><br>${prompt}</aside>`;if(detail)content+=`<aside class="detail-note"><b>More details</b><br>${detail}</aside>`;modalOpen=true;if(world){world.player.enabled=false;world.player.release();}$("dialog-title").textContent=title;$("dialog-body").innerHTML=content;const choices=learningChoices(actions,showAll);$("dialog-actions").replaceChildren(...choices.map(a=>a.more?button(a.label,()=>modal(title,body,actions,true)):button(a.label,a.run,a.disabled)));$("dialog").hidden=false;$("dialog-actions").querySelector('button:not(:disabled)')?.focus();}
-function close(){modalOpen=false;$('dialog').hidden=true;if(world)world.player.enabled=!journeyPaused&&mission.phase==='active';render();}
-function persistMission(force=false){if(sampleMode)return;if(mission.phase==='brief')return;if(mission.phase==='debrief'){clearActiveAttempt('lunar-relay');return;}if(!force&&Date.now()-lastSaveAt<3000)return;lastSaveAt=Date.now();if(!saveActiveAttempt('lunar-relay',serializeSnapshot(mission)))mission.notice='Your game could not be saved. Keep this tab open.';}
-function recoverSavedAttempt(){modal('Welcome back!','<p>We found your saved game.</p>',[{label:'Keep playing',run:()=>{recoveredAttempt=false;close();}},{label:'Start over',run:()=>{clearActiveAttempt('lunar-relay');location.reload();}}]);}
-function run(action){mission.notice='';const result=applyAction(mission,action);if(!mission.notice)mission.notice=result.message;world?.update(mission);persistMission(true);if(['debrief','suspended'].includes(mission.phase)){debrief();return;}render();return result;}
-function sources(){modal('Radio on the Moon',`<p>A <a href="https://ssd.jpl.nasa.gov/horizons/" target="_blank" rel="noopener">NASA JPL Horizons</a> calculation shows a message takes only about ${mission.scenario.oneWaySeconds.toFixed(1)} seconds to go from the Moon to Earth. That is much faster than from Mars!</p><p>But radio goes in straight lines. A hill can block it. The line in the game shows where the radio can reach. <a href="https://www.nasa.gov/glenn/glenn-expertise-space-exploration/scan/lunar-surface-propagation/" target="_blank" rel="noopener">NASA: radio on the Moon</a> describes the challenge.</p>`,[{label:'Back',run:()=>mission.phase==='brief'?brief():['debrief','suspended'].includes(mission.phase)?debrief():close()}]);}
-function brief(){modal('Behind the hill',`<p>Elena: “Messages to Earth are fast from the Moon. But this big hill can block our radio!”</p><p>Drive to the near stop, or the far stop behind the hill. For the far stop, put a relay on the hill top. It passes the message over the hill. Keep enough battery to get home!</p><p>Walk with WASD or arrows. Drag to look. Press E next to a machine to drive to the next stop.</p>`,[{label:'Let’s go!',run:()=>{run({id:'begin'});close();}},{label:'NASA connection',run:sources}]);}
-function messageText(){if(!mission.message)return 'No packet';return {queued:'Queued: link blocked',outbound:'Flying to Earth…',processing:'At Earth',returning:'Traveling',delivered:'Delivered','reception-blocked':'Awaiting contact'}[mission.message.status];}
-async function travel(destination){const from=mission.positionZ;mission.notice='';const r=applyAction(mission,{id:'travelTo',payload:destination});if(!r.ok){mission.notice=r.message;if(mission.phase==='active')stationMenu();else debrief();return;}modalOpen=true;world.player.enabled=false;$('dialog').hidden=true;mission.notice=`Driving to ${destination}…`;const animation=world.animateTravel(mission,from);render();await animation;world.update(mission);mission.notice=r.message;close();}
-function stationMenu(){const actions=[],p=mission.position;if(p==='base'){
- if(!mission.routeInspected)actions.push({label:'Look at the map',run:()=>{run({id:'inspectRoute'});checkpoint=serializeSnapshot(mission);stationMenu();}});
- if(mission.routeInspected&&!mission.returned)for(const [scope,label]of [['near','Pick the near stop'],['far','Pick the far stop']])actions.push({label,run:()=>{run({id:'selectSurveyScope',payload:scope});stationMenu();}});
- if(mission.routePlan==='far'&&!mission.relayLoaded&&!mission.returned)actions.push({label:'Load the relay · 1 min',run:()=>{run({id:'loadRelayKit'});if(mission.phase==='active')stationMenu();}});
- if(mission.routePlan&&!mission.returned){if(mission.routePlan==='near')actions.push({label:'Drive to the near stop',run:()=>travel('near')});else{if(mission.relayLoaded)actions.push({label:'Drive to the hill top',run:()=>travel('saddle')});actions.push({label:'Drive straight to the far stop',run:()=>travel('far')});}}
- if(mission.returned)actions.push({label:'Check everyone is home',run:()=>{const r=run({id:'confirmDelivery'});if(r&&!r.ok)stationMenu();}});
- }else if(p==='saddle'){
- if(!mission.relayDeployed)actions.push({label:'Put up the relay pole · 3 min',run:()=>{run({id:'anchorRelay'});if(mission.phase==='active')stationMenu();}});
- if(mission.relayDeployed&&!mission.relayPowered&&mission.relayEnergyWh===0)actions.push({label:'Plug in relay battery',run:()=>{run({id:'connectRelayPower'});if(mission.phase==='active')stationMenu();}});
- for(const [hop,label]of [['base','Test hop to the base'],['field','Test hop to the far stop']])if(mission.relayPowered&&!mission.verifiedHops[hop])actions.push({label:`${label} · 30 sec`,run:()=>{run({id:'verifyHop',payload:hop});if(mission.phase==='active')stationMenu();}});
- actions.push({label:'Drive to the far stop',run:()=>travel('far')},{label:'Drive home',run:()=>travel('base')});
- }else{
- if(!mission.observations)actions.push({label:`Do science · ${p==='near'?'2':'4'} min`,run:()=>{run({id:'startProbe'});if(mission.phase==='active')stationMenu();}});
- if(mission.observations&&!mission.extraObservation&&!mission.message)actions.push({label:'Extra science · 3 min',run:()=>{run({id:'extraObservation'});if(mission.phase==='active')stationMenu();}});
- if(mission.observations&&!mission.message)actions.push({label:'Send message',run:()=>{run({id:'sendPacket'});stationMenu();}});
- actions.push({label:'Drive home',run:()=>travel('base')},{label:'Shorten survey',run:()=>{run({id:'shortenSurvey'});stationMenu();}});
- }
- if(mission.returned&&mission.observations&&!mission.message)actions.push({label:'Send message from the base',run:()=>{run({id:'sendPacket'});stationMenu();}});
- if(mission.message&&mission.message.status!=='delivered')actions.push({label:'Wait 10 seconds',run:()=>{run({id:'wait',payload:10});if(mission.phase==='active')stationMenu();}});
- actions.push({label:'NASA connection',run:sources},{label:'Back',run:close});const f=returnForecast(mission);
- modal(p==='base'?'Base map screen':p==='saddle'?'Hill top for the relay':`${p==='near'?'Near':'Far'} survey stop`,`<p>Radio to the base: <b>${localLinkAvailable(mission)?'working':'blocked'}</b> · Message to Earth: <b>${messageText()}</b>. Green line: radio works. Orange line: blocked.</p><p>You are at: ${p} · science: ${mission.observations} · relay: ${mission.relayDeployed?'up':'not up'}, ${mission.relayPowered?'has power':'no power'} · hops tested: ${Number(mission.verifiedHops.base)+Number(mission.verifiedHops.field)}/2.</p><p>At home you will have about ${Math.round(f.energyWh)} Wh battery and ${Math.round(f.suitUnits)} suit air. ${mission.notice||''}</p>`,actions);}
-function interact(targetId){const s=targetId?world?.stations.find(station=>station.id===targetId):world?.nearest();const distance=s?Math.hypot(world.player.position.x-s.stand.x,world.player.position.z-s.stand.z):Infinity;if(!s||s.id!==mission.position||distance>1.8){mission.notice='Walk to the machine here, then press E.';render();return;}if(mission.phase==='active')stationMenu();}
-function render(){if(!world)return;persistMission();$('energy').textContent=reserveText(mission.roverEnergyWh,mission.scenario.roverCapacityWh,'Wh');$('air').textContent=reserveText(mission.suitReserveUnits,100,'units');$('exposure').textContent=localLinkAvailable(mission)?'Available':'Blocked';$('clock').textContent=`Clock · ${Math.floor(mission.simSeconds/60)} min · Earth: ${messageText()}`;$('objective').textContent=getObjective(mission);$('notice').textContent=mission.notice||'';const s=world.nearest(),target=s?.id===mission.position&&s.distance<=1.8?s.title:'';if($('station-actions').dataset.station!==target){$('station-actions').dataset.station=target;$('station-actions').replaceChildren(...(target?[button(`Use ${target} · E`,stationActionHandler(s,interact))]:[]));}world.update(mission);}
-function debrief(){const r=getResult(mission);if(!reported){completeChapter('lunar-relay',{outcome:r.outcome,attemptCompleted:r.completed,success:r.completed,mastered:r.outcome==='relay-survey'||r.outcome==='direct-survey',carry:{version:1,...r}});reported=true;}const prior=comparison,compare=prior?`<h3>Same starting conditions</h3><p>Previous / this plan: observations ${prior.observations} / ${r.observations}; rover energy ${Math.round(prior.roverEnergyWh)} / ${Math.round(r.roverEnergyWh)} Wh; suit reserve ${Math.round(prior.suitReserveUnits)} / ${Math.round(r.suitReserveUnits)}; packet ${prior.message?.status||'not sent'} / ${r.message?.status||'not sent'}.</p>`:'';
- const titles={'suspended':'Game stopped','turnaround':'Safe turn back','relay-survey':'The relay worked!','direct-survey':'Science and home'};modal(titles[r.outcome],`<p>${r.outcome==='suspended'?'The battery got too low. Try another plan!':r.outcome==='turnaround'?'You did less, and brought everyone home safe. Good choice!':r.outcome==='relay-survey'?'Your relay passed the message over the hill. It used time and battery, but it worked!':'You did the science and got home with battery to spare.'}</p><p>Observations ${r.observations} · rover ${Math.round(r.roverEnergyWh)} Wh · suit ${Math.round(r.suitReserveUnits)} · relay battery ${Math.round(r.relayEnergyWh)} Wh · packet ${r.message?.status||'not sent'}.</p><p>${r.message?.departureAt!=null?`Your message waited ${Math.round(r.message.departureAt-r.message.createdAt)} seconds, then flew to Earth in ${mission.scenario.oneWaySeconds.toFixed(1)} seconds.`:'No message was sent this time.'}</p><p>Starting battery ${r.carryUsed?'came from Dust at the Door':'was the normal amount'}.</p><p>The hill and the relay are pretend, for the game.</p>${compare}`,[...(checkpoint?[{label:'Try another plan',run:()=>{comparison=r;mission=restoreSnapshot(checkpoint);reported=false;world.update(mission);close();}}]:[]),{label:'Start again',run:()=>{clearActiveAttempt('lunar-relay');recoveredAttempt=false;comparison=null;mission=createMission({initialCarry:carry,scenario:tuneScenario('lunar-relay',lunarRelayScenario)});checkpoint=null;reported=false;world.update(mission);if(mission.phase==='suspended')debrief();else if(recoveredAttempt)recoverSavedAttempt();else brief();}},{label:'Return to journey',run:openJourney},{label:'Sources',run:sources}]);}
-function pause(){if(modalOpen)return;modal('Paused','<p>The game is paused.</p>',[{label:'Resume',run:close},{label:'NASA connection',run:sources},{label:'Return to journey',run:openJourney}]);}
-$('pause').onclick=pause;$('journey').onclick=openJourney;document.addEventListener('visibilitychange',()=>{if(document.hidden&&!modalOpen&&mission.phase==='active')pause();});connectChapter('lunar-relay',value=>{if(world){world.player.enabled=!value&&!modalOpen&&mission.phase==='active';if(value)world.player.release();}});
-try{world=await createScene({container:$('world'),onInteract:interact,onPause:pause,onMove:dt=>{if(!modalOpen&&!journeyPaused&&mission.phase==='active'){advanceMission(mission,dt);if(mission.phase==='suspended')debrief();else render();}}});$('locations').replaceChildren(...world.stations.map(s=>button(s.title,()=>{if(modalOpen)return;if(s.id!==mission.position){mission.notice='Use the machine here to drive to another stop.';render();return;}const ok=world.walkTo(s.id);mission.notice=ok?`Walking to ${s.title}. Press E when you arrive.`:'You are already close, or the way is blocked.';render();})));world.update(mission);if(recoveredAttempt&&['inspect','active'].includes(mission.phase))recoverSavedAttempt();else if(['suspended','debrief'].includes(mission.phase))debrief();else brief();}catch(error){console.error(error);modal('The Moon drive did not load','<p>Please reload the page.</p>',[{label:'Return to journey',run:openJourney}]);}
+import {applyAction, getObjective, getSteps, getResult, PLANS, NEXT, hasLink, batteryHome, suitLeft} from './actions.js';
+import {createRelayScene} from './scene.js';
+
+const ID = 'lunar-relay';
+
+function sources(ctx) {
+  const sc = ctx.mission.scenario;
+  return `<p>Radio waves travel in straight lines. On the Moon there is no air to bend them, so a hill between two radios blocks the signal. NASA engineers study how radio travels across the lunar surface for future Artemis crews. <a href="https://www.nasa.gov/glenn/glenn-expertise-space-exploration/scan/lunar-surface-propagation/" target="_blank" rel="noopener">NASA Glenn: lunar surface radio</a>.</p>
+  <p>On ${sc.geometryDate.slice(0, 10)}, light (and radio) took about <b>${sc.oneWaySeconds} seconds</b> to go from the Moon to Earth. That number comes from NASA JPL’s Horizons system. Mars is much farther: there it takes many minutes.</p>
+  <p class="mx-made-up"><b>Made up for the game:</b> ${sc.limitation}</p>`;
+}
+
+function brief(ctx) {
+  const sc = ctx.mission.scenario;
+  ctx.dialog({label: 'MOON · SOUTH POLE · HORIZON BASE', title: 'Over the Hill', body: `
+    <p><b>Jin:</b> “Scientists on Earth want a core of soil from <b>Shadow Hollow</b>. It is on the other side of the big ridge.”</p>
+    <p><b>Luca (on the radio):</b> “Radio goes in straight lines. Once you drive behind the hill, we can’t hear you. A <b>radio relay</b> on the ridge top could pass messages over it.”</p>
+    <ul class="mx-howto"><li>🚙 Hop in the rover and drive. Every drive uses battery.</li><li>📡 Set up the relay: legs out, raise the mast, aim the dish.</li><li>🔩 Drill a core, put it in the sample box, send the data.</li><li>🏠 Drive home and go inside. Keep enough battery to get back!</li></ul>
+    <aside class="mx-detail"><b>More details</b><br>The rover starts at ${sc.batteryStart}% battery and you have ${sc.suitMinutes} minutes of suit air. A message from the Moon reaches Earth in about ${sc.oneWaySeconds} seconds.</aside>`,
+    actions: [{label: '▶ Let’s go!', primary: true, run: () => { ctx.act({id: 'begin'}, {quiet: true}); planBoard(ctx); }}, {label: 'Is this real?', run: () => ctx.sourcesDialog(() => brief(ctx))}]});
+}
+
+function planBoard(ctx) {
+  ctx.saveCheckpoint();
+  const last = readHistory(ID).at(-1);
+  ctx.dialog({label: 'PLAN THE TRIP', title: 'How will you talk to the base?', body: `<p>You can change your mind on the way. Your plan is just where you start.</p>
+    ${planCards(Object.entries(PLANS).map(([id, p]) => ({id, ...p, cost: {relay: '⏱ More time · 📶 Always in touch', direct: '⏱ Faster · 📵 Quiet behind the hill'}[id]})), last?.plan)}
+    ${last ? `<p class="mx-last">Last time: <b>${PLANS[last.plan]?.title || '—'}</b> · 🧪 ${last.cores} core${last.cores === 1 ? '' : 's'} · 🔋 ${last.battery}% left · 📵 ${last.quiet} quiet minutes. Try something new?</p>` : ''}`,
+    actions: [], onOpen: body => body.querySelectorAll('[data-plan]').forEach(b => { b.onclick = () => { ctx.act({id: 'choosePlan', payload: b.dataset.plan}); ctx.close(); }; })});
+}
+
+function driveDialog(ctx) {
+  const s = ctx.mission, sc = s.scenario;
+  const cards = NEXT[s.at].map(to => {
+    const leg = sc.legs[`${s.at}>${to}`], after = s.battery - leg.battery;
+    const homeAfter = batteryHome({...s, at: to});
+    return {id: to, icon: to === 'base' ? '🏠' : to === 'saddle' ? '⛰️' : '🕳️', title: sc.stops[to].name,
+      text: to === 'hollow' ? (hasLink({...s, at: 'hollow'}) ? 'The relay can hear you down there. 📶' : 'Behind the hill: no radio down there. 📵') : to === 'saddle' ? 'Top of the ridge. The base can see you here.' : 'Back home to Horizon Base.',
+      cost: `🔋 −${leg.battery}% · ⏱ ${leg.minutes} min${homeAfter > after ? ' · ⚠️ not enough to get home!' : ''}`};
+  });
+  const warn = s.hand ? '<p class="mx-tip">Put down what you are holding first.</p>' : s.drill !== 'rover' ? '<p class="mx-tip">Put the drill back on the rover first.</p>' : '';
+  ctx.dialog({label: 'ROVER · DRIVE', title: 'Where to?', body: `<p>🔋 Battery <b>${s.battery}%</b> · you need <b>${batteryHome(s)}%</b> to get home from here.</p>${warn}${planCards(cards)}`,
+    actions: [{label: '← Stay here', run: () => ctx.close()}],
+    onOpen: body => body.querySelectorAll('[data-plan]').forEach(b => { b.onclick = () => driveTo(ctx, b.dataset.plan); })});
+}
+async function driveTo(ctx, to) {
+  const s = ctx.mission;
+  if (s.hand || s.drill !== 'rover') { ctx.close(); ctx.act({id: 'drive', payload: to}); return; }
+  ctx.close(); ctx.busy = true; ctx.setControls();
+  try { await ctx.view.drive(to, ctx.sampleMode ? .4 : 7); } catch (e) { console.error(e); }
+  ctx.busy = false; ctx.act({id: 'drive', payload: to}); ctx.setControls();
+}
+
+function debrief(ctx) {
+  const r = getResult(ctx.mission), s = ctx.mission;
+  ctx.report.send({outcome: r.outcome, completed: r.completed, success: r.success, mastered: r.mastered, score: r.score, carry: {plan: r.plan, rating: r.rating, cores: r.cores}});
+  const history = r.completed && !ctx.sampleMode ? pushHistory(ID, {plan: r.plan, minutes: r.minutes, battery: r.battery, suit: r.suitLeft, cores: r.cores, quiet: r.quietMinutes, live: r.live}) : readHistory(ID);
+  ctx.persist(ctx.mission, true); ctx.setControls();
+  const title = !r.completed ? (s.stoppedEarly ? 'Practice stopped' : '😮‍💨 Suit air ran low') : {great: '🏆 Over the hill!', ok: '👍 Home with science', low: '🙂 Home safe, but no core'}[r.rating];
+  const tip = !r.completed ? 'Tip: plan your drives so you have air and battery to get home.'
+    : r.rescued ? 'Tip: the rover ran flat. Watch the white mark on the battery bar: that is what you need to get home.'
+    : !r.cores ? 'Tip: drill a core in Shadow Hollow before you come home.'
+    : r.live ? 'You talked to Earth live from behind the hill! The relay cost time, but you got extra science. Could a quick trip save battery?'
+    : 'Quick and safe! But nobody could hear you in the hollow. Could a relay on the ridge let Earth help you?';
+  const compare = history.length > 1 ? compareTable(history.map((h, i) => i === history.length - 1 ? 'This time' : `Try ${i + 1}`), [
+    {label: 'Plan', values: history.map(h => PLANS[h.plan]?.title || '—')},
+    {label: 'Cores', values: history.map(h => h.cores), better: 'high'},
+    {label: 'Sent live', values: history.map(h => h.live), better: 'high'},
+    {label: 'Quiet minutes', values: history.map(h => h.quiet), better: 'low'},
+    {label: 'Battery left (%)', values: history.map(h => h.battery), better: 'high'},
+    {label: 'Suit air left (min)', values: history.map(h => h.suit), better: 'high'}]) : '<p class="mx-last">Play again with the other plan to compare here.</p>';
+  ctx.dialog({label: 'MISSION REPORT · OVER THE HILL', title, body: `
+    ${r.completed ? `<p>🧪 Cores: <b>${r.cores}</b> · 📶 Sent live: <b>${r.live}</b> · 📵 Out of touch: <b>${r.quietMinutes} min</b></p>
+      <p>🔋 Battery left: <b>${r.battery}%</b> · 🧑‍🚀 Suit air left: <b>${r.suitLeft} min</b> · ⏱ ${r.minutes} min${r.relayUsed ? ` · 📡 relay mast ${(s.scenario.relay.baseM + r.stages * s.scenario.relay.stageM).toFixed(1)} m` : ''}</p>` : ''}
+    <p class="mx-tip">💡 ${tip}</p>${compare}
+    <aside class="mx-detail"><b>More details</b><br>The Moon is so close that Earth hears you about ${s.scenario.oneWaySeconds} seconds later, if your radio can reach. Future Artemis crews will use relays and satellites so they can talk from behind hills and craters.</aside>`,
+    actions: [
+      {label: '🔁 Try a different plan', primary: true, disabled: !ctx.checkpoint, run: () => ctx.retry(() => planBoard(ctx))},
+      {label: '↺ Play again', run: () => ctx.restart()}, {label: '🗺️ Back to the map', run: ctx.openJourney}, {label: 'Sources', run: () => ctx.sourcesDialog(() => debrief(ctx))}]});
+}
+
+runMission({
+  id: ID, title: 'Over the Hill', place: 'MISSION CONTROL JR. · MOON SOUTH POLE',
+  meters: [{id: 'battery', icon: '🔋', label: 'Rover battery'}, {id: 'suit', icon: '🧑‍🚀', label: 'Suit air'}, {id: 'radio', icon: '📶', label: 'Radio'}],
+  create: () => createMission({scenario: tuneScenario(ID, lunarRelayScenario), seed: 42 + readHistory(ID).length}),
+  rules: {applyAction, getObjective, getSteps},
+  scene: ctx => createRelayScene({container: document.getElementById('world'), getState: () => ctx.mission, act: a => ctx.act(a), onPause: () => ctx.pause(), onDrive: () => driveDialog(ctx)}),
+  brief, sources, debrief,
+  sampler(ctx) { ctx.act({id: 'begin'}, {quiet: true}); ctx.saveCheckpoint(); },
+  hud(ctx) {
+    const s = ctx.mission, sc = s.scenario, {hud} = ctx, link = hasLink(s), home = batteryHome(s);
+    hud.timer(s.phase === 'active' && s.plan ? `🧑‍🚀 ${suitLeft(s)} min · ${link ? '📶 Signal' : '📵 No signal'}` : '', suitLeft(s) <= sc.lowSuitMinutes);
+    hud.meter('battery', {value: s.battery, max: 100, text: `${s.battery}% · need ${home}%`, warn: (home + sc.batteryReserve) / 100});
+    hud.meter('suit', {value: suitLeft(s), max: sc.suitMinutes, text: `${suitLeft(s)} min`, warn: .2});
+    const queued = s.messages.filter(m => m.status === 'queued').length;
+    hud.meter('radio', {value: link ? 1 : 0, max: 1, text: link ? (queued ? 'Sending…' : 'Signal') : queued ? `No signal · ${queued} waiting` : 'No signal'});
+  },
+});

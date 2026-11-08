@@ -1,44 +1,92 @@
-import {startPip} from '../../companion.js';startPip('solar-shelter');
-import {tuneScenario,reserveText} from '../../simulation/difficulty.js';
+// "A Place to Hide" — story, plan board, storm screen and debrief. Shared plumbing lives in ../shared/controller.js.
+import {runMission} from '../shared/controller.js';
+import {planCards, compareTable} from '../shared/hud.js';
+import {readHistory, pushHistory} from '../shared/runtime.js';
+import {tuneScenario} from '../../simulation/difficulty.js';
 import {shelterScenario} from './scenario.js';
-import {learningDetail,learningMode,learningPrompt,learningChoices} from '../../simulation/learning.js';
-import {stationActionHandler} from '../../simulation/interactions.js';
-import {samplerSnapshot} from '../../simulation/sampler.js';
-import {connectChapter,completeChapter,openJourney,journeyPaused} from '../../campaign-bridge.js';
-import {readJourney} from '../../journey-state.js';
-import {createMission} from './state.js';
-import {applyAction,advanceMission,getObjective,getResult,serializeSnapshot,restoreSnapshot} from './actions.js';
-import {saveActiveAttempt,loadActiveAttempt,clearActiveAttempt} from '../../simulation/mission-storage.js';
-import {createScene} from './scene.js';
-const sampleMode=new URLSearchParams(location.search).get('sampler')==='1';
-const $=id=>document.getElementById(id);
-let carry={};try{const storm=readJourney(localStorage).records.storm?.carry;carry.experimentPreserved=(storm?.experimentData||0)>0;}catch{}
-let recoveredSnapshot=sampleMode?null:loadActiveAttempt('solar-shelter'),recoveredAttempt=!!recoveredSnapshot;let mission=recoveredSnapshot?restoreSnapshot(recoveredSnapshot):sampleMode?samplerSnapshot('solar-shelter'):createMission({initialCarry:carry,scenario:tuneScenario('solar-shelter',shelterScenario)}),world,modalOpen=true,checkpoint=null,comparison=null,reported=false,lastSaveAt=0;
+import {createMission, CREW} from './state.js';
+import {applyAction, advanceMission, getObjective, getSteps, getResult, PLANS, stormStart, stormEnd, teamDose, shelterTransmission, filledSlots, crewSafe} from './actions.js';
+import {createShelterScene} from './scene.js';
 
-const button=(label,run,disabled=false)=>{const b=document.createElement('button');b.textContent=label;b.disabled=disabled;b.onclick=run;return b;};
-function modal(title,body,actions,showAll=false){const prompt=learningPrompt('solar-shelter'),detail=learningDetail('solar-shelter');let content=body;if(prompt)content+=`<aside class="decision-tip"><b>Think about it</b><br>${prompt}</aside>`;if(detail)content+=`<aside class="detail-note"><b>More details</b><br>${detail}</aside>`;modalOpen=true;if(world){world.player.enabled=false;world.player.release();}$("dialog-title").textContent=title;$("dialog-body").innerHTML=content;const choices=learningChoices(actions,showAll);$("dialog-actions").replaceChildren(...choices.map(a=>a.more?button(a.label,()=>modal(title,body,actions,true)):button(a.label,a.run,a.disabled)));$("dialog").hidden=false;$("dialog-actions").querySelector('button:not(:disabled)')?.focus();}
-function close(){modalOpen=false;$('dialog').hidden=true;if(world)world.player.enabled=!journeyPaused&&['inspect','active'].includes(mission.phase);render();}
-function persistMission(force=false){if(sampleMode)return;if(mission.phase==='brief')return;if(mission.phase==='debrief'){clearActiveAttempt('solar-shelter');return;}if(!force&&Date.now()-lastSaveAt<3000)return;lastSaveAt=Date.now();if(!saveActiveAttempt('solar-shelter',serializeSnapshot(mission)))mission.notice='Your game could not be saved. Keep this tab open.';}
-function recoverSavedAttempt(){modal('Welcome back!','<p>We found your saved game.</p>',[{label:'Keep playing',run:()=>{recoveredAttempt=false;close();}},{label:'Start over',run:()=>{clearActiveAttempt('solar-shelter');location.reload();}}]);}
-function run(action){mission.notice='';const result=applyAction(mission,action);if(!mission.notice)mission.notice=result.message;world?.update(mission);persistMission(true);if(mission.phase==='debrief'||mission.phase==='suspended')return debrief();render();return result;}
-function showSources(){modal('This really happened!',`<p>NASA watched a real Sun storm on <strong>10 May 2024, 13:35 UTC</strong> using GOES-P. <a href="${mission.scenario.event.link}" target="_blank" rel="noopener">See NASA’s record</a>.</p><p>NASA saw it from near Earth. In our game, the timing and the numbers are pretend, so you can practise.</p><p>NASA explains how <a href="https://science.nasa.gov/science-research/heliophysics/how-nasa-will-protect-astronauts-from-space-radiation-at-the-moon/" target="_blank" rel="noopener">supplies can help create a radiation shelter</a>.</p>`,[{label:'Back',run:()=>mission.phase==='brief'?brief():['debrief','suspended'].includes(mission.phase)?debrief():close()}]);}
-function brief(){if(sampleMode)$('dialog-label').textContent='MISSION SAMPLER / PRACTICE';modal('A Sun storm is coming!',`<p>Elena: “The Sun is sending out a storm of invisible energy. It is called radiation. We need to get ready!”</p><p>Water blocks radiation. Put water bags around the safe room. Then call everyone inside. Use <b>WASD or arrow keys</b> to walk, drag to look, and press <b>E</b> near a station. The buttons can show you the way.</p><p>The clock stops while you read.</p>`,[{label:'Let’s go!',run:()=>{if(!sampleMode)run({id:'inspectMonitor'});else checkpoint=serializeSnapshot(mission);close();}},{label:'Is this real?',run:showSources}]);}
-function monitorMenu(){if(mission.phase==='inspect'){modal('Space weather screen',`<p>Luca: “This storm really happened. Our clock here is pretend.”</p><p>The storm starts in ${Math.round(mission.scenario.hazardStart/60)} minutes. Water around the safe room blocks some radiation. It cannot block all of it.</p>`,[{label:'Begin exercise',run:()=>{run({id:'begin'});checkpoint=serializeSnapshot(mission);close();}},{label:'See the NASA record',run:showSources},{label:'Back',run:close}]);return;}
- const actions=[{label:'Wait 2 minutes',run:()=>{run({id:'wait',payload:120});if(mission.phase==='active')close();}},{label:'Wait for the storm to pass',run:()=>{run({id:'wait',payload:Math.max(1,mission.scenario.hazardEnd-mission.simSeconds)});if(mission.phase==='active')close();}},{label:'Check on the crew and finish',run:()=>{const result=run({id:'confirmCrew'});if(result&&!result.ok)monitorMenu();}},{label:'Stop early',run:()=>{const result=run({id:'confirmCrew',payload:{early:true}});if(result&&!result.ok)monitorMenu();}},{label:'NASA connection',run:showSources},{label:'Back',run:close}];
- modal('Space weather screen',`<p>${mission.notice||'The clock shows when the storm comes.'}</p><p>Elapsed: ${Math.floor(mission.simSeconds/60)} minutes. The storm gets weaker at minute ${Math.round(mission.scenario.hazardEnd/60)}. Choose when to wait.</p>`,actions);}
-function waterMenu(){const actions=mission.bags.map(b=>({label:`Bag ${b.id+1}: ${b.location==='storage'?'move to shelter':'return to storage'} · ${Math.round(mission.scenario.bagTransferSeconds/60)} min`,run:async()=>{const from=b.location;mission.notice='';const result=applyAction(mission,{id:'moveBag',targetId:b.id,payload:from==='storage'?'shelter':'storage'});if(!result.ok){mission.notice=result.message;waterMenu();return;}modalOpen=true;world.player.enabled=false;$('dialog').hidden=true;mission.notice='Moving the water bag…';const animation=world.animateBag(b.id,mission);render();await animation;mission.notice=result.message;if(mission.phase==='active'){world.update(mission);waterMenu();}else debrief();}}));actions.push({label:'Use 1 kg for drinking',run:()=>{run({id:'accessSupply'});waterMenu();}},{label:'Back',run:close});
- const accessible=mission.bags.filter(b=>b.location==='storage').reduce((n,b)=>n+b.massKg,0),installed=mission.bags.filter(b=>b.location==='shelter').reduce((n,b)=>n+b.massKg,0);
- modal('Water bags',`<p>Jin: “Each bag takes ${mission.scenario.bagTransferSeconds/60===1?'one minute':Math.round(mission.scenario.bagTransferSeconds/60)+' minutes'} to move with the cart. We can still drink it later. It is just harder to reach.”</p><p><b>Available:</b> ${accessible} kg · <b>In shelter:</b> ${installed} kg · <b>Used:</b> ${mission.waterConsumedKg} kg</p><p>${mission.notice||''}</p>`,actions);}
-function shelterMenu(){const count=mission.bags.filter(b=>b.location==='shelter').length,all=Object.values(mission.crew).every(c=>c.location==='shelter');modal('Safe room',`<p>Luca: “More water means less radiation gets in. But some still gets in.”</p><p>${count} of 3 water modules are in place. ${all?'All four crew are safe inside.':'The crew is not in the safe room yet.'}</p>`,[{label:'Call the crew in · 1 min',disabled:all,run:()=>{run({id:'recallCrew'});if(mission.phase==='active')shelterMenu();}},{label:'Back',run:close}]);}
-function recorderMenu(){modal('Science machine',`<p>Amara: “My science machine needs power to finish. Turning it off saves power, but my test stops.”</p><p>Recorder: <b>${mission.experimentOn?'on':'off'}</b> · powered for ${Math.floor(mission.experimentPoweredSeconds/60)} of ${Math.round(mission.scenario.experimentGoalSeconds/60)} minutes.</p>${learningMode()==='simple'?'':'<p>The air and lights come first. The science machine uses more power on top.</p>'}`,[{label:mission.experimentOn?'Turn it off':'Turn it on',run:()=>{run({id:'setExperimentPolicy',payload:!mission.experimentOn});recorderMenu();}},{label:'Back',run:close}]);}
-function interact(targetId){const station=targetId?world?.stations.find(station=>station.id===targetId):world?.nearest();const distance=station?Math.hypot(world.player.position.x-station.stand.x,world.player.position.z-station.stand.z):Infinity;if(!station||distance>1.5){mission.notice='Walk closer, then press E.';render();return;}if(mission.phase==='inspect'&&station.id!=='monitor'){mission.notice='First look at the space weather screen.';render();return;}if(station.id==='monitor')monitorMenu();if(station.id==='water'&&mission.phase==='active')waterMenu();if(station.id==='shelter'&&mission.phase==='active')shelterMenu();if(station.id==='recorder'&&mission.phase==='active')recorderMenu();}
-function render(){if(!world)return;persistMission();const r=getResult(mission);$('energy').textContent=reserveText(mission.energyWh,mission.scenario.capacityWh,'Wh');$('air').textContent=reserveText(mission.airReserveUnits,100,'units');$('exposure').textContent=r.maxExposurePoints.toFixed(1);$('clock').textContent=`Training clock · ${Math.floor(mission.simSeconds/60)}:${String(Math.floor(mission.simSeconds%60)).padStart(2,'0')}`;$('objective').textContent=getObjective(mission);$('notice').textContent=mission.notice||'';const station=world.nearest();const target=station?.distance<=1.5?station.title:'';if($('station-actions').dataset.station!==target){$('station-actions').dataset.station=target;$('station-actions').replaceChildren(...(target?[button(`Use ${target} · E`,stationActionHandler(station,interact))]:[]));}world.update(mission);}
-function debrief(){const result=getResult(mission);if(!reported){completeChapter('solar-shelter',{outcome:result.outcome,attemptCompleted:result.completed,success:result.completed,mastered:result.outcome==='useful-record',carry:{version:1,...result}});reported=true;}
- const summary={...result};const prior=comparison;const compare=prior?`<h3>Same starting conditions</h3><p>Previous / this attempt: shelter bags ${prior.shelterLayout} / ${summary.shelterLayout}; energy ${Math.round(prior.energyWh)} / ${Math.round(summary.energyWh)} Wh; exposure ${prior.maxExposurePoints.toFixed(1)} / ${summary.maxExposurePoints.toFixed(1)} points; recorder ${Math.floor(prior.experimentPoweredSeconds/60)} / ${Math.floor(summary.experimentPoweredSeconds/60)} minutes.</p>`:'';
- modal(result.outcome==='suspended'?'Game stopped':result.outcome==='limited'?'You stopped early':result.outcome==='useful-record'?'Everyone safe, and science done!':'Crew first, science later',`<p>${result.outcome==='suspended'?'The air got too low. Try again!':result.outcome==='limited'?'You stopped early. The crew is safe. The science is not finished.':result.outcome==='useful-record'?'You kept the crew safe AND finished the science. Great plan!':'You saved power for the crew. That was a safe choice. The science can wait.'}</p><p>Water remaining: ${result.waterRemainingKg} kg; shelter modules: ${result.shelterLayout}; energy: ${Math.round(result.energyWh)} Wh; modeled exposure: ${result.maxExposurePoints.toFixed(1)} points; recorder: ${Math.floor(result.experimentPoweredSeconds/60)} minutes.</p><p>The radiation numbers are pretend. Water helps a lot, but it cannot stop all of it.</p>${compare}`,[{label:'Try a different plan',run:()=>{comparison=summary;mission=restoreSnapshot(checkpoint);reported=false;world.update(mission);close();}},{label:'Play again',run:()=>{clearActiveAttempt('solar-shelter');recoveredAttempt=false;comparison=null;mission=sampleMode?samplerSnapshot('solar-shelter'):createMission({initialCarry:carry,scenario:tuneScenario('solar-shelter',shelterScenario)});checkpoint=null;reported=false;world.update(mission);if(mission.phase==='suspended')debrief();else if(recoveredAttempt)recoverSavedAttempt();else brief();}},{label:'Return to journey',run:openJourney},{label:'Sources',run:showSources}]);}
-function pause(){if(modalOpen)return;modal('Paused',`<p>The game is paused.</p>`,[{label:'Resume',run:close},{label:'Sources',run:showSources},{label:'Return to journey',run:openJourney}]);}
-$('pause').onclick=pause;$('journey').onclick=openJourney;document.addEventListener('visibilitychange',()=>{if(document.hidden&&!modalOpen&&mission.phase==='active')pause();});
-connectChapter('solar-shelter',value=>{if(world){world.player.enabled=!value&&!modalOpen&&['inspect','active'].includes(mission.phase);if(value)world.player.release();}});
-try{world=await createScene({container:$('world'),onInteract:interact,onPause:pause,onMove:dt=>{if(!modalOpen&&!journeyPaused){if(mission.phase==='active')advanceMission(mission,dt);if(mission.phase==='suspended')debrief();else render();}}});
- $('locations').replaceChildren(...world.stations.map(s=>button(s.title,()=>{if(modalOpen)return;world.walkTo(s.id);mission.notice=`Walking to ${s.title}. Press E when you arrive.`;render();})));world.update(mission);if(recoveredAttempt&&['inspect','active'].includes(mission.phase))recoverSavedAttempt();else if(['suspended','debrief'].includes(mission.phase))debrief();else brief();
-}catch(error){console.error(error);modal('The base did not load','<p>Please reload the page.</p>',[{label:'Return to journey',run:openJourney}]);}
+const ID = 'solar-shelter';
+const name = id => id[0].toUpperCase() + id.slice(1);
+
+function sources(ctx) {
+  return `<p>On <b>10 May 2024</b>, NASA’s space weather team recorded a real burst of fast particles from the Sun, measured by the GOES satellite near Earth. <a href="${ctx.mission.scenario.event.link}" target="_blank" rel="noopener">See NASA’s record</a>.</p>
+  <p>NASA plans for crews to shelter behind water, food and supplies when a storm like this comes. <a href="https://science.nasa.gov/science-research/heliophysics/how-nasa-will-protect-astronauts-from-space-radiation-at-the-moon/" target="_blank" rel="noopener">Read how NASA protects astronauts</a>.</p>
+  <p class="mx-made-up"><b>Made up for the game:</b> ${ctx.mission.scenario.limitation}</p>`;
+}
+function brief(ctx) {
+  const back = ctx.carry.stormOutcome ? '<p>You kept the base safe in the dust storm. Now a different kind of storm is coming.</p>' : '';
+  ctx.dialog({label: 'MARS DAY 18 · SPACE WEATHER ALERT', title: 'A storm from the Sun!', body: `${back}
+    <p><b>Elena:</b> “The Sun just threw out a cloud of super-fast particles. They are invisible, but they can hurt our bodies. They reach Mars in about <b>${Math.round(ctx.mission.scenario.warningSeconds / 60)} minutes</b>!”</p>
+    <p>Build a shelter around the crew. <b>Water</b>, <b>plastic</b> and <b>packed supplies</b> all block particles. Then call everyone inside.</p>
+    <ul class="mx-howto"><li>👀 Look at a thing and press <b>E</b> (or click it) to pick it up.</li><li>🟨 Carry it to a glowing yellow spot on the shelter.</li><li>🗣️ Walk up to a crew member and press <b>E</b> to call them.</li><li>↩️ Press <b>Q</b> to put a shield back.</li></ul>
+    <aside class="mx-detail"><b>More details</b><br>Mars has a thin atmosphere and no global magnetic field, so more particles reach the ground than on Earth. The planet itself blocks everything coming from below, so the roof matters most.</aside>`,
+    actions: [{label: '▶ Let’s go!', primary: true, run: () => { ctx.act({id: 'begin'}, {quiet: true}); planBoard(ctx); }}, {label: 'Is this real?', run: () => ctx.sourcesDialog(() => brief(ctx))}]});
+}
+function planBoard(ctx) {
+  ctx.saveCheckpoint();
+  const last = readHistory(ID).at(-1);
+  ctx.dialog({label: 'PICK A PLAN', title: 'How will you build it?', body: `<p>There are <b>8 spots</b>: 6 on the walls and 2 on the roof. The roof spots count double.</p>${planCards(Object.entries(PLANS).map(([id, p]) => ({id, ...p, cost: {water: '🐢 Slow · 💪 Strongest', fast: '🐇 Quick · 🙂 Medium', roof: '⚖️ In between'}[id]})), last?.plan)}
+    ${last ? `<p class="mx-last">Last time: <b>${PLANS[last.plan]?.title || 'a plan'}</b> · team dose ${last.teamDose}. Try something new?</p>` : ''}
+    <aside class="mx-detail"><b>More details</b><br>Water and plastic are full of hydrogen. Hydrogen is very good at slowing down fast particles. Supply bags help too, but less.</aside>`,
+    actions: [], onOpen: body => body.querySelectorAll('[data-plan]').forEach(b => { b.onclick = () => { ctx.act({id: 'choosePlan', payload: b.dataset.plan}); ctx.close(); }; })});
+}
+function consoleScreen(ctx) {
+  const s = ctx.mission, toStorm = Math.max(0, stormStart(s) - s.simSeconds);
+  const canSkip = s.stage !== 'after' && s.playerInShelter && crewSafe(s) + CREW.filter(c => s.crew[c].at === 'walking').length === 4;
+  ctx.dialog({label: 'STORM SCREEN', title: s.stage === 'after' ? 'All clear!' : s.stage === 'storm' ? 'The storm is here' : `Storm arrives in ${Math.ceil(toStorm / 60)} min`, body: `
+    <p>Shelter blocks <b>${Math.round((1 - shelterTransmission(s)) * 100)}%</b> of particles · ${filledSlots(s).length} of 8 spots filled · ${crewSafe(s)} of 4 crew inside.</p>
+    ${s.stage === 'after' ? '<p>The particles have faded. Everyone can come out!</p>' : '<p>When everyone is inside (you too), you can skip ahead to the end of the storm.</p>'}`,
+    actions: [
+      ...(s.stage === 'after' ? [{label: '✅ Finish the mission', primary: true, run: () => { ctx.close(); ctx.act({id: 'finish'}); }}] : [{label: '⏩ Skip ahead', disabled: !canSkip, title: canSkip ? '' : 'Everyone (you too) must be in the shelter', run: () => { ctx.close(); ctx.act({id: 'skipAhead'}); }}]),
+      {label: '← Back', run: () => ctx.close()}, {label: 'Stop practice', run: () => { ctx.close(); ctx.act({id: 'stopEarly'}); }}]});
+}
+function doseBars(ctx) {
+  const m = ctx.mission, people = [...CREW.map(id => [name(id), m.crew[id].dose]), ['You', m.playerDose]], max = Math.max(100, ...people.map(p => p[1])), g = m.scenario.ratings;
+  return `<div class="mx-bars">${people.map(([n, d]) => `<div class="mx-barrow"><span>${n}</span><span class="mx-track"><i style="width:${d / max * 100}%" class="${d <= g.great ? 'good' : d <= g.ok ? 'mid' : 'bad'}"></i><em style="left:${g.great / max * 100}%"></em><em style="left:${g.ok / max * 100}%"></em></span><b>${d.toFixed(0)}</b></div>`).join('')}</div><p class="mx-legend">Lines: under ${g.great} is great · under ${g.ok} is OK.</p>`;
+}
+function debrief(ctx) {
+  const r = getResult(ctx.mission);
+  ctx.report.send({outcome: r.outcome, completed: r.completed, success: r.success, mastered: r.mastered, score: r.score, carry: {plan: r.plan, rating: r.rating, teamDose: r.teamDose, roofCovered: r.roofCovered}});
+  const history = r.completed && !ctx.sampleMode ? pushHistory(ID, {plan: r.plan, teamDose: r.teamDose, filled: r.filled, roof: r.roofCovered, crewSafe: r.crewSafeAtArrival}) : readHistory(ID);
+  ctx.persist(ctx.mission, true); ctx.setControls();
+  const title = !r.completed ? 'Practice stopped' : {great: '🏆 Super shelter!', ok: '👍 Everyone made it', high: '😬 Too many particles got in'}[r.rating];
+  const tip = !r.completed ? 'You can try again any time.' : r.roofCovered < 2 ? 'Tip: the roof spots count double. Put your best shields up there!' : r.filled < 8 ? 'Tip: every empty spot lets particles stream in. Try to fill all 8.' : r.crewSafeAtArrival < 4 ? 'Tip: call the crew earlier, so nobody is outside when the storm hits.' : r.water + r.poly < 8 ? 'Tip: water and plastic block more than supply bags. Was there time to use more?' : 'You built a strong shelter. Can you do it faster?';
+  const compare = history.length > 1 ? compareTable(history.map((h, i) => i === history.length - 1 ? 'This time' : `Try ${i + 1}`), [
+    {label: 'Plan', values: history.map(h => PLANS[h.plan]?.title || '—')},
+    {label: 'Team dose', values: history.map(h => h.teamDose), better: 'low'},
+    {label: 'Spots filled', values: history.map(h => h.filled), better: 'high'},
+    {label: 'Roof covered', values: history.map(h => h.roof), better: 'high'},
+    {label: 'Crew in on time', values: history.map(h => h.crewSafe), better: 'high'}]) : '<p class="mx-last">Play again with a different plan to compare results here.</p>';
+  ctx.dialog({label: 'MISSION REPORT · A PLACE TO HIDE', title, body: `
+    ${r.completed ? doseBars(ctx) : ''}
+    ${r.completed ? `<p>Your shelter blocked <b>${Math.round((1 - r.transmission) * 100)}%</b> of particles. ${r.filled} of 8 spots filled (roof ${r.roofCovered}/2) using ${r.water} water, ${r.poly} plastic and ${r.cargo} supply ${r.cargo === 1 ? 'stack' : 'stacks'}.</p>` : ''}
+    <p class="mx-tip">💡 ${tip}</p>${compare}
+    <aside class="mx-detail"><b>More details</b><br>Real crews watch NASA space weather alerts. The particles in a storm like this can arrive in under an hour. The dose points here are made up, but the idea is real: more hydrogen-rich mass between you and space means fewer particles get through.</aside>`,
+    actions: [
+      {label: '🔁 Try a different plan', primary: true, disabled: !ctx.checkpoint, run: () => ctx.retry(() => planBoard(ctx))},
+      {label: '↺ Play again', run: () => ctx.restart()}, {label: '🗺️ Back to the map', run: ctx.openJourney}, {label: 'Sources', run: () => ctx.sourcesDialog(() => debrief(ctx))}]});
+}
+
+runMission({
+  id: ID, title: 'A Place to Hide', place: 'MISSION CONTROL JR. · MARS DAY 18', carryFrom: 'storm',
+  meters: [{id: 'time', icon: '⏳', label: 'Warning time'}, {id: 'shield', icon: '🛡️', label: 'Shelter shield'}, {id: 'dose', icon: '☢️', label: 'Team dose'}],
+  create: carry => createMission({scenario: tuneScenario(ID, shelterScenario), initialCarry: carry}),
+  rules: {applyAction, getObjective, getSteps, advance: (m, dt, ctx) => advanceMission(m, dt, {playerInShelter: ctx.view.inShelter()})},
+  scene: ctx => createShelterScene({container: document.getElementById('world'), getState: () => ctx.mission, act: a => ctx.act(a), onPause: () => ctx.pause(), onConsole: () => consoleScreen(ctx)}),
+  brief, sources, debrief,
+  sampler(ctx) { ctx.act({id: 'begin'}, {quiet: true}); ctx.saveCheckpoint(); ctx.act({id: 'choosePlan', payload: 'roof'}, {quiet: true}); },
+  hud(ctx) {
+    const s = ctx.mission, {hud} = ctx, toStorm = stormStart(s) - s.simSeconds;
+    if (s.phase === 'active' && !ctx.playing() && s.stage !== 'plan') s.playerInShelter = ctx.view.inShelter();
+    if (s.phase === 'active' && s.stage === 'prep') hud.timer(`☀️ Storm in ${Math.floor(toStorm / 60)}:${String(Math.floor(toStorm % 60)).padStart(2, '0')}`, toStorm < 240);
+    else if (s.phase === 'active' && s.stage === 'storm') hud.timer(`☢️ Storm · ${Math.ceil((stormEnd(s) - s.simSeconds) / 60)} min left`, !s.playerInShelter);
+    else if (s.phase === 'active' && s.stage === 'after') hud.timer('✅ All clear');
+    else hud.timer('');
+    hud.meter('time', {value: Math.max(0, toStorm), max: s.scenario.warningSeconds, text: toStorm > 0 ? `${Math.ceil(toStorm / 60)} min` : 'Storm!'});
+    hud.meter('shield', {value: (1 - shelterTransmission(s)) * 100, max: 80, text: `${filledSlots(s).length}/8 spots`, warn: .45});
+    const dose = teamDose(s); hud.meter('dose', {value: Math.max(0, 100 - dose), max: 100, text: dose.toFixed(0), warn: .35});
+  },
+}).then(ctx => addEventListener('keydown', e => { if (e.code === 'KeyQ' && ctx.playing() && ctx.mission.held) ctx.act({id: 'putBack'}); }));

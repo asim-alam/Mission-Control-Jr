@@ -1,0 +1,129 @@
+// Shared HUD for the expansion missions: meters, the job card with a step checklist,
+// a look-to-use prompt, an edge arrow toward the next target, walk-to buttons,
+// optional narration, and the story/plan/debrief dialog.
+import {learningMode} from '../../simulation/learning.js';
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
+const NARRATION_KEY = 'mission-control-jr.narration.v1';
+const LEARNING_KEY = 'mission-control-jr.learning-mode.v1';
+const store = {
+  get(k, d) { try { return localStorage.getItem(k) ?? d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+};
+
+/** Build the HUD once, synchronously, before Pip starts watching #objective. */
+export function buildHud({title, place, meters}) {
+  document.body.insertAdjacentHTML('beforeend', `
+  <header class="mx-top">
+    <div class="mx-title"><small>${esc(place)}</small><h1>${esc(title)}</h1></div>
+    <div class="mx-timer" id="mx-timer" hidden></div>
+    <div class="mx-actions">
+      <button id="mx-narrate" type="button" aria-pressed="false" title="Read the story out loud">🔊 Read to me</button>
+      <button id="mx-details" type="button" aria-pressed="false" title="Show extra science details">🔬 Details</button>
+      <button id="pause" type="button">⏸️ Pause</button><button id="journey" type="button">🗺️ Map</button>
+    </div>
+  </header>
+  <section class="mx-meters" id="mx-meters" aria-label="Mission supplies">${meters.map(m => `
+    <div class="mx-meter" data-meter="${m.id}"><span class="mx-meter-icon" aria-hidden="true">${m.icon}</span><span class="mx-meter-body"><span class="mx-meter-label">${esc(m.label)}</span><span class="mx-bar"><i></i></span><b class="mx-meter-value">—</b></span></div>`).join('')}
+  </section>
+  <section class="mx-job" aria-label="Your job">
+    <p class="mx-eyebrow">YOUR JOB NOW</p>
+    <div id="objective"><h2>Loading…</h2></div>
+    <ol class="mx-steps" id="mx-steps"></ol>
+    <p class="mx-notice" id="notice" role="status" aria-live="polite"></p>
+  </section>
+  <div class="mx-crosshair" aria-hidden="true"></div>
+  <div class="mx-edge" id="mx-edge" aria-hidden="true">➤</div>
+  <div class="mx-prompt" id="mx-prompt" hidden><button type="button" id="mx-use"><kbd>E</kbd><span id="mx-use-label"></span><i class="mx-hold" id="mx-hold"></i></button></div>
+  <section class="mx-walk" aria-label="Walk to a place"><p class="mx-eyebrow">WALK TO</p><div id="locations"></div><p class="mx-keys">WASD / arrows walk · drag to look · <b>E</b> or click to use · hold <b>E</b> for long jobs</p></section>
+  <div class="mx-toast" id="mx-toast" role="status" aria-live="polite"></div>
+  <div id="dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title" hidden><div class="card"><p class="eyebrow" id="dialog-label"></p><h2 id="dialog-title"></h2><div id="dialog-body"></div><div id="dialog-actions"></div></div></div>`);
+  const narrate = $('mx-narrate'), details = $('mx-details');
+  const sync = () => {
+    narrate.setAttribute('aria-pressed', String(narration()));
+    details.setAttribute('aria-pressed', String(learningMode() === 'details'));
+    document.body.classList.toggle('mx-details-on', learningMode() === 'details');
+  };
+  narrate.onclick = () => { store.set(NARRATION_KEY, narration() ? 'off' : 'on'); if (!narration()) try { speechSynthesis.cancel(); } catch {} sync(); };
+  details.onclick = () => { store.set(LEARNING_KEY, learningMode() === 'details' ? 'simple' : 'details'); sync(); hud.onDetails?.(); };
+  sync();
+  let toastTimer = 0, lastObjective = '', lastStepsKey = '';
+  const hud = {
+    onDetails: null,
+    meter(id, {value, max = 100, text, warn = .25}) {
+      const el = document.querySelector(`[data-meter="${id}"]`); if (!el) return;
+      const f = Math.max(0, Math.min(1, value / max));
+      el.querySelector('i').style.width = `${f * 100}%`;
+      el.querySelector('.mx-meter-value').textContent = text ?? `${Math.round(f * 100)}%`;
+      el.classList.toggle('low', f < warn); el.classList.toggle('mid', f >= warn && f < .5);
+    },
+    timer(text, urgent = false) { const t = $('mx-timer'); t.hidden = !text; t.textContent = text || ''; t.classList.toggle('urgent', urgent); },
+    objective(text) {
+      if (text === lastObjective) return; lastObjective = text;
+      $('objective').innerHTML = `<h2>${esc(text)}</h2>`; speak(text);
+    },
+    steps(list) {
+      const key = JSON.stringify(list); if (key === lastStepsKey) return; lastStepsKey = key;
+      $('mx-steps').innerHTML = list.map(s => `<li class="${s.done ? 'done' : s.now ? 'now' : ''}">${s.done ? '✅' : s.now ? '👉' : '⬜'} ${esc(s.text)}</li>`).join('');
+    },
+    notice(text) { $('notice').textContent = text || ''; },
+    toast(text, kind = 'info') {
+      const t = $('mx-toast'); t.textContent = text; t.className = `mx-toast show ${kind}`; clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => { t.className = 'mx-toast'; }, 3200); if (kind !== 'quiet') speak(text);
+    },
+    prompt(focus) {
+      const p = $('mx-prompt'); p.hidden = !focus;
+      if (focus) { $('mx-use-label').textContent = focus.label; p.classList.toggle('holdable', !!focus.hold); p.querySelector('kbd').textContent = focus.hold ? 'Hold E' : 'E'; }
+    },
+    hold(progress) { $('mx-hold').style.setProperty('--p', progress); $('mx-prompt').classList.toggle('holding', progress > 0); },
+    edge(info) {
+      const e = $('mx-edge');
+      if (!info || info.onScreen) { e.classList.remove('show'); return; }
+      let x = info.x - .5, y = info.y - .5; if (info.behind) { x = -x; y = -y; if (Math.abs(x) < .05) y = .5; }
+      const a = Math.atan2(y, x), r = Math.min(.42 / Math.abs(Math.cos(a) || 1e-6), .4 / Math.abs(Math.sin(a) || 1e-6));
+      e.style.left = `${50 + Math.cos(a) * r * 100}%`; e.style.top = `${50 + Math.sin(a) * r * 100}%`; e.style.transform = `translate(-50%,-50%) rotate(${a}rad)`; e.classList.add('show');
+    },
+    walkButtons(list, onWalk) {
+      $('locations').replaceChildren(...list.map(({id, label}) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = label; b.onclick = () => onWalk(id); return b; }));
+    },
+  };
+  return hud;
+}
+
+export function narration() { return store.get(NARRATION_KEY, 'off') === 'on'; }
+/** Read text aloud when narration is on. Never throws. */
+export function speak(text, force = false) {
+  if (!force && !narration()) return;
+  try { const s = speechSynthesis; s.cancel(); const u = new SpeechSynthesisUtterance(String(text).replace(/<[^>]+>/g, ' ')); u.rate = .95; u.pitch = 1.1; u.lang = 'en-US'; s.speak(u); } catch {}
+}
+
+/**
+ * Show the dialog. body is trusted HTML authored in the mission. actions: [{label, run, primary, disabled}].
+ * Detail blocks marked class="mx-detail" only show when Details is on.
+ */
+export function dialog({label = '', title, body, actions, onOpen}) {
+  $('dialog-label').textContent = label; $('dialog-title').textContent = title; $('dialog-body').innerHTML = body;
+  $('dialog-actions').replaceChildren(...actions.map(a => {
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = a.label; b.disabled = !!a.disabled;
+    if (a.primary) b.classList.add('primary'); if (a.title) b.title = a.title; b.onclick = a.run; return b;
+  }));
+  $('dialog').hidden = false; onOpen?.($('dialog-body'));
+  ($('dialog-actions').querySelector('button.primary:not(:disabled)') || $('dialog-actions').querySelector('button:not(:disabled)'))?.focus();
+  if (narration()) speak(`${title}. ${$('dialog-body').innerText}`);
+}
+export function closeDialog() { $('dialog').hidden = true; try { speechSynthesis.cancel(); } catch {} }
+export const dialogOpen = () => !$('dialog').hidden;
+
+/** A plan card list used for strategy choices. options: [{id, icon, title, text, cost}] */
+export function planCards(options, selected) {
+  return `<div class="mx-plans">${options.map(o => `<button type="button" class="mx-plan${o.id === selected ? ' picked' : ''}" data-plan="${o.id}"><span class="mx-plan-icon">${o.icon}</span><b>${esc(o.title)}</b><span>${esc(o.text)}</span>${o.cost ? `<small>${esc(o.cost)}</small>` : ''}</button>`).join('')}</div>`;
+}
+
+/** Side-by-side comparison of this attempt and earlier ones. rows: [{label, values:[...], better:'high'|'low'}] */
+export function compareTable(headers, rows) {
+  return `<table class="mx-compare"><thead><tr><th></th>${headers.map(h => `<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${rows.map(r => {
+    const nums = r.values.map(v => typeof v === 'number' ? v : NaN), best = r.better === 'low' ? Math.min(...nums.filter(Number.isFinite)) : Math.max(...nums.filter(Number.isFinite));
+    return `<tr><th>${esc(r.label)}</th>${r.values.map((v, i) => `<td class="${r.better && nums[i] === best && nums.filter(Number.isFinite).length > 1 ? 'best' : ''}">${esc(r.format ? r.format(v) : v)}</td>`).join('')}</tr>`;
+  }).join('')}</tbody></table>`;
+}

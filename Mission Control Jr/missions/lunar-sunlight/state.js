@@ -1,4 +1,12 @@
 import {lunarSunScenario} from './scenario.js';
-export function createMission({scenario=lunarSunScenario,seed=42}={}){
- return {missionId:'lunar-sunlight',scenario:structuredClone(scenario),seed,simSeconds:0,paused:false,phase:'brief',events:Object.entries(scenario.pads).flatMap(([id,pad])=>pad.shadow.map((at,i)=>({id:`${id}-shadow-${i}`,at}))),energyWh:scenario.initialEnergyWh,airReserveUnits:100,collectorLocation:'storage',selectedPad:null,cartAttached:false,cartLocation:'storage',deployed:false,cableLengthUsed:0,cableRouted:false,connected:false,scienceOn:false,scienceServedWh:0,essentialUnservedWh:0,generatedWh:0,crewWorkSeconds:0,powerInspected:false,sitesCompared:false,decisions:[],notice:''};
+import {SAVE_SCHEMA} from '../shared/schema.js';
+
+export function createMission({scenario = lunarSunScenario, seed = 42} = {}) {
+  return {
+    missionId: 'lunar-sunlight', schema: SAVE_SCHEMA, scenario: structuredClone(scenario), seed,
+    phase: 'brief', plan: null, paused: false, simSeconds: 0,
+    suitMinutes: scenario.suitMinutes, cart: 'base', hitched: false, legs: false, stages: 0, wings: false,
+    plug: 'reel', tracker: false, savePlan: null, watch: null,
+    batteryKWh: scenario.batteryStartKWh, events: [], decisions: [], notice: '', stoppedEarly: false, suitLow: false,
+  };
 }

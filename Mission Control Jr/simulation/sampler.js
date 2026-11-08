@@ -6,13 +6,19 @@ import {createMission as createDelay} from '../missions/earth-delay/state.js';
 import {applyAction as actDelay} from '../missions/earth-delay/actions.js';
 import {createMission as createSunlight} from '../missions/lunar-sunlight/state.js';
 import {applyAction as actSunlight} from '../missions/lunar-sunlight/actions.js';
+import {createMission as createDust} from '../missions/lunar-dust/state.js';
+import {applyAction as actDust} from '../missions/lunar-dust/actions.js';
+import {createMission as createRelay} from '../missions/lunar-relay/state.js';
+import {applyAction as actRelay} from '../missions/lunar-relay/actions.js';
 /** Fixed scenario entry states; they never grant campaign completion. */
 export function samplerSnapshot(id){
  const definitions={
-  'solar-shelter':[createShelter,actShelter,[{id:'inspectMonitor'},{id:'begin'}]],
-  greenhouse:[createGreenhouse,actGreenhouse,[{id:'begin'},{id:'setPolicy',payload:['a','b']},{id:'advancePeriod'}]],
-  'earth-delay':[createDelay,actDelay,[{id:'begin'},{id:'inspectFault'},{id:'sendEarthRequest'}]],
-  'lunar-sunlight':[createSunlight,actSunlight,[{id:'begin'},{id:'inspectPower'},{id:'compareSites'}]]
+  'solar-shelter':[createShelter,actShelter,[{id:'begin'},{id:'choosePlan',payload:'roof'}]],
+  greenhouse:[createGreenhouse,actGreenhouse,[{id:'begin'},{id:'choosePlan',payload:'salad'}]],
+  'earth-delay':[createDelay,actDelay,[{id:'begin'},{id:'choosePlan',payload:'earth'},{id:'sendMessage'}]],
+  'lunar-sunlight':[createSunlight,actSunlight,[{id:'begin'}]],
+  'lunar-dust':[createDust,actDust,[{id:'begin'}]],
+  'lunar-relay':[createRelay,actRelay,[{id:'begin'}]]
  };
  const def=definitions[id];if(!def)return null;const [create,act,actions]=def,m=create({seed:42});for(const action of actions){const result=act(m,action);if(!result.ok)throw new Error(`Sampler ${id}: ${result.message}`);}return m;
 }

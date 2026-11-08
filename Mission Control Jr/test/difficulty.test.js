@@ -35,31 +35,31 @@ test('Explorer keeps every authored scenario value; Cadet changes only listed va
  assert.notEqual(tuneScenario('lunar-sunlight',lunarSunScenario,'cadet').pads,lunarSunScenario.pads,'tuned copy must not share nested objects');
 });
 
-// Wait for Earth's advice without conserving reserves: the lesson case.
+// Wait for Earth without save-water mode: the lesson case.
 function waitForEarth(level){
  const m=createDelay({scenario:tuneScenario('earth-delay',delayScenario,level)});
- for(const id of ['begin','inspectFault','sendEarthRequest','isolatePumpBranch'])ok(delayAction(m,{id}));
- while(m.phase==='active'&&m.message.status!=='delivered')delayAction(m,{id:'wait',payload:300});
- if(m.phase==='active'){ok(delayAction(m,{id:'applyAdvice'}));ok(delayAction(m,{id:'verifyFlow'}));}
+ for(const [id,x] of [['begin'],['choosePlan','earth'],['sendMessage'],['waitForEarth'],['readAnswer'],['togglePower'],['openPanel']])ok(delayAction(m,{id,payload:x,targetId:x}));
+ for(const p of ['pump','filter']){ok(delayAction(m,{id:'takeSpare',targetId:p}));ok(delayAction(m,{id:'swap',targetId:p}));}
+ for(const id of ['closePanel','togglePower','testRun','finish'])ok(delayAction(m,{id}));
  return m;
 }
-test('Earth delay: waiting idly stops Explorer training but Cadet survives with a visible cost',()=>{
- assert.equal(waitForEarth('explorer').phase,'suspended');
- const cadet=waitForEarth('cadet');assert.equal(cadet.phase,'active');assert.equal(cadet.verified,true);
- assert.ok(cadet.airReserveUnits<40,'the cost of waiting should still be obvious');
+test('Earth delay: waiting without saving water costs more on Explorer; Cadet keeps more water',()=>{
+ const explorer=waitForEarth('explorer'),cadet=waitForEarth('cadet');
+ assert.equal(explorer.fixed,true);assert.equal(cadet.fixed,true);
+ assert.ok(cadet.waterL>explorer.waterL,'Cadet should keep more water');
+ assert.ok(explorer.waterL<explorer.waterStartL*.6,'the cost of waiting should still be obvious');
 });
 
-test('Shelter: a Cadet can place all water and recall the crew with time to spare',()=>{
- const m=createShelter({scenario:tuneScenario('solar-shelter',shelterScenario,'cadet')});
- ok(shelterAction(m,{id:'inspectMonitor'}));ok(shelterAction(m,{id:'begin'}));
- for(const id of [0,1,2])ok(shelterAction(m,{id:'moveBag',targetId:id,payload:'shelter'}));ok(shelterAction(m,{id:'recallCrew'}));
- assert.ok(m.scenario.hazardStart-m.simSeconds>=360,`only ${m.scenario.hazardStart-m.simSeconds}s left`);
- assert.ok(m.scenario.hazardStart<m.scenario.hazardEnd&&m.scenario.hazardEnd<m.scenario.durationSeconds);
+test('Shelter: a Cadet gets more warning time and a gentler storm than an Explorer',()=>{
+ const cadet=createShelter({scenario:tuneScenario('solar-shelter',shelterScenario,'cadet')}),explorer=createShelter({scenario:tuneScenario('solar-shelter',shelterScenario,'explorer')});
+ assert.ok(cadet.scenario.warningSeconds>explorer.scenario.warningSeconds);assert.ok(cadet.scenario.peakDoseRate<explorer.scenario.peakDoseRate);
+ for(const m of [cadet,explorer]){ok(shelterAction(m,{id:'begin'}));ok(shelterAction(m,{id:'choosePlan',payload:'water'}));}
 });
 
-test('Lunar dust: Cadet starts with a larger filter and two spares; Explorer is unchanged',()=>{
+test('Lunar dust: Cadet starts with more power and two spare filters; tools work the same',()=>{
  const cadet=createDust({scenario:tuneScenario('lunar-dust',lunarDustScenario,'cadet')}),explorer=createDust({scenario:tuneScenario('lunar-dust',lunarDustScenario,'explorer')});
- assert.deepEqual([cadet.filterRemaining,cadet.spareFilters],[60,2]);assert.deepEqual([explorer.filterRemaining,explorer.spareFilters],[30,1]);
+ assert.deepEqual([cadet.power,cadet.spares],[70,2]);assert.deepEqual([explorer.power,explorer.spares],[50,1]);
+ assert.deepEqual(cadet.scenario.tools,explorer.scenario.tools);
 });
 
 test('Storm: Cadet has longer preparation and slower unsealed oxygen loss',()=>{

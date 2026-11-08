@@ -1,54 +1,222 @@
-import {advanceClock} from '../../simulation/clock.js';
-import {servePower} from '../../simulation/resources.js';
-import {createMessage,updateMessage} from '../../simulation/messages.js';
+// Rules for "Over the Hill". Pure functions; the 3D scene reads this state and sends actions.
 import {recordDecision} from '../../simulation/decisions.js';
-import {serializeSnapshot,restoreSnapshot} from '../../simulation/replay.js';
-export function lineVisible(aZ,aHeight,bZ,bHeight,scenario){const ridge=scenario.ridgeZ;if((aZ-ridge)*(bZ-ridge)>0||aZ===bZ)return true;const t=(ridge-aZ)/(bZ-aZ);if(t<0||t>1)return true;return aHeight+(bHeight-aHeight)*t>scenario.ridgeHeightM;}
-export function localLinkAvailable(m){const sc=m.scenario;if(lineVisible(0,sc.terminalHeightM,m.positionZ,sc.terminalHeightM,sc))return true;return m.relayDeployed&&m.relayPowered&&m.relayEnergyWh>0&&m.verifiedHops.base&&m.verifiedHops.field&&lineVisible(0,sc.terminalHeightM,sc.ridgeZ,sc.relayHeightM,sc)&&lineVisible(sc.ridgeZ,sc.relayHeightM,m.positionZ,sc.terminalHeightM,sc);}
-export function earthLinkAvailable(m){return localLinkAvailable(m);}
-export function returnForecast(m){const sc=m.scenario,distance=Math.abs(m.positionZ-sc.positions.base),seconds=distance*sc.secondsPerMeter;return {energyWh:m.roverEnergyWh-(sc.idleW+sc.driveW)*seconds/3600,suitUnits:m.suitReserveUnits-sc.suitPerSecond*seconds,seconds};}
-export function advanceMission(m,seconds,{drive=false,probe=false,targetZ=null}={}){
- if(m.phase!=='active'||m.paused||!Number.isFinite(seconds)||seconds<0)return null;
- const sc=m.scenario,startZ=m.positionZ,startTime=m.simSeconds;let probeServed=0;
- advanceClock(m,seconds,(s,dt)=>{
-  const loads=[{id:'idle',watts:sc.idleW},...(drive?[{id:'drive',watts:sc.driveW}]:[]),...(probe?[{id:'probe',watts:sc.probeW}]:[])];
-  const ledger=servePower({energyWh:s.roverEnergyWh,capacityWh:sc.roverCapacityWh,generationW:0,loads},dt);s.roverEnergyWh=ledger.energyWh;
-  const driveFrac=drive?Math.max(0,Math.min(1,(ledger.servedWh.drive||0)/(sc.driveW*dt/3600))):1;
-  if(targetZ!==null&&seconds>0){const expected=startZ+(targetZ-startZ)*Math.min(1,(s.simSeconds+dt-startTime)/seconds);s.positionZ+= (expected-s.positionZ)*driveFrac;}
-  s.suitReserveUnits=Math.max(0,s.suitReserveUnits-dt*sc.suitPerSecond);
-  if(probe)probeServed+=(ledger.servedWh.probe||0)/(sc.probeW/3600);
-  if(s.relayPowered){s.relayEnergyWh=Math.max(0,s.relayEnergyWh-sc.relayW*dt/3600);if(s.relayEnergyWh===0)s.relayPowered=false;}
-  if(s.message)updateMessage(s.message,s.simSeconds+dt,earthLinkAvailable(s));
-  return s.suitReserveUnits>0&&s.roverEnergyWh>0;
- });
- if(m.suitReserveUnits<=0||m.roverEnergyWh<=0){m.phase='suspended';m.notice='Game paused: the battery ran too low.';}
- return {probeServed};
+import {serializeSnapshot, restoreSnapshot} from '../../simulation/replay.js';
+import {lineOfSight} from '../shared/moon-ground.js';
+
+const ok = message => ({ok: true, message}), fail = message => ({ok: false, message});
+export const PLANS = {
+  relay: {icon: '📡', title: 'Relay on the ridge', text: 'Stop on the ridge top and set up a radio relay. Then the base and Earth can hear you in the hollow.'},
+  direct: {icon: '🚙', title: 'Quick trip', text: 'Skip the relay. Drill, then drive back. Your data goes home once you are over the hill.'},
+};
+export const NEXT = {base: ['saddle'], saddle: ['base', 'hollow'], hollow: ['saddle']};
+export const relayHeight = s => s.scenario.relay.baseM + s.stages * s.scenario.relay.stageM;
+
+/** Can the base hear a rover parked at this stop, straight over the ground? */
+export function directLink(s, stop) {
+  if (stop === 'base') return true;
+  const sc = s.scenario, b = sc.baseAntenna;
+  return lineOfSight(b, b.h, sc.stops[stop].park, sc.roverAntennaH).clear;
 }
-export function applyAction(m,{id,payload}={}){
- const no=message=>({ok:false,message}),yes=message=>({ok:true,message});
- if(id==='begin'&&m.phase==='brief'){m.phase='active';recordDecision(m,id);return yes('Earth is close to the Moon. But a hill can still block the radio!');}
- if(m.phase!=='active')return no('Start the game, or play again.');if(m.paused)return no('Unpause the game first.');const sc=m.scenario;
- const work=(seconds,options)=>{advanceMission(m,seconds,options);return m.phase==='active';};
- if(id==='inspectRoute'){m.routeInspected=true;return yes('The radio works at the near stop. The far stop is behind the hill.');}
- if(id==='selectSurveyScope'){if(!m.routeInspected||!['near','far'].includes(payload)||m.position!=='base')return no('Look at the map at the base first.');m.routePlan=payload;recordDecision(m,id,{scope:payload});return yes(`${payload==='near'?'Near':'Far'} survey selected.`);}
- if(id==='loadRelayKit'){if(m.routePlan!=='far'||m.position!=='base'||m.relayLoaded)return no('Pick the far stop, then load the relay at the base.');if(!work(60))return no('The game stopped while loading.');m.relayLoaded=true;recordDecision(m,id);return yes('The relay is in the rover!');}
- if(id==='travelTo'){
-  if(!m.routePlan||!(payload in sc.positions)||payload===m.position)return no('Pick a different place to go.');if(payload==='saddle'&&!m.relayLoaded)return no('Load the relay before you drive to the hill top.');if(payload==='far'&&m.routePlan!=='far')return no('Pick the far stop at the base first.');
-  const target=sc.positions[payload],distance=Math.abs(m.positionZ-target),seconds=distance*sc.secondsPerMeter,remainingDistance=Math.abs(target-sc.positions.base),required=(sc.idleW+sc.driveW)*(seconds+remainingDistance*sc.secondsPerMeter)/3600+sc.minimumReturnWh;
-  if(m.roverEnergyWh<required||m.suitReserveUnits<sc.suitPerSecond*(seconds+remainingDistance*sc.secondsPerMeter)+sc.minimumReturnSuit)return no('Not enough battery to get home from there.');
-  if(!work(seconds,{drive:true,targetZ:target}))return no('The game stopped while driving.');m.position=payload;m.positionZ=target;if(payload==='saddle'&&m.relayLoaded&&!m.relayDeployed)m.relayLocation='saddle';if(payload==='base')m.returned=true;recordDecision(m,id,{destination:payload,seconds});return yes(`Reached ${payload}.`);
- }
- if(id==='anchorRelay'){if(m.position!=='saddle'||m.relayLocation!=='saddle'||m.relayDeployed)return no('Bring the relay to the hill top first.');if(!work(180))return no('The game stopped during setup.');m.relayDeployed=true;recordDecision(m,id);return yes('The relay pole is up. Now give it power.');}
- if(id==='connectRelayPower'){if(!m.relayDeployed||m.position!=='saddle'||m.relayPowered||m.relayEnergyWh>0)return no('Put up the pole before you plug in its battery.');if(m.roverEnergyWh<sc.relayAllocationWh+sc.minimumReturnWh)return no('Keep enough battery to drive home.');if(!work(30))return no('Training paused during connection.');m.roverEnergyWh-=sc.relayAllocationWh;m.relayEnergyWh=sc.relayAllocationWh;m.relayPowered=true;recordDecision(m,id);return yes('The relay has power! Now test both hops.');}
- if(id==='verifyHop'){if(!m.relayDeployed||!m.relayPowered||m.position!=='saddle'||!['base','field'].includes(payload))return no('Give the relay power before you test it.');if(m.verifiedHops[payload])return no('You already tested that hop.');const to=payload==='base'?sc.positions.base:sc.positions.far;if(!lineVisible(sc.ridgeZ,sc.relayHeightM,to,sc.terminalHeightM,sc))return no('The hill blocks that hop.');if(!work(30))return no('The game stopped during the test.');m.verifiedHops[payload]=true;recordDecision(m,id,{hop:payload});return yes(`${payload==='base'?'Outpost':'Field'} hop verified.`);}
- if(id==='startProbe'){if(!['near','far'].includes(m.position)||m.observations>0)return no('Drive to a stop before you use the science tool.');const seconds=m.position==='near'?120:240,forecast=returnForecast(m);if(forecast.energyWh<sc.minimumReturnWh+5||forecast.suitUnits<sc.minimumReturnSuit+sc.suitPerSecond*seconds)return no('Keep enough battery to get home.');const r=advanceMission(m,seconds,{probe:true});if(!r||m.phase!=='active')return no('The game stopped during the science.');m.probeProgressSeconds+=r.probeServed;if(r.probeServed<seconds-.01)return no('The science tool did not get enough power.');m.observations=m.position==='far'?2:1;recordDecision(m,id,{site:m.position,observations:m.observations});return yes(`Science done: ${m.observations} reading${m.observations===1?'':'s'}.`);}
- if(id==='extraObservation'){if(m.observations<1||m.extraObservation||m.message||!['near','far'].includes(m.position))return no('Do any extra science before you send the message.');const f=returnForecast(m);if(f.energyWh<sc.minimumReturnWh+10||f.suitUnits<sc.minimumReturnSuit+3.6)return no('Extra science would use the battery you need to get home.');const r=advanceMission(m,180,{probe:true});if(!r||m.phase!=='active'||r.probeServed<179.99)return no('The extra science did not finish.');m.observations++;m.extraObservation=true;recordDecision(m,id);return yes('Extra science done! It used time and battery.');}
- if(id==='sendPacket'){if(m.observations<1||m.message)return no('Do the science first. You only need to send one message.');m.message=createMessage({id:'lunar-field-record',createdAt:m.simSeconds,outboundSeconds:sc.oneWaySeconds,processingSeconds:0,inboundSeconds:0,payload:{observations:m.observations}});updateMessage(m.message,m.simSeconds,earthLinkAvailable(m));recordDecision(m,id,{observations:m.observations});return yes(m.message.status==='queued'?'The hill blocks the radio. The message will wait.':'Your message is flying to Earth!');}
- if(id==='wait'){if(!Number.isFinite(payload)||payload<=0||payload>600)return no('Pick how long to wait.');if(!work(payload))return no('The game stopped while waiting.');recordDecision(m,id,{seconds:payload});return yes('Time passed. The message moved along.');}
- if(id==='shortenSurvey'){m.shortened=true;recordDecision(m,id);return yes('The crew is going home with less science. Safe choice!');}
- if(id==='confirmDelivery'){if(m.position!=='base'||!m.returned)return no('Drive back to the base first.');if(m.observations&&!m.message)return no('Send your message first.');if(m.message&&m.message.status!=='delivered')return no('The message is still on its way. Wait a little.');m.phase='debrief';recordDecision(m,id);return yes('Everyone is home, and the message arrived!');}
- return no('Unknown action.');
+/** The relay's two hops: base → relay (needs the dish aimed) and relay → the rover at a stop. */
+export function relayHops(s, stop = s.at) {
+  const sc = s.scenario;
+  if (s.relay !== 'ground' || !s.legs) return {base: false, field: false};
+  const spot = sc.stops[s.relayAt].relaySpot, h = relayHeight(s), b = sc.baseAntenna;
+  return {base: s.aimed && lineOfSight(b, b.h, spot, h).clear, field: lineOfSight(spot, h, sc.stops[stop].park, sc.roverAntennaH).clear};
 }
-export function getObjective(m){if(m.phase==='brief')return 'Plan your Moon drive';if(m.phase==='suspended')return 'Game stopped. Try again!';if(m.phase==='debrief')return 'See how your trip went';if(!m.routeInspected)return 'Look at the map and the hill';if(!m.routePlan)return 'Pick the near stop or the far stop';if(!m.observations)return 'Set up the relay if you need it. Then do the science';if(!m.returned)return 'Send your message and drive home';return 'Check the message arrived and everyone is home';}
-export function getResult(m){return {outcome:m.phase==='suspended'?'suspended':m.shortened||!m.observations?'turnaround':m.routePlan==='far'&&m.relayDeployed&&m.verifiedHops.base&&m.verifiedHops.field?'relay-survey':'direct-survey',completed:m.phase==='debrief',position:m.position,routePlan:m.routePlan,observations:m.observations,roverEnergyWh:m.roverEnergyWh,suitReserveUnits:m.suitReserveUnits,carryUsed:m.carryUsed,relayEnergyWh:m.relayEnergyWh,relayDeployed:m.relayDeployed,verifiedHops:{...m.verifiedHops},message:m.message?structuredClone(m.message):null,returned:m.returned,sourceIds:m.scenario.sourceIds};}
-export {serializeSnapshot,restoreSnapshot};
+export function hasLink(s, stop = s.at) { if (directLink(s, stop)) return true; const h = relayHops(s, stop); return h.base && h.field; }
+/** Battery needed to drive home from where you are. */
+export function batteryHome(s) {
+  let need = 0, at = s.at; const sc = s.scenario;
+  while (at !== 'base') { const to = at === 'hollow' ? 'saddle' : 'base'; need += sc.legs[`${at}>${to}`].battery; at = to; }
+  return need;
+}
+export const suitLeft = s => Math.max(0, s.scenario.suitMinutes - s.minutes);
+
+function spend(s, minutes) {
+  if (!hasLink(s)) s.quietMinutes += minutes;
+  s.minutes += minutes; s.simSeconds = s.minutes * 60;
+  if (suitLeft(s) <= 0 && s.phase === 'active') { s.phase = 'debrief'; s.notice = 'Suit air is very low. Luca calls the crew home.'; }
+}
+function deliver(s) {
+  let n = 0;
+  for (const m of s.messages) if (m.status === 'queued' && hasLink(s)) { m.status = 'delivered'; m.deliveredMin = s.minutes; m.live = s.at === 'hollow'; n++; }
+  return n;
+}
+
+export function applyAction(s, {id, payload, targetId} = {}) {
+  if (s.phase === 'brief' && id === 'begin') { s.phase = 'active'; recordDecision(s, 'begin'); return ok('Pick a plan for the trip.'); }
+  if (s.phase !== 'active') return fail('Start the mission first.');
+  const sc = s.scenario, arg = payload ?? targetId;
+  if (id === 'choosePlan') {
+    if (!PLANS[arg] || s.plan) return fail('Pick one of the plans.');
+    s.plan = arg; recordDecision(s, id, {plan: arg});
+    return ok(arg === 'relay' ? 'Plan: relay on the ridge. Load the relay onto the rover!' : 'Plan: quick trip. Hop in the rover!');
+  }
+  if (!s.plan) return fail('Pick a plan first.');
+  if (id === 'stopEarly') { s.stoppedEarly = true; s.phase = 'debrief'; return ok('Practice stopped.'); }
+  switch (id) {
+    case 'takeRelay': {
+      if (s.hand) return fail('Your hands are full.');
+      const here = s.relay === 'crate' ? s.at === 'base' : s.relay === 'rover' || (s.relay === 'ground' && s.relayAt === s.at);
+      if (!here) return fail('The relay is not here.');
+      if (s.relay === 'ground' && (s.legs || s.stages)) return fail('Lower the mast and lift the legs first.');
+      s.relay = 'hand'; s.hand = 'relay'; s.relayAt = null; s.aimed = false; s.legs = false; s.stages = 0; recordDecision(s, id); return ok('You have the relay. It is light on the Moon!');
+    }
+    case 'stowRelay':
+      if (s.hand !== 'relay' && s.relay !== 'hand') return fail('Pick up the relay first.');
+      s.relay = 'rover'; s.hand = null; recordDecision(s, id); return ok('The relay is on the cargo deck.');
+    case 'putRelayBack':
+      if (s.relay !== 'hand' || s.at !== 'base') return fail('You can only put it back at the base.');
+      s.relay = 'crate'; s.hand = null; return ok('Relay back in its crate.');
+    case 'placeRelay':
+      if (s.relay !== 'hand') return fail('Pick up the relay first.');
+      if (!sc.stops[s.at].relaySpot) return fail('Set it down out on the trip, not at the base.');
+      s.relay = 'ground'; s.relayAt = s.at; s.hand = null; s.legs = false; s.stages = 0; s.aimed = false; spend(s, sc.minutes.placeRelay); recordDecision(s, id, {at: s.at});
+      return ok('Relay set down. Now put its legs out.');
+    case 'relayLegs':
+      if (s.relay !== 'ground' || s.relayAt !== s.at) return fail('Set the relay down first.');
+      if (s.legs && s.stages) return fail('Lower the mast first.');
+      s.legs = !s.legs; spend(s, sc.minutes.legs); recordDecision(s, id, {down: s.legs});
+      return ok(s.legs ? 'Legs out. The relay stands steady.' : 'Legs up.');
+    case 'raiseStage':
+      if (s.relay !== 'ground' || !s.legs) return fail('Put the relay’s legs out first.');
+      if (s.stages >= sc.relay.stages) return fail('The mast is as tall as it goes.');
+      s.stages++; spend(s, sc.minutes.stage); recordDecision(s, id, {stages: s.stages});
+      return ok(`Mast up to ${relayHeight(s).toFixed(1)} m.${relayHops(s, 'hollow').field ? ' It can see into Shadow Hollow!' : ' Still too low to see over the hill.'}`);
+    case 'lowerStage':
+      if (s.relay !== 'ground' || s.stages <= 0) return fail('The mast is already down.');
+      s.stages--; spend(s, 1); recordDecision(s, id, {stages: s.stages}); return ok(`Mast down to ${relayHeight(s).toFixed(1)} m.`);
+    case 'aim': {
+      if (s.relay !== 'ground' || !s.legs) return fail('Put the relay’s legs out first.');
+      if (s.aimed) return fail('The dish already points at the base.');
+      s.aimed = true; spend(s, sc.minutes.aim); recordDecision(s, id);
+      const hop = relayHops(s);
+      return ok(hop.base ? 'Beep! The dish found the base. Green light!' : 'The dish points at the base, but the hill is in the way.');
+    }
+    case 'drive': {
+      if (!NEXT[s.at].includes(arg)) return fail('You can’t drive there from here.');
+      if (s.hand) return fail('Put down what you are holding first.');
+      if (s.drill !== 'rover') return fail('Put the drill back on the rover first.');
+      const leg = sc.legs[`${s.at}>${arg}`], from = s.at, quietBefore = !hasLink(s);
+      s.at = arg;
+      if (quietBefore || !hasLink(s)) s.quietMinutes += leg.minutes;
+      s.minutes += leg.minutes; s.simSeconds = s.minutes * 60;
+      let message = `Arrived at ${sc.stops[arg].name}.`;
+      if (s.battery < leg.battery) { s.battery = 0; s.rescued = true; s.minutes += sc.minutes.rescue; s.simSeconds = s.minutes * 60; message = 'The rover battery ran flat! Luca drove out a spare battery. That took a while.'; }
+      else s.battery -= leg.battery;
+      const sent = deliver(s);
+      if (sent) message += ` 📶 Signal! Your data zipped to the base and reached Earth ${sc.oneWaySeconds} seconds later.`;
+      recordDecision(s, id, {from, to: arg, battery: s.battery, sent});
+      if (suitLeft(s) <= 0) { s.phase = 'debrief'; return ok('Suit air is very low. Luca calls the crew home.'); }
+      return ok(message);
+    }
+    case 'takeDrill':
+      if (s.hand) return fail('Your hands are full.');
+      if (s.at !== 'hollow') return fail('Drill in Shadow Hollow, where the science is.');
+      if (s.coreReady) return fail('Take the core out of the drill first.');
+      if (s.drill === 'hand') return fail('You already have the drill.');
+      s.drill = 'hand'; s.hand = 'drill'; s.drillAt = null; spend(s, sc.minutes.takeDrill); recordDecision(s, id); return ok('You have the drill. Set it on the X.');
+    case 'placeDrill': {
+      if (s.hand !== 'drill') return fail('Pick up the drill first.');
+      if (!sc.drillSpots[arg]) return fail('Put it on an X.');
+      if (arg === 'b' && !s.earthAsked) return fail('Use the first X.');
+      if (arg === 'a' && s.cores >= 1) return fail('You already drilled here. Earth asked for the second X!');
+      s.drill = 'ground'; s.drillAt = arg; s.hand = null; spend(s, sc.minutes.placeDrill); recordDecision(s, id, {spot: arg}); return ok('Drill in place. Hold E on it to drill.');
+    }
+    case 'packDrill':
+      if (s.hand !== 'drill') return fail('Pick up the drill first.');
+      s.drill = 'rover'; s.hand = null; recordDecision(s, id); return ok('Drill back on the rover.');
+    case 'drillCore': {
+      if (s.drill !== 'ground') return fail('Set the drill on the X first.');
+      if (s.coreReady) return fail('Take the core out first.');
+      if (s.cores >= (s.earthAsked ? 2 : 1)) return fail('That is all the cores we need. Head home!');
+      if (s.battery < sc.drillBattery) return fail('Not enough battery to drill.');
+      s.battery -= sc.drillBattery; s.coreReady = true; s.cores++; spend(s, sc.minutes.drill); recordDecision(s, id, {core: s.cores, spot: s.drillAt});
+      return ok('Brrrr! The drill spins down and pulls up a core of Moon soil.');
+    }
+    case 'takeCore':
+      if (!s.coreReady) return fail('Drill a core first.');
+      if (s.hand) return fail('Your hands are full.');
+      s.coreReady = false; s.hand = 'core'; recordDecision(s, id); return ok('Careful! Put the core in the sample box on the rover.');
+    case 'stowCore':
+      if (s.hand !== 'core') return fail('Take the core out of the drill first.');
+      s.hand = null; s.stowed++; spend(s, sc.minutes.stow); recordDecision(s, id); return ok('Core safe in the sample box. Now send the data!');
+    case 'sendData': {
+      const unsent = s.stowed - s.messages.length;
+      if (unsent <= 0) return fail(s.stowed ? 'All the data is sent.' : 'Put a core in the sample box first.');
+      for (let i = 0; i < unsent; i++) s.messages.push({core: s.messages.length + 1, status: 'queued', sentMin: s.minutes, deliveredMin: null, live: false});
+      spend(s, sc.minutes.send);
+      const sent = deliver(s); recordDecision(s, id, {sent, link: hasLink(s)});
+      if (!sent) return ok('No signal! The hill blocks the radio. The data waits in the rover until you are in view.');
+      if (s.cores === 1 && !s.earthAsked) { s.earthAsked = true; return ok(`📶 Sent! Earth got it ${sc.oneWaySeconds} s later. Earth: “We see shiny bits! Can you drill one more core at the second X?”`); }
+      return ok(`📶 Sent! Earth got it ${sc.oneWaySeconds} s later. Earth: “Great core. Thank you, crew!”`);
+    }
+    case 'finish':
+      if (s.at !== 'base') return fail('Drive back to the base first.');
+      if (s.hand) return fail('Put down what you are holding first.');
+      s.finished = true; s.phase = 'debrief'; recordDecision(s, id); return ok('Welcome home, crew!');
+  }
+  return fail('Nothing happens.');
+}
+
+export function getObjective(s) {
+  if (s.phase === 'brief') return 'Welcome to Horizon Base';
+  if (s.phase === 'debrief') return s.stoppedEarly ? 'Game stopped. Try again!' : s.finished ? 'See how your trip went' : 'Suit air ran low. Try again!';
+  if (!s.plan) return 'Pick a plan for the trip';
+  const sc = s.scenario;
+  if (s.hand === 'relay') return s.at === 'base' ? 'Put the relay on the rover’s cargo deck' : sc.stops[s.at].relaySpot ? 'Set the relay down on the yellow ring' : 'Put the relay on the rover';
+  if (s.hand === 'drill') return s.coreReady ? 'Put the drill on the rover' : s.cores < (s.earthAsked ? 2 : 1) ? `Set the drill on the ${s.earthAsked && s.cores ? 'second' : 'glowing'} X` : 'Put the drill back on the rover';
+  if (s.hand === 'core') return 'Put the core in the sample box on the rover';
+  if (s.at === 'base') {
+    if (s.stowed) return 'Go inside: hold E on the base hatch';
+    if (s.plan === 'relay' && s.relay === 'crate') return 'Pick up the radio relay by its handle';
+    return 'Get in the rover and drive to the ridge top';
+  }
+  if (s.at === 'saddle') {
+    if (s.stowed) return 'Drive home to the base';
+    if (s.relay === 'rover' && s.plan === 'relay') return 'Lift the relay off the rover';
+    if (s.relay === 'ground' && s.relayAt === 'saddle') {
+      if (!s.legs) return 'Put the relay’s legs out: hold E on it';
+      const hop = relayHops(s, 'hollow');
+      if (!hop.field) return 'Raise the mast: press E on the green ▲';
+      if (!s.aimed) return 'Aim the dish at the base: hold E on the dish';
+    }
+    return 'Drive down into Shadow Hollow';
+  }
+  // Shadow Hollow
+  if (s.coreReady) return 'Take the core out of the drill';
+  if (s.stowed > s.messages.length) return 'Send the data: hold E on the rover radio';
+  if (s.drill === 'ground' && s.cores < (s.earthAsked ? 2 : 1)) return s.drillAt === 'a' && s.earthAsked && s.cores ? 'Move the drill to the second X' : 'Drill a core: hold E on the drill';
+  if (s.drill === 'rover' && s.cores < (s.earthAsked ? 2 : 1)) return s.earthAsked ? 'Earth wants one more! Take the drill again' : 'Take the drill off the rover';
+  if (s.drill === 'ground') return 'Pick up the drill and put it on the rover';
+  return 'Drive home over the hill';
+}
+export function getSteps(s) {
+  const relay = s.plan === 'relay';
+  const list = [
+    {text: 'Pick a plan', done: !!s.plan},
+    ...(relay ? [{text: 'Load the relay on the rover', done: s.relay !== 'crate'}, {text: 'Set up the relay on the ridge', done: hasLinkTo(s)}] : []),
+    {text: 'Drill a core in the hollow', done: s.stowed > 0},
+    {text: 'Send the data', done: s.messages.length > 0},
+    {text: 'Drive home and go inside', done: s.finished},
+  ];
+  if (s.phase !== 'brief') { const now = list.find(x => !x.done); if (now) now.now = true; }
+  return list;
+}
+const hasLinkTo = s => { const h = relayHops(s, 'hollow'); return h.base && h.field; };
+
+export function getResult(s) {
+  const sc = s.scenario, completed = s.phase === 'debrief' && s.finished;
+  const live = s.messages.filter(m => m.live).length, delivered = s.messages.filter(m => m.status === 'delivered').length;
+  const suit = suitLeft(s);
+  const rating = !completed ? 'none' : s.stowed === 0 ? 'low' : s.rescued || suit < sc.lowSuitMinutes || s.battery < sc.batteryReserve ? 'ok' : 'great';
+  return {
+    outcome: !completed ? (s.stoppedEarly ? 'stopped' : 'suit-limit') : rating === 'low' ? 'no-science' : live ? 'live-science' : 'late-science',
+    completed, success: completed && rating !== 'low', mastered: rating === 'great',
+    score: completed ? Math.max(0, Math.min(100, Math.round(50 + s.stowed * 15 + live * 5 + suit / 6 + s.battery / 4 - s.quietMinutes / 2 - (s.rescued ? 25 : 0)))) : null,
+    plan: s.plan, rating, minutes: s.minutes, battery: s.battery, suitLeft: suit, cores: s.stowed, delivered, live,
+    quietMinutes: s.quietMinutes, relayUsed: hasLinkTo(s), stages: s.stages, rescued: s.rescued,
+  };
+}
+export {serializeSnapshot, restoreSnapshot};

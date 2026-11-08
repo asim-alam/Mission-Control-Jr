@@ -67,7 +67,7 @@ export class Player {
     if(this.route.length) {
       const next=this.route[0],distance=Math.hypot(next.x-p.x,next.z-p.z);
       if(distance<.12){this.route.shift();if(!this.route.length&&this.lookTarget)this.facing=Math.atan2(this.lookTarget.x-p.x,this.lookTarget.z-p.z);}
-      else {const amount=Math.min(distance,dt*3.8);dx=(next.x-p.x)/distance*amount;dz=(next.z-p.z)/distance*amount;}
+      else {const amount=Math.min(distance,dt*3.8*(this.speedScale??1));dx=(next.x-p.x)/distance*amount;dz=(next.z-p.z)/distance*amount;}
       if(this.lookTarget) {
         const target=Math.atan2(p.x-this.lookTarget.x,p.z-this.lookTarget.z);
         let diff=target-this.yaw;diff=Math.atan2(Math.sin(diff),Math.cos(diff));
@@ -77,14 +77,17 @@ export class Player {
       const forward=Number(this.keys.has('KeyW')||this.keys.has('ArrowUp'))-Number(this.keys.has('KeyS')||this.keys.has('ArrowDown'));
       const side=Number(this.keys.has('KeyD')||this.keys.has('ArrowRight'))-Number(this.keys.has('KeyA')||this.keys.has('ArrowLeft'));
       const length=Math.hypot(forward,side)||1,yaw=this.yaw;
-      dx=(side*Math.cos(yaw)-forward*Math.sin(yaw))/length*dt*3.8;
-      dz=(-side*Math.sin(yaw)-forward*Math.cos(yaw))/length*dt*3.8;
+      dx=(side*Math.cos(yaw)-forward*Math.sin(yaw))/length*dt*3.8*(this.speedScale??1);
+      dz=(-side*Math.sin(yaw)-forward*Math.cos(yaw))/length*dt*3.8*(this.speedScale??1);
     }
     const oldX=p.x,oldZ=p.z;
     const x=THREE.MathUtils.clamp(p.x+dx,this.bounds.minX,this.bounds.maxX);
-    if(!isBlocked(x,p.z,this.obstacles))p.x=x;
+    const allowed=(px,pz)=>!isBlocked(px,pz,this.obstacles)&&(!this.canMoveTo||this.canMoveTo(px,pz));
+    if(allowed(x,p.z))p.x=x;
     const z=THREE.MathUtils.clamp(p.z+dz,this.bounds.minZ,this.bounds.maxZ);
-    if(!isBlocked(p.x,z,this.obstacles))p.z=z;
+    if(allowed(p.x,z))p.z=z;
+    // Optional terrain following (outdoor Moon missions): keep the eyes above the ground.
+    if(this.groundAt){const target=this.groundAt(p.x,p.z)+(this.eyeHeight??1.62);p.y+=(target-p.y)*Math.min(1,dt*10);}
     const moved=Math.hypot(p.x-oldX,p.z-oldZ)>.001;
     if(moved)this.facing=Math.atan2(p.x-oldX,p.z-oldZ);
     if(moved){this.stepClock+=dt;if(this.stepClock>.43){this.onStep();this.stepClock=0;}}

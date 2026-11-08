@@ -1,9 +1,15 @@
 import {lunarDustScenario} from './scenario.js';
-export function createMission({scenario=lunarDustScenario,seed=42,initialCarry={}}={}){
- const valid=initialCarry.version===1&&['near','ridge','storage'].includes(initialCarry.collectorLocation)&&Number.isFinite(initialCarry.energyWh);
- const carried=valid?Math.max(0,Math.min(scenario.capacityWh,initialCarry.energyWh)):scenario.initialEnergyWh;
- const energy=Math.max(scenario.minimumRecoveryWh,carried);
- return {missionId:'lunar-dust',scenario:structuredClone(scenario),seed,phase:'brief',paused:false,simSeconds:0,events:[],energyWh:energy,recoveryChargeWh:energy-carried,airReserveUnits:scenario.initialAirReserve,
-  items:[{id:'panel',dust:100,location:'dirty'},{id:'boots',dust:100,location:'dirty'},{id:'tool',dust:80,location:'dirty'}],rackClosed:false,rackPoweredSeconds:0,treatment:null,filterRemaining:scenario.initialFilter??30,spareFilters:scenario.spareFilters??1,filterInspected:false,
-  outerDoor:'open',innerDoor:'closed',cycleComplete:false,boundaryVerified:false,deconCycles:0,decisions:[],notice:''};
+import {SAVE_SCHEMA} from '../shared/schema.js';
+
+export const ITEMS = ['suit', 'helmet', 'bag', 'boots'];
+export function createMission({scenario = lunarDustScenario, seed = 42} = {}) {
+  return {
+    missionId: 'lunar-dust', schema: SAVE_SCHEMA, scenario: structuredClone(scenario), seed,
+    phase: 'brief', plan: null, minutes: 0, simSeconds: 0, power: scenario.powerUnits,
+    outer: 'open', pressurized: false, hand: null, edsItem: null,
+    items: Object.fromEntries(ITEMS.map(id => [id, {dust: scenario.items[id].dust, cleanedBy: []}])),
+    scratched: false, airDust: 0, filterLoad: 0, spares: scenario.spareFilters, swaps: 0,
+    baseDust: 0, leaks: 0, innerOpen: false, uses: {brush: 0, vacuum: 0, eds: 0, scrub: 0},
+    decisions: [], notice: '', stoppedEarly: false,
+  };
 }

@@ -1,38 +1,98 @@
-import {startPip} from '../../companion.js';startPip('earth-delay');
-import {tuneScenario,reserveText} from '../../simulation/difficulty.js';
+// "Message to Earth" — story, plan board, Earth-link console and repair debrief.
+import {runMission} from '../shared/controller.js';
+import {planCards, compareTable} from '../shared/hud.js';
+import {readHistory, pushHistory} from '../shared/runtime.js';
+import {tuneScenario} from '../../simulation/difficulty.js';
 import {delayScenario} from './scenario.js';
-import {learningDetail,learningMode,learningPrompt,learningChoices} from '../../simulation/learning.js';
-import {stationActionHandler} from '../../simulation/interactions.js';
-import {samplerSnapshot} from '../../simulation/sampler.js';
-import {connectChapter,completeChapter,openJourney,journeyPaused} from '../../campaign-bridge.js';
-import {readJourney} from '../../journey-state.js';
 import {createMission} from './state.js';
-import {applyAction,advanceMission,getObjective,getResult,serializeSnapshot,restoreSnapshot} from './actions.js';
-import {saveActiveAttempt,loadActiveAttempt,clearActiveAttempt} from '../../simulation/mission-storage.js';
-import {createScene} from './scene.js';
-const sampleMode=new URLSearchParams(location.search).get('sampler')==='1';
-const $=id=>document.getElementById(id);let carry={};try{carry=readJourney(localStorage).records.greenhouse?.carry||{};}catch{}
-let recoveredSnapshot=sampleMode?null:loadActiveAttempt('earth-delay'),recoveredAttempt=!!recoveredSnapshot;let mission=recoveredSnapshot?restoreSnapshot(recoveredSnapshot):sampleMode?samplerSnapshot('earth-delay'):createMission({initialCarry:carry,scenario:tuneScenario('earth-delay',delayScenario)}),world,modalOpen=true,checkpoint=null,comparison=null,reported=false,lastSaveAt=0;
-const button=(label,run,disabled=false)=>{const b=document.createElement('button');b.textContent=label;b.disabled=disabled;b.onclick=run;return b;};
-function modal(title,body,actions,showAll=false){const prompt=learningPrompt('earth-delay'),detail=learningDetail('earth-delay');let content=body;if(prompt)content+=`<aside class="decision-tip"><b>Think about it</b><br>${prompt}</aside>`;if(detail)content+=`<aside class="detail-note"><b>More details</b><br>${detail}</aside>`;modalOpen=true;if(world){world.player.enabled=false;world.player.release();}$("dialog-title").textContent=title;$("dialog-body").innerHTML=content;const choices=learningChoices(actions,showAll);$("dialog-actions").replaceChildren(...choices.map(a=>a.more?button(a.label,()=>modal(title,body,actions,true)):button(a.label,a.run,a.disabled)));$("dialog").hidden=false;$("dialog-actions").querySelector('button:not(:disabled)')?.focus();}
-function close(){modalOpen=false;$('dialog').hidden=true;if(world)world.player.enabled=!journeyPaused&&mission.phase==='active';render();}
-function persistMission(force=false){if(sampleMode)return;if(mission.phase==='brief')return;if(mission.phase==='debrief'){clearActiveAttempt('earth-delay');return;}if(!force&&Date.now()-lastSaveAt<3000)return;lastSaveAt=Date.now();if(!saveActiveAttempt('earth-delay',serializeSnapshot(mission)))mission.notice='Your game could not be saved. Keep this tab open.';}
-function recoverSavedAttempt(){modal('Welcome back!','<p>We found your saved game.</p>',[{label:'Keep playing',run:()=>{recoveredAttempt=false;close();}},{label:'Start over',run:()=>{clearActiveAttempt('earth-delay');location.reload();}}]);}
-function run(action){mission.notice='';const result=applyAction(mission,action);if(!mission.notice)mission.notice=result.message;world?.update(mission);persistMission(true);if(['debrief','suspended'].includes(mission.phase)){debrief();return;}render();return result;}
-function sources(){modal('Why is Earth so slow to answer?',`<p>A <a href="https://ssd.jpl.nasa.gov/horizons/" target="_blank" rel="noopener">NASA JPL Horizons</a> shows that on 14 November 2026, a message takes about ${(mission.scenario.oneWaySeconds/60).toFixed(0)} minutes to go from Mars to Earth. Even moving as fast as light!</p><p>The answer takes the same time to come back. Earth also needs ${mission.scenario.processingSeconds/60} minutes to think. When Mars and Earth are far apart, it takes even longer. The broken pump is pretend.</p>`,[{label:'Back',run:()=>mission.phase==='brief'?brief():['debrief','suspended'].includes(mission.phase)?debrief():close()}]);}
-function brief(){if(sampleMode)$('dialog-label').textContent='MISSION SAMPLER / PRACTICE';modal('Earth is far away',`<p>Luca: “Uh oh! The cooling pump stopped. We have spare air, but not forever.”</p><p>Send a message to Earth for help. While you wait, you choose: fix it yourself, or save air until Earth answers.</p><p>Walk with WASD or arrows. Drag to look. Press E next to a machine. The clock stops while you read.</p>`,[{label:'Begin exercise',run:()=>{if(!sampleMode)run({id:'begin'});else checkpoint=serializeSnapshot(mission);close();}},{label:'NASA connection',run:sources}]);}
-function pumpMenu(){const actions=[];if(!mission.faultInspected)actions.push({label:'Look at the pump',run:()=>{run({id:'inspectFault'});pumpMenu();}});if(mission.faultInspected&&!mission.branchIsolated&&!mission.processorRunning)actions.push({label:'Turn off pump power · 1 min',run:()=>{run({id:'isolatePumpBranch'});if(mission.phase==='active')pumpMenu();}});if(mission.branchIsolated&&!mission.coverOpen&&!mission.cartridgeReplaced)actions.push({label:'Open the cover · 45 sec',run:()=>{run({id:'openServiceCover'});if(mission.phase==='active')pumpMenu();}});if(mission.coverOpen&&!mission.cartridgeReplaced)actions.push({label:'Put in new part · 2 min',run:()=>{run({id:'replaceCartridge'});if(mission.phase==='active')pumpMenu();}});if(mission.coverOpen&&mission.cartridgeReplaced)actions.push({label:'Close the cover · 30 sec',run:()=>{run({id:'latchCover'});if(mission.phase==='active')pumpMenu();}});if(mission.branchIsolated&&mission.cartridgeReplaced&&mission.coverLatched&&!mission.processorRunning)actions.push({label:'Turn pump on · 30 sec',run:()=>{run({id:'restoreBranch'});if(mission.phase==='active')pumpMenu();}});if(mission.processorRunning&&!mission.verified)actions.push({label:'Test the pump · 1 min',run:()=>{run({id:'verifyFlow'});if(mission.phase==='active')pumpMenu();}});if(mission.verified)actions.push({label:'Finish recovery',run:()=>run({id:'finish'})});actions.push({label:'Back',run:close});
- modal('Broken pump',`<p>Jin: “Do the steps in order. Power off first, so it is safe.”</p><p>Branch: ${mission.branchIsolated?'isolated':'connected'} · cover: ${mission.coverOpen?'open':'closed'} · spare cartridges: ${mission.spareCartridges} · pump: ${mission.processorRunning?'running':'stopped'}.</p><p>${mission.notice||''}</p>`,actions);}
-function reserveMenu(){const actions=[];if(!mission.reserveConnected)actions.push({label:'Turn on spare air · 1 min',run:()=>{run({id:'connectReserve'});if(mission.phase==='active')reserveMenu();}});actions.push({label:mission.policy==='normal'?'Save air: pause the science':'Turn science back on',run:()=>{run({id:'selectSupportPolicy',payload:mission.policy==='normal'?'conserve':'normal'});reserveMenu();}},{label:'Suspend safely',run:()=>run({id:'suspendExercise'})},{label:'Back',run:close});
- modal('Spare air',`<p>Amara: “I can pause my science. Then we use less air while we wait.”</p><p>Reserve: ${mission.reserveConnected?'connected':'not connected'} · policy: ${mission.policy} · study: ${mission.experimentOn?'running':'paused'}. ${mission.notice||''}</p>`,actions);}
-function messageText(){if(!mission.message)return 'No message sent yet.';return {queued:'Getting ready to send',outbound:'Flying to Earth…',processing:'Earth is thinking…',returning:'The answer is flying to Mars…',delivered:'Reply received','reception-blocked':'The answer is waiting to be sent'}[mission.message.status];}
-function terminal(){const actions=[];if(!mission.message)actions.push({label:'Send Earth request',run:()=>{const r=run({id:'sendEarthRequest'});if(r?.ok)checkpoint=serializeSnapshot(mission);terminal();}});if(mission.message&&mission.message.status!=='delivered')actions.push({label:'Wait 5 minutes',run:()=>{run({id:'wait',payload:300});if(mission.phase==='active')terminal();}});if(mission.message?.status==='delivered'&&!mission.processorRunning)actions.push({label:'Try Earth’s idea · 2 min',run:()=>{run({id:'applyAdvice'});if(mission.phase==='active')terminal();}});actions.push({label:'NASA connection',run:sources},{label:'Back',run:close});
- const cropStatus=mission.crops.map(c=>`tray ${c.id.toUpperCase()}: ${c.harvested?'already harvested':`stress ${Math.round(c.stress*100)}%`}`).join(' · ');
- modal('Message to Earth',`<p>Jin: “Earth has the pump’s instructions. Let’s ask them.”</p><p>Status: <b>${messageText()}</b>. A message takes about ${(mission.scenario.oneWaySeconds/60).toFixed(0)} minutes to get to Earth. Then the answer needs time to come back.</p><p>Your plants: ${cropStatus}. (These come from the Greenhouse mission, if you played it.)</p><p>${mission.message?.status==='delivered'?'Earth: “Thanks for your message! Turn the pump power off before you fix it.”':''}</p><p>${mission.notice||''}</p>`,actions);}
-function interact(targetId){const s=targetId?world?.stations.find(station=>station.id===targetId):world?.nearest();const distance=s?Math.hypot(world.player.position.x-s.stand.x,world.player.position.z-s.stand.z):Infinity;if(!s||distance>1.5){mission.notice='Walk closer, then press E.';render();return;}if(mission.phase!=='active')return;if(s.id==='pump')pumpMenu();if(s.id==='reserve')reserveMenu();if(s.id==='terminal')terminal();}
-function render(){if(!world)return;persistMission();$('energy').textContent=reserveText(mission.energyWh,mission.scenario.capacityWh,'Wh');$('air').textContent=reserveText(mission.airReserveUnits,mission.scenario.initialAirReserve,'units');$('exposure').textContent=messageText();$('clock').textContent=`Clock · ${Math.floor(mission.simSeconds/60)}:${String(Math.floor(mission.simSeconds%60)).padStart(2,'0')}`;$('objective').textContent=getObjective(mission);$('notice').textContent=mission.notice||'';const s=world.nearest(),target=s?.distance<=1.5?s.title:'';if($('station-actions').dataset.station!==target){$('station-actions').dataset.station=target;$('station-actions').replaceChildren(...(target?[button(`Use ${target} · E`,stationActionHandler(s,interact))]:[]));}world.update(mission);}
-function debrief(){const r=getResult(mission);if(!reported){completeChapter('earth-delay',{outcome:r.outcome,attemptCompleted:r.completed,success:r.completed,mastered:r.verified,carry:{version:1,...r}});reported=true;}const prior=comparison;const compare=prior?`<h3>Same start</h3><p>Previous / this plan: air ${Math.round(prior.airReserveUnits)} / ${Math.round(r.airReserveUnits)} units; energy ${Math.round(prior.energyWh)} / ${Math.round(r.energyWh)} Wh; spares ${prior.spareRemaining} / ${r.spareRemaining}; pump restored at ${prior.restoredAt===null?'not restored':Math.round(prior.restoredAt/60)+' min'} / ${r.restoredAt===null?'not restored':Math.round(r.restoredAt/60)+' min'}.</p>`:'';
- const crops=r.crops.map(c=>`tray ${c.id.toUpperCase()} ${c.harvested?'was already harvested':`${Math.round(c.stress*100)}% stress`}`).join(' · ');const title={ 'reserve-limit':'Training paused','protected-suspension':'A protected stop','bridge-and-verify':'You had a plan while you waited!','local-recovery':'Local recovery'}[r.outcome];modal(title,`<p>${r.outcome==='reserve-limit'?'The spare air ran out. Try a different plan!':r.outcome==='protected-suspension'?'The crew is safe. The pump still needs fixing.':r.outcome==='bridge-and-verify'?'You saved air while you waited, then used Earth’s idea. Smart!':'You fixed the pump yourself with the spare part. Great job!'}</p><p>Air: ${Math.round(r.airReserveUnits)} units · energy: ${Math.round(r.energyWh)} Wh · spare cartridges: ${r.spareRemaining} · reply: ${r.replyReceivedAt===null?'not yet received':`received at ${Math.round(r.replyReceivedAt/60)} min`} · study: ${Math.round(r.experimentPoweredSeconds/60)} powered minutes.</p><p>Plants from the greenhouse ${r.cropCarryUsed?': yes':': no'}: ${crops}.</p><p>The numbers are made simple for the game.</p>${compare}`,[...(checkpoint?[{label:'Try a different plan',run:()=>{comparison=r;mission=restoreSnapshot(checkpoint);reported=false;world.update(mission);close();}}]:[]),{label:'Start again',run:()=>{clearActiveAttempt('earth-delay');recoveredAttempt=false;comparison=null;mission=sampleMode?samplerSnapshot('earth-delay'):createMission({initialCarry:carry,scenario:tuneScenario('earth-delay',delayScenario)});checkpoint=null;reported=false;world.update(mission);if(mission.phase==='suspended')debrief();else if(recoveredAttempt)recoverSavedAttempt();else brief();}},{label:'Return to journey',run:openJourney},{label:'Sources',run:sources}]);}
-function pause(){if(modalOpen)return;modal('Paused','<p>The game is paused.</p>',[{label:'Resume',run:close},{label:'NASA connection',run:sources},{label:'Return to journey',run:openJourney}]);}
-$('pause').onclick=pause;$('journey').onclick=openJourney;document.addEventListener('visibilitychange',()=>{if(document.hidden&&!modalOpen&&mission.phase==='active')pause();});connectChapter('earth-delay',value=>{if(world){world.player.enabled=!value&&!modalOpen&&mission.phase==='active';if(value)world.player.release();}});
-try{world=await createScene({container:$('world'),onInteract:interact,onPause:pause,onMove:dt=>{if(!modalOpen&&!journeyPaused&&mission.phase==='active'){advanceMission(mission,dt);if(mission.phase==='suspended')debrief();else render();}}});$('locations').replaceChildren(...world.stations.map(s=>button(s.title,()=>{if(modalOpen)return;world.walkTo(s.id);mission.notice=`Walking to ${s.title}. Press E when you get there.`;render();})));world.update(mission);if(recoveredAttempt&&['inspect','active'].includes(mission.phase))recoverSavedAttempt();else if(['suspended','debrief'].includes(mission.phase))debrief();else brief();}catch(error){console.error(error);modal('The repair room did not load','<p>Please reload the page.</p>',[{label:'Return to journey',run:openJourney}]);}
+import {applyAction, advanceMission, getObjective, getSteps, getResult, PLANS, PART_NAMES, messageProgress, earthRoundTrip, earthAnswer, waterRate} from './actions.js';
+import {createDelayScene} from './scene.js';
+
+const ID = 'earth-delay';
+const min = s => Math.max(0, Math.round(s / 60));
+
+function sources(ctx) {
+  const sc = ctx.mission.scenario;
+  return `<p>On <b>${sc.geometryDate.slice(0, 10)}</b>, light took <b>${(sc.oneWaySeconds / 60).toFixed(1)} minutes</b> to travel from Mars to Earth. We got this from NASA JPL’s <b>Horizons</b> system, which tracks where the planets are. <a href="https://ssd.jpl.nasa.gov/horizons/" target="_blank" rel="noopener">Try Horizons</a>.</p>
+  <p>Radio messages travel at the speed of light, so nothing can make the answer come faster. Real Mars crews will need to fix many things on their own. <a href="https://www.nasa.gov/humans-in-space/the-human-body-in-space/" target="_blank" rel="noopener">Read about the hazards of deep space, including distance from Earth</a>.</p>
+  <p class="mx-made-up"><b>Made up for the game:</b> ${sc.limitation}</p>`;
+}
+function brief(ctx) {
+  const sc = ctx.mission.scenario, carry = ctx.mission.carryL;
+  ctx.dialog({label: `MARS DAY ${sc.sol} · ALARM!`, title: 'The water machine broke!', body: `
+    <p><b>Luca:</b> “Our water recycler just stopped! It cleans all our water. We have <b>${ctx.mission.waterL.toFixed(0)} litres</b> left${carry ? `, including ${carry.toFixed(0)} L saved in the greenhouse tank` : ''}.”</p>
+    <p><b>Elena:</b> “We can ask the experts on Earth. But Earth is far away. A message takes <b>${(sc.oneWaySeconds / 60).toFixed(0)} minutes</b> to get there, even at the speed of light, and the answer takes just as long to come back.”</p>
+    <ul class="mx-howto"><li>📡 Send a message at the <b>Earth link</b>.</li><li>🔌 Turn the power <b>off</b> before you open the machine.</li><li>🧪 Test parts with the <b>multimeter</b>. Swap broken ones for spares.</li><li>🚿 Flip <b>save-water mode</b> to make the water last.</li></ul>
+    <aside class="mx-detail"><b>More details</b><br>Time runs ${sc.timeScale}× faster here: one real second is ${sc.timeScale} mission seconds. The crew uses ${sc.waterUseLPerMin} L of water a minute, or ${sc.saveUseLPerMin} L in save mode.</aside>`,
+    actions: [{label: '▶ Let’s fix it!', primary: true, run: () => { ctx.act({id: 'begin'}, {quiet: true}); planBoard(ctx); }}, {label: 'Is this real?', run: () => ctx.sourcesDialog(() => brief(ctx))}]});
+}
+function planBoard(ctx) {
+  ctx.saveCheckpoint();
+  const sc = ctx.mission.scenario, last = readHistory(ID).at(-1), wait = earthRoundTrip(ctx.mission, false);
+  ctx.dialog({label: 'PICK A PLAN', title: 'How will you fix it?', body: `<p>An answer from Earth takes about <b>${min(wait)} mission minutes</b>. You have spares: ${sc.spares.pump} pump, ${sc.spares.valve} valve, ${sc.spares.filter} filters.</p>
+    ${planCards(Object.entries(PLANS).map(([id, p]) => ({id, ...p, cost: {earth: '🐢 Slow · ✅ Sure', self: '🐇 Fast · 🎲 Risky', both: '🤝 Team · 🧠 Smart'}[id]})), last?.plan)}
+    ${last ? `<p class="mx-last">Last time: <b>${PLANS[last.plan]?.title || 'a plan'}</b> · ${last.water} L water left · ${last.minutes} min. Try something new?</p>` : ''}
+    <aside class="mx-detail"><b>More details</b><br>If you send your meter readings with the message, Earth can answer faster.</aside>`,
+    actions: [], onOpen: body => body.querySelectorAll('[data-plan]').forEach(b => { b.onclick = () => { ctx.act({id: 'choosePlan', payload: b.dataset.plan}); ctx.close(); }; })});
+}
+function answerDialog(ctx) {
+  const a = earthAnswer(ctx.mission); ctx.act({id: 'readAnswer'}, {quiet: true});
+  ctx.dialog({label: 'MESSAGE FROM EARTH', title: '📨 Earth answered!', body: `<div class="mx-letter"><p><b>From:</b> ${a.from}</p>${a.lines.map(l => `<p>${l}</p>`).join('')}</div>`,
+    actions: [{label: 'Got it!', primary: true, run: () => ctx.close()}]});
+}
+function consoleScreen(ctx) {
+  const s = ctx.mission, sc = s.scenario, p = messageProgress(s);
+  if (s.fixed) return ctx.dialog({label: 'EARTH LINK', title: 'Clean water is flowing!', body: '<p>Send Earth the good news and finish the mission.</p>', actions: [{label: '✅ Finish the mission', primary: true, run: () => { ctx.close(); ctx.act({id: 'finish'}); }}, {label: '← Back', run: () => ctx.close()}]});
+  if (s.message.status === 'arrived') return answerDialog(ctx);
+  const found = Object.entries(s.findings).filter(([, v]) => v).map(([k, v]) => `${PART_NAMES[k]}: ${v === 'bad' ? 'broken' : 'OK'}`);
+  const waitLitres = p ? waterRate(s) * p.secondsLeft : 0;
+  const body = s.message.status === 'none'
+    ? `<p>A message to Earth and back takes about <b>${min(earthRoundTrip(s, found.length > 0))} mission minutes</b>.</p>${found.length ? `<p>📎 Your meter readings will be sent too: ${found.join(', ')}. That helps Earth answer faster!</p>` : '<p>Tip: if you test some parts first, Earth can answer faster.</p>'}`
+    : `<p>${p.leg === 'out' ? '✉️ Your message is flying to Earth.' : p.leg === 'earth' ? '🧠 Earth is thinking about your problem.' : '✉️ The answer is flying back to Mars.'} It arrives in <b>${min(p.secondsLeft)} mission minutes</b>.</p>
+       <p>If you just wait, the crew will use about <b>${waitLitres.toFixed(1)} L</b> of water${s.saveMode ? ' (save mode is on)' : '. Turn on save-water mode to use less'}. Or keep working while you wait!</p>`;
+  ctx.dialog({label: 'EARTH LINK · MARS ↔ EARTH', title: s.message.status === 'none' ? 'Send a message to Earth?' : 'Waiting for Earth', body,
+    actions: [
+      ...(s.message.status === 'none' ? [{label: '📡 Send the message', primary: true, run: () => { ctx.act({id: 'sendMessage'}); ctx.close(); }}]
+        : [{label: '⏩ Wait for the answer', primary: s.plan === 'earth', run: () => { ctx.close(); ctx.act({id: 'waitForEarth'}); if (ctx.mission.message.status === 'arrived') answerDialog(ctx); }}]),
+      {label: '← Back', run: () => ctx.close()}, {label: 'Stop practice', run: () => { ctx.close(); ctx.act({id: 'stopEarly'}); }}]});
+}
+function debrief(ctx) {
+  const r = getResult(ctx.mission);
+  ctx.report.send({outcome: r.outcome, completed: r.completed, success: r.success, mastered: r.mastered, score: r.score, carry: {plan: r.plan, rating: r.rating, waterLeftL: r.waterLeftL, askedEarth: r.askedEarth}});
+  const history = r.completed && !ctx.sampleMode ? pushHistory(ID, {plan: r.plan, water: r.waterLeftL, minutes: r.minutes, spares: r.sparesUsed, wasted: r.sparesWasted, fixed: r.fixed}) : readHistory(ID);
+  ctx.persist(ctx.mission, true); ctx.setControls();
+  const title = !r.completed ? 'Practice stopped' : !r.fixed ? '😟 The water ran low' : {great: '🏆 Super fixer!', ok: '👍 Fixed it!', low: '😅 Fixed, just in time'}[r.rating];
+  const broke = `The <b>${PART_NAMES[r.broken]}</b> was broken${r.cause ? `, because the <b>${PART_NAMES[r.cause]}</b> was clogged` : ''}.`;
+  const tip = !r.completed ? 'You can try again any time.' : !r.fixed ? 'Tip: turn on save-water mode early, and keep working while Earth thinks.' : r.sparesWasted ? 'Tip: test a part before you swap it, so you do not use up spares you might need later.' : !r.askedEarth ? 'You fixed it alone! Next time, try asking Earth too. What could go wrong without help?' : r.plan === 'earth' ? 'Tip: you could test parts while the message travels. Then Earth answers faster!' : 'Smart teamwork with Earth. Can you save even more water?';
+  const compare = history.length > 1 ? compareTable(history.map((h, i) => i === history.length - 1 ? 'This time' : `Try ${i + 1}`), [
+    {label: 'Plan', values: history.map(h => PLANS[h.plan]?.title || '—')},
+    {label: 'Water left (L)', values: history.map(h => h.water), better: 'high'},
+    {label: 'Mission minutes', values: history.map(h => h.minutes), better: 'low'},
+    {label: 'Spares used', values: history.map(h => h.spares), better: 'low'},
+    {label: 'Spares wasted', values: history.map(h => h.wasted), better: 'low'}]) : '<p class="mx-last">Play again with a different plan to compare results here.</p>';
+  ctx.dialog({label: 'MISSION REPORT · MESSAGE TO EARTH', title, body: `
+    ${r.completed ? `<p>${broke}</p><p>💧 Water left: <b>${r.waterLeftL} L</b> · ⏱ <b>${r.minutes}</b> mission minutes · 🔧 Spares used: <b>${r.sparesUsed}</b>${r.sparesWasted ? ` (${r.sparesWasted} not needed)` : ''} · 📡 Asked Earth: <b>${r.askedEarth ? 'yes' : 'no'}</b></p>` : ''}
+    <p class="mx-tip">💡 ${tip}</p>${compare}
+    <aside class="mx-detail"><b>More details</b><br>On the Moon, a message to Earth takes about one second. On Mars it takes many minutes, so Mars crews must be ready to solve problems on their own.</aside>`,
+    actions: [
+      {label: '🔁 Try a different plan', primary: true, disabled: !ctx.checkpoint, run: () => ctx.retry(() => planBoard(ctx))},
+      {label: '↺ Play again', run: () => ctx.restart()}, {label: '🗺️ Back to the map', run: ctx.openJourney}, {label: 'Sources', run: () => ctx.sourcesDialog(() => debrief(ctx))}]});
+}
+
+runMission({
+  id: ID, title: 'Message to Earth', place: 'MISSION CONTROL JR. · MARS DAY 35', carryFrom: 'greenhouse',
+  meters: [{id: 'water', icon: '💧', label: 'Water left'}, {id: 'earth', icon: '📡', label: 'Earth’s answer'}, {id: 'spares', icon: '🔧', label: 'Spare parts'}],
+  create: carry => createMission({scenario: tuneScenario(ID, delayScenario), initialCarry: carry, seed: 42 + readHistory(ID).length}),
+  rules: {applyAction, getObjective, getSteps, advance: (m, dt) => advanceMission(m, dt)},
+  scene: ctx => createDelayScene({container: document.getElementById('world'), getState: () => ctx.mission, act: a => ctx.act(a), onPause: () => ctx.pause(), onConsole: () => consoleScreen(ctx)}),
+  brief, sources, debrief,
+  sampler(ctx) { ctx.act({id: 'begin'}, {quiet: true}); ctx.saveCheckpoint(); ctx.act({id: 'choosePlan', payload: 'both'}, {quiet: true}); },
+  hud(ctx) {
+    const s = ctx.mission, {hud} = ctx, p = messageProgress(s), sc = s.scenario;
+    hud.timer(s.phase === 'active' && s.plan ? `⏱ Mission time ${Math.floor(s.simSeconds / 60)} min${s.saveMode ? ' · 🚿 saving' : ''}` : '', s.waterL < 8);
+    hud.meter('water', {value: s.waterL, max: s.waterStartL, text: `${s.waterL.toFixed(1)} L`, warn: .3});
+    hud.meter('earth', p ? {value: p.leg === 'arrived' ? 1 : 1 - p.secondsLeft / earthRoundTrip(s), max: 1, text: p.leg === 'arrived' ? 'Arrived!' : `${min(p.secondsLeft)} min`} : {value: 0, max: 1, text: 'Not sent'});
+    const left = s.spares.pump + s.spares.valve + s.spares.filter, total = sc.spares.pump + sc.spares.valve + sc.spares.filter;
+    hud.meter('spares', {value: left, max: total, text: `${left} of ${total}`});
+  },
+}).then(ctx => addEventListener('keydown', e => { if (e.code === 'KeyQ' && ctx.playing() && ctx.mission.holding) ctx.act({id: 'putBack'}); }));

@@ -1,6 +1,25 @@
-import inputs from '../../data/normalized.json' with {type:'json'};
-export const greenhouseScenario={id:'meridian-cultivation-v1',version:1,kind:'authored exercise with NASA-informed concepts',
- sourceIds:['osdr-osd-269','nasa-life-support-baseline'],durationSeconds:172800,periodSeconds:86400,lightSeconds:inputs.lettuceReference.lightHours*3600,
- initialEnergyWh:3600,capacityWh:4000,essentialW:60,lightW:100,generationW:[220,205],initialWaterKg:12,
- pumpW:20,waterPerTrayKg:1,progressPerFullLightPeriod:.15,faultFlowFactor:.6,repairSeconds:1800,repairEnergyWh:40,
- limitation:'Plants were already growing. Mars crop growth, resources, fault, yields and this simplified 24-hour schedule are authored for play, not measured Mars production.'};
+import inputs from '../../data/normalized.json' with {type: 'json'};
+
+// "The Greenhouse Promise" — grow a fresh salad for Elena's birthday in three Mars days.
+// SOURCED: the light schedule (NASA OSDR study OSD-269: 16 h light, 8 h dark, ISS Veggie lettuce),
+// and the crops themselves (red romaine lettuce and mizuna grown in Veggie; chile peppers harvested on the ISS in 2021).
+// AUTHORED (game tuning): growth per day, power use, water use, the leak and portions. Not measured Mars farming.
+export const greenhouseScenario = {
+  id: 'meridian-cultivation-v2', version: 2, sourceIds: ['osdr-osd-269', 'nasa-life-support-baseline'],
+  lightHours: inputs.lettuceReference.lightHours, darkHours: inputs.lettuceReference.darkHours, startSol: 32,
+  growDays: 2,                        // two nights of growing, then harvest day
+  powerBudgetKWh: 2.2,                // solar power for grow lights each day
+  batteryKWh: 1.2,                    // extra stored power you may borrow over the whole mission
+  lightKWh: {off: 0, half: .55, full: 1},
+  growth: {off: 0, half: .6, full: 1},
+  plantUseL: {off: .4, half: .8, full: 1.2},
+  moistureBand: [1, 3.2], startMoisture: 1.6, waterPerTurnL: 1, tankStartL: 18, babyHarvest: .8,
+  leakDay: 2, leakLPerDay: 6, leakFlowFactor: .5,
+  crops: {
+    a: {crop: 'lettuce', name: 'Red lettuce', icon: '🥬', start: 1.4, ready: 3, portions: 4},
+    b: {crop: 'mizuna', name: 'Mizuna greens', icon: '🌿', start: 1.2, ready: 3, portions: 3},
+    c: {crop: 'pepper', name: 'Chile peppers', icon: '🌶️', start: 3.5, ready: 5, portions: 2},
+  },
+  saladGoal: 6,
+  limitation: 'The 16-hour light schedule and the crops are real NASA space-farming examples. How fast the plants grow, the power and water numbers, the leak and the portions are made up for this game.',
+};

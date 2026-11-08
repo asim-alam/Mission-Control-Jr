@@ -1,32 +1,84 @@
-import {startPip} from '../../companion.js';startPip('lunar-dust');
-import {tuneScenario,reserveText} from '../../simulation/difficulty.js';
+// "Dust Busters" — story, cleaning plan, airlock HUD and debrief.
+import {runMission} from '../shared/controller.js';
+import {planCards, compareTable} from '../shared/hud.js';
+import {readHistory, pushHistory} from '../shared/runtime.js';
+import {tuneScenario} from '../../simulation/difficulty.js';
 import {lunarDustScenario} from './scenario.js';
-import {learningDetail,learningMode,learningPrompt,learningChoices} from '../../simulation/learning.js';
-import {stationActionHandler} from '../../simulation/interactions.js';
-import {connectChapter,completeChapter,openJourney,journeyPaused} from '../../campaign-bridge.js';
-import {readJourney} from '../../journey-state.js';
-import {createMission} from './state.js';
-import {applyAction,advanceMission,getObjective,getResult,serializeSnapshot,restoreSnapshot} from './actions.js';
-import {saveActiveAttempt,loadActiveAttempt,clearActiveAttempt} from '../../simulation/mission-storage.js';
-import {createScene} from './scene.js';
-const sampleMode=new URLSearchParams(location.search).get('sampler')==='1';const $=id=>document.getElementById(id);let carry={};try{carry=readJourney(localStorage).records['lunar-sunlight']?.carry||{};}catch{}
-let recoveredSnapshot=sampleMode?null:loadActiveAttempt('lunar-dust'),recoveredAttempt=!!recoveredSnapshot;let mission=recoveredSnapshot?restoreSnapshot(recoveredSnapshot):createMission({initialCarry:carry,scenario:tuneScenario('lunar-dust',lunarDustScenario)}),world,modalOpen=true,checkpoint=null,comparison=null,reported=false,lastSaveAt=0;
-const button=(label,run,disabled=false)=>{const b=document.createElement('button');b.textContent=label;b.disabled=disabled;b.onclick=run;return b;};
-function modal(title,body,actions,showAll=false){const prompt=learningPrompt('lunar-dust'),detail=learningDetail('lunar-dust');let content=body;if(prompt)content+=`<aside class="decision-tip"><b>Think about it</b><br>${prompt}</aside>`;if(detail)content+=`<aside class="detail-note"><b>More details</b><br>${detail}</aside>`;modalOpen=true;if(world){world.player.enabled=false;world.player.release();}$("dialog-title").textContent=title;$("dialog-body").innerHTML=content;const choices=learningChoices(actions,showAll);$("dialog-actions").replaceChildren(...choices.map(a=>a.more?button(a.label,()=>modal(title,body,actions,true)):button(a.label,a.run,a.disabled)));$("dialog").hidden=false;$("dialog-actions").querySelector('button:not(:disabled)')?.focus();}
-function close(){modalOpen=false;$('dialog').hidden=true;if(world)world.player.enabled=!journeyPaused&&mission.phase==='active';render();}
-function persistMission(force=false){if(sampleMode)return;if(mission.phase==='brief')return;if(mission.phase==='debrief'){clearActiveAttempt('lunar-dust');return;}if(!force&&Date.now()-lastSaveAt<3000)return;lastSaveAt=Date.now();if(!saveActiveAttempt('lunar-dust',serializeSnapshot(mission)))mission.notice='Your game could not be saved. Keep this tab open.';}
-function recoverSavedAttempt(){modal('Welcome back!','<p>We found your saved game.</p>',[{label:'Keep playing',run:()=>{recoveredAttempt=false;close();}},{label:'Start over',run:()=>{clearActiveAttempt('lunar-dust');location.reload();}}]);}
-function run(action){mission.notice='';const result=applyAction(mission,action);if(!mission.notice)mission.notice=result.message;world?.update(mission);persistMission(true);if(['debrief','suspended'].includes(mission.phase)){debrief();return;}render();return result;}
-function sources(){modal('This really happened!',`<p>NASA tested a <a href="https://www.nasa.gov/blogs/missions/2025/03/04/blue-ghost-begins-surface-operations-captures-descent-video-sunrise/" target="_blank" rel="noopener">dust shield on the Moon</a> in 2025. It used electricity to push Moon dust off glass!</p><p>Our dust cleaner is pretend. It cleans one flat panel, not a whole space suit. There is no wind on the Moon, because there is almost no air. The dust came in stuck to our gear.</p>`,[{label:'Back',run:()=>mission.phase==='brief'?brief():['debrief','suspended'].includes(mission.phase)?debrief():close()}]);}
-function brief(){modal('Dust at the door!',`<p>Elena: “Our gear is covered in Moon dust! Let’s keep it out of the base.”</p><p>Moon dust is sharp, like tiny bits of glass. It is on the panel, the boots and a tool. Clean them, then go in through the dust door.</p>${mission.recoveryChargeWh>0?`<p>We charged the battery a bit so you can play.</p>`:''}<p>Walk with WASD or arrows. Drag to look. Press E next to a machine. The clock stops while you read.</p>`,[{label:'Let’s go!',run:()=>{run({id:'begin'});checkpoint=serializeSnapshot(mission);close();}},{label:'NASA connection',run:sources}]);}
-function rackMenu(){const panel=mission.items.find(i=>i.id==='panel'),actions=[];if(panel.location==='dirty')actions.push({label:'Put the panel in',run:()=>{run({id:'stageItem',targetId:'panel'});rackMenu();}});if(['dirty','staged'].includes(panel.location))actions.push({label:'Leave the panel outside',run:()=>{run({id:'quarantineItem',targetId:'panel'});rackMenu();}});if(panel.location==='staged'&&panel.dust>mission.scenario.cleanThreshold){if(!mission.rackClosed)actions.push({label:'Close the cleaner',run:()=>{run({id:'closeRack'});rackMenu();}});if(mission.rackClosed)actions.push({label:'Clean with power · 5 min',run:()=>{run({id:'startRack'});if(mission.phase==='active')rackMenu();}});actions.push({label:`Brush it by hand · ${Math.round(mission.scenario.manualPanelSeconds/60)} min`,run:()=>{run({id:'manualCleanItem',targetId:'panel'});if(mission.phase==='active')rackMenu();}});}actions.push({label:'Back',run:close});modal('Dust cleaner',`<p>Jin: “The machine is faster. Brushing by hand takes longer and fills the filter.”</p><p>Panel: ${panel.location} · modeled dust ${Math.round(panel.dust)} / 100 · rack ${mission.rackClosed?'closed':'open'}. ${mission.notice||''}</p>`,actions);}
-function trayMenu(){const actions=[];for(const item of mission.items.filter(i=>i.id!=='panel')){if(item.location==='dirty')actions.push({label:`Stage ${item.id}`,run:()=>{run({id:'stageItem',targetId:item.id});trayMenu();}});if(item.location==='staged'&&item.dust>mission.scenario.cleanThreshold)actions.push({label:`Brush the ${item.id} · ${Math.round(mission.scenario.manualOtherSeconds/60)} min`,run:()=>{run({id:'manualCleanItem',targetId:item.id});if(mission.phase==='active')trayMenu();}});if(item.id==='tool'&&['dirty','staged'].includes(item.location))actions.push({label:'Leave the tool outside',run:()=>{run({id:'quarantineItem',targetId:item.id});trayMenu();}});}actions.push({label:'Back',run:close});const list=mission.items.filter(i=>i.id!=='panel').map(i=>`<li>${i.id}: ${i.location}, dust ${Math.round(i.dust)}/100</li>`).join('');modal('Boots and tools',`<p>Elena: “Clean your boots and tools too, before you open the inside door.”</p><ul>${list}</ul><p>${mission.notice||''}</p>`,actions);}
-function filterMenu(){const actions=[{label:'Inspect filter',run:()=>{run({id:'inspectFilter'});filterMenu();}}];if(mission.filterInspected&&mission.spareFilters)actions.push({label:'Put in a new filter',run:()=>{run({id:'replaceFilter'});filterMenu();}});actions.push({label:'Back',run:close});modal('Dust filter',`<p>Filter condition: ${Math.round(mission.filterRemaining)} units · spare cassettes: ${mission.spareFilters}. A new filter uses ${mission.spareFilters>1?'one of the spares':'our last spare'}. The slow air cleaning uses less filter.</p><p>${mission.notice||''}</p>`,actions);}
-function airlockMenu(){const actions=[];if(mission.outerDoor==='open')actions.push({label:'Shut the outside door',run:()=>{run({id:'secureOuterDoor'});airlockMenu();}});else if(!mission.boundaryVerified)actions.push({label:'Open the outside door again · uses air',run:()=>{run({id:'reopenOuterDoor'});airlockMenu();}});if(mission.outerDoor==='closed'&&!mission.cycleComplete)actions.push({label:'Fast clean · 2 min, uses more filter',run:()=>{run({id:'runAirlockCycle',payload:'normal'});if(mission.phase==='active')airlockMenu();}},{label:'Slow clean · 4 min, saves filter',run:()=>{run({id:'runAirlockCycle',payload:'conserve'});if(mission.phase==='active')airlockMenu();}});if(mission.cycleComplete&&!mission.boundaryVerified)actions.push({label:'Check no dust is left',run:()=>{run({id:'verifyBoundary'});airlockMenu();}});if(mission.boundaryVerified)actions.push({label:'Open clean-side door',run:()=>run({id:'openInnerDoor'})});actions.push({label:'Back',run:close});modal('Door buttons',`<p>Outside door: ${mission.outerDoor} · clean-side door: ${mission.innerDoor} · cycle: ${mission.cycleComplete?'complete':'not complete'} · boundary: ${mission.boundaryVerified?'verified':'not verified'}.</p><p>Keep both doors shut while the air is cleaned. Clean every dusty thing, or leave it outside. ${mission.notice||''}</p>`,actions);}
-function interact(targetId){const s=targetId?world?.stations.find(station=>station.id===targetId):world?.nearest();const distance=s?Math.hypot(world.player.position.x-s.stand.x,world.player.position.z-s.stand.z):Infinity;if(!s||distance>1.5){mission.notice='Walk closer to a station, then press E.';render();return;}if(mission.phase!=='active')return;if(s.id==='rack')rackMenu();if(s.id==='tray')trayMenu();if(s.id==='filter')filterMenu();if(s.id==='airlock')airlockMenu();}
-function render(){if(!world)return;persistMission();$('energy').textContent=reserveText(mission.energyWh,mission.scenario.capacityWh,'Wh');$('air').textContent=reserveText(mission.airReserveUnits,100,'units');$('exposure').textContent=reserveText(mission.filterRemaining,100,'units');$('clock').textContent=`Clock · ${Math.floor(mission.simSeconds/60)} min`;$('objective').textContent=getObjective(mission);$('notice').textContent=mission.notice||'';const s=world.nearest(),target=s?.distance<=1.5?s.title:'';if($('station-actions').dataset.station!==target){$('station-actions').dataset.station=target;$('station-actions').replaceChildren(...(target?[button(`Use ${target} · E`,stationActionHandler(s,interact))]:[]));}world.update(mission);}
-function debrief(){const r=getResult(mission);if(!reported){completeChapter('lunar-dust',{outcome:r.outcome,attemptCompleted:r.completed,success:r.completed,mastered:r.outcome==='clean-return'||r.outcome==='manual-return',carry:{version:1,...r}});reported=true;}const prior=comparison,compare=prior?`<h3>Same starting conditions</h3><p>Previous / this plan: energy ${Math.round(prior.energyWh)} / ${Math.round(r.energyWh)} Wh; filter ${Math.round(prior.filterRemaining)} / ${Math.round(r.filterRemaining)} units; air ${Math.round(prior.airReserveUnits)} / ${Math.round(r.airReserveUnits)} units; treatment ${prior.treatment||'none'} / ${r.treatment||'none'}.</p>`:'';const titles={'suspended':'Training paused','quarantined':'Clean inside! One thing left outside','manual-return':'Brushed by hand, nice and careful','clean-return':'Clean return'};
- modal(titles[r.outcome],`<p>${r.outcome==='suspended'?'Something ran too low. Try another plan!':r.outcome==='quarantined'?'The crew got in clean. Some gear stayed outside.':'No dust got in! The crew is inside.'}</p><p>Energy ${Math.round(r.energyWh)} Wh · air ${Math.round(r.airReserveUnits)} · filter ${Math.round(r.filterRemaining)} · spare filters ${r.spareFilters} · cycles ${r.deconCycles}.</p><p>${r.items.map(i=>`${i.id}: ${i.location}, dust ${Math.round(i.dust)}`).join(' · ')}.</p><p>Our dust cleaner is pretend. It only cleans the panel.</p>${compare}`,[...(checkpoint?[{label:'Try another plan',run:()=>{comparison=r;mission=restoreSnapshot(checkpoint);reported=false;world.update(mission);close();}}]:[]),{label:'Start again',run:()=>{clearActiveAttempt('lunar-dust');recoveredAttempt=false;comparison=null;mission=createMission({initialCarry:carry,scenario:tuneScenario('lunar-dust',lunarDustScenario)});checkpoint=null;reported=false;world.update(mission);if(mission.phase==='suspended')debrief();else if(recoveredAttempt)recoverSavedAttempt();else brief();}},{label:'Return to journey',run:openJourney},{label:'NASA connection',run:sources}]);}
-function pause(){if(modalOpen)return;modal('Paused','<p>The game is paused.</p>',[{label:'Resume',run:close},{label:'NASA connection',run:sources},{label:'Return to journey',run:openJourney}]);}
-$('pause').onclick=pause;$('journey').onclick=openJourney;document.addEventListener('visibilitychange',()=>{if(document.hidden&&!modalOpen&&mission.phase==='active')pause();});connectChapter('lunar-dust',value=>{if(world){world.player.enabled=!value&&!modalOpen&&mission.phase==='active';if(value)world.player.release();}});
-try{world=await createScene({container:$('world'),onInteract:interact,onPause:pause,onMove:dt=>{if(!modalOpen&&!journeyPaused&&mission.phase==='active'){advanceMission(mission,dt);if(mission.phase==='suspended')debrief();else render();}}});$('locations').replaceChildren(...world.stations.map(s=>button(s.title,()=>{if(modalOpen)return;const ok=world.walkTo(s.id);mission.notice=ok?`Walking to ${s.title}. Press E when you arrive.`:'You are already close, or the way is blocked.';render();})));world.update(mission);if(recoveredAttempt&&['inspect','active'].includes(mission.phase))recoverSavedAttempt();else if(['suspended','debrief'].includes(mission.phase))debrief();else brief();}catch(error){console.error(error);modal('The dust door did not load','<p>Please reload the page.</p>',[{label:'Return to journey',run:openJourney}]);}
+import {createMission, ITEMS} from './state.js';
+import {applyAction, getObjective, getSteps, getResult, PLANS, dirtyItems} from './actions.js';
+import {createDustScene} from './scene.js';
+
+const ID = 'lunar-dust';
+
+function sources(ctx) {
+  const sc = ctx.mission.scenario;
+  return `<p>In March 2025, NASA’s <b>Electrodynamic Dust Shield</b> rode to the Moon on the Blue Ghost lander. It used electric fields to lift Moon dust off <b>glass</b> and <b>radiator</b> surfaces. That is why the EDS plate here works best on the smooth helmet visor. <a href="https://www.nasa.gov/blogs/missions/2025/03/04/blue-ghost-begins-surface-operations-captures-descent-video-sunrise/" target="_blank" rel="noopener">Read NASA’s Blue Ghost update</a>.</p>
+  <p>Moon dust is made of tiny sharp bits of broken rock. There is no wind or water on the Moon to smooth them, so the dust is jagged and clingy. Dust only moves inside a base if people carry it in.</p>
+  <p class="mx-made-up"><b>Made up for the game:</b> ${sc.limitation}</p>`;
+}
+
+function brief(ctx) {
+  const sc = ctx.mission.scenario;
+  ctx.dialog({label: 'MOON · HORIZON BASE AIRLOCK', title: 'Dust Busters', body: `
+    <p><b>Amara:</b> “What a moonwalk! But look at us. We are covered in Moon dust.”</p>
+    <p><b>Luca (on the radio):</b> “Don’t bring that dust inside! It is sharp like tiny bits of glass. It scratches things and makes people cough. Clean everything in the airlock first.”</p>
+    <ul class="mx-howto"><li>🚪 Shut the <b>outside hatch</b> and fill the airlock with air.</li><li>🧹 Clean the <b>suit, helmet, bag and boots</b>: brush, vacuum or the EDS plate.</li><li>🌬️ Press the green button to <b>clean the air</b>. Swap the filter when it is full.</li><li>✅ Open the <b>inside hatch</b> only when the screen says it is safe.</li></ul>
+    <aside class="mx-detail"><b>More details</b><br>You have ${sc.powerUnits} power units and ${sc.spareFilters} spare filter${sc.spareFilters === 1 ? '' : 's'}. The vacuum uses ${sc.tools.vacuum.power} power each time, the EDS ${sc.tools.eds.power}, the air fan ${sc.scrub.power}.</aside>`,
+    actions: [{label: '▶ Let’s bust some dust!', primary: true, run: () => { ctx.act({id: 'begin'}, {quiet: true}); planBoard(ctx); }}, {label: 'Is this real?', run: () => ctx.sourcesDialog(() => brief(ctx))}]});
+}
+
+function planBoard(ctx) {
+  ctx.saveCheckpoint();
+  const sc = ctx.mission.scenario, last = readHistory(ID).at(-1);
+  ctx.dialog({label: 'PICK A PLAN', title: 'How will you clean the gear?', body: `<p>You can use any tool at any time. Your plan is just where you start.</p>
+    ${planCards(Object.entries(PLANS).map(([id, p]) => ({id, ...p, cost: {brush: '⚡ No power · 🌫️ Dusty air', vacuum: `⚡ ${sc.tools.vacuum.power} each · ⏱ Slow`, mix: `⚡ ${sc.tools.eds.power} each · 🪖 Visor-safe`}[id]})), last?.plan)}
+    ${last ? `<p class="mx-last">Last time: <b>${PLANS[last.plan]?.title || '—'}</b> · ${last.minutes} min · ⚡ ${last.power} left · dust in base: ${last.base}${last.scratched ? ' · 🪖 visor scratched' : ''}. Try something new?</p>` : ''}`,
+    actions: [], onOpen: body => body.querySelectorAll('[data-plan]').forEach(b => { b.onclick = () => { ctx.act({id: 'choosePlan', payload: b.dataset.plan}); ctx.close(); }; })});
+}
+
+function debrief(ctx) {
+  const r = getResult(ctx.mission);
+  ctx.report.send({outcome: r.outcome, completed: r.completed, success: r.success, mastered: r.mastered, score: r.score, carry: {plan: r.plan, rating: r.rating, baseDust: r.baseDust}});
+  const history = r.completed && !ctx.sampleMode ? pushHistory(ID, {plan: r.plan, minutes: r.minutes, power: r.powerLeft, base: r.baseDust, scratched: r.scratched, filters: r.filters}) : readHistory(ID);
+  ctx.persist(ctx.mission, true); ctx.setControls();
+  const title = !r.completed ? 'Practice stopped' : {great: '🏆 Dust Buster!', ok: '👍 Mostly clean', low: '🤧 Dusty base'}[r.rating];
+  const tip = !r.completed ? 'You can try again any time.'
+    : r.baseDust > 0 ? 'Tip: wait until the screen says “safe” before you open the inside hatch.'
+    : r.scratched ? 'Tip: brushing the visor scratched it. Try the vacuum or the EDS plate on the helmet.'
+    : r.plan === 'brush' ? 'Fast and clean! Brushing made dusty air, so the filter worked hard. Could the vacuum save filters?'
+    : r.plan === 'vacuum' ? 'Super clean! The vacuum was slow and used power. Could the brush be faster on the suit?'
+    : 'Smart use of the EDS! It used a lot of power. Which gear needed it most?';
+  const compare = history.length > 1 ? compareTable(history.map((h, i) => i === history.length - 1 ? 'This time' : `Try ${i + 1}`), [
+    {label: 'Plan', values: history.map(h => PLANS[h.plan]?.title || '—')},
+    {label: 'Minutes', values: history.map(h => h.minutes), better: 'low'},
+    {label: 'Power left', values: history.map(h => h.power), better: 'high'},
+    {label: 'Dust in base', values: history.map(h => h.base), better: 'low'},
+    {label: 'Filters used', values: history.map(h => h.filters), better: 'low'},
+    {label: 'Visor', values: history.map(h => h.scratched ? 'scratched' : 'OK')}]) : '<p class="mx-last">Play again with a different plan to compare here.</p>';
+  ctx.dialog({label: 'MISSION REPORT · DUST BUSTERS', title, body: `
+    ${r.completed ? `<p>⏱ <b>${r.minutes}</b> min · ⚡ Power left: <b>${r.powerLeft}</b> · 🌬️ Filters swapped: <b>${r.filters}</b> · 🧹 ${r.uses.brush} brush · 🌀 ${r.uses.vacuum} vacuum · ⚡ ${r.uses.eds} EDS</p>
+      <p>🏠 Dust that got into the base: <b>${r.baseDust}</b>${r.leaks ? ` (the inside hatch opened too early ${r.leaks} time${r.leaks > 1 ? 's' : ''})` : ''} · 🪖 Visor: <b>${r.scratched ? 'scratched' : 'shiny'}</b></p>` : ''}
+    <p class="mx-tip">💡 ${tip}</p>${compare}
+    <aside class="mx-detail"><b>More details</b><br>Apollo astronauts found Moon dust on everything after their moonwalks. Future Artemis bases will need airlocks, filters and new tools like the EDS to keep it out.</aside>`,
+    actions: [
+      {label: '🔁 Try a different plan', primary: true, disabled: !ctx.checkpoint, run: () => ctx.retry(() => planBoard(ctx))},
+      {label: '↺ Play again', run: () => ctx.restart()}, {label: '🗺️ Back to the map', run: ctx.openJourney}, {label: 'Sources', run: () => ctx.sourcesDialog(() => debrief(ctx))}]});
+}
+
+runMission({
+  id: ID, title: 'Dust Busters', place: 'MISSION CONTROL JR. · MOON BASE AIRLOCK',
+  meters: [{id: 'power', icon: '⚡', label: 'Power'}, {id: 'air', icon: '🌫️', label: 'Dust in the air'}, {id: 'filter', icon: '🌬️', label: 'Filter'}],
+  create: () => createMission({scenario: tuneScenario(ID, lunarDustScenario), seed: 42 + readHistory(ID).length}),
+  rules: {applyAction, getObjective, getSteps},
+  scene: ctx => createDustScene({container: document.getElementById('world'), getState: () => ctx.mission, act: a => ctx.act(a), onPause: () => ctx.pause()}),
+  brief, sources, debrief,
+  sampler(ctx) { ctx.act({id: 'begin'}, {quiet: true}); ctx.saveCheckpoint(); },
+  hud(ctx) {
+    const s = ctx.mission, sc = s.scenario, {hud} = ctx;
+    const clean = ITEMS.length - dirtyItems(s).length;
+    hud.timer(s.phase === 'active' && s.plan ? `⏱ ${s.minutes} min · 🧑‍🚀 ${s.pressurized ? clean : 0} of 4 clean` : '', false);
+    hud.meter('power', {value: s.power, max: sc.powerUnits, text: `${s.power} of ${sc.powerUnits}`});
+    hud.meter('air', {value: Math.max(0, 60 - s.airDust), max: 60, text: s.airDust <= sc.airSafe ? (s.airDust < .5 ? 'Clean' : 'Safe') : `${Math.round(s.airDust)} dusty`, warn: .5});
+    hud.meter('filter', {value: sc.filterCap - s.filterLoad, max: sc.filterCap, text: `${Math.round(100 - s.filterLoad / sc.filterCap * 100)}% left · ${s.spares} spare`});
+  },
+}).then(ctx => addEventListener('keydown', e => { if (e.code === 'KeyQ' && ctx.playing() && ctx.mission.hand) ctx.act({id: 'putTool'}); }));

@@ -1,58 +1,183 @@
-import {advanceClock} from '../../simulation/clock.js';
-import {servePower} from '../../simulation/resources.js';
-import {createMessage,updateMessage} from '../../simulation/messages.js';
+// Rules for "Message to Earth". Pure functions; the 3D scene only reads this state.
 import {recordDecision} from '../../simulation/decisions.js';
-import {serializeSnapshot,restoreSnapshot} from '../../simulation/replay.js';
-const fraction=n=>Math.max(0,Math.min(1,n));
-export function advanceMission(state,seconds){
- if(state.phase!=='active'||state.paused||!Number.isFinite(seconds)||seconds<0)return false;
- const sc=state.scenario;advanceClock(state,seconds,(m,dt)=>{
-  const loads=[{id:'essential',watts:sc.essentialW},...(m.processorRunning?[{id:'processor',watts:sc.processorW}]:[]),...(m.experimentOn?[{id:'experiment',watts:sc.experimentW}]:[])];
-  const ledger=servePower({energyWh:m.energyWh,capacityWh:sc.capacityWh,generationW:0,loads},dt);m.energyWh=ledger.energyWh;
-  const processor=m.processorRunning?fraction((ledger.servedWh.processor||0)/(sc.processorW*dt/3600)):0;
-  const faultRate=m.reserveConnected&&m.policy==='conserve'?sc.conservedAirLossPerSecond:sc.normalAirLossPerSecond;
-  const loss=m.processorRunning?sc.unpoweredAirLossPerSecond*(1-processor):faultRate;
-  m.airReserveUnits=Math.max(0,m.airReserveUnits-dt*loss);
-  if(m.experimentOn){
-   const served=(ledger.servedWh.experiment||0)/(sc.experimentW/3600);
-   m.experimentPoweredSeconds+=served;
-   for(const crop of m.crops){if(crop.harvested)continue;crop.stress=fraction(crop.stress+Math.max(0,dt-served)*sc.cropStressPerUnservedSecond-served*sc.cropStressReliefPerServedSecond);}
+import {serializeSnapshot, restoreSnapshot} from '../../simulation/replay.js';
+import {PARTS} from './state.js';
+
+const ok = message => ({ok: true, message}), fail = message => ({ok: false, message});
+export const PLANS = {
+  earth: {icon: '📡', title: 'Ask Earth first', text: 'Send a message, save water, and wait for the experts. Slow but sure.'},
+  self: {icon: '🔧', title: 'Fix it yourself', text: 'Test the parts with the meter and swap what is broken. Fast if you are careful.'},
+  both: {icon: '🤝', title: 'Do both', text: 'Send a message, then start testing while it travels. Earth checks your work.'},
+};
+export const PART_NAMES = {pump: 'pump motor', valve: 'water valve', filter: 'filter'};
+
+/** Earth's answer arrives after: light time out + thinking + light time back. */
+export function earthRoundTrip(s, withData = s.message.withData) {
+  const sc = s.scenario; return sc.oneWaySeconds * 2 + sc.earthThinkSeconds * (withData ? .5 : 1);
+}
+export function messageProgress(s) {
+  const m = s.message, sc = s.scenario; if (m.status === 'none') return null;
+  const t = s.simSeconds - m.sentAt, out = sc.oneWaySeconds, think = m.arrivesAt - m.sentAt - out * 2;
+  if (t < out) return {leg: 'out', fraction: t / out, secondsLeft: m.arrivesAt - s.simSeconds};
+  if (t < out + think) return {leg: 'earth', fraction: (t - out) / think, secondsLeft: m.arrivesAt - s.simSeconds};
+  if (t < out * 2 + think) return {leg: 'back', fraction: (t - out - think) / out, secondsLeft: m.arrivesAt - s.simSeconds};
+  return {leg: 'arrived', fraction: 1, secondsLeft: 0};
+}
+export const earthKnows = s => s.message.status === 'arrived';
+/** What the player knows is broken (from their own tests or from Earth). */
+export function knownBad(s) {
+  return PARTS.filter(p => s.health[p] !== 'ok' && s.health[p] !== 'clean' && (earthKnows(s) || s.findings[p] === 'bad'));
+}
+export const allGood = s => PARTS.every(p => s.health[p] === 'ok' || s.health[p] === 'clean');
+export const waterRate = s => (s.saveMode ? s.scenario.saveUseLPerMin : s.scenario.waterUseLPerMin) / 60;
+
+/** Mission clock: real seconds × timeScale. Water drains; the message travels. */
+export function advanceMission(s, realSeconds) {
+  if (s.phase !== 'active' || !s.plan || s.fixed) return;
+  passTime(s, realSeconds * s.scenario.timeScale);
+}
+export function passTime(s, seconds) {
+  s.simSeconds += seconds; s.waterL = Math.max(0, s.waterL - waterRate(s) * seconds);
+  if (s.message.status !== 'none' && s.message.status !== 'arrived') {
+    const p = messageProgress(s); s.message.status = p.leg === 'out' ? 'outbound' : p.leg === 'earth' ? 'earth' : p.leg === 'back' ? 'inbound' : 'arrived';
+    if (s.message.status === 'arrived') s.notice = '📡 Earth answered! Read it at the console.';
   }
-  if(m.message)updateMessage(m.message,m.simSeconds+dt,true);
-  return m.airReserveUnits>0;
- });
- if(state.airReserveUnits<=0){state.phase='suspended';state.notice='Game paused: the spare air ran out.';}
- return true;
+  if (s.waterL <= s.scenario.lowWaterL && !s.lowWater) { s.lowWater = true; s.phase = 'debrief'; s.notice = 'Water is very low. The crew opens the emergency water.'; }
 }
-export function applyAction(m,{id,payload}={}){
- const no=message=>({ok:false,message}),yes=message=>({ok:true,message});
- if(id==='begin'&&m.phase==='brief'){m.phase='active';recordDecision(m,id);return yes('The pump is broken. We need a plan!');}
- if(m.phase!=='active')return no('Start the game, or play again.');if(m.paused)return no('Unpause the game first.');
- const work=(seconds)=>{advanceMission(m,seconds);return m.phase==='active';};
- if(id==='inspectFault'){if(m.faultInspected)return no('You already looked at it.');m.faultInspected=true;recordDecision(m,id);return yes('The cooling pump has stopped.');}
- if(id==='sendEarthRequest'){
-  if(!m.faultInspected||m.message)return no('Look at the pump first. You only need to send one message.');
-  m.message=createMessage({id:'earth-advice',createdAt:m.simSeconds,outboundSeconds:m.scenario.oneWaySeconds,processingSeconds:m.scenario.processingSeconds,inboundSeconds:m.scenario.oneWaySeconds,payload:'Turn the pump power off before you fix it.'});updateMessage(m.message,m.simSeconds,true);recordDecision(m,id);return yes('Message sent! Earth needs time to get it and send a reply.');
- }
- if(id==='connectReserve'){if(m.reserveConnected)return no('The spare air is already on.');if(!work(60))return no('The game stopped while connecting.');m.reserveConnected=true;recordDecision(m,id);return yes('Reserve connected.');}
- if(id==='selectSupportPolicy'){
-  if(!['normal','conserve'].includes(payload)||m.policy===payload)return no('Pick the other choice.');m.policy=payload;m.experimentOn=payload!=='conserve';recordDecision(m,id,{policy:payload});return yes(payload==='conserve'?'Science paused to save air.':'Science is on again.');
- }
- if(id==='isolatePumpBranch'){if(!m.faultInspected||m.branchIsolated||m.processorRunning)return no('Look at the pump before you turn it off.');if(!work(60))return no('The game stopped while turning it off.');m.branchIsolated=true;recordDecision(m,id);return yes('Pump power is off. It is safe to fix.');}
- if(id==='openServiceCover'){if(!m.branchIsolated||m.coverOpen||m.cartridgeReplaced)return no('Turn the pump power off first.');if(!work(45))return no('The game stopped while looking.');m.coverOpen=true;m.coverLatched=false;recordDecision(m,id);return yes('The cover is open.');}
- if(id==='replaceCartridge'){if(!m.branchIsolated||!m.coverOpen||m.cartridgeReplaced||m.spareCartridges<1)return no('Open the cover and put in the spare part.');if(!work(120))return no('The game stopped while swapping the part.');m.cartridgeReplaced=true;m.spareCartridges--;recordDecision(m,id);return yes('The new part is in!');}
- if(id==='latchCover'){if(!m.coverOpen||!m.cartridgeReplaced)return no('Put in the new part first.');if(!work(30))return no('The game stopped before the cover was closed.');m.coverOpen=false;m.coverLatched=true;recordDecision(m,id);return yes('Cover latched.');}
- if(id==='restoreBranch'){if(!m.branchIsolated||!m.cartridgeReplaced||!m.coverLatched||m.processorRunning)return no('Finish the repair steps first.');if(!work(30))return no('The game stopped before the pump was turned on.');m.branchIsolated=false;m.processorRunning=true;m.restoredAt=m.simSeconds;recordDecision(m,id);return yes('The pump is running again. You fixed it yourself!');}
- if(id==='applyAdvice'){
-  if(m.message?.status!=='delivered'||m.processorRunning)return no('Earth has not answered yet, or the pump already works.');
-  if(!m.branchIsolated||m.coverOpen)return no('Turn the pump off and close the cover before you try Earth’s idea.');if(!work(120))return no('The game stopped before the reset finished.');m.replyApplied=true;m.branchIsolated=false;m.processorRunning=true;m.restoredAt=m.simSeconds;recordDecision(m,id);return yes('Earth’s idea worked! The pump is running.');
- }
- if(id==='wait'){if(!Number.isFinite(payload)||payload<=0||payload>3600)return no('Pick how long to wait.');work(payload);recordDecision(m,id,{requestedSeconds:payload});return yes('You waited. The message moved along, and some air was used.');}
- if(id==='verifyFlow'){if(!m.processorRunning||m.energyWh<=0)return no('Turn the pump on before you test it.');if(!work(60))return no('The game stopped during the test.');if(m.energyWh<=0)return no('The power ran out before the test finished.');m.verified=true;recordDecision(m,id);return yes('Test passed! The water flows and the air is OK.');}
- if(id==='finish'){if(!m.verified)return no('Test the pump, or stop the game.');m.phase='debrief';recordDecision(m,id);return yes('Recovery complete.');}
- if(id==='suspendExercise'){m.phase='debrief';recordDecision(m,id);return yes('The crew is safe. The pump still needs fixing.');}
- return no('Unknown action.');
+
+export function applyAction(s, {id, targetId, payload} = {}) {
+  if (s.phase === 'brief' && id === 'begin') { s.phase = 'active'; recordDecision(s, 'begin'); return ok('Pick a plan.'); }
+  if (s.phase !== 'active') return fail('Start the mission first.');
+  if (id === 'choosePlan') { if (!PLANS[payload] || s.plan) return fail('Pick one of the plans.'); s.plan = payload; recordDecision(s, id, {plan: payload}); return ok(`Plan: ${PLANS[payload].title}.`); }
+  if (!s.plan) return fail('Pick a plan first.');
+  if (s.fixed && !['finish', 'stopEarly', 'toggleSave', 'readAnswer'].includes(id)) return fail('The recycler is fixed! Finish at the console.');
+  const sc = s.scenario;
+  switch (id) {
+    case 'toggleSave': s.saveMode = !s.saveMode; recordDecision(s, id, {on: s.saveMode}); return ok(s.saveMode ? 'Save-water mode on. Short showers and careful cups!' : 'Save-water mode off.');
+    case 'sendMessage': {
+      if (s.message.status !== 'none') return fail('Your message is already on its way.');
+      const withData = PARTS.some(p => s.findings[p]);
+      s.message = {status: 'outbound', sentAt: s.simSeconds, arrivesAt: s.simSeconds + earthRoundTrip(s, withData), withData};
+      recordDecision(s, id, {withData}); return ok(withData ? 'Sent, with your meter readings! Earth can answer faster.' : 'Message sent to Earth!');
+    }
+    case 'waitForEarth': {
+      if (s.message.status === 'none') return fail('Send a message first.');
+      if (s.message.status === 'arrived') return fail('Earth already answered.');
+      const wait = s.message.arrivesAt - s.simSeconds; passTime(s, wait); recordDecision(s, id, {minutes: +(wait / 60).toFixed(1)});
+      return ok(s.phase === 'debrief' ? 'The water ran too low while you waited.' : `You waited ${Math.round(wait / 60)} minutes. Earth answered!`);
+    }
+    case 'togglePower': {
+      if (s.power) { s.power = false; s.alarm = false; recordDecision(s, id, {on: false}); return ok('Power off. Now it is safe to open the panel.'); }
+      if (s.panel === 'open') return fail('Close the panel before you turn the power on.');
+      s.power = true; recordDecision(s, id, {on: true}); return ok('Power on. Do a test run!');
+    }
+    case 'openPanel': if (s.power) return fail('Safety first! Turn off the power lever.'); if (s.panel === 'open') return fail('The panel is already open.'); s.panel = 'open'; passTime(s, 60); recordDecision(s, id); return ok('Panel open. You can see the pump, the valve and the filter.');
+    case 'closePanel': if (s.panel !== 'open') return fail('The panel is already closed.'); if (s.holding && s.holding !== 'meter') return fail('Fit the part you are holding first.'); s.panel = 'closed'; passTime(s, 45); recordDecision(s, id); return ok('Panel closed and bolted.');
+    case 'takeMeter': if (s.holding === 'meter') return fail('You already have the meter.'); s.holding = 'meter'; return ok('You have the multimeter.');
+    case 'test': {
+      if (!['pump', 'valve'].includes(targetId)) return fail('The meter tests the pump and the valve.');
+      if (s.holding !== 'meter') return fail('Get the multimeter from the shelf first.');
+      if (s.panel !== 'open') return fail('Open the panel first.');
+      if (s.power) return fail('Turn the power off before testing.');
+      const bad = s.health[targetId] === 'bad'; s.findings[targetId] = bad ? 'bad' : 'ok'; passTime(s, 60);
+      recordDecision(s, id, {part: targetId, bad}); const m = sc.meter[targetId];
+      return ok(`${PART_NAMES[targetId]}: ${bad ? m.bad : m.ok}. Normal is ${m.range}. ${bad ? 'That is NOT normal!' : 'That looks normal.'}`);
+    }
+    case 'inspect': {
+      if (targetId !== 'filter') return fail('Use the meter on that part.');
+      if (s.panel !== 'open') return fail('Open the panel first.');
+      const clogged = s.health.filter === 'clogged'; s.findings.filter = clogged ? 'bad' : 'ok'; passTime(s, 60); recordDecision(s, id, {part: 'filter', clogged});
+      return ok(clogged ? 'Yuck! The filter is brown and clogged.' : 'The filter looks clean and white.');
+    }
+    case 'takeSpare': {
+      if (!PARTS.includes(targetId)) return fail('Pick a spare part.');
+      if (s.spares[targetId] <= 0) return fail(`No spare ${PART_NAMES[targetId]} left.`);
+      if (s.holding && s.holding !== 'meter') return fail('Your hands are full.');
+      s.holding = targetId; return ok(`You have a spare ${PART_NAMES[targetId]}.${s.findings[targetId] || earthKnows(s) ? '' : ' (You have not checked if the old one is broken.)'}`);
+    }
+    case 'putBack': { if (!s.holding) return fail('Your hands are empty.'); const was = s.holding; s.holding = null; return ok(was === 'meter' ? 'Meter back on the hook.' : `Spare ${PART_NAMES[was]} back on the shelf.`); }
+    case 'swap': {
+      if (s.holding !== targetId) return fail(`Bring a spare ${PART_NAMES[targetId]} from the shelf.`);
+      if (s.panel !== 'open') return fail('Open the panel first.');
+      if (s.power) return fail('Turn the power off first.');
+      const wasBroken = s.health[targetId] !== 'ok' && s.health[targetId] !== 'clean';
+      s.spares[targetId] -= 1; s.holding = null; s.health[targetId] = targetId === 'filter' ? 'clean' : 'ok';
+      s.findings[targetId] = 'ok'; s.swaps.push({part: targetId, needed: wasBroken}); s.removed.push({part: targetId, broken: wasBroken}); passTime(s, 120);
+      recordDecision(s, id, {part: targetId, needed: wasBroken});
+      return ok(wasBroken ? `New ${PART_NAMES[targetId]} fitted!` : `New ${PART_NAMES[targetId]} fitted. The old one was fine, so that spare was not needed.`);
+    }
+    case 'testRun': {
+      if (!s.power) return fail('Turn the power on first.');
+      if (s.panel === 'open') return fail('Close the panel first.');
+      const v = s.variant, brokenFixed = s.health[v.broken] === 'ok' || s.health[v.broken] === 'clean';
+      const result = !brokenFixed ? 'no-start' : allGood(s) ? 'fixed' : 'low-flow'; s.testRuns.push(result); passTime(s, 60);
+      recordDecision(s, id, {result});
+      if (result === 'fixed') { s.fixed = true; s.alarm = false; return ok('Clean water is flowing! You fixed it!'); }
+      s.alarm = true;
+      return fail(result === 'no-start' ? (v.broken === 'pump' ? 'The motor will not spin. Something is still broken.' : 'The motor spins, but no water moves. Something is still stuck.') : 'Water moves, but slowly, and the motor gets hot. Something is blocking the flow.');
+    }
+    case 'readAnswer': if (!earthKnows(s)) return fail('Earth has not answered yet.'); s.readAnswer = true; for (const p of PARTS) if (s.health[p] !== 'ok' && s.health[p] !== 'clean') s.findings[p] = 'bad'; return ok('You read Earth’s answer.');
+    case 'finish': if (!s.fixed) return fail('Fix the recycler first.'); s.phase = 'debrief'; recordDecision(s, id); return ok('Mission complete!');
+    case 'stopEarly': s.phase = 'debrief'; s.stoppedEarly = true; recordDecision(s, id); return ok('You stopped the practice.');
+  }
+  return fail('Unknown action.');
 }
-export function getObjective(m){if(m.phase==='brief')return 'Look at the broken pump';if(m.phase==='suspended')return 'Game stopped. Try again from a safe spot.';if(m.phase==='debrief')return 'Look at what you chose';if(!m.faultInspected)return 'Look at the broken pump';if(!m.message)return 'Send a message to Earth';if(!m.processorRunning)return 'Fix it yourself, or save air while you wait for Earth';return m.verified?'Finish the mission':'Test the pump';}
-export function getResult(m){return {outcome:m.phase==='suspended'?'reserve-limit':!m.verified?'protected-suspension':m.replyApplied?'bridge-and-verify':'local-recovery',completed:m.phase==='debrief',energyWh:m.energyWh,airReserveUnits:m.airReserveUnits,spareRemaining:m.spareCartridges,processorRunning:m.processorRunning,verified:m.verified,experimentPoweredSeconds:m.experimentPoweredSeconds,crops:m.crops.map(c=>({...c})),cropCarryUsed:m.cropCarryUsed,replyReceivedAt:m.message?.deliveredAt??null,restoredAt:m.restoredAt,message:m.message?structuredClone(m.message):null,sourceId:m.scenario.sourceId};}
-export {serializeSnapshot,restoreSnapshot};
+
+/** The next helpful step, short enough to read aloud. */
+export function getObjective(s) {
+  if (s.phase === 'brief') return 'Meet the broken water machine';
+  if (s.phase === 'debrief') return s.stoppedEarly ? 'Game stopped. Try again from a safe spot.' : 'See how your repair went';
+  if (!s.plan) return 'Pick your repair plan';
+  if (s.fixed) return 'It works! Finish at the console';
+  if (s.plan !== 'self' && s.message.status === 'none') return 'Send a message to Earth at the console';
+  if (s.message.status === 'arrived' && !s.readAnswer) return 'Earth answered! Read it at the console';
+  const bad = knownBad(s), needsWork = bad.length > 0 || (s.plan !== 'earth' && PARTS.some(p => !s.findings[p]));
+  if (s.plan === 'earth' && !earthKnows(s) && !bad.length) return s.saveMode ? 'Wait for Earth’s answer at the console' : 'Turn on save-water mode while you wait';
+  if (s.holding && s.holding !== 'meter') return `Fit the new ${PART_NAMES[s.holding]} in the machine`;
+  if (needsWork) {
+    if (s.power) return 'Turn off the power lever';
+    if (s.panel === 'closed') return 'Open the panel: hold E on it';
+    const untested = PARTS.find(p => !s.findings[p] && !earthKnows(s));
+    if (bad.length) return `Get a spare ${PART_NAMES[bad[0]]} from the shelf`;
+    if (untested === 'filter') return 'Look at the filter';
+    if (untested) return s.holding === 'meter' ? `Test the ${PART_NAMES[untested]} with the meter` : 'Get the multimeter from the shelf';
+  }
+  if (s.panel === 'open') return 'Close the panel';
+  if (!s.power) return 'Turn the power lever back on';
+  return 'Do a test run: press the lamp on the machine';
+}
+export function getSteps(s) {
+  const opened = s.panel === 'open' || s.swaps.length > 0 || s.testRuns.length > 0;
+  const found = knownBad(s).length > 0 || s.swaps.some(w => w.needed);
+  const list = [
+    {text: 'Pick a plan', done: !!s.plan},
+    ...(s.plan && s.plan !== 'self' ? [{text: 'Message Earth', done: s.message.status !== 'none'}] : []),
+    {text: 'Power off + open the panel', done: opened},
+    {text: 'Find what is broken', done: found || allGood(s)},
+    {text: 'Swap the broken parts', done: allGood(s)},
+    {text: 'Test run', done: s.fixed},
+  ];
+  if (s.phase !== 'brief') { const now = list.find(x => !x.done); if (now) now.now = true; }
+  return list;
+}
+export function getResult(s) {
+  const completed = s.phase === 'debrief' && !s.stoppedEarly, fixed = s.fixed;
+  const water = +s.waterL.toFixed(1), g = s.scenario.ratings, wasted = s.swaps.filter(w => !w.needed).length;
+  const rating = !completed ? 'none' : !fixed ? 'low' : water >= g.great && wasted === 0 ? 'great' : water >= g.ok ? 'ok' : 'low';
+  return {
+    outcome: !completed ? 'stopped' : !fixed ? 'water-low' : rating === 'great' ? 'fixed-great' : 'fixed',
+    completed, success: completed && fixed, mastered: rating === 'great',
+    score: completed ? Math.round(Math.max(0, Math.min(100, (fixed ? 50 : 0) + water / s.waterStartL * 40 + (wasted ? 0 : 10)))) : null,
+    plan: s.plan, rating, fixed, waterLeftL: water, minutes: Math.round(s.simSeconds / 60), sparesUsed: s.swaps.length, sparesWasted: wasted,
+    askedEarth: s.message.status !== 'none', sentData: s.message.withData, testRuns: s.testRuns.length, broken: s.variant.broken, cause: s.variant.cause,
+  };
+}
+export function earthAnswer(s) {
+  const v = s.variant, broken = PART_NAMES[v.broken], cause = v.cause && PART_NAMES[v.cause];
+  return {from: 'Maya, Mission Control in Houston',
+    lines: [`Hi Meridian crew! We studied your recycler${s.message.withData ? ' and your meter readings — thank you, they helped a lot' : ''}.`,
+      `The ${broken} is broken.${cause ? ` We think the ${cause} is clogged too. That made the ${broken} work too hard.` : ' Everything else should be fine.'}`,
+      `Turn the power off, open the panel, and swap the ${broken}${cause ? ` and the ${cause}` : ''}. Then do a test run.`,
+      'You’ve got this. Talk soon — well, in about 22 minutes!']};
+}
+export {serializeSnapshot, restoreSnapshot};

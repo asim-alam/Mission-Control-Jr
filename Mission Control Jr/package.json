@@ -13,7 +13,8 @@
     "models:mission2": "node scripts/generate-expedition-models.js",
     "models:survival": "node scripts/generate-survival-models.js",
     "data:normalize": "node scripts/normalize-nasa-data.mjs",
-    "models:lunar": "node scripts/generate-lunar-models.js"
+    "models:lunar": "node scripts/generate-lunar-models.js",
+    "models:expansion": "node scripts/generate-expansion-models.mjs"
   },
   "dependencies": {
     "@fontsource-variable/fredoka": "^5.3.0",

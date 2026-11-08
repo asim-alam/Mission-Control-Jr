@@ -1,18 +1,18 @@
 const explanations={
- 'solar-shelter':'The air and lights use 180 W. The science machine wants 240 W more. The battery always powers the air and lights first. Water bags block some radiation, but never all of it. The water is still there to drink later.',
- greenhouse:'Each tray with its light on uses power and water. Plants only grow when they really get the power. Packed meals are still the main food. NASA gave us the light schedule: 16 hours on, 8 hours off.',
- 'earth-delay':'On this date a message takes about 11 minutes to go from Mars to Earth, even at the speed of light. Earth also needs time to think. So the answer comes much later.',
- 'lunar-sunlight':'NASA’s LOLA maps show how often real spots near the Moon’s south pole get sunlight. Our base, cables and shadow times are pretend.',
- 'lunar-dust':'NASA’s dust shield test cleaned hard, flat things like glass. Our panel and filter numbers are pretend. The dust came in on our gear, not wind. The Moon has no wind.',
- 'lunar-relay':'Radio goes in straight lines, so the hill blocks it. A relay on the hill top needs power and two clear hops: base to relay, then relay to you. A message from the Moon to Earth takes about one second.'
+ 'solar-shelter':'The storm date and the GOES particle data are real NASA records. The shelter spots, dose points and walking times are made up for the game. Water and plastic block more particles than supply bags because they hold lots of hydrogen.',
+ greenhouse:'NASA gave us the light schedule (16 hours on, 8 off) and the crops astronauts really grew: red lettuce, mizuna and chile peppers. The power budget, growth speed and leak are made up for the game. Packed meals are still the main food.',
+ 'earth-delay':'On this date a message takes about 11 minutes to go from Mars to Earth, even at the speed of light (NASA JPL data). The answer needs 11 more minutes to come back. The recycler, its parts, the meter numbers and the water use are made up for the game.',
+ 'lunar-sunlight':'NASA’s LOLA maps show how often real spots near the Moon’s south pole get sunlight. Our hills, cart, cable and battery are pretend.',
+ 'lunar-dust':'NASA’s dust shield test cleaned hard, smooth things like glass. Our tool, power and filter numbers are pretend. The dust came in on our gear, not wind. The Moon has no wind.',
+ 'lunar-relay':'Radio goes in straight lines, so a hill blocks it. A relay on the ridge top needs two clear hops: base to relay, then relay to you. A message from the Moon to Earth takes about one second.'
 };
 const prompts={
- 'solar-shelter':'Water blocks radiation. Moving each water bag takes time. What will you do first?',
- greenhouse:'Which plants get light? Remember, the base needs power too.',
- 'earth-delay':'Earth’s answer will take a long time. Fix it yourself, or save air while you wait?',
- 'lunar-sunlight':'Where does the sunlight reach? Put the solar panel there, or just use the battery.',
- 'lunar-dust':'Keep Moon dust out of the base. Clean your gear, then check the doors.',
- 'lunar-relay':'How far will you drive? A relay can pass messages over the hill, but it uses time and battery.'
+ 'solar-shelter':'Water blocks the most particles, but it is heavy and slow to carry. What will you build first?',
+ greenhouse:'Which beds get full light? Borrowing battery power grows more, but the base needs it at night.',
+ 'earth-delay':'Earth’s answer takes over 20 minutes. Test the parts yourself, ask Earth, or do both?',
+ 'lunar-sunlight':'Is it better to go high on the ridge, or build a tall mast close to home?',
+ 'lunar-dust':'Brushing is fast but makes dusty air. The vacuum is slow and uses power. Which will you use on the visor?',
+ 'lunar-relay':'Will you take time to set up a relay and stay in touch, or make a quick trip and send your data later?'
 };
 export function learningMode(storage){
  try{return (storage??globalThis.localStorage)?.getItem('mission-control-jr.learning-mode.v1')==='details'?'details':'simple';}

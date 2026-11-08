@@ -1,39 +1,90 @@
-import {startPip} from '../../companion.js';startPip('greenhouse');
-import {tuneScenario,reserveText} from '../../simulation/difficulty.js';
+// "The Greenhouse Promise" — story, plan board, day console and birthday-dinner debrief.
+import {runMission} from '../shared/controller.js';
+import {planCards, compareTable} from '../shared/hud.js';
+import {readHistory, pushHistory} from '../shared/runtime.js';
+import {tuneScenario} from '../../simulation/difficulty.js';
 import {greenhouseScenario} from './scenario.js';
-import {learningDetail,learningMode,learningPrompt,learningChoices} from '../../simulation/learning.js';
-import {stationActionHandler} from '../../simulation/interactions.js';
-import {samplerSnapshot} from '../../simulation/sampler.js';
-import {connectChapter,completeChapter,openJourney,journeyPaused} from '../../campaign-bridge.js';
-import {readJourney} from '../../journey-state.js';
-import {createMission} from './state.js';
-import {applyAction,advanceMission,getObjective,getResult,serializeSnapshot,restoreSnapshot} from './actions.js';
-import {saveActiveAttempt,loadActiveAttempt,clearActiveAttempt} from '../../simulation/mission-storage.js';
-import {createScene} from './scene.js';
-const sampleMode=new URLSearchParams(location.search).get('sampler')==='1';
-const $=id=>document.getElementById(id);
-let carry={};try{carry=readJourney(localStorage).records['solar-shelter']?.carry||{};}catch{}
-let recoveredSnapshot=sampleMode?null:loadActiveAttempt('greenhouse'),recoveredAttempt=!!recoveredSnapshot;let mission=recoveredSnapshot?restoreSnapshot(recoveredSnapshot):sampleMode?samplerSnapshot('greenhouse'):createMission({initialCarry:carry,scenario:tuneScenario('greenhouse',greenhouseScenario)}),world,modalOpen=true,checkpoint=null,comparison=null,reported=false,lastSaveAt=0;
-const button=(label,run,disabled=false)=>{const b=document.createElement('button');b.textContent=label;b.disabled=disabled;b.onclick=run;return b;};
-function modal(title,body,actions,showAll=false){const prompt=learningPrompt('greenhouse'),detail=learningDetail('greenhouse');let content=body;if(prompt)content+=`<aside class="decision-tip"><b>Think about it</b><br>${prompt}</aside>`;if(detail)content+=`<aside class="detail-note"><b>More details</b><br>${detail}</aside>`;modalOpen=true;if(world){world.player.enabled=false;world.player.release();}$("dialog-title").textContent=title;$("dialog-body").innerHTML=content;const choices=learningChoices(actions,showAll);$("dialog-actions").replaceChildren(...choices.map(a=>a.more?button(a.label,()=>modal(title,body,actions,true)):button(a.label,a.run,a.disabled)));$("dialog").hidden=false;$("dialog-actions").querySelector('button:not(:disabled)')?.focus();}
-function close(){modalOpen=false;$('dialog').hidden=true;if(world)world.player.enabled=!journeyPaused&&mission.phase==='active';render();}
-function persistMission(force=false){if(sampleMode)return;if(mission.phase==='brief')return;if(mission.phase==='debrief'){clearActiveAttempt('greenhouse');return;}if(!force&&Date.now()-lastSaveAt<3000)return;lastSaveAt=Date.now();if(!saveActiveAttempt('greenhouse',serializeSnapshot(mission)))mission.notice='Your game could not be saved. Keep this tab open.';}
-function recoverSavedAttempt(){modal('Welcome back!','<p>We found your saved game.</p>',[{label:'Keep playing',run:()=>{recoveredAttempt=false;close();}},{label:'Start over',run:()=>{clearActiveAttempt('greenhouse');location.reload();}}]);}
-function run(action){mission.notice='';const result=applyAction(mission,action);if(!mission.notice)mission.notice=result.message;world?.update(mission);persistMission(true);if(['debrief','suspended'].includes(mission.phase)){debrief();return;}render();return result;}
-function sources(){modal('This really happened!',`<p>NASA’s <a href="https://osdr.nasa.gov/bio/repo/data/studies/OSD-269" target="_blank" rel="noopener">OSD-269 lettuce study</a> shows how astronauts grew lettuce on the International Space Station. The plants got 16 hours of light, then 8 hours of dark.</p><p>Our Mars greenhouse is pretend, and so are its numbers. Fresh leaves are a yummy extra. The crew still eats packed meals too.</p><p><a href="https://ntrs.nasa.gov/citations/20210024855" target="_blank" rel="noopener">NASA life-support assumptions</a> give context for planning supplies.</p>`,[{label:'Back',run:()=>mission.phase==='brief'?brief():['debrief','suspended'].includes(mission.phase)?debrief():close()}]);}
-function brief(){if(sampleMode)$('dialog-label').textContent='MISSION SAMPLER / PRACTICE';modal('Welcome to the greenhouse',`<p>Amara: “These plants have been growing for weeks. Let’s help them grow more!”</p><p>We do not have much power or water. You choose which plants get light. But the base needs power too!</p>${!sampleMode&&carry.experimentPreserved?'<p>Your science from before helped! The plants are a bit bigger already.</p>':''}<p>Walk with WASD or arrows. Drag to look. Press E next to a machine. The clock stops while you read.</p>`,[{label:'Let’s grow!',run:()=>{if(!sampleMode)run({id:'begin'});checkpoint=serializeSnapshot(mission);close();}},{label:'Read NASA connection',run:sources}]);}
-function crops(){const trayInfo=mission.trays.map(t=>`<li>Tray ${t.id.toUpperCase()}: ${t.harvested?'harvested':`${Math.round(t.progress*100)}% ready`} · stress ${Math.round(t.stress*100)}%</li>`).join('');
- const actions=[{label:'Light for both trays',run:()=>{run({id:'setPolicy',payload:['a','b']});crops();}},{label:'Light for tray A',run:()=>{run({id:'setPolicy',payload:['a']});crops();}},{label:'Light for tray B',run:()=>{run({id:'setPolicy',payload:['b']});crops();}},{label:'Lights off · save power',run:()=>{run({id:'setPolicy',payload:[]});crops();}},...mission.trays.filter(t=>!t.harvested&&t.progress>=1).map(t=>({label:`Harvest tray ${t.id.toUpperCase()}`,run:()=>{run({id:'harvestTray',targetId:t.id});crops();}})),{label:'Back',run:close}];
- modal('Plant trays',`<p>Amara: “A small harvest is OK. Using up all our power is not.” Each tray with light also needs water.</p><ul>${trayInfo}</ul><p>Lights now: ${mission.selectedTrays.length?mission.selectedTrays.join(' and ').toUpperCase():'no trays'}. ${mission.notice||''}</p>`,actions);}
-function manifold(){const actions=[];if(mission.fault&&!mission.faultInspected)actions.push({label:'Look at the pipe',run:()=>{run({id:'inspectManifold'});manifold();}});if(mission.faultInspected&&!mission.isolated&&!mission.repaired)actions.push({label:'Turn off the pipe',run:()=>{run({id:'isolateManifold'});manifold();}});if(mission.isolated&&!mission.repaired)actions.push({label:`Fix the pipe · ${Math.round(mission.scenario.repairSeconds/60)} min and ${mission.scenario.repairEnergyWh} Wh`,run:()=>{run({id:'repairReturnLine'});if(mission.phase==='active')manifold();}});actions.push({label:'Back',run:close});
- modal('Water pipes',`<p>Jin: “This pipe carries water to the plants. Turn it off first, then fix it.”</p><p>Line: <b>${mission.repaired?'repaired':mission.isolated?'isolated':mission.fault?'restricted':'operating normally'}</b>. ${mission.notice||''}</p>`,actions);}
-function schedule(){const done=mission.periodsCompleted;const actions=[];if(done<2)actions.push({label:`Let them grow · day ${done+1} · up to 24 hours`,run:()=>{run({id:'advancePeriod'});if(mission.phase==='active')schedule();}});if(done>=2)actions.push({label:'Finish cultivation',run:()=>run({id:'finishCultivation'})});actions.push({label:'Stop early',run:()=>run({id:'finishCultivation',payload:{early:true}})},{label:'NASA connection',run:sources},{label:'Back',run:close});
- modal('Grow clock',`<p>Elena: “Let’s skip ahead in time. The base still uses power and water while we wait.”</p><p>Each grow day has 16 hours of light and 8 hours of dark, like on the space station. (A real Mars day is a little longer than an Earth day!)</p><p>Completed periods: ${done}/2 · stored meals: ${mission.packagedFoodPortions} portions. ${mission.notice||''}</p>`,actions);}
-function interact(targetId){const station=targetId?world?.stations.find(station=>station.id===targetId):world?.nearest();const distance=station?Math.hypot(world.player.position.x-station.stand.x,world.player.position.z-station.stand.z):Infinity;if(!station||distance>1.5){mission.notice='Walk closer, then press E.';render();return;}if(mission.phase!=='active')return;if(station.id==='crops')crops();if(station.id==='manifold')manifold();if(station.id==='console')schedule();}
-function render(){if(!world)return;persistMission();$('energy').textContent=reserveText(mission.energyWh,mission.scenario.capacityWh,'Wh');$('air').textContent=reserveText(mission.reservoirKg,mission.scenario.initialWaterKg,'kg');const remaining=mission.trays.filter(t=>!t.harvested);$('exposure').textContent=remaining.length?`${Math.round(Math.max(...remaining.map(t=>t.progress))*100)}%`:'Harvested';$('clock').textContent=`Grow clock · ${Math.floor(mission.simSeconds/3600)} hours`;$('objective').textContent=getObjective(mission);$('notice').textContent=mission.notice||'';const s=world.nearest();const target=s?.distance<=1.5?s.title:'';if($('station-actions').dataset.station!==target){$('station-actions').dataset.station=target;$('station-actions').replaceChildren(...(target?[button(`Use ${target} · E`,stationActionHandler(s,interact))]:[]));}world.update(mission);}
-function debrief(){const r=getResult(mission);if(!reported){completeChapter('greenhouse',{outcome:r.outcome,attemptCompleted:r.completed,success:r.completed,mastered:r.outcome==='balanced-harvest',carry:{version:1,...r}});reported=true;}const previous=comparison;const compare=previous?`<h3>Same start</h3><p>Previous / this attempt: harvest ${previous.harvestedSupplement} / ${r.harvestedSupplement} portions; remaining energy ${Math.round(previous.energyWh)} / ${Math.round(r.energyWh)} Wh; water ${previous.waterRemainingKg.toFixed(1)} / ${r.waterRemainingKg.toFixed(1)} kg.</p>`:'';
- modal(r.outcome==='suspended'?'Training paused':r.outcome==='balanced-harvest'?'A balanced harvest':r.outcome==='small-harvest'?'A smaller harvest':'The plants need more time',`<p>${r.outcome==='suspended'?'The air got too low. Try another plan!':r.harvestedSupplement?'Your plants made fresh leaves to eat. Yum!':'The crew ate packed meals. The plants need more time to grow.'}</p><p>Fresh supplement: ${r.harvestedSupplement} portions · packaged meals: ${r.packagedFoodPortions} · energy: ${Math.round(r.energyWh)} Wh · water: ${r.waterRemainingKg.toFixed(1)} kg · return line: ${r.faultRepaired?'repaired':'not repaired'}.</p><p>The plant numbers are pretend.</p>${compare}`,[{label:'Try another plan',run:()=>{comparison=r;mission=restoreSnapshot(checkpoint);reported=false;world.update(mission);close();}},{label:'Start again',run:()=>{clearActiveAttempt('greenhouse');recoveredAttempt=false;comparison=null;mission=sampleMode?samplerSnapshot('greenhouse'):createMission({initialCarry:carry,scenario:tuneScenario('greenhouse',greenhouseScenario)});checkpoint=null;reported=false;world.update(mission);if(mission.phase==='suspended')debrief();else if(recoveredAttempt)recoverSavedAttempt();else brief();}},{label:'Return to journey',run:openJourney},{label:'Sources',run:sources}]);}
-function pause(){if(modalOpen)return;modal('Paused','<p>The game is paused.</p>',[{label:'Resume',run:close},{label:'Sources',run:sources},{label:'Return to journey',run:openJourney}]);}
-$('pause').onclick=pause;$('journey').onclick=openJourney;document.addEventListener('visibilitychange',()=>{if(document.hidden&&!modalOpen&&mission.phase==='active')pause();});
-connectChapter('greenhouse',value=>{if(world){world.player.enabled=!value&&!modalOpen&&mission.phase==='active';if(value)world.player.release();}});
-try{world=await createScene({container:$('world'),onInteract:interact,onPause:pause,onMove:dt=>{if(!modalOpen&&!journeyPaused&&mission.phase==='active'){advanceMission(mission,dt);if(mission.phase==='suspended')debrief();else render();}}});$('locations').replaceChildren(...world.stations.map(s=>button(s.title,()=>{if(modalOpen)return;world.walkTo(s.id);mission.notice=`Walking to ${s.title}. Press E when you get there.`;render();})));world.update(mission);if(recoveredAttempt&&['inspect','active'].includes(mission.phase))recoverSavedAttempt();else if(['suspended','debrief'].includes(mission.phase))debrief();else brief();}catch(error){console.error(error);modal('The greenhouse did not load','<p>Please reload the page.</p>',[{label:'Return to journey',run:openJourney}]);}
+import {createMission, BEDS} from './state.js';
+import {applyAction, getObjective, getSteps, getResult, PLANS, lightPower, batteryNeeded, isReady, moistureState} from './actions.js';
+import {createGreenhouseScene} from './scene.js';
+
+const ID = 'greenhouse';
+
+function sources(ctx) {
+  const sc = ctx.mission.scenario;
+  return `<p>NASA grows plants in space in a chamber called <b>Veggie</b>. In study <b>OSD-269</b>, lettuce on the Space Station had <b>${sc.lightHours} hours of light and ${sc.darkHours} hours of dark</b> each day. <a href="https://osdr.nasa.gov/bio/repo/data/studies/OSD-269" target="_blank" rel="noopener">See the NASA study</a>.</p>
+  <p>Astronauts first ate red romaine lettuce grown in space in 2015, grew mizuna greens, and picked chile peppers in 2021. <a href="https://www.nasa.gov/missions/station/iss-research/growing-plants-in-space/" target="_blank" rel="noopener">Read about growing plants in space</a>.</p>
+  <p class="mx-made-up"><b>Made up for the game:</b> ${sc.limitation}</p>`;
+}
+function brief(ctx) {
+  const rested = ctx.mission.crewRested ? '<p>After the Sun storm, the crew is rested and ready to farm.</p>' : '';
+  ctx.dialog({label: 'MARS DAYS 32–34 · THE GREENHOUSE', title: 'A birthday promise', body: `${rested}
+    <p><b>Amara:</b> “Shh! It’s Elena’s birthday in three days. I promised her a <b>fresh salad</b>. Can you help me grow it?”</p>
+    <p>You have three beds: 🥬 <b>red lettuce</b>, 🌿 <b>mizuna</b> and 🌶️ <b>chile peppers</b>. Plants need <b>light</b> and the right amount of <b>water</b>. Light uses power, and we only have so much each day.</p>
+    <ul class="mx-howto"><li>💡 Flip a bed’s <b>light lever</b>: off → half → full.</li><li>💧 Turn the blue <b>valve wheel</b> to water. Watch the dial: green is just right.</li><li>📺 At the console, check the power and <b>end the day</b>.</li></ul>
+    <aside class="mx-detail"><b>More details</b><br>NASA’s plant chambers use red and blue LEDs, because plants use those colours most for growing. The light schedule here (16 hours on, 8 off) comes from a real NASA lettuce study.</aside>`,
+    actions: [{label: '▶ Let’s grow!', primary: true, run: () => { ctx.act({id: 'begin'}, {quiet: true}); planBoard(ctx); }}, {label: 'Is this real?', run: () => ctx.sourcesDialog(() => brief(ctx))}]});
+}
+function planBoard(ctx) {
+  ctx.saveCheckpoint();
+  const sc = ctx.mission.scenario, last = readHistory(ID).at(-1);
+  ctx.dialog({label: 'PICK A PLAN', title: 'How will you share the light?', body: `<p>Each day there is <b>${sc.powerBudgetKWh} kWh</b> of solar power for the lights. Full light on a bed uses ${sc.lightKWh.full} kWh, half uses ${sc.lightKWh.half}. You can borrow up to <b>${sc.batteryKWh} kWh</b> from the battery for the whole mission, but the base needs it at night.</p>
+    ${planCards(Object.entries(PLANS).map(([id, p]) => ({id, ...p, cost: {salad: '🥗 Safe · 🔋 Saves battery', feast: '🌶️ Bonus · 🔋 Uses battery', even: '🧪 Experiment'}[id]})), last?.plan)}
+    ${last ? `<p class="mx-last">Last time: <b>${PLANS[last.plan]?.title || 'a plan'}</b> · ${last.salad} salad portions${last.peppers ? ' + peppers' : ''}. Try something new?</p>` : ''}`,
+    actions: [], onOpen: body => body.querySelectorAll('[data-plan]').forEach(b => { b.onclick = () => { ctx.act({id: 'choosePlan', payload: b.dataset.plan}); ctx.close(); }; })});
+}
+function consoleScreen(ctx) {
+  const s = ctx.mission, sc = s.scenario, power = lightPower(s), need = batteryNeeded(s), harvestDay = s.day > sc.growDays;
+  const rows = BEDS.map(id => { const b = s.beds[id]; return `<tr><td>${sc.crops[id].icon} ${sc.crops[id].name}</td><td>${b.harvested ? 'picked' : b.light}</td><td>${b.harvested ? '—' : moistureState(s, id)}</td><td>${Math.round(Math.min(1, b.progress / sc.crops[id].ready) * 100)}%</td></tr>`; }).join('');
+  ctx.dialog({label: `GREENHOUSE · MARS DAY ${sc.startSol + s.day - 1}`, title: harvestDay ? 'Harvest day!' : `Day ${s.day} of ${sc.growDays}: end the day?`, body: `
+    <table class="mx-compare"><thead><tr><th>Bed</th><th>Light</th><th>Soil</th><th>Grown</th></tr></thead><tbody>${rows}</tbody></table>
+    <p>⚡ Lights tonight: <b>${power.toFixed(2)} kWh</b> of ${sc.powerBudgetKWh} kWh solar${need > 0 ? ` · <b>${need.toFixed(2)} kWh</b> from the battery` : ''}. 🔋 Battery left: <b>${s.batteryKWh.toFixed(2)} kWh</b>. 💧 Tank: <b>${s.tankL.toFixed(1)} L</b>.</p>
+    ${need > s.batteryKWh + 1e-9 ? '<p class="mx-tip">⚠️ Not enough power for all these lights. Turn one down.</p>' : ''}
+    ${harvestDay ? '<p>Pick the ready plants with the basket, then put the basket on the table to serve dinner.</p>' : ''}`,
+    actions: [
+      ...(!harvestDay ? [{label: '🌙 End the day', primary: true, run: async () => {
+        const r = ctx.act({id: 'endDay'}); if (!r.ok) return; ctx.close(); ctx.busy = true; await ctx.view.nightfall(); ctx.busy = false;
+      }}] : []),
+      {label: '← Back', run: () => ctx.close()}, {label: 'Stop practice', run: () => { ctx.close(); ctx.act({id: 'stopEarly'}); }}]});
+}
+function debrief(ctx) {
+  const r = getResult(ctx.mission), sc = ctx.mission.scenario;
+  ctx.report.send({outcome: r.outcome, completed: r.completed, success: r.success, mastered: r.mastered, score: r.score, carry: {plan: r.plan, rating: r.rating, tankL: r.tankL, leakFixed: r.leakFixed, trays: r.trays}});
+  const history = r.completed && !ctx.sampleMode ? pushHistory(ID, {plan: r.plan, salad: r.saladPortions, peppers: r.peppers, battery: r.batteryLeftKWh, tank: r.tankL, health: r.health}) : readHistory(ID);
+  if (r.completed) ctx.view.celebrate();
+  ctx.persist(ctx.mission, true); ctx.setControls();
+  const title = !r.completed ? 'Practice stopped' : {feast: '🎉 A birthday feast!', salad: '🥗 Salad served!', small: '🙂 A small snack', none: '😢 Nothing to eat yet'}[r.rating];
+  const story = !r.completed ? '' : r.rating === 'feast' ? '<p><b>Elena:</b> “A salad AND spicy peppers? On Mars? Best birthday ever!”</p>' : r.rating === 'salad' ? '<p><b>Elena:</b> “Fresh salad! It tastes like home. Thank you!”</p>' : '<p><b>Elena:</b> “Every leaf counts. Thank you for trying!”</p>';
+  const tip = !r.completed ? 'You can try again any time.' : r.health < 80 ? 'Tip: keep the soil dial in the green. Too dry or too wet makes plants droopy.' : !r.leakFixed ? 'Tip: fix the leak quickly. It wastes water the base needs later.' : r.rating === 'salad' ? 'Tip: borrowing a little battery power on one day could grow peppers too.' : r.batteryLeftKWh < .2 ? 'Tip: you used almost all the battery. Could you save some and still feast?' : 'Great farming! Try a different plan and compare.';
+  const compare = history.length > 1 ? compareTable(history.map((h, i) => i === history.length - 1 ? 'This time' : `Try ${i + 1}`), [
+    {label: 'Plan', values: history.map(h => PLANS[h.plan]?.title || '—')},
+    {label: 'Salad portions', values: history.map(h => h.salad), better: 'high'},
+    {label: 'Peppers', values: history.map(h => h.peppers ? 'yes' : 'no')},
+    {label: 'Battery left (kWh)', values: history.map(h => h.battery), better: 'high'},
+    {label: 'Water left (L)', values: history.map(h => h.tank), better: 'high'},
+    {label: 'Plant health %', values: history.map(h => h.health), better: 'high'}]) : '<p class="mx-last">Play again with a different plan to compare results here.</p>';
+  ctx.dialog({label: 'MISSION REPORT · THE GREENHOUSE PROMISE', title, body: `${story}
+    ${r.completed ? `<p>🥗 Salad: <b>${r.saladPortions}</b> of ${sc.saladGoal} portions · 🌶️ Peppers: <b>${r.peppers ? 'yes' : 'no'}</b> · 🔋 Battery left: <b>${r.batteryLeftKWh} kWh</b> · 💧 Water left: <b>${r.tankL} L</b>${r.leakedL ? ` (${r.leakedL} L leaked)` : ''} · 🌱 Plant health: <b>${r.health}%</b></p>` : ''}
+    <p class="mx-tip">💡 ${tip}</p>${compare}
+    <aside class="mx-detail"><b>More details</b><br>Farming on Mars means balancing power, water and time. Water left in the tank here carries on to the next mission, when a pump breaks.</aside>`,
+    actions: [
+      {label: '🔁 Try a different plan', primary: true, disabled: !ctx.checkpoint, run: () => ctx.retry(() => planBoard(ctx))},
+      {label: '↺ Play again', run: () => ctx.restart()}, {label: '🗺️ Back to the map', run: ctx.openJourney}, {label: 'Sources', run: () => ctx.sourcesDialog(() => debrief(ctx))}]});
+}
+
+runMission({
+  id: ID, title: 'The Greenhouse Promise', place: 'MISSION CONTROL JR. · MARS DAYS 32–34', carryFrom: 'solar-shelter',
+  meters: [{id: 'power', icon: '⚡', label: 'Light power today'}, {id: 'battery', icon: '🔋', label: 'Battery'}, {id: 'water', icon: '💧', label: 'Water tank'}],
+  create: carry => createMission({scenario: tuneScenario(ID, greenhouseScenario), initialCarry: carry}),
+  rules: {applyAction, getObjective, getSteps},
+  scene: async ctx => { const view = await createGreenhouseScene({container: document.getElementById('world'), getState: () => ctx.mission, act: a => ctx.act(a), onPause: () => ctx.pause(), onConsole: () => consoleScreen(ctx)}); view.world.onInspect = text => ctx.hud.toast(text, 'quiet'); return view; },
+  brief, sources, debrief,
+  sampler(ctx) { ctx.act({id: 'begin'}, {quiet: true}); ctx.saveCheckpoint(); ctx.act({id: 'choosePlan', payload: 'salad'}, {quiet: true}); },
+  hud(ctx) {
+    const s = ctx.mission, sc = s.scenario, {hud} = ctx, power = lightPower(s);
+    hud.timer(s.phase === 'active' && s.plan ? (s.day > sc.growDays ? '🎂 Harvest day' : `☀️ Day ${s.day} of ${sc.growDays}`) : '');
+    hud.meter('power', {value: Math.max(0, sc.powerBudgetKWh - power), max: sc.powerBudgetKWh, text: `${power.toFixed(1)} / ${sc.powerBudgetKWh} kWh`, warn: power > sc.powerBudgetKWh ? 2 : 0});
+    hud.meter('battery', {value: s.batteryKWh - batteryNeeded(s), max: sc.batteryKWh, text: `${Math.max(0, s.batteryKWh - batteryNeeded(s)).toFixed(1)} kWh`});
+    hud.meter('water', {value: s.tankL, max: sc.tankStartL, text: `${s.tankL.toFixed(1)} L`});
+  },
+});

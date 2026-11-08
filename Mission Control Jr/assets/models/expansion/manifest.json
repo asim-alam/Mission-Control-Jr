@@ -1,0 +1,906 @@
+[
+ {
+  "id": "hab-quarters-interior",
+  "bytes": 460368,
+  "triangles": 13844,
+  "draws": 25,
+  "materials": 15,
+  "boundsMeters": [
+   16.12,
+   4.62,
+   10.12
+  ],
+  "interactionNodes": [
+   "hatch_door",
+   "light_strips",
+   "window_l",
+   "window_r"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "hab-service-interior",
+  "bytes": 399852,
+  "triangles": 12060,
+  "draws": 21,
+  "materials": 13,
+  "boundsMeters": [
+   14.12,
+   4.62,
+   9.12
+  ],
+  "interactionNodes": [
+   "hatch_door",
+   "light_strips",
+   "window_l",
+   "window_r"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "storm-shelter",
+  "bytes": 384700,
+  "triangles": 11272,
+  "draws": 34,
+  "materials": 10,
+  "boundsMeters": [
+   3.62,
+   2.41,
+   2.8
+  ],
+  "interactionNodes": [
+   "slot_back_1",
+   "slot_back_2",
+   "slot_left_1",
+   "slot_left_2",
+   "slot_right_1",
+   "slot_right_2",
+   "slot_roof_1",
+   "slot_roof_2",
+   "mount_back_1",
+   "mount_back_2",
+   "mount_left_1",
+   "mount_left_2",
+   "mount_right_1",
+   "mount_right_2",
+   "mount_roof_1",
+   "mount_roof_2",
+   "dose_screen",
+   "seat_1",
+   "seat_2",
+   "seat_3",
+   "seat_4",
+   "entry_light"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "water-wall-bag",
+  "bytes": 118620,
+  "triangles": 3032,
+  "draws": 7,
+  "materials": 6,
+  "boundsMeters": [
+   1.4,
+   2.078,
+   0.415
+  ],
+  "interactionNodes": [
+   "handle",
+   "drink_valve",
+   "water_level"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "poly-shield-panel",
+  "bytes": 39304,
+  "triangles": 960,
+  "draws": 7,
+  "materials": 6,
+  "boundsMeters": [
+   1.4,
+   1.9,
+   0.225
+  ],
+  "interactionNodes": [
+   "handle_l",
+   "handle_r",
+   "bolt_holes"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "cargo-shield-stack",
+  "bytes": 118632,
+  "triangles": 3224,
+  "draws": 18,
+  "materials": 8,
+  "boundsMeters": [
+   1.42,
+   2.048,
+   0.44
+  ],
+  "interactionNodes": [
+   "handle",
+   "bag_1",
+   "bag_2",
+   "bag_3"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "space-weather-console",
+  "bytes": 114292,
+  "triangles": 3344,
+  "draws": 11,
+  "materials": 8,
+  "boundsMeters": [
+   1.1,
+   1.958,
+   0.657
+  ],
+  "interactionNodes": [
+   "main_screen",
+   "alert_beacon",
+   "button_ack"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "stowage-rack",
+  "bytes": 68628,
+  "triangles": 2148,
+  "draws": 4,
+  "materials": 4,
+  "boundsMeters": [
+   2.1,
+   2,
+   0.71
+  ],
+  "interactionNodes": [
+   "shelf_1",
+   "shelf_2",
+   "shelf_3"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "drinking-water-station",
+  "bytes": 31704,
+  "triangles": 724,
+  "draws": 7,
+  "materials": 6,
+  "boundsMeters": [
+   0.7,
+   1.3,
+   0.65
+  ],
+  "interactionNodes": [
+   "level_fill",
+   "tap"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "crew-member",
+  "bytes": 290744,
+  "triangles": 9280,
+  "draws": 27,
+  "materials": 13,
+  "boundsMeters": [
+   0.615,
+   1.91,
+   0.526
+  ],
+  "interactionNodes": [
+   "hips",
+   "torso",
+   "head",
+   "arm_l",
+   "arm_r",
+   "leg_l",
+   "leg_r",
+   "hair_short",
+   "hair_bun",
+   "hair_curly",
+   "hair_cap",
+   "helmet",
+   "pack",
+   "badge"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "hab-greenhouse-interior",
+  "bytes": 697920,
+  "triangles": 21576,
+  "draws": 26,
+  "materials": 16,
+  "boundsMeters": [
+   16.12,
+   4.62,
+   10.12
+  ],
+  "interactionNodes": [
+   "hatch_door",
+   "light_strips",
+   "window_l",
+   "window_r"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "grow-bed",
+  "bytes": 311196,
+  "triangles": 8836,
+  "draws": 31,
+  "materials": 16,
+  "boundsMeters": [
+   1.8,
+   1.795,
+   1.03
+  ],
+  "interactionNodes": [
+   "led_panel",
+   "led_glow",
+   "light_lever",
+   "valve_wheel",
+   "moisture_needle",
+   "water_spray",
+   "plant_1",
+   "plant_2",
+   "plant_3",
+   "plant_4",
+   "plant_5",
+   "plant_6",
+   "nameplate"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "lettuce-plant",
+  "bytes": 67840,
+  "triangles": 1848,
+  "draws": 13,
+  "materials": 3,
+  "boundsMeters": [
+   0.45,
+   0.191,
+   0.445
+  ],
+  "interactionNodes": [
+   "leaves",
+   "heart"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "mizuna-plant",
+  "bytes": 143240,
+  "triangles": 3916,
+  "draws": 22,
+  "materials": 2,
+  "boundsMeters": [
+   0.36,
+   0.274,
+   0.342
+  ],
+  "interactionNodes": [
+   "leaves"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "pepper-plant",
+  "bytes": 66736,
+  "triangles": 2028,
+  "draws": 4,
+  "materials": 4,
+  "boundsMeters": [
+   0.283,
+   0.313,
+   0.312
+  ],
+  "interactionNodes": [
+   "leaves",
+   "fruit",
+   "flowers"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "greenhouse-water-tank",
+  "bytes": 76740,
+  "triangles": 2468,
+  "draws": 6,
+  "materials": 6,
+  "boundsMeters": [
+   0.95,
+   1.72,
+   0.96
+  ],
+  "interactionNodes": [
+   "level",
+   "gauge_needle"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "irrigation-line",
+  "bytes": 70760,
+  "triangles": 1948,
+  "draws": 9,
+  "materials": 7,
+  "boundsMeters": [
+   2.762,
+   1.65,
+   0.269
+  ],
+  "interactionNodes": [
+   "isolation_valve",
+   "hose_segment",
+   "hose_mount",
+   "leak_point"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "spare-hose",
+  "bytes": 10668,
+  "triangles": 156,
+  "draws": 3,
+  "materials": 3,
+  "boundsMeters": [
+   0.9,
+   0.09,
+   0.09
+  ],
+  "interactionNodes": [
+   "grip"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "harvest-basket",
+  "bytes": 75360,
+  "triangles": 2980,
+  "draws": 2,
+  "materials": 1,
+  "boundsMeters": [
+   0.512,
+   0.435,
+   0.52
+  ],
+  "interactionNodes": [
+   "contents",
+   "handle"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "galley-table",
+  "bytes": 53296,
+  "triangles": 1228,
+  "draws": 8,
+  "materials": 7,
+  "boundsMeters": [
+   1.6,
+   0.964,
+   0.9
+  ],
+  "interactionNodes": [
+   "salad_bowl",
+   "bowl_contents",
+   "cake",
+   "candle_flame"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "farm-console",
+  "bytes": 48584,
+  "triangles": 1168,
+  "draws": 9,
+  "materials": 7,
+  "boundsMeters": [
+   1,
+   1.72,
+   0.569
+  ],
+  "interactionNodes": [
+   "screen",
+   "day_button"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "tool-shelf",
+  "bytes": 96632,
+  "triangles": 2724,
+  "draws": 8,
+  "materials": 8,
+  "boundsMeters": [
+   1.4,
+   1.2,
+   0.405
+  ],
+  "interactionNodes": [
+   "hose_hook"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "water-recycler",
+  "bytes": 311328,
+  "triangles": 9648,
+  "draws": 31,
+  "materials": 14,
+  "boundsMeters": [
+   1.937,
+   2.5,
+   0.785
+  ],
+  "interactionNodes": [
+   "access_panel",
+   "bolt_1",
+   "bolt_2",
+   "bolt_3",
+   "bolt_4",
+   "pump_socket",
+   "valve_socket",
+   "filter_socket",
+   "test_pump",
+   "test_valve",
+   "flow_water",
+   "power_lever",
+   "status_lamp",
+   "outlet"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "pump-motor",
+  "bytes": 125424,
+  "triangles": 4344,
+  "draws": 8,
+  "materials": 7,
+  "boundsMeters": [
+   0.26,
+   0.38,
+   0.29
+  ],
+  "interactionNodes": [
+   "fan",
+   "scorch",
+   "tag"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "check-valve",
+  "bytes": 18808,
+  "triangles": 284,
+  "draws": 5,
+  "materials": 5,
+  "boundsMeters": [
+   0.3,
+   0.242,
+   0.12
+  ],
+  "interactionNodes": [
+   "coil",
+   "stuck_flag"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "filter-cartridge",
+  "bytes": 53380,
+  "triangles": 1184,
+  "draws": 5,
+  "materials": 5,
+  "boundsMeters": [
+   0.17,
+   0.458,
+   0.17
+  ],
+  "interactionNodes": [
+   "grime",
+   "handle"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "multimeter",
+  "bytes": 49844,
+  "triangles": 1200,
+  "draws": 11,
+  "materials": 7,
+  "boundsMeters": [
+   0.1,
+   0.29,
+   0.05
+  ],
+  "interactionNodes": [
+   "meter_screen",
+   "meter_dial",
+   "probe_red",
+   "probe_black"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "earth-link-console",
+  "bytes": 92624,
+  "triangles": 2872,
+  "draws": 8,
+  "materials": 7,
+  "boundsMeters": [
+   1.622,
+   2.16,
+   0.7
+  ],
+  "interactionNodes": [
+   "screen",
+   "send_button",
+   "antenna_lamp"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "parts-shelf",
+  "bytes": 74188,
+  "triangles": 2160,
+  "draws": 8,
+  "materials": 8,
+  "boundsMeters": [
+   1.62,
+   1.7,
+   0.422
+  ],
+  "interactionNodes": [
+   "spare_pump",
+   "spare_valve",
+   "spare_filter_1",
+   "spare_filter_2",
+   "meter_hook"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "utility-panel",
+  "bytes": 74116,
+  "triangles": 1956,
+  "draws": 11,
+  "materials": 9,
+  "boundsMeters": [
+   0.7,
+   1.85,
+   0.16
+  ],
+  "interactionNodes": [
+   "save_switch",
+   "gauge_needle",
+   "save_lamp"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "moon-south-pole",
+  "bytes": 2844004,
+  "triangles": 74648,
+  "draws": 13,
+  "materials": 8,
+  "boundsMeters": [
+   1200,
+   40.751,
+   1200
+  ],
+  "interactionNodes": [
+   "ridge_pad_marker",
+   "near_pad_marker",
+   "relay_near",
+   "relay_saddle",
+   "relay_far"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "lunar-habitat",
+  "bytes": 325556,
+  "triangles": 10464,
+  "draws": 23,
+  "materials": 14,
+  "boundsMeters": [
+   10.732,
+   6.48,
+   4.63
+  ],
+  "interactionNodes": [
+   "power_port",
+   "port_socket",
+   "port_lamp",
+   "base_antenna",
+   "base_dish",
+   "beacon",
+   "windows",
+   "airlock"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "solar-mast-cart",
+  "bytes": 327828,
+  "triangles": 9424,
+  "draws": 41,
+  "materials": 11,
+  "boundsMeters": [
+   2.62,
+   3.79,
+   2.555
+  ],
+  "interactionNodes": [
+   "tow_bar",
+   "wheel_l",
+   "wheel_r",
+   "leg_1",
+   "leg_2",
+   "leg_3",
+   "leg_4",
+   "mast_1",
+   "mast_2",
+   "mast_3",
+   "panel_pivot",
+   "wing_l",
+   "wing_r",
+   "sun_lamp",
+   "reel_drum",
+   "plug",
+   "cable_exit",
+   "crank",
+   "screen"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "moon-airlock",
+  "bytes": 301248,
+  "triangles": 7232,
+  "draws": 45,
+  "materials": 21,
+  "boundsMeters": [
+   5.72,
+   2.8,
+   3.5
+  ],
+  "interactionNodes": [
+   "outer_door",
+   "outer_wheel",
+   "inner_door",
+   "inner_wheel",
+   "hook_suit",
+   "hook_helmet",
+   "hook_bag",
+   "boot_mat",
+   "brush_holder",
+   "vac_unit",
+   "vac_nozzle",
+   "eds_pad",
+   "eds_glow",
+   "eds_slot",
+   "eds_switch",
+   "fan",
+   "filter_door",
+   "filter_slot",
+   "locker_door",
+   "spare_filter_1",
+   "spare_filter_2",
+   "air_screen",
+   "air_lamp",
+   "cycle_button",
+   "dust_tray",
+   "floor_dust"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "moon-suit",
+  "bytes": 165636,
+  "triangles": 5332,
+  "draws": 12,
+  "materials": 9,
+  "boundsMeters": [
+   1,
+   1.635,
+   0.585
+  ],
+  "interactionNodes": [
+   "dust_legs",
+   "dust_arms",
+   "dust_body",
+   "hanger"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "eva-helmet",
+  "bytes": 72312,
+  "triangles": 2400,
+  "draws": 6,
+  "materials": 6,
+  "boundsMeters": [
+   0.34,
+   0.367,
+   0.4
+  ],
+  "interactionNodes": [
+   "visor",
+   "dust_visor",
+   "scratches"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "tool-bag",
+  "bytes": 25212,
+  "triangles": 660,
+  "draws": 4,
+  "materials": 4,
+  "boundsMeters": [
+   0.44,
+   0.535,
+   0.19
+  ],
+  "interactionNodes": [
+   "dust_bag"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "moon-boots",
+  "bytes": 55512,
+  "triangles": 1800,
+  "draws": 3,
+  "materials": 3,
+  "boundsMeters": [
+   0.46,
+   0.26,
+   0.37
+  ],
+  "interactionNodes": [
+   "dust_boots"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "dust-brush",
+  "bytes": 20160,
+  "triangles": 424,
+  "draws": 3,
+  "materials": 3,
+  "boundsMeters": [
+   0.14,
+   0.385,
+   0.05
+  ],
+  "interactionNodes": [
+   "bristles"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "moon-rover",
+  "bytes": 259420,
+  "triangles": 6640,
+  "draws": 27,
+  "materials": 10,
+  "boundsMeters": [
+   2.26,
+   2.6,
+   3.17
+  ],
+  "interactionNodes": [
+   "wheel_fl",
+   "wheel_fr",
+   "wheel_rl",
+   "wheel_rr",
+   "cargo_slot",
+   "rover_antenna",
+   "headlights",
+   "seat_l",
+   "seat_r",
+   "dash_screen",
+   "drill_slot"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "relay-station",
+  "bytes": 139596,
+  "triangles": 3944,
+  "draws": 25,
+  "materials": 9,
+  "boundsMeters": [
+   1.52,
+   3.245,
+   0.564
+  ],
+  "interactionNodes": [
+   "leg_1",
+   "leg_2",
+   "leg_3",
+   "mast_1",
+   "mast_2",
+   "mast_3",
+   "dish_pivot",
+   "dish_tilt",
+   "link_lamp",
+   "power_lamp",
+   "flap_l",
+   "flap_r",
+   "handle"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "science-drill",
+  "bytes": 125392,
+  "triangles": 4560,
+  "draws": 8,
+  "materials": 6,
+  "boundsMeters": [
+   0.818,
+   1.154,
+   0.714
+  ],
+  "interactionNodes": [
+   "drill_head",
+   "drill_bit",
+   "core_sample"
+  ],
+  "errors": 0,
+  "warnings": 0
+ }
+]

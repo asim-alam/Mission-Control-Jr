@@ -10,18 +10,18 @@ export const LEVELS={
 
 /** Cadet overrides per mission. Values are authored game tuning, not NASA measurements. */
 export const CADET_TUNING={
- // 10 min before activity instead of 8; one-minute cart moves; gentler modeled hazard.
- 'solar-shelter':{initialEnergyWh:200,hazardStart:600,bagTransferSeconds:60,eventPerSecond:.02},
- // Shorter repair; slightly faster growth so a one-tray plan still reaches harvest.
- greenhouse:{repairSeconds:900,progressPerFullLightPeriod:.2},
- // Waiting for Earth's reply (~25 min round trip) without conserving is survivable, just costly.
- 'earth-delay':{processingSeconds:120,normalAirLossPerSecond:.055,conservedAirLossPerSecond:.015,unpoweredAirLossPerSecond:.055,initialEnergyWh:150},
- // More stored energy so a late or shaded collector does not stop training.
- 'lunar-sunlight':{initialEnergyWh:650},
- // Larger filter and shorter hand cleaning.
- 'lunar-dust':{initialFilter:60,spareFilters:2,manualPanelSeconds:300,manualOtherSeconds:150,initialEnergyWh:400},
- // A faster, better-charged rover.
- 'lunar-relay':{initialRoverWh:420,secondsPerMeter:3},
+ // Ten more minutes of warning and a gentler peak, so a slower builder still finishes the shelter.
+ 'solar-shelter':{warningSeconds:1800,peakDoseRate:.033},
+ // A bigger battery, a slower leak and a wider "just right" soil band, so a careful plan still feasts.
+ greenhouse:{batteryKWh:1.5,leakLPerDay:4,moistureBand:[.8,3.6]},
+ // More water at the start, a quicker answer from Earth and shorter hand jobs. The light-time delay itself is never changed.
+ 'earth-delay':{waterStartL:26,earthThinkSeconds:240,holdSeconds:{openPanel:1.4,closePanel:1,test:.8,inspect:.8,swap:1.1}},
+ // More suit air and a bigger, fuller battery, so a short mast still keeps the base warm. Pads, shadows and the Sun are unchanged.
+ 'lunar-sunlight':{suitMinutes:150,batteryKWh:55,batteryStartKWh:35},
+ // More power and a second spare filter, so a brushing plan can still clean the air. Tool effects are unchanged.
+ 'lunar-dust':{powerUnits:70,spareFilters:2,holdSeconds:{wheel:1.2,brush:.8,vacuum:1.4,filter:1}},
+ // More suit air, a fuller rover battery and shorter hand jobs. The hill, the radio rules and the light time are unchanged.
+ 'lunar-relay':{suitMinutes:110,batteryStart:95,holdSeconds:{legs:.9,stage:1.1,aim:1,drill:1.8}},
  // Older chapters read these through their own controllers.
  storm:{prepSeconds:540,stormDrainScale:.6},
  rover:{drainScale:.65}

@@ -1,9 +1,18 @@
 import {shelterScenario} from './scenario.js';
-export function createMission({scenario=shelterScenario,seed=42,initialCarry={}}={}) {
-  return {missionId:'solar-shelter',scenario:structuredClone(scenario),seed,simSeconds:0,paused:false,phase:'brief',
-    events:[{id:'activity-start',at:scenario.hazardStart},{id:'supply-need',at:780},{id:'activity-end',at:scenario.hazardEnd}],
-    energyWh:scenario.initialEnergyWh,airReserveUnits:100,waterConsumedKg:0,
-    bags:[0,1,2].map(id=>({id,location:'storage',massKg:scenario.bagMassKg})),
-    crew:Object.fromEntries(['elena','amara','jin','luca'].map(name=>[name,{location:'habitat',exposurePoints:0}])),
-    experimentOn:false,experimentPoweredSeconds:initialCarry.experimentPreserved?60:0,decisions:[],notice:'',result:null};
+import {SAVE_SCHEMA} from '../shared/schema.js';
+
+export const CREW = ['elena', 'amara', 'jin', 'luca'];
+export const SLOT_IDS = Object.keys(shelterScenario.slots);
+
+export function createMission({scenario = shelterScenario, seed = 42, initialCarry = {}} = {}) {
+  const items = [];
+  for (const [kind, spec] of Object.entries(scenario.materials)) for (let i = 1; i <= spec.count; i++) items.push({id: `${kind}-${i}`, kind, at: 'store'});
+  return {
+    missionId: 'solar-shelter', schema: SAVE_SCHEMA, scenario: structuredClone(scenario), seed,
+    phase: 'brief', stage: 'warning', plan: null, simSeconds: 0, paused: false,
+    items, held: null, slots: Object.fromEntries(Object.keys(scenario.slots).map(id => [id, null])),
+    crew: Object.fromEntries(CREW.map(id => [id, {at: 'work', arriveAt: null, dose: 0}])),
+    playerInShelter: false, playerDose: 0, trips: 0, removals: 0,
+    atArrival: null, events: [], decisions: [], notice: '', carryNote: initialCarry.stormOutcome || null,
+  };
 }
