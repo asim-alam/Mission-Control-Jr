@@ -137,7 +137,7 @@ document.getElementById('mute').onclick = () => {
 
 // ---------- Game state ----------
 const RES = ['power', 'oxygen', 'water', 'food', 'radiation', 'equipment', 'morale'];
-const RES_LABEL = { power: 'Power', oxygen: 'Oxygen', water: 'Water', food: 'Food', radiation: 'Shield prep', equipment: 'Equipment', morale: 'Morale' };
+const RES_LABEL = { power: 'Power', oxygen: 'Air', water: 'Water', food: 'Food', radiation: 'Sun shield', equipment: 'Machines', morale: 'Happy' };
 let carriedMission={stormOutcome:null,successfulTraverse:false};try{carriedMission=readMissionCarry(localStorage);}catch{/* Direct play remains available without browser storage. */}
 let state;
 let stormLevel = 0;
@@ -175,7 +175,7 @@ function apply(fx = {}) {
 const living = () => state.crew.filter((c) => c.hp > 0);
 function hurtCrew(c, dmg, why) {
   c.hp = remainingCrewCondition(c.hp,dmg);
-  log(`${c.name} needs recovery after a training injury (${why}). The exercise can continue safely.`);
+  log(`${c.name} got hurt (${why}) and needs rest. Don't worry, they will get better.`);
 }
 function hurtRandom(dmg, why, count = 1) {
   const alive = living();
@@ -198,11 +198,11 @@ function dailyUpkeep() {
   if (stormLevel > 0) apply({ power: state.flags.stormReady ? -4 : -14 });
   if (r.power < 15) {
     apply({ oxygen: -6, morale: -4 });
-    log('Power critical: life support throttled.');
+    log('Power is very low! The air machine slows down.');
   }
   for (const c of living()) {
     c.fatigue = Math.min(100, c.fatigue + 5);
-    if (c.fatigue > 80 && randomEvent() < 0.3) hurtCrew(c, 10, 'exhaustion accident');
+    if (c.fatigue > 80 && randomEvent() < 0.3) hurtCrew(c, 10, 'too tired');
   }
   if (r.oxygen <= 0) hurtRandom(40, 'hypoxia');
   if (r.food <= 0 || r.water-state.shieldWater <= 0) hurtRandom(20, 'starvation/dehydration');
@@ -211,24 +211,24 @@ function dailyUpkeep() {
 
 function chooseWork(w) {
   if (state.ended || currentEvent()) return;
-  if(w.id==='farm' && (state.res.power<4 || state.res.water-state.shieldWater<3)){log('The greenhouse needs more available power and water.');render();return;}
+  if(w.id==='farm' && (state.res.power<4 || state.res.water-state.shieldWater<3)){log('The plants need more power and water.');render();return;}
   playBeep();
   apply(w.fx);
   state.decisionHistory.push({sol:state.sol,type:'work',choice:w.id});
   if(w.id==='farm'){
     state.cropPlantedSol ??= state.sol;
     state.cropProgress+=1;
-    log('The established crops received light and water. Harvest comes later.');
+    log('The plants got light and water. They will be ready later.');
   }
   if (w.rest) state.crew.forEach((c) => { c.fatigue = Math.max(0, c.fatigue - w.rest); });
   else state.crew.forEach((c) => { c.fatigue = Math.min(100, c.fatigue + 4); });
-  log(`Crew focus: ${w.label}.`);
+  log(`Today's job: ${w.label}.`);
   endDay();
 }
 
 function endDay() {
   dailyUpkeep();
-  if(state.cropProgress>=2 && state.sol-state.cropPlantedSol>=2){apply({food:5});state.cropProgress=0;state.cropPlantedSol=null;log('A small fresh-food supplement is ready; packaged food remains essential.');}
+  if(state.cropProgress>=2 && state.sol-state.cropPlantedSol>=2){apply({food:5});state.cropProgress=0;state.cropPlantedSol=null;log('Some fresh food is ready to eat! We still need the packed food too.');}
   if (!living().length) return ending();
   if (state.sol === 30) return ending();
   state.sol++;
@@ -247,7 +247,7 @@ function resolveChoice(ch) {
   if (ch.flag) state.flags[ch.flag] = true;
   if (ch.shelterType === 'water') shelter.visible = true;
   if (ch.shelterType === 'rover') roverShelter.visible = true;
-  if (ch.hurt) hurtRandom(ch.hurt, ch.hurtReason || 'suit failure', ch.hurtCount || 1);
+  if (ch.hurt) hurtRandom(ch.hurt, ch.hurtReason || 'spacesuit leak', ch.hurtCount || 1);
   if (ch.fatigue) state.crew.forEach((c) => { c.fatigue = Math.min(100, c.fatigue + ch.fatigue); });
   if (ch.rest) state.crew.forEach((c) => { c.fatigue = Math.max(0, c.fatigue - ch.rest); });
   log(ch.note);
@@ -264,22 +264,22 @@ function currentEvent() {
   if (!ev) return null;
   let choices=ev.choices;
   if (state.sol === 8 && state.flags.kestrelSurveyed) {
-    choices = [...choices, { label: 'Use Kestrel survey to choose a safer approach', fx: { equipment: 10, power: 5 }, flag: 'kestrelRouteUsed', note: 'The later field survey helped the crew compare routes before the EVA.' }];
+    choices = [...choices, { label: 'Use the rover map from Kestrel Ridge to pick a safe path', fx: { equipment: 10, power: 5 }, flag: 'kestrelRouteUsed', note: 'Your rover map showed the safest way. Great!' }];
   }
   if (ev.storm) {
     return {
-      title: `Sol ${state.sol} — Dust Storm`,
-      text: state.flags.stormReady ? 'Dust blots out the sun. Your reserves hold.' : 'Dust blots out the sun. Solar output collapses, and you were not ready.',
-      choices: [{ label: 'Endure', fx: state.flags.stormReady ? {} : { oxygen: -6, morale: -5 }, note: 'The storm rages on.' }],
+      title: `Day ${state.sol} — Dust Storm`,
+      text: state.flags.stormReady ? 'Dust hides the Sun. You saved enough, so the base is OK!' : 'Dust hides the Sun. The solar panels make almost no power, and you did not save enough.',
+      choices: [{ label: 'Wait for the storm to pass', fx: state.flags.stormReady ? {} : { oxygen: -6, morale: -5 }, note: 'The storm keeps blowing.' }],
     };
   }
   if (ev.solarStorm) {
     const exposure=modeledStormExposure(state.res.radiation), shelter=state.shelterType;
-    const shelterName=shelter==='water'?'water around the sleep area':shelter==='rover'?'the salvaged rover cabin':'the habitat alone';
+    const shelterName=shelter==='water'?'the beds with water around them':shelter==='rover'?'the old rover':'the base with no extra cover';
     return {
-      title: 'Sol 27 — Radiation Storm',
-      text: `Particle activity rises. The crew waits in ${shelterName}. The educational model counts ${exposure.exposurePoints} exposure points; even extra shielding leaves some exposure.`,
-      choices: [{ label: 'Wait it out', fx: shelter ? { morale: 8 } : { morale: -15 }, exposurePoints: exposure.exposurePoints, hurt: exposure.crewConditionLoss, hurtCount: 4, hurtReason: 'training recovery after the storm', note: shelter ? 'Preparation reduced modeled exposure and the crew needs recovery.' : 'The crew needs recovery after a higher-exposure training scenario.' }],
+      title: 'Day 27 — Sun Storm',
+      text: `The Sun storm is here. The crew hides in ${shelterName}. Radiation points: ${exposure.exposurePoints}. Extra cover makes this number smaller, but never zero.`,
+      choices: [{ label: 'Wait it out', fx: shelter ? { morale: 8 } : { morale: -15 }, exposurePoints: exposure.exposurePoints, hurt: exposure.crewConditionLoss, hurtCount: 4, hurtReason: 'Sun storm', note: shelter ? 'Your cover helped! The crew needs a little rest.' : 'The crew got more radiation and needs rest to get better.' }],
     };
   }
   if (ev.cond && !ev.cond(state)) return null;
@@ -287,8 +287,8 @@ function currentEvent() {
     const safe = state.flags.fungusStudied;
     return {
       title: ev.title,
-      text: safe ? 'The study confirms the fungus is safe once cooked. It can add a reliable protein source to the menu.' : 'Two crew members get sick. The raw fungus held a mild toxin that a study would have found.',
-      choices: [{ label: 'Continue', fx: safe ? { food: 25, morale: 10 } : { morale: -10 }, hurt: safe ? 0 : 25, hurtCount: 2, hurtReason: 'fungus poisoning', note: safe ? 'Science fed the crew.' : 'A hard lesson in rigor.' }],
+      text: safe ? 'The test says the mushroom is safe when cooked. Now there is more food for everyone!' : 'Two crew members get a tummy ache. The mushroom had something bad in it. A test would have found it.',
+      choices: [{ label: 'Continue', fx: safe ? { food: 25, morale: 10 } : { morale: -10 }, hurt: safe ? 0 : 25, hurtCount: 2, hurtReason: 'fungus poisoning', note: safe ? 'Science gave the crew more food!' : 'Lesson learned: test first.' }],
     };
   }
   return { ...ev, choices: choices.filter((c) => !c.cond || c.cond(state)) };
@@ -304,24 +304,24 @@ function ending() {
   let title;
   let text;
   if (readyCrew === 4 && prep >= 3 && r.morale > 50) {
-    title = 'Model Mission';
-    text = 'All four astronauts return home healthy. Your careful data and preparation become the template for future outposts.';
+    title = 'Super Mission';
+    text = 'All four astronauts are healthy and happy. Your careful plan will help future Mars bases!';
   } else if (readyCrew === 4) {
     title = 'Safe Return';
-    text = 'Everyone made it home, though sometimes only just. Better planning could have made it easier.';
+    text = 'Everyone is safe, but it was close sometimes. Planning ahead makes it easier.';
   } else {
     title = 'Recovery Needed';
-    text = `${readyCrew} of 4 crew members are ready for the next task. Everyone remains safe; the others need a recovery period.`;
+    text = `${readyCrew} of 4 crew members are ready to go. Everyone is safe. The others need some rest to get better.`;
   }
-  completeChapter('extended',{outcome:title,attemptCompleted:true,success:readyCrew===4,mastered:title==='Model Mission'});
+  completeChapter('extended',{outcome:title,attemptCompleted:true,success:readyCrew===4,mastered:title==='Super Mission'});
   const decisionReview=selectDecisionReview(state.decisionHistory);
   const review=decisionReview.entries.map(entry=>`<li>Sol ${entry.sol}: ${entry.choice}</li>`).join('');
-  const summarizedWork=decisionReview.summarizedWork?`<li>${decisionReview.summarizedWork} earlier crew-focus choices are summarized here; all story-event decisions remain listed.</li>`:'';
-  let explanation='A crew can use work plans and shelter choices to protect supplies and stay healthy.';try{if(localStorage.getItem('mission-control-jr.learning-mode.v1')==='details')explanation=`Current resources: power ${Math.round(r.power)}, oxygen ${Math.round(r.oxygen)}, water ${Math.round(r.water)}, food ${Math.round(r.food)}, equipment ${Math.round(r.equipment)}, morale ${Math.round(r.morale)}. Choices connect these systems; the values are simplified game units.`;}catch{}
-  showModal(`<h2 id="modal-heading">Commander’s Exam · ${title}</h2><p>${text}</p><p class="small">Preparations made: ${prep}/4 · Final morale ${Math.round(r.morale)}</p>
-    <section class="learning-summary"><h3>Decision review</h3><ol>${review||'<li>No major decision was recorded.</li>'}${summarizedWork}</ol><p><b>What you practiced:</b> link power, life support, food, water, crew health, and radiation planning. Each resource choice changes the options that remain later.</p><p>${explanation}</p><p><b>If you had chosen differently:</b> another work assignment or shelter choice would shift resource levels and could change crew condition by the end of the exercise.</p><p><b>Training model:</b> exposure points and crew condition are authored game scales, not radiation dose or a medical forecast. Hazards can call for recovery, but the exercise never ends with a crew death.</p><p><b>Real NASA connection:</b> NASA develops regenerative systems to recycle air and water for long missions. <a href="https://www.nasa.gov/directorates/stmd/game-changing-development-program/next-generation-life-support-ngls/" target="_blank" rel="noopener">NASA Next Generation Life Support</a></p></section>
-    <p class="lesson">This is a simplified training game. Its resource values are not operational mission-planning data.</p>`,
-    [{ label: 'Return to expedition journey', onClick:openJourney },{ label: 'Begin a new mission', onClick: () => { hideModal(); newGame(); } }]);
+  const summarizedWork=decisionReview.summarizedWork?`<li>${decisionReview.summarizedWork} more daily job choices are not shown. All your big choices are listed.</li>`:'';
+  let explanation='Good job plans and safe hiding spots keep the crew healthy and the supplies full.';try{if(localStorage.getItem('mission-control-jr.learning-mode.v1')==='details')explanation=`Current resources: power ${Math.round(r.power)}, oxygen ${Math.round(r.oxygen)}, water ${Math.round(r.water)}, food ${Math.round(r.food)}, equipment ${Math.round(r.equipment)}, morale ${Math.round(r.morale)}. Every choice changes these numbers. They are game numbers, not real ones.`;}catch{}
+  showModal(`<h2 id="modal-heading">Base Boss Report · ${title}</h2><p>${text}</p><p class="small">Things you got ready: ${prep}/4 · Happiness at the end ${Math.round(r.morale)}</p>
+    <section class="learning-summary"><h3>Your big choices</h3><ol>${review||'<li>No big choices yet.</li>'}${summarizedWork}</ol><p><b>What you learned:</b> power, air, water, food and crew health are all connected. A choice today changes what you can do later.</p><p>${explanation}</p><p><b>Try again?</b> Different jobs or hiding spots would change your numbers and how the crew feels at the end.</p><p><b>Just a game:</b> the radiation points and health numbers are made up for the game. Crew members can get hurt and need rest, but nobody ever dies.</p><p><b>This is real!</b> NASA is building machines that clean and reuse air and water, so astronauts can go on long trips. <a href="https://www.nasa.gov/directorates/stmd/game-changing-development-program/next-generation-life-support-ngls/" target="_blank" rel="noopener">NASA Next Generation Life Support</a></p></section>
+    <p class="lesson">This is a game. The numbers are made simple so they are fun to play with.</p>`,
+    [{ label: 'Back to the map', onClick:openJourney },{ label: 'Begin a new mission', onClick: () => { hideModal(); newGame(); } }]);
 }
 
 // ---------- UI ----------
@@ -333,7 +333,7 @@ function render() {
     showModal(`<h2 id="modal-heading">${ev.title}</h2><p>${ev.text}</p>`, ev.choices.map((c) => ({ label: c.label, onClick: () => { hideModal(); resolveChoice(c); } })));
     $('work').innerHTML = '';
   } else {
-    $('work').innerHTML = '<h3>Assign today\'s crew focus</h3>';
+    $('work').innerHTML = '<h3>Pick today\'s job for the crew</h3>';
     WORK.forEach((w) => {
       const b = document.createElement('button');
       b.textContent = w.label;
@@ -350,7 +350,7 @@ function renderStats() {
     return `<div class="res"><span>${RES_LABEL[k]}</span><div class="bar"><i style="width:${v}%;background:${col}"></i></div><b>${v}</b></div>`;
   }).join('');
   $('crew').innerHTML = state.crew.map((c) => `<div class="crew"><b>${c.name}</b><small>${c.role}</small>
-    <div class="mini">Condition ${c.hp} · Fatigue ${c.fatigue}</div></div>`).join('');
+    <div class="mini">Condition ${c.hp} · Tired ${c.fatigue}</div></div>`).join('');
   $('log').innerHTML = state.log.map((l) => `<div>${l}</div>`).join('');
 
 }

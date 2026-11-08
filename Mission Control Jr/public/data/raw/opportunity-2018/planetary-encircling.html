@@ -1,0 +1,1117 @@
+<!DOCTYPE html><html lang="en"><head><meta
+charset="utf-8"><meta
+name="viewport" content="width=device-width,minimum-scale=1"><link
+rel="apple-touch-icon" sizes="57x57" href="/img/site/apple-touch-icon-57x57.png"><link
+rel="apple-touch-icon" sizes="60x60" href="/img/site/apple-touch-icon-60x60.png"><link
+rel="apple-touch-icon" sizes="72x72" href="/img/site/apple-touch-icon-72x72.png"><link
+rel="apple-touch-icon" sizes="76x76" href="/img/site/apple-touch-icon-76x76.png"><link
+rel="apple-touch-icon" sizes="114x114" href="/img/site/apple-touch-icon-114x114.png"><link
+rel="apple-touch-icon" sizes="120x120" href="/img/site/apple-touch-icon-120x120.png"><link
+rel="apple-touch-icon" sizes="144x144" href="/img/site/apple-touch-icon-144x144.png"><link
+rel="apple-touch-icon" sizes="152x152" href="/img/site/apple-touch-icon-152x152.png"><link
+rel="apple-touch-icon" sizes="180x180" href="/img/site/apple-touch-icon-180x180.png"><meta
+name="apple-mobile-web-app-capable" content="yes"><meta
+name="apple-mobile-web-app-status-bar-style" content="black-translucent"><link
+rel="icon" type="image/png" sizes="228x228" href="/img/site/coast-228x228.png"><meta
+name="msapplication-TileColor" content="#FFFFFF"><meta
+name="msapplication-TileImage" content="/img/site/mstile-144x144.png"><meta
+name="msapplication-config" content="/img/site/browserconfig.xml"><link
+rel="yandex-tableau-widget" href="/img/site/yandex-browser-manifest.json"><link
+rel="icon" type="image/png" sizes="32x32" href="/img/site/favicon-32x32.png"><link
+rel="icon" type="image/png" sizes="16x16" href="/img/site/favicon-16x16.png"><link
+rel="shortcut icon" href="/img/site/favicon.ico"> <script>loadjs=function(){var n=function(){},e={},t={},r={};function c(n,e){if(n){var c=r[n];if(t[n]=e,c)for(;c.length;)c[0](n,e),c.splice(0,1)}}function i(e,t){e.call&&(e={success:e}),t.length?(e.error||n)(t):(e.success||n)(e)}function o(e,t,r,c){var i,s,u=document,f=r.async,a=(r.numRetries||0)+1,h=r.before||n;c=c||0,/(^css!|\.css$)/.test(e)?(i=!0,(s=u.createElement("link")).rel="stylesheet",s.href=e.replace(/^css!/,"")):((s=u.createElement("script")).src=e,s.async=void 0===f||f),s.onload=s.onerror=s.onbeforeload=function(n){var u=n.type[0];if(i&&"hideFocus"in s)try{s.sheet.cssText.length||(u="e")}catch(n){u="e"}if("e"==u&&(c+=1)<a)return o(e,t,r,c);t(e,u,n.defaultPrevented)},!1!==h(e,s)&&u.head.appendChild(s)}function s(n,t,r){var s,u;if(t&&t.trim&&(s=t),u=(s?r:t)||{},s){if(s in e)throw"LoadJS";e[s]=!0}!function(n,e,t){var r,c,i=(n=n.push?n:[n]).length,s=i,u=[];for(r=function(n,t,r){if("e"==t&&u.push(n),"b"==t){if(!r)return;u.push(n)}--i||e(u)},c=0;c<s;c++)o(n[c],r,t)}(n,function(n){i(u,n),c(s,n)},u)}return s.ready=function(n,e){return function(n,e){var c,i,o,s=[],u=(n=n.push?n:[n]).length,f=u;for(c=function(n,t){t.length&&s.push(n),--f||e(s)};u--;)i=n[u],(o=t[i])?c(i,o):(r[i]=r[i]||[]).push(c)}(n,function(n){i(e,n)}),s},s.done=function(n){c(n,[])},s.reset=function(){e={},t={},r={}},s.isDefined=function(n){return n in e},s}();!function(e,t){"function"==typeof define&&define.amd?define(t):"object"==typeof exports?module.exports=t():e.Cookie=t()}(this,function(){"use strict";function e(t,n,o){return void 0===n?e.get(t):void(null===n?e.remove(t):e.set(t,n,o))}function t(e){return e.replace(/[.*+?^$|[\](){}\\-]/g,"\\$&")}function n(e){var t="";for(var n in e)if(e.hasOwnProperty(n)){if("expires"===n){var r=e[n];"object"!=typeof r&&(r+="number"==typeof r?"D":"",r=o(r)),e[n]=r.toUTCString()}if("secure"===n){if(!e[n])continue;t+=";"+n}t+=";"+n+"="+e[n]}return e.hasOwnProperty("path")||(t+=";path=/"),t}function o(e){var t=new Date,n=e.charAt(e.length-1),o=parseInt(e,10);switch(n){case"Y":t.setFullYear(t.getFullYear()+o);break;case"M":t.setMonth(t.getMonth()+o);break;case"D":t.setDate(t.getDate()+o);break;case"h":t.setHours(t.getHours()+o);break;case"m":t.setMinutes(t.getMinutes()+o);break;case"s":t.setSeconds(t.getSeconds()+o);break;default:t=new Date(e)}return t}return e.enabled=function(){var t,n="__test_key";return document.cookie=n+"=1",t=!!document.cookie,t&&e.remove(n),t},e.get=function(e,n){if("string"!=typeof e||!e)return null;e="(?:^|; )"+t(e)+"(?:=([^;]*?))?(?:;|$)";var o=new RegExp(e),r=o.exec(document.cookie);return null!==r?n?r[1]:decodeURIComponent(r[1]):null},e.getRaw=function(t){return e.get(t,!0)},e.set=function(e,t,o,r){o!==!0&&(r=o,o=!1),r=n(r?r:{});var u=e+"="+(o?t:encodeURIComponent(t))+r;document.cookie=u},e.setRaw=function(t,n,o){e.set(t,n,!0,o)},e.remove=function(t){e.set(t,"a",{expires:new Date})},e});function handleFirstTab(e){9===e.keyCode&&(document.documentElement.classList.add("user-is-tabbing"),window.removeEventListener("keydown",handleFirstTab),window.addEventListener("mousedown",handleMouseDownOnce))}function handleMouseDownOnce(){document.documentElement.classList.remove("user-is-tabbing"),window.removeEventListener("mousedown",handleMouseDownOnce),window.addEventListener("keydown",handleFirstTab)}window.addEventListener("keydown",handleFirstTab);</script> <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script> <link
+rel="preconnect" href="https://www.planetary.org" /><link
+rel="preload"
+as="style"
+href="https://www.planetary.org/css/sitefont.css"
+/><link
+rel="stylesheet"
+href="https://www.planetary.org/css/sitefont.css"
+media="print"
+onload="this.media='all'"
+/>
+<noscript><link
+rel="stylesheet"
+href="https://www.planetary.org/css/sitefont.css"
+/>
+</noscript> <script id="Cookiebot" src="https://consent.cookiebot.com/uc.js" data-cbid="0f97b11d-eb49-4793-97a5-742e1ea7b61d" type="text/javascript" async></script>                            
+                <style>
+        html{line-height:1.15;-webkit-text-size-adjust:100%}body{margin:0}main{display:block}h1{font-size:2em;margin:.67em 0}a{background-color:transparent}strong{font-weight:bolder}img{border-style:none}button,input{font-family:inherit;font-size:100%;line-height:1.15;margin:0}button,input{overflow:visible}button{text-transform:none}button{-webkit-appearance:button}button::-moz-focus-inner{border-style:none;padding:0}button:-moz-focusring{outline:ButtonText dotted 1px}[type=checkbox]{box-sizing:border-box;padding:0}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}[type=search]::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}html{box-sizing:border-box;font-family:sans-serif}*,:after,:before{box-sizing:inherit}h1,h2,h3,h4,p{margin:0}button{background:0 0;padding:0}ul{list-style:none;margin:0;padding:0}html{font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica Neue,Arial,Noto Sans,sans-serif;line-height:1.5}*,:after,:before{border:0 solid #e2e8f0}img{border-style:solid}input::-webkit-input-placeholder{color:#a0aec0}input:-ms-input-placeholder{color:#a0aec0}h1,h2,h3,h4{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}button,input{padding:0;line-height:inherit;color:inherit}img{display:block;vertical-align:middle}img{max-width:100%;height:auto}.btn{padding:.75rem 2rem;border-radius:.25rem;text-decoration:none;letter-spacing:.025em;text-transform:uppercase;display:inline-block;text-align:center}.btn-blue{background-color:#037cc2;color:#fff;border-width:1px;border-color:#037cc2}.btn-orange{background-color:#cc4e12;color:#fff;border-width:1px;border-color:#cc4e12}body{color:#1a1a1a}p{font-weight:300;line-height:1.625;font-size:1.125rem;margin-top:1.5rem;margin-bottom:1.5rem}strong{font-weight:600}a{text-decoration:none}main a{text-decoration:none;color:#037cc2}h1,h2,h3,h4{margin-top:2.5rem;margin-bottom:1.5rem;font-weight:700}h1:first-of-type{margin-top:0}h1{font-size:2.25rem}@media screen and (min-width:992px){h1{font-size:3rem}}h2{font-size:1.875rem}h3{font-size:1.5rem}h4{font-size:1.25rem}#skipnav a{-webkit-transform:translateY(-100%);transform:translateY(-100%)}:root{--outlineColor:#5db7a5}body{font-family:Poppins,Helvetica,Arial,sans-serif}[class^=icon-]:before{font-family:fontello;font-style:normal;font-weight:400;speak:never;display:inline-block;text-decoration:inherit;width:1em;margin-right:.2em;text-align:center;font-variant:normal;text-transform:none;line-height:1em;margin-left:.2em;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}.icon-search:before{content:"\e802"}.icon-cancel:before{content:"\e803"}.icon-chat:before{content:"\e809"}.icon-user:before{content:"\e811"}.icon-heart:before{content:"\e812"}.icon-left-open:before{content:"\e813"}.icon-arrows-cw:before{content:"\e819"}.icon-twitter:before{content:"\f099"}.icon-facebook:before{content:"\f09a"}.icon-menu:before{content:"\f0c9"}.icon-linkedin:before{content:"\f0e1"}.icon-rocket:before{content:"\f135"}.icon-youtube:before{content:"\f167"}.icon-instagram:before{content:"\f16d"}#mobilemenu-main,#searchmenu-main,.mobilereturn,.subs{display:none}#mobilemenu-main,#searchmenu-main,.subs{position:fixed;overflow-y:scroll;max-height:100%;top:0;left:0}.joinmenu span{bottom:100%;margin-left:-12px;width:24px;overflow:hidden}.joinmenu span,.joinmenu span:after{position:absolute;left:50%;height:12px}.joinmenu span:after{content:"";width:12px;-webkit-transform:translate(-50%,50%) rotate(45deg);transform:translate(-50%,50%) rotate(45deg);background-color:#f7fafc}.appearance-none{-webkit-appearance:none;-moz-appearance:none;appearance:none}.bg-black{background-color:#000}.bg-white{background-color:#fff}.bg-gray-100{background-color:#f7fafc}.bg-gray-200{background-color:#edf2f7}.bg-planetary-blue{background-color:#037cc2}.bg-asteroid-gray{background-color:#333}.bg-center{background-position:50%}.bg-cover{background-size:cover}.border-transparent{border-color:transparent}.border-gray-200{border-color:#edf2f7}.border-planetary-blue{border-color:#037cc2}.border-asteroid-gray{border-color:#333}.rounded-none{border-radius:0}.rounded{border-radius:.25rem}.rounded-full{border-radius:9999px}.rounded-tl{border-top-left-radius:.25rem}.rounded-tr{border-top-right-radius:.25rem}.rounded-br{border-bottom-right-radius:.25rem}.rounded-bl{border-bottom-left-radius:.25rem}.border-2{border-width:2px}.border-r-0{border-right-width:0}.border-b-2{border-bottom-width:2px}.border-b-3{border-bottom-width:3px}.block{display:block}.inline-block{display:inline-block}.inline{display:inline}.flex{display:-webkit-box;display:-ms-flexbox;display:flex}.hidden{display:none}.items-center{-webkit-box-align:center;-ms-flex-align:center;align-items:center}.justify-end{-webkit-box-pack:end;-ms-flex-pack:end;justify-content:flex-end}.justify-center{-webkit-box-pack:center;-ms-flex-pack:center;justify-content:center}.flex-auto{-webkit-box-flex:1;-ms-flex:1 1 auto;flex:1 1 auto}.flex-none{-webkit-box-flex:0;-ms-flex:none;flex:none}.font-light{font-weight:300}.font-medium{font-weight:500}.font-semibold{font-weight:600}.h-12{height:3rem}.h-full{height:100%}.leading-tight{line-height:1.25}.leading-normal{line-height:1.5}.m-0{margin:0}.mx-1{margin-left:.25rem;margin-right:.25rem}.mx-8{margin-left:2rem;margin-right:2rem}.mx-auto{margin-left:auto;margin-right:auto}.mt-0{margin-top:0}.mb-0{margin-bottom:0}.mt-1{margin-top:.25rem}.mt-2{margin-top:.5rem}.mr-2{margin-right:.5rem}.mb-2{margin-bottom:.5rem}.mt-3{margin-top:.75rem}.mb-3{margin-bottom:.75rem}.ml-3{margin-left:.75rem}.mt-4{margin-top:1rem}.mr-4{margin-right:1rem}.ml-4{margin-left:1rem}.mb-6{margin-bottom:1.5rem}.mt-8{margin-top:2rem}.ml-8{margin-left:2rem}.mt-20{margin-top:5rem}.min-h-64{min-height:16rem}.opacity-0{opacity:0}.outline-none{outline:0}.p-0{padding:0}.p-2{padding:.5rem}.px-0{padding-left:0;padding-right:0}.py-1{padding-top:.25rem;padding-bottom:.25rem}.py-2{padding-top:.5rem;padding-bottom:.5rem}.py-3{padding-top:.75rem;padding-bottom:.75rem}.px-3{padding-left:.75rem;padding-right:.75rem}.py-4{padding-top:1rem;padding-bottom:1rem}.py-6{padding-top:1.5rem;padding-bottom:1.5rem}.px-6{padding-left:1.5rem;padding-right:1.5rem}.py-8{padding-top:2rem;padding-bottom:2rem}.px-8{padding-left:2rem;padding-right:2rem}.py-12{padding-top:3rem;padding-bottom:3rem}.pt-0{padding-top:0}.pr-0{padding-right:0}.pr-1{padding-right:.25rem}.pb-1{padding-bottom:.25rem}.pr-2{padding-right:.5rem}.pb-2{padding-bottom:.5rem}.pb-4{padding-bottom:1rem}.pt-8{padding-top:2rem}.pr-8{padding-right:2rem}.pb-12{padding-bottom:3rem}.pt-20{padding-top:5rem}.fixed{position:fixed}.absolute{position:absolute}.relative{position:relative}.top-0{top:0}.bottom-0{bottom:0}.left-0{left:0}.shadow{box-shadow:0 1px 3px 0 rgba(0,0,0,.1),0 1px 2px 0 rgba(0,0,0,.06)}.shadow-lg{box-shadow:0 10px 15px -3px rgba(0,0,0,.1),0 4px 6px -2px rgba(0,0,0,.05)}.text-center{text-align:center}.text-white{color:#fff}.text-planetary-blue{color:#037cc2}.text-arcturus-orange{color:#cc4e12}.text-asteroid-gray{color:#333}.text-xs{font-size:.75rem}.text-sm{font-size:.875rem}.text-base{font-size:1rem}.text-lg{font-size:1.125rem}.text-xl{font-size:1.25rem}.text-2xl{font-size:1.5rem}.text-3xl{font-size:1.875rem}.uppercase{text-transform:uppercase}.underline{text-decoration:underline}.tracking-wide{letter-spacing:.025em}.truncate{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.w-10{width:2.5rem}.w-16{width:4rem}.w-48{width:12rem}.w-auto{width:auto}.w-1\/2{width:50%}.w-full{width:100%}.z-10{z-index:3}.z-30{z-index:4}.z-40{z-index:5}.z-50{z-index:6}.container-med{max-width:760px}@media (min-width:480px){.xs\:inline{display:inline}}@media (min-width:576px){.sm\:inline-block{display:inline-block}.sm\:hidden{display:none}}@media (min-width:768px){.md\:flex{display:-webkit-box;display:-ms-flexbox;display:flex}.md\:flex-1{-webkit-box-flex:1;-ms-flex:1 1 0%;flex:1 1 0%}.md\:min-h-88{min-height:22rem}.md\:text-sm{font-size:.875rem}}@media (min-width:860px){.mn\:inline-block{display:inline-block}.mn\:flex{display:-webkit-box;display:-ms-flexbox;display:flex}.mn\:hidden{display:none}.mn\:mt-20{margin-top:5rem}.mn\:mt-32{margin-top:8rem}.mn\:pt-32{padding-top:8rem}}@media (min-width:992px){.lg\:flex{display:-webkit-box;display:-ms-flexbox;display:flex}.lg\:hidden{display:none}.lg\:justify-center{-webkit-box-pack:center;-ms-flex-pack:center;justify-content:center}.lg\:pt-0{padding-top:0}.lg\:pb-10{padding-bottom:2.5rem}}@media screen and (min-width:1060px){a.donatebutton.btn,a.jointog.btn{min-width:110px}}
+    </style>
+            <link rel="preload" href="https://www.planetary.org/css/site.combined.min.166.css" as="style" onload="this.rel='stylesheet'">
+            <noscript><link rel="stylesheet" href="https://www.planetary.org/css/site.combined.min.166.css"></noscript>
+            <script>
+                !function(e){"use strict";var n=function(n,t,o){function i(e){return a.body?e():void setTimeout(function(){i(e)})}function r(){l.addEventListener&&l.removeEventListener("load",r),l.media=o||"all"}var d,a=e.document,l=a.createElement("link");if(t)d=t;else{var s=(a.body||a.getElementsByTagName("head")[0]).childNodes;d=s[s.length-1]}var f=a.styleSheets;l.rel="stylesheet",l.href=n,l.media="only x",i(function(){d.parentNode.insertBefore(l,t?d:d.nextSibling)});var u=function(e){for(var n=l.href,t=f.length;t--;)if(f[t].href===n)return e();setTimeout(function(){u(e)})};return l.addEventListener&&l.addEventListener("load",r),l.onloadcssdefined=u,u(r),l};"undefined"!=typeof exports?exports.loadCSS=n:e.loadCSS=n}("undefined"!=typeof global?global:this);
+                !function(t){if(t.loadCSS){var e=loadCSS.relpreload={};if(e.support=function(){try{return t.document.createElement("link").relList.supports("preload")}catch(e){return!1}},e.poly=function(){for(var e=t.document.getElementsByTagName("link"),r=0;r<e.length;r++){var n=e[r];"preload"===n.rel&&"style"===n.getAttribute("as")&&(t.loadCSS(n.href,n,n.getAttribute("media")),n.rel=null)}},!e.support()){e.poly();var r=t.setInterval(e.poly,300);t.addEventListener&&t.addEventListener("load",function(){e.poly(),t.clearInterval(r)}),t.attachEvent&&t.attachEvent("onload",function(){t.clearInterval(r)})}}}(this);
+            </script>
+                        <script src="https://phenomenal-terrific.planetary.org/script.js" data-site="UDDGKLNZ" defer></script>
+                        <!-- Cookiebot Google Consent Mode for gtag -->
+  <script data-cookieconsent="ignore">
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+          dataLayer.push(arguments);
+      }
+      gtag("consent", "default", {
+          ad_personalization: "denied",
+          ad_storage: "denied",
+          ad_user_data: "denied",
+          analytics_storage: "denied",
+          functionality_storage: "denied",
+          personalization_storage: "denied",
+          security_storage: "granted",
+          wait_for_update: 500,
+      });
+      gtag("set", "ads_data_redaction", true);
+      gtag("set", "url_passthrough", true);
+      gtag('js', new Date());
+      gtag('config', 'G-HV4XDQL72V');
+      gtag('config', 'AW-11158515478');
+      gtag('config', 'AW-976465703');
+  </script>
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-HV4XDQL72V" data-cookieconsent="ignore"></script>
+              	 
+		<!-- Facebook Pixel Code -->
+		<script type="text/plain" data-cookieconsent="marketing">
+		!function(f,b,e,v,n,t,s)
+		{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+		n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+		if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+		n.queue=[];t=b.createElement(e);t.async=!0;
+		t.src=v;s=b.getElementsByTagName(e)[0];
+		s.parentNode.insertBefore(t,s)}(window,document,'script',
+		'https://connect.facebook.net/en_US/fbevents.js');
+		fbq('init', '825620047534426'); 
+		fbq('track', 'PageView');
+		fbq('dataProcessingOptions', ['LDU'], 0, 0);
+		</script>
+		<!-- End Facebook Pixel Code -->
+	        <script>var testImg=document.createElement("img");if(!("srcset"in testImg)||!("sizes"in testImg)){document.createElement("picture");var s=document.createElement("script");s.setAttribute("src","https://www.planetary.org/js/picturefill.min.166.js");if("async"in s)
+s.setAttribute("async",true);document.head.appendChild(s);}</script> <style>@font-face{font-family:'fontello';src:url('https://www.planetary.org/fonts/fontello.eot?ts=20221122063825');src:url('https://www.planetary.org/fonts/fontello.eot?#iefix') format('embedded-opentype'),url('https://www.planetary.org/fonts/fontello.woff2?ts=20221122063825') format('woff2'),url('https://www.planetary.org/fonts/fontello.woff?ts=20221122063825') format('woff'),url('https://www.planetary.org/fonts/fontello.ttf?ts=20221122063825') format('truetype');font-weight:400;font-style:normal;font-display:swap}</style> <script type="text/javascript">var staticAssetsVersion="166";var assetsBaseUrl="https://www.planetary.org/";var retina=window.devicePixelRatio>1;</script> <title>The Mars Exploration Rovers Update:… | The Planetary Society</title><meta name="description" content="As a monster dust storm grew to encircle the Red Planet in June, Opportunity spent most of the month in the dark, presumably sleeping in a hibernation…">
+<meta name="referrer" content="no-referrer-when-downgrade">
+<meta name="robots" content="all">
+<meta content="51189044844" property="fb:profile_id">
+<meta content="en_US" property="og:locale">
+<meta content="The Planetary Society" property="og:site_name">
+<meta content="website" property="og:type">
+<meta content="https://www.planetary.org/articles/06-mer-update-planet-encircling-dust-cloud" property="og:url">
+<meta content="The Mars Exploration Rovers Update: Opportunity Sleeps as Storm…" property="og:title">
+<meta content="As a monster dust storm grew to encircle the Red Planet in June, Opportunity spent most of the month in the dark, presumably sleeping in a hibernation…" property="og:description">
+<meta content="https://planetary.s3.amazonaws.com/web/assets/pictures/_1200x630_crop_center-center_82_none/20180802_3-PEDE-single-070118-Cantor.jpg?mtime=1753475259" property="og:image">
+<meta content="1200" property="og:image:width">
+<meta content="630" property="og:image:height">
+<meta content="Wrapped in a cloud of dust" property="og:image:alt">
+<meta content="https://www.instagram.com/planetarysociety/" property="og:see_also">
+<meta content="https://www.youtube.com/user/planetarysociety" property="og:see_also">
+<meta content="https://www.facebook.com/planetarysociety" property="og:see_also">
+<meta content="https://twitter.com/exploreplanets" property="og:see_also">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@exploreplanets">
+<meta name="twitter:creator" content="@exploreplanets">
+<meta name="twitter:title" content="The Mars Exploration Rovers Update: Opportunity Sleeps as Storm…">
+<meta name="twitter:description" content="As a monster dust storm grew to encircle the Red Planet in June, Opportunity spent most of the month in the dark, presumably sleeping in a hibernation…">
+<meta name="twitter:image" content="https://planetary.s3.amazonaws.com/web/assets/pictures/_1200x630_crop_center-center_82_none/20180802_3-PEDE-single-070118-Cantor.jpg?mtime=1753475259">
+<meta name="twitter:image:width" content="800">
+<meta name="twitter:image:height" content="418">
+<meta name="twitter:image:alt" content="Wrapped in a cloud of dust">
+<link href="https://www.planetary.org/articles/06-mer-update-planet-encircling-dust-cloud" rel="canonical">
+<link href="https://www.planetary.org/" rel="home"></head><body
+class="bg-white"><header><div
+id="skipnav" aria-label="Skip Navigation" role="navigation" style="">
+<a
+href="#main-content" tabindex="1" class="bg-planetary-blue text-white font-medium underline absolute left-0 top-0 p-2 z-50">Skip to main content</a></div><div
+class="mainheader fixed top-0 w-full text-white font-light bg-black transition-all z-40 block"><div
+class="loginnav w-full items-center justify-end px-6 py-2 font-semibold text-base hidden lg:flex" style="padding-top:0.55rem;">
+<span
+class="pr-2"><a
+class="text-white hover:text-planetary-blue focus:text-planetary-blue outline-none" href="https://community.planetary.org" tabindex="1"><span
+class="icon-chat" role="img" aria-label="chat icon"></span>Community</a></span> <span
+class="pr-2"><a
+class="text-white hover:text-planetary-blue focus:text-planetary-blue outline-none" href="https://www.planetary.org/accountcenter" tabindex="1"><span
+class="icon-user" role="img" aria-label="user icon"></span>Account</a></span> <span
+class="pr-2"><a
+class="text-white hover:text-planetary-blue focus:text-planetary-blue outline-none" href="https://www.planetary.org/renew-membership" tabindex="1"><span
+class="icon-arrows-cw" role="img" aria-label="refresh arrows icon"></span>Renew</a></span> <span><a
+class="searchtog text-white hover:text-planetary-blue focus:text-planetary-blue outline-none" tabindex="1"><span
+class="icon-search" role="img" aria-label="search"></span>Search</a></span></div><div
+class="mainnav w-full flex items-center px-6 py-4 lg:pb-10 lg:pt-0"><div
+class="hidden sm:inline-block w-48 flex-none">
+<a
+href="https://www.planetary.org" tabindex="1">
+<img
+class="transition-all h-12 scale10" alt="Planetary Society logo" src="https://planetary.s3.amazonaws.com/sites/planetary/images/TPS_Logo_3Stack-White.svg">
+</a></div><div
+class="w-16 inline-block sm:hidden flex-none">
+<a
+href="https://www.planetary.org" tabindex="1">
+<img
+class="transition-all h-12 scale10" alt="Planetary Society logo" src="https://planetary.s3.amazonaws.com/sites/planetary/images/TPS_Logomark-White.svg">
+</a></div><nav
+class="flex-auto text-xl tracking-wide text-center text-white font-semibold"><ul
+id="nav" class="flex justify-end lg:justify-center p-0"><li
+class="list-reset pr-8 hidden mn:inline-block menu-work">
+<a
+class="text-white pb-1 border-b-3 border-transparent hover:border-planetary-blue focus:border-planetary-blue widemenu" tabindex="1">Our Work</a></li><li
+class="list-reset pr-8 hidden mn:inline-block menu-explore">
+<a
+class="text-white pb-1 border-b-3 border-transparent hover:border-planetary-blue focus:border-planetary-blue widemenu" tabindex="1">Explore Space</a></li><li
+class="list-reset pr-8 hidden mn:inline-block menu-action">
+<a
+class="text-white pb-1 border-b-3 border-transparent hover:border-planetary-blue focus:border-planetary-blue widemenu" tabindex="1">Take Action</a></li><li
+class="list-reset pr-8 hidden mn:inline-block menu-about">
+<a
+class="text-white pb-1 border-b-3 border-transparent hover:border-planetary-blue focus:border-planetary-blue widemenu" tabindex="1">About</a></li><li
+class="list-reset hidden lg:hidden mn:inline-block pr-8">
+<a
+class="text-white hover:text-planetary-blue focus:text-planetary-blue outline-none" href="https://www.planetary.org/accountcenter" tabindex="1" aria-label="Account Center"><span
+class="icon-user" role="img" aria-label="user icon"></span></a></li><li
+class="list-reset hidden lg:hidden mn:inline-block pr-0">
+<a
+class="searchtog text-white hover:text-planetary-blue focus:text-planetary-blue outline-none" tabindex="1" aria-label="Search"><span
+class="icon-search" role="img" aria-label="search icon"></span></a></li><li
+class="list-reset inline mn:hidden pr-8">
+<a
+class="text-white hover:text-planetary-blue focus:text-planetary-blue outline-none block" href="/donate" tabindex="1"><span
+class="icon-heart text-arcturus-orange" role="img" aria-label="heart icon"></span><div
+class="text-xs uppercase">Donate</div></a></li><li
+class="list-reset inline mn:hidden pr-8">
+<a
+class="text-white hover:text-planetary-blue  focus:text-planetary-blue outline-none block" href="/membership" tabindex="1"><span
+class="icon-rocket text-planetary-blue" role="img" aria-label="rocket icon"></span><div
+class="text-xs uppercase">Join</div></a></li><li
+class="list-reset inline hidden xs:inline mn:hidden pr-8" id="mobilesearch">
+<a
+class="searchtog text-white hover:text-planetary-blue  focus:text-planetary-blue outline-none block" tabindex="1"><span
+class="icon-search" role="img" aria-label="search icon"></span><div
+class="text-xs uppercase">Search</div></a></li><li
+class="list-reset inline mn:hidden pr-0" id="mobilemenu">
+<a
+class="mobiletog text-white hover:text-planetary-blue  focus:text-planetary-blue outline-none block" tabindex="1"><span
+class="icon-menu" role="img" aria-label="menu icon"></span><span
+class="icon-cancel hidden" role="img" aria-label="close icon"></span><div
+class="text-xs uppercase">Menu</div></a></li></ul></nav><div
+class="w-48 hidden lg:flex justify-end menubuttons"><style>@media screen and (min-width:1060px){a.jointog.btn,a.donatebutton.btn{min-width:110px}}</style><div
+class="relative">
+<a
+class="jointog btn btn-blue px-6 py-1 text-lg font-semibold" tabindex="1">Join</a><div
+class="joinmenu absolute bg-gray-100 rounded text-asteroid-gray text-center z-50 shadow hidden" style="top:55px;left:50%;transform:translate(-50%, 0); min-width:260px;"><ul
+class="justify-center text-center font-medium leading-normal py-6"><li
+class="px-8 text-lg py-2"><a
+href="/membership" class="hover:text-planetary-blue hover:pl-2 focus:text-planetary-blue focus:pl-2 outline-none transition-all" tabindex="1">Become A Member</a></li><li
+class="px-8 text-lg py-2"><a
+href="/renew-membership" class="hover:text-planetary-blue hover:pl-2 focus:text-planetary-blue focus:pl-2 outline-none transition-all" tabindex="1">Renew</a></li><li
+class="px-8 text-lg py-2"><a
+href="/gift-membership" class="hover:text-planetary-blue hover:pl-2 focus:text-planetary-blue focus:pl-2 outline-none transition-all" tabindex="1">Gift Membership</a></li><li
+class="px-8 text-lg py-2"><a
+href="/planetary-academy" class="hover:text-planetary-blue hover:pl-2 focus:text-planetary-blue focus:pl-2 outline-none transition-all" tabindex="1">Kids Membership</a></li><li
+class="px-8 text-lg py-2"><a
+href="/giving" class="hover:text-planetary-blue hover:pl-2 focus:text-planetary-blue focus:pl-2 outline-none transition-all" tabindex="1">Other Ways to Give</a></li></ul>
+<span
+aria-hidden="true" role="presentation"></span></div></div>
+<a
+class="btn btn-orange px-3 py-1 ml-3 text-lg font-semibold outline-none donatebutton" tabindex="1" href="/donate">Donate</a></div></div><div
+class="mobilegive hidden mn:flex w-full lg:hidden justify-end">
+<a
+class="btn btn-blue py-3 px-0 m-0 text-lg font-semibold rounded-none w-1/2 outline-none" tabindex="1" href="/membership">Join</a>
+<a
+class="btn btn-orange py-3 px-0 m-0 text-lg font-semibold rounded-none w-1/2 outline-none" tabindex="1" href="/donate">Donate</a></div></div><div
+id="submenu-work" class="subs w-full bg-gray-100 shadow-lg border-b-3 border-planetary-blue pt-20 mn:pt-32 transition-all z-30"><div
+class="w-full border-gray-200 border-b-2 bg-asteroid-gray py-4 uppercase text-base mobilereturn">
+<a
+class="text-white hover:text-planetary-blue-lighter focus:text-planetary-blue-lighter outline-none ml-8 font-semibold" tabindex="1"><span
+class="icon-left-open text-base" role="img" aria-label="left arrow icon"></span> Back To Main Menu</a></div><div
+style="max-width:1200px; margin:0 auto;" class="text-asteroid-gray text-xl font-medium leading-normal pb-12"><ul
+class="md:flex justify-center"><li
+class="md:flex-1 mx-8"><h3 class="mb-6 pb-2 border-b-2 border-gray-200">What We Do</h3><ul><li
+class="py-3"><a
+href="/explore-worlds" class="hover:text-planetary-blue hover:pl-2 focus:text-planetary-blue focus:pl-2 outline-none truncate transition-all"><img
+src="https://planetary.s3.amazonaws.com/sites/planetary/images/explore_worlds.svg" alt="hand reaching toward planet" class="w-10 inline-block mb-3 pr-1">Explore Worlds</a></li><li
+class="py-3"><a
+href="/find-life" class="hover:text-planetary-blue hover:pl-2 focus:text-planetary-blue focus:pl-2 outline-none transition-all"><img
+src="https://planetary.s3.amazonaws.com/sites/planetary/images/find_life.svg" alt="hand pointing to dna" class="w-10 inline-block mb-3 pr-1">Find Life</a></li><li
+class="py-3"><a
+href="/defend-earth" class="hover:text-planetary-blue hover:pl-2 focus:text-planetary-blue focus:pl-2 outline-none transition-all"><img
+src="https://planetary.s3.amazonaws.com/sites/planetary/images/defend_earth.svg" alt="fist blocking meteor" class="w-10 inline-block mb-3 pr-1">Defend Earth</a></li></ul></li><li
+class="md:flex-1 mx-8"><h3 class="mb-6 pb-2 border-b-2 border-gray-200">How We Work</h3><ul><li
+class="py-3"><a
+href="/outreach" class="hover:text-planetary-blue hover:pl-2 hover:pr-0 focus:text-planetary-blue focus:pl-2 focus:pr-0 outline-none pr-2 truncate transition-all">Education &amp; Public Outreach</a></li><li
+class="py-3"><a
+href="/space-policy-advocacy" class="hover:text-planetary-blue hover:pl-2 hover:pr-0 focus:text-planetary-blue focus:pl-2 focus:pr-0 outline-none pr-2 truncate transition-all">Space Policy &amp; Advocacy</a></li><li
+class="py-3"><a
+href="/sci-tech" class="hover:text-planetary-blue hover:pl-2 hover:pr-0 focus:text-planetary-blue focus:pl-2 focus:pr-0 outline-none pr-2 truncate transition-all">Science &amp; Technology</a></li><li
+class="py-3"><a
+href="/global" class="hover:text-planetary-blue hover:pl-2 hover:pr-0 focus:text-planetary-blue focus:pl-2 focus:pr-0 outline-none pr-2 truncate transition-all">Global Collaboration</a></li></ul></li><li
+class="md:flex-1 mx-8"><h3 class="mb-6 pb-2 border-b-2 border-gray-200">Our Results</h3><ul><li><a
+href="/about/our-impact" class="block border-transparent rounded border-2 py-3 hover:border-planetary-blue hover:border-2 hover:p-3 hover:bg-blue-100 focus:border-planetary-blue focus:border-2 focus:p-3 focus:bg-blue-100 outline-none transition-all">Our Impact<p
+class="text-sm font-light leading-tight m-0">Learn how our members and community are changing the worlds.</p></a></li><li><a
+href="/sci-tech/lightsail" class="block border-transparent rounded border-2 py-3 hover:border-planetary-blue hover:border-2 hover:p-3 hover:bg-blue-100 focus:border-planetary-blue focus:border-2 focus:p-3 focus:bg-blue-100 outline-none transition-all">LightSail<p
+class="text-sm font-light leading-tight m-0">Our citizen-funded spacecraft successfully demonstrated solar sailing for CubeSats.</p></a></li></ul></li></ul></div></div><div
+id="submenu-explore" class="subs w-full bg-gray-100 shadow-lg border-b-3 border-planetary-blue pt-20 mn:pt-32 transition-all z-30"><div
+class="w-full border-gray-200 border-b-2 bg-asteroid-gray py-4 uppercase text-base mobilereturn">
+<a
+class="text-white hover:text-planetary-blue-lighter focus:text-planetary-blue-lighter outline-none ml-8 font-semibold" tabindex="1"><span
+class="icon-left-open text-base" role="img" aria-label="left arrow icon"></span> Back To Main Menu</a></div><div
+style="max-width:1200px; margin:0 auto;" class="text-asteroid-gray text-xl font-medium leading-normal pb-12"><ul
+class="md:flex justify-center"><li
+class="md:flex-1 mx-8"><h3 class="mb-6 pb-2 border-b-2 border-gray-200">Space Topics</h3><ul><li
+class="py-3"><a
+href="/worlds" class="hover:text-planetary-blue hover:pl-2 hover:pr-0 focus:text-planetary-blue focus:pl-2 focus:pr-0 outline-none pr-2 truncate transition-all">Planets & Other Worlds</a></li><li
+class="py-3"><a
+href="/space-missions" class="hover:text-planetary-blue hover:pl-2 hover:pr-0 focus:text-planetary-blue focus:pl-2 focus:pr-0 outline-none pr-2 truncate transition-all">Space Missions</a></li><li
+class="py-3"><a
+href="/night-sky" class="hover:text-planetary-blue hover:pl-2 hover:pr-0 focus:text-planetary-blue focus:pl-2 focus:pr-0 outline-none pr-2 truncate transition-all">Night Sky</a></li><li
+class="py-3"><a
+href="/space-policy" class="hover:text-planetary-blue hover:pl-2 hover:pr-0 focus:text-planetary-blue focus:pl-2 focus:pr-0 outline-none pr-2 truncate transition-all">Space Policy</a></li><li
+class="py-3"><a
+href="/kids" class="hover:text-planetary-blue hover:pl-2 hover:pr-0 focus:text-planetary-blue focus:pl-2 focus:pr-0 outline-none pr-2 truncate transition-all">For Kids</a></li></ul></li><li
+class="md:flex-1 mx-8"><h3 class="mb-6 pb-2 border-b-2 border-gray-200">Learn</h3><ul><li
+class="py-3"><a
+href="/articles" class="hover:text-planetary-blue hover:pl-2 hover:pr-0 focus:text-planetary-blue focus:pl-2 focus:pr-0 outline-none pr-2 truncate transition-all">Articles</a></li><li
+class="py-3"><a
+href="/planetary-radio" class="hover:text-planetary-blue hover:pl-2 hover:pr-0 focus:text-planetary-blue focus:pl-2 focus:pr-0 outline-none pr-2 truncate transition-all">Planetary Radio</a></li><li
+class="py-3"><a
+href="/space-images" class="hover:text-planetary-blue hover:pl-2 hover:pr-0 focus:text-planetary-blue focus:pl-2 focus:pr-0 outline-none pr-2 truncate transition-all">Space Images</a></li><li
+class="py-3"><a
+href="/video" class="hover:text-planetary-blue hover:pl-2 hover:pr-0 focus:text-planetary-blue focus:pl-2 focus:pr-0 outline-none pr-2 truncate transition-all">Videos</a></li><li
+class="py-3"><a
+href="/courses" class="hover:text-planetary-blue hover:pl-2 hover:pr-0 focus:text-planetary-blue focus:pl-2 focus:pr-0 outline-none pr-2 truncate transition-all">Courses</a></li></ul></li><li
+class="md:flex-1 mx-8"><h3 class="mb-0 pb-2 truncate">The Planetary Report</h3>
+<a
+href="/planetary-report" class="block border-transparent rounded border-2 hover:border-planetary-blue hover:border-2 hover:p-3 hover:bg-blue-100 hover:border-planetary-blue focus:border-2 focus:p-3 focus:bg-blue-100 outline-none transition-all">
+<img
+src="https://planetary.s3.amazonaws.com/sites/planetary/images/menu-mars-valles-marineris.jpg" alt="Valles Marineris on Mars"><h4 class="mt-3 mb-0">Future Forward</h4><p
+class="text-sm mt-2 mb-0">The next chapter in Mars and exoplanet exploration.</p>
+</a></li></ul></div></div><div
+id="submenu-action" class="subs w-full bg-gray-100 shadow-lg border-b-3 border-planetary-blue pt-20 mn:pt-32 transition-all z-30"><div
+class="w-full border-gray-200 border-b-2 bg-asteroid-gray py-4 uppercase text-base mobilereturn">
+<a
+class="text-white hover:text-planetary-blue-lighter focus:text-planetary-blue-lighter outline-none ml-8 font-semibold" tabindex="1"><span
+class="icon-left-open text-base" role="img" aria-label="left arrow icon"></span> Back To Main Menu</a></div><div
+style="max-width:1200px; margin:0 auto;" class="text-asteroid-gray text-xl font-medium leading-normal pb-12"><ul
+class="md:flex justify-center"><li
+class="md:flex-1 mx-8"><h3 class="mb-6 pb-2 border-b-2 border-gray-200">Get Involved</h3><ul><li><a
+href="/membership" class="block border-transparent rounded border-2 py-3 hover:border-planetary-blue hover:border-2 hover:p-3 hover:bg-blue-100 focus:border-planetary-blue focus:border-2 focus:p-3 focus:bg-blue-100 outline-none transition-all">Become A Member<p
+class="text-sm font-light leading-tight m-0">Membership programs for explorers of all ages.</p></a></li><li><a
+href="/connect" class="block border-transparent rounded border-2 py-3 hover:border-planetary-blue hover:border-2 hover:p-3 hover:bg-blue-100 focus:border-planetary-blue focus:border-2 focus:p-3 focus:bg-blue-100 outline-none transition-all">Email Signup<p
+class="text-sm font-light leading-tight m-0">Get updates and weekly tools to learn, share, and advocate for space exploration.</p></a></li><li><a
+href="/action-center" class="block border-transparent rounded border-2 py-3 hover:border-planetary-blue hover:border-2 hover:p-3 hover:bg-blue-100 focus:border-planetary-blue focus:border-2 focus:p-3 focus:bg-blue-100 outline-none transition-all">Action Center<p
+class="text-sm font-light leading-tight m-0">Volunteer as a space advocate.</p></a></li></ul></li><li
+class="md:flex-1 mx-8"><h3 class="mb-6 pb-2 border-b-2 border-gray-200">Support Our Mission</h3><ul><li
+class="py-3"><a
+href="/renew-membership" class="hover:text-planetary-blue hover:pl-2 hover:pr-0 focus:text-planetary-blue focus:pl-2 focus:pr-0 outline-none pr-2 truncate transition-all">Renew Membership</a></li><li
+class="py-3"><a
+href="/donate" class="hover:text-planetary-blue hover:pl-2 hover:pr-0 focus:text-planetary-blue focus:pl-2 focus:pr-0 outline-none pr-2 truncate transition-all">Society Projects</a></li><li
+class="py-3"><a
+href="/travel" class="hover:text-planetary-blue hover:pl-2 hover:pr-0 focus:text-planetary-blue focus:pl-2 focus:pr-0 outline-none pr-2 truncate transition-all">Travel</a></li><li
+class="py-3"><a
+href="/giving" class="hover:text-planetary-blue hover:pl-2 hover:pr-0 focus:text-planetary-blue focus:pl-2 focus:pr-0 outline-none pr-2 truncate transition-all">Other Ways to Give</a></li><li
+class="py-3"><a
+href="/shop" class="hover:text-planetary-blue hover:pl-2 hover:pr-0 focus:text-planetary-blue focus:pl-2 focus:pr-0 outline-none pr-2 truncate transition-all">Store</a></li></ul></li><li
+class="md:flex-1 mx-8"><h3 class="mb-0 pb-2">The Planetary Fund</h3>
+<img
+src="https://planetary.s3.amazonaws.com/sites/planetary/images/menu-europa.jpg" alt="Europa mosaic"><p
+class="text-sm mt-3 mb-3">Accelerate progress in our three core enterprises — Explore Worlds, Find Life, and Defend Earth. You can support the entire fund, or designate a core enterprise of your choice.</p>
+<a
+class="btn btn-orange py-1 text-lg font-semibold outline-none" href="https://connect.planetary.org/35?s_src=menudonate">Give Today</a></li></ul></div></div><div
+id="submenu-about" class="subs w-full bg-gray-100 shadow-lg border-b-3 border-planetary-blue pt-20 mn:pt-32 transition-all z-30"><div
+class="w-full border-gray-200 border-b-2 bg-asteroid-gray py-4 uppercase text-base mobilereturn">
+<a
+class="text-white hover:text-planetary-blue-lighter focus:text-planetary-blue-lighter outline-none ml-8 font-semibold" tabindex="1"><span
+class="icon-left-open text-base" role="img" aria-label="left arrow icon"></span> Back To Main Menu</a></div><div
+style="max-width:800px; margin:0 auto;" class="text-asteroid-gray text-xl font-medium leading-normal pb-12"><ul
+class="md:flex justify-center"><li
+class="md:flex-1 mx-8"><h3 class="mb-6 pb-2 border-b-2 border-gray-200">About Us</h3><ul><li
+class="py-3"><a
+href="/about" class="hover:text-planetary-blue hover:pl-2 hover:pr-0 focus:text-planetary-blue focus:pl-2 focus:pr-0 outline-none pr-2 truncate transition-all">Overview</a></li><li
+class="py-3"><a
+href="/about/strategic-framework" class="hover:text-planetary-blue hover:pl-2 hover:pr-0 focus:text-planetary-blue focus:pl-2 focus:pr-0 outline-none pr-2 truncate transition-all">Strategic Framework</a></li><li
+class="py-3"><a
+href="/press-room" class="hover:text-planetary-blue hover:pl-2 hover:pr-0 focus:text-planetary-blue focus:pl-2 focus:pr-0 outline-none pr-2 truncate transition-all">News &amp; Press</a></li><li
+class="py-3"><a
+href="/careers" class="hover:text-planetary-blue hover:pl-2 hover:pr-0 focus:text-planetary-blue focus:pl-2 focus:pr-0 outline-none pr-2 truncate transition-all">Careers</a></li><li
+class="py-3"><a
+href="/about/contact" class="hover:text-planetary-blue hover:pl-2 hover:pr-0 focus:text-planetary-blue focus:pl-2 focus:pr-0 outline-none pr-2 truncate transition-all">Contact Us</a></li><li
+class="py-3"><a
+href="/about/our-story" class="hover:text-planetary-blue hover:pl-2 hover:pr-0 focus:text-planetary-blue focus:pl-2 focus:pr-0 outline-none pr-2 truncate transition-all">Our Story</a></li></ul></li><li
+class="md:flex-1 mx-8"><h3 class="mb-0 pb-2">The Planetary Society</h3>
+<img
+src="https://planetary.s3.amazonaws.com/sites/planetary/images/menu-tps-founders.jpg" alt="The Planetary Society founders"><h4 class="mt-3 mb-0">Our Vision</h4><p
+class="text-base mt-1 mb-0">Know the Cosmos and our place within it.</p><h4 class="mt-3 mb-0">Our Mission</h4><p
+class="text-base mt-1 mb-0">Empowering the world's citizens to advance space science and exploration.</p></li></ul></div></div><div
+id="submenu-membership" class="subs w-full bg-gray-100 shadow-lg border-b-3 border-planetary-blue pt-20 mn:pt-32 transition-all z-30"><div
+class="w-full border-gray-200 border-b-2 bg-asteroid-gray py-4 uppercase text-base mobilereturn">
+<a
+class="text-white hover:text-planetary-blue-lighter focus:text-planetary-blue-lighter outline-none ml-8 font-semibold" tabindex="1"><span
+class="icon-left-open text-base" role="img" aria-label="left arrow icon"></span> Back To Main Menu</a></div><div
+style="max-width:800px; margin:0 auto;" class="text-asteroid-gray text-xl font-medium leading-normal pb-12"><ul
+class="md:flex justify-center"><li
+class="md:flex-1 mx-8"><h3 class="mb-6 pb-2 border-b-2 border-gray-200">Membership</h3><ul><li
+class="py-3"><a
+href="/membership" class="hover:text-planetary-blue hover:pl-2 hover:pr-0 focus:text-planetary-blue focus:pl-2 focus:pr-0 outline-none pr-2 truncate transition-all">Become A Member</a></li><li
+class="py-3"><a
+href="/renew-membership" class="hover:text-planetary-blue hover:pl-2 hover:pr-0 focus:text-planetary-blue focus:pl-2 focus:pr-0 outline-none pr-2 truncate transition-all">Renew Membership</a></li><li
+class="py-3"><a
+href="/gift-membership" class="hover:text-planetary-blue hover:pl-2 hover:pr-0 focus:text-planetary-blue focus:pl-2 focus:pr-0 outline-none pr-2 truncate transition-all">Gift Membership</a></li><li
+class="py-3"><a
+href="/planetary-academy" class="hover:text-planetary-blue hover:pl-2 hover:pr-0 focus:text-planetary-blue focus:pl-2 focus:pr-0 outline-none pr-2 truncate transition-all">Kids Membership</a></li><li
+class="py-3"><a
+href="/giving" class="hover:text-planetary-blue hover:pl-2 hover:pr-0 focus:text-planetary-blue focus:pl-2 focus:pr-0 outline-none pr-2 truncate transition-all">Other Ways to Give</a></li><li
+class="py-3"><a
+href="https://www.planetary.org/about/contact" class="hover:text-planetary-blue hover:pl-2 hover:pr-0 focus:text-planetary-blue focus:pl-2 focus:pr-0 outline-none pr-2 truncate transition-all">Contact Us</a></li></ul></li></ul></div></div><div
+id="mobilemenu-main" class="w-full bg-gray-200 border-b-3 border-planetary-blue shadow-lg pt-20 mn:pt-32 transition-all z-30"><div
+style="max-width:600px; margin:0 auto;" class="text-asteroid-gray text-xl font-medium leading-normal py-12"><ul
+class="justify-center text-center navmobile navmobile"><li
+class="px-8 text-xl py-2 menu-work"><a
+class="hover:text-planetary-blue hover:pl-2 focus:text-planetary-blue focus:pl-2 outline-none transition-all" tabindex="1">Our Work</a></li><li
+class="px-8 text-xl py-2 menu-explore"><a
+class="hover:text-planetary-blue hover:pl-2 focus:text-planetary-blue focus:pl-2 outline-none transition-all" tabindex="1">Explore Space</a></li><li
+class="px-8 text-xl py-2 menu-action"><a
+class="hover:text-planetary-blue hover:pl-2 focus:text-planetary-blue focus:pl-2 outline-none transition-all" tabindex="1">Take Action</a></li><li
+class="px-8 text-xl py-2 menu-about"><a
+class="hover:text-planetary-blue hover:pl-2 focus:text-planetary-blue focus:pl-2 outline-none transition-all" tabindex="1">About</a></li><li
+class="px-8 text-xl py-2 menu-membership"><a
+class="hover:text-planetary-blue hover:pl-2 focus:text-planetary-blue focus:pl-2 outline-none transition-all" tabindex="1">Membership</a></li><li
+class="px-8 text-xl py-2"><span
+class="icon-chat" role="img" aria-label="chat icon"></span><a
+href="https://community.planetary.org" class="hover:text-planetary-blue hover:pl-2 focus:text-planetary-blue focus:pl-2 outline-none transition-all" tabindex="1">Member Community</a></li><li
+class="px-8 text-xl py-2"><span
+class="icon-user" role="img" aria-label="user icon"></span><a
+href="https://www.planetary.org/accountcenter" class="hover:text-planetary-blue hover:pl-2 focus:text-planetary-blue focus:pl-2 outline-none transition-all" tabindex="1">Account Center</a></li><li
+class="px-8 text-xl py-2"><span
+class="icon-search" role="img" aria-label="search"></span><a
+class="searchtog hover:text-planetary-blue hover:pl-2 focus:text-planetary-blue focus:pl-2 outline-none transition-all" tabindex="1">Search</a></li><li
+class="px-8 text-2xl pt-8 pb-4">
+<a
+class="hover:text-planetary-blue focus:text-planetary-blue outline-none" href="https://www.facebook.com/planetarysociety"><span
+class="icon-facebook mx-1" role="img" aria-label="facebook icon"></span></a>
+<a
+class="hover:text-planetary-blue focus:text-planetary-blue outline-none" href="https://twitter.com/exploreplanets"><span
+class="icon-twitter" role="img" aria-label="twitter icon"></span></a>
+<a
+class="hover:text-planetary-blue focus:text-planetary-blue outline-none" href="https://www.youtube.com/user/planetarysociety?sub_confirmation=1"><span
+class="icon-youtube mx-1" role="img" aria-label="youtube icon"></span></a>
+<a
+class="hover:text-planetary-blue focus:text-planetary-blue outline-none" href="https://www.linkedin.com/company/the-planetary-society"><span
+class="icon-linkedin mx-1" role="img" aria-label="LinkedIn icon"></span></a>
+<a
+class="hover:text-planetary-blue" href="https://www.instagram.com/planetarysociety/"><span
+class="icon-instagram" role="img" aria-label="instagram icon"></span></a></li></ul></div></div><div
+id="searchmenu-main" class="w-full bg-gray-200 border-b-3 border-planetary-blue shadow-lg pt-20 mn:pt-32 transition-all z-30"><div
+style="text-align:right;" class="searchtog text-asteroid-gray text-3xl font-medium leading-normal mt-2 mr-2 outline-none focus:text-planetary-blue" tabindex="1"><a><span
+class="icon-cancel" role="img" aria-label="close icon"></span></a></div><div
+style="max-width:600px; margin:0 auto;" class="text-asteroid-gray text-xl font-medium leading-normal pt-0 pb-12"><ul
+class="justify-center text-center navmobile"><li
+class="text-base text-asteroid-gray text-center">&ldquo;Exploration is in our nature.&rdquo; - Carl Sagan</li><li><form
+id="searchFormMain" class="w-full flex mt-4" method="get" action="/search-results">
+<input
+id="searchfield" type="search" placeholder="Search..." autofocus="autofocus" name="q" class="w-full text-asteroid-gray border-2 border-asteroid-gray border-r-0 p-2 focus:outline-none focus:border-planetary-blue appearance-none leading-normal text-2xl rounded-tl rounded-bl ml-4 ">
+<button
+class="hover:bg-planetary-blue focus:bg-planetary-blue bg-asteroid-gray border-asteroid-gray hover:border-planetary-blue focus:border-planetary-blue border-2 rounded-tr rounded-br mr-4">
+<span
+class="w-auto flex justify-end items-center text-white p-2">
+<span
+class="icon-search" role="img" aria-label="search icon"></span>
+</span>
+</button></form></li><li
+class="px-8 text-2xl pt-8 pb-4">
+<a
+class="hover:text-planetary-blue focus:text-planetary-blue outline-none" href="https://www.facebook.com/planetarysociety"><span
+class="icon-facebook mx-1" role="img" aria-label="facebook icon"></span></a>
+<a
+class="hover:text-planetary-blue focus:text-planetary-blue outline-none" href="https://twitter.com/exploreplanets"><span
+class="icon-twitter" role="img" aria-label="twitter icon"></span></a>
+<a
+class="hover:text-planetary-blue focus:text-planetary-blue outline-none" href="https://www.youtube.com/user/planetarysociety?sub_confirmation=1"><span
+class="icon-youtube mx-1" role="img" aria-label="youtube icon"></span></a>
+<a
+class="hover:text-planetary-blue focus:text-planetary-blue outline-none" href="https://www.linkedin.com/company/the-planetary-society"><span
+class="icon-linkedin mx-1" role="img" aria-label="LinkedIn icon"></span></a>
+<a
+class="hover:text-planetary-blue focus:text-planetary-blue outline-none" href="https://www.instagram.com/planetarysociety/"><span
+class="icon-instagram" role="img" aria-label="instagram icon"></span></a></li></ul></div></div><div
+class="menuoverlay bg-black block fixed top-0 left-0 w-full h-full opacity-0 z-10 hidden"></div></header><main
+id="main-content"><div
+class="text-center bg-cover bg-center mb-0 py-8 mt-20 mn:mt-32 min-h-64 md:min-h-88" style="background-image: url(https://planetary.s3.amazonaws.com/web/assets/hero/hero-spirit-methusaleh-approach-2x.jpg); min-height: 400px;" role="img" aria-label="Spirit approaching Methusaleh outcrop - Sol 454 - PIA07855 (HighDPI)"></div><article><div
+class="flex justify-center mx-auto "><div
+class="container-med w-full px-6"><header><p
+class="mt-8 mn:mt-20 mb-0"></p><h1 class="mb-0 leading-tight">The Mars Exploration Rovers Update: Opportunity Sleeps as Storm Chasers Study Planet-Encircling Dust Cloud</h1><h2 class="text-2xl mt-0 mb-2">Sols 5103–5132</h2><div
+class="flex items-top items-center mb-2">
+<picture
+class="flex-none rounded-full mr-2" style="height:4rem; width:4rem;">
+<source
+data-srcset="https://planetary.s3.amazonaws.com/web/assets/pictures/_200x200_crop_center-center_82_line/20181105_rayl-thumbnail.jpg.webp 200w, https://planetary.s3.amazonaws.com/web/assets/pictures/_576x576_crop_center-center_82_line/20181105_rayl-thumbnail.jpg.webp 576w"
+data-sizes="auto"
+type="image/webp" />
+<img
+class="lazyload rounded-full mr-2" style="height:4rem; width:4rem;" src="data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%27576%27%20height=%27576%27%20style=%27background:%23CCC%27%20/%3E"
+data-srcset="https://planetary.s3.amazonaws.com/web/assets/pictures/_200x200_crop_center-center_82_line/20181105_rayl-thumbnail.jpg 200w, https://planetary.s3.amazonaws.com/web/assets/pictures/_576x576_crop_center-center_82_line/20181105_rayl-thumbnail.jpg 576w"
+data-sizes="auto"
+alt="A.J.S. Rayl" />
+</picture><div><p
+class="mt-0 mb-0 text-xs md:text-sm leading-normal"><strong>Written by </strong>
+<a
+href="https://www.planetary.org/profiles/a-j-s-rayl"><strong>A.J.S. Rayl</strong></a>
+<br>Contributing Editor, The Planetary Society                                                                                                                                                                            <br>
+July 4, 2018</p></div></div></header></div></div><div
+class="flex justify-center mx-auto"><div
+class="container-med w-full px-6"><p>As a monster dust storm grew to encircle the Red Planet in June, Opportunity spent most of the month in the dark, presumably sleeping in a hibernation mode as the sky over the Mars Exploration Rover’s campsite in west rim of Endeavour Crater, about halfway down Perseverance Valley, became darker and darker.</p><p>What began as a small, local dust storm in the northern hemisphere on May 29<sup>th&nbsp;</sup>had grown a little by the next day, and a little more the next. By June 1<sup>st</sup>,&nbsp;Bruce Cantor, who posts Mars Weather Reports each week from data acquired by the&nbsp;Mars Color Imager (MARCI) onboard the Mars Reconnaissance Orbiter (MRO),&nbsp;decided the MER team needed to know about this one. He made the call.</p></div></div><div
+class="flex justify-center mx-auto container-med w-full px-0 sm:px-6 my-12"><figure
+class="table mx-auto">
+<a
+href="https://www.planetary.org/space-images/wrapped-in-a-cloud-of-dust">
+<picture
+class="block">
+<source
+class="lazyload" data-srcset="https://planetary.s3.amazonaws.com/web/assets/pictures/_512x514_crop_center-center_line/20180802_3-PEDE-single-070118-Cantor.jpg.webp 512w"
+sizes="100vw"
+type="image/webp" />
+<img
+class="lazyload" src="data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%27512%27%20height=%27514%27%20style=%27background:%23CCC%27%20/%3E"
+data-srcset="https://planetary.s3.amazonaws.com/web/assets/pictures/_512x514_crop_center-center_line/20180802_3-PEDE-single-070118-Cantor.jpg 512w"
+sizes="100vw"
+alt="Wrapped in a cloud of dust"/>
+</picture>
+</a><figcaption
+class="px-6 sm:px-0 font-light mt-2 mb-0 leading-normal text-base"><span
+class="text-base font-semibold uppercase my-0">Wrapped in a cloud of dust</span> A small local storm that popped up in the northern hemisphere of Mars on May 30, 2018 grew into a massive regional dust storm in days. By mid-June, it ballooned large enough to encircle the planet, shrouding it in a thick cloud of dust. The image above, taken by the MARCI &mdash; the Mars Color Imager &mdash; onboard the Mars Reconnaissance Orbiter (MRO) and processed by Bruce Cantor at Malin Space Science Systems (MSSS), shows the latest global view of Mars on July 1, 2018. The small dot near the middle is where Opportunity is hunkered down waiting out the Planet-Encircling Dust Event (PEDE).<span
+class="text-gray-700 ml-2"><em>Image: NASA / JPL-Caltech / MSSS</em></span></figcaption></figure></div><div
+class="flex justify-center mx-auto"><div
+class="container-med w-full px-6"><p>In less than a week, the storm would cross the equator and move into the southern hemisphere of Mars where it would merge with other storms and turned day into night for Opportunity.&nbsp;</p><p>The MER ops team put the rover on a low-power plan. The robot responded, but the data that the team received on Sunday, June 10<sup>th</sup>, was dismal. The dusty haze in the sky overhead was&nbsp;<em>six times&nbsp;</em>as bad as the rover endured during the last monster storm in 2007, according to&nbsp;MER Athena Science Team member and atmospheric scientist Mark Lemmon, Senior Research Scientist of the Space Science Institute (SSI).</p><p>Even more concerning, the robot’s power level was so low that the MER power lead Jennifer Herman, of the Jet Propulsion Laboratory (JPL), the center where all NASA’s robotic Mars missions have been ‘born,’ could only describe it as “crazy.”&nbsp;</p><p>The assumption was that the rover would soon trip its low-power fault and turn off everything but the clock.&nbsp;And, as covered earlier this month in&nbsp;<em><a
+href="http://www.planetary.org/explore/space-topics/space-missions/mer-updates/2018/06-mer-update-opportunity-dust-storm-sleep.html">The MER Update Special Report</a>,&nbsp;</em>MER Project Manager John Callas announced that the veteran rover had hunkered down in a low power mode and sleeping through the storm during a NASA press teleconference on June 13<sup>th</sup>. Other Mars program officials announced that the space agency would bring all its assets at Mars to bear on the study of this rare, planet-encircling dust event, or PEDE, in NASA acronym language.&nbsp;</p><p>Since then, the rover has been silent. “There has been no further communication from Opportunity and we do not expect to hear anything for several more weeks, maybe a month or more,” JPL’s Chief of MER Engineering Bill Nelson, said at month’s end.</p><p>The good news is that it’s springtime at Endeavour Crater and the power models continue to indicate Mars’ cold temperatures won’t get cold enough to harm Opportunity’s instruments.&nbsp;All that dust&nbsp;in the atmosphere is preventing the Sun from heating the surface during the day, because it’s heating the dust at the top of the dust cloud. So while the temperatures are cooler during the day, the dust cloud radiates at night so the rover actually experiences warmer nighttime temps. Perfect. That’s when the rover needs the warmth the most.</p><p>The bad news is it’s really, really dark and the solar powered rover is likely not able to produce much, if any, solar power.&nbsp;“For Opportunity, this is a&nbsp;<em>very&nbsp;</em>big deal,” said Herman.</p><p>Turns out, Opportunity sustained “a direct hit,” according to Cantor, who has been watching dust storms on Mars from an orbital, global perspective for more than 20 years. This ‘bot had taken a direct hit in 2007 too, and had to shut down for survival then too. “But this storm is different,” said Cantor. “It was a one-punch knockout.”</p></div></div><div
+class="flex justify-center mx-auto container-med w-full px-0 sm:px-6 my-12"><figure
+class="table mx-auto">
+<a
+href="https://www.planetary.org/space-images/in-just-one-month">
+<picture
+class="block">
+<source
+class="lazyload" data-srcset="https://planetary.s3.amazonaws.com/web/assets/pictures/_576x289_crop_center-center_82_line/20180704_2-Dual-PEDE-before-after-0528-07012-018-revised.jpg.webp 576w, https://planetary.s3.amazonaws.com/web/assets/pictures/_768x385_crop_center-center_82_line/20180704_2-Dual-PEDE-before-after-0528-07012-018-revised.jpg.webp 768w"
+sizes="100vw"
+type="image/webp" />
+<img
+class="lazyload" src="data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%27768%27%20height=%27385%27%20style=%27background:%23CCC%27%20/%3E"
+data-srcset="https://planetary.s3.amazonaws.com/web/assets/pictures/_576x289_crop_center-center_82_line/20180704_2-Dual-PEDE-before-after-0528-07012-018-revised.jpg 576w, https://planetary.s3.amazonaws.com/web/assets/pictures/_768x385_crop_center-center_82_line/20180704_2-Dual-PEDE-before-after-0528-07012-018-revised.jpg 768w"
+sizes="100vw"
+alt="In just one month..."/>
+</picture>
+</a><figcaption
+class="px-6 sm:px-0 font-light mt-2 mb-0 leading-normal text-base"><span
+class="text-base font-semibold uppercase my-0">In just one month...</span> The images above, taken by MARCI – the Mars Color Imager camera onboard MRO and
+processed by Cantor and his team at Malin Space Science Systems (MSSS) show how
+completely a planet-encircling dust event, or PEDE as it’s known by NASA acronym, can
+obscure Mars in just one month.<span
+class="text-gray-700 ml-2"><em>Image: NASA / JPL-Caltech / MSSS</em></span></figcaption></figure></div><div
+class="flex justify-center mx-auto"><div
+class="container-med w-full px-6"><p>Dust storms on Mars are different than what we Earthlings generally consider a ‘storm’ to be. What is usually referred to as one storm on Mars is really comprised of multiple dust lifting “centers” or dust devil-like funnel clouds that pop up or grow and intensify, as well as move the storm along. Therefore, while a storm can engulf an area in its direct path, another area may have more action on the ground, be closer to the ‘ground zero’ of a lifting center so to speak, and render&nbsp;a more deleterious impact.&nbsp;</p><p>Simply theorized: “The rover&nbsp;wasn’t near any lifting centers in 2007, but is in this storm,” said Mars atmospheric scientist&nbsp;Michael Wolff, Senior Research Scientist at Space Science Institute (SSI).&nbsp;This proximity might also explain the “extraordinary amount” of dust the rover last recorded, he noted.&nbsp;</p><p>On&nbsp;<a
+href="https://www.jpl.nasa.gov/news/news.php?release=2018-142">June 20<sup>th</sup>, NASA announced</a>&nbsp;the storm had gone global. To be more accurate, it evolved into a planetary-encircling dust event (PEDE),&nbsp;lofting enough dust into the atmosphere to completely blanket the planet and block out the Sun. In other words, the Red Planet and most all its features were&nbsp;hidden from most orbiting instruments beneath an opaque, beige dust cloud. The atmospheric scientists taking measurements with instruments on the orbiters were soon blocked out.&nbsp;</p><p>From Martian&nbsp;<em>firma</em>, as the storm circled, Curiosity began sending home images of her hazy, dusty world on the other side of the planet from Opportunity.&nbsp;The waiting game entered a new stage. “We’re in that phase waiting for the storm to transition into a decay phase,” said Lemmon. “We’re not there yet, but everyday brings us a day closer.”</p><p>That doesn’t mean no one’s working. Everyone has been working. Although, with all preparations for recovery in order, some team members at JPL are being encouraged to take vacation time in July.&nbsp;</p><p>The dust event seemed to come as almost a shock.&nbsp;“It has been&nbsp;<em>11 Earth years&nbsp;</em>since we’ve had one of these storms,” reminded MER Athena Science Team member&nbsp;Michael Doyle Smith, of NASA Goddard Space Flight Center, who is among the atmospheric scientists studying the storm with instruments on the orbiters.&nbsp;</p><p>The team members knew that they had dodged the bullet last Mars year – about two Earth years ago – when JPL planetary scientist James Shirley predicted a planet-encircler. But now, so suddenly, that next big storm was here and all over Opportunity.&nbsp;</p><p>“This storm came on&nbsp;<em>so&nbsp;</em>fast,” said Herman. “In 2007, after seeing the strains of the dust storm over a period of 2 or 3 weeks we saw the sky darken, but not like this. This one was one week:&nbsp;<em>boom</em>! “We&nbsp;<em>were&nbsp;</em>shocked. It was so early, and so big. That kind of scared everyone.”</p></div></div><div
+class="flex justify-center mx-auto container-med w-full px-0 sm:px-6 my-12"><figure
+class="table mx-auto">
+<a
+href="https://www.planetary.org/space-images/mars-stormy-weather-through-11-june-2018">
+<picture
+class="block">
+<img
+class="lazyload" src="https://planetary.s3.amazonaws.com/web/assets/pictures/20180704_3-Storm-path-gif-zurek-053181-06118.gif"
+alt="Mars&#039; stormy weather through 11 June 2018"/>
+</picture>
+</a><figcaption
+class="px-6 sm:px-0 font-light mt-2 mb-0 leading-normal text-base"><span
+class="text-base font-semibold uppercase my-0">Mars&#039; stormy weather through 11 June 2018</span> This series of images, created with imagery processed by the Mars Color Imager (MARCI) crew at Malin Space Science Systems (MSSS), shows simulated views of the path of the ongoing epic dust storm event as it moves across the planet, darkening the Martian sky and blotting out the Sun from Opportunity&rsquo;s view. The storm is depicted in rusty red swaths. Opportunity and the younger, larger, roving laboratory Curiosity are placed in their approximate locations on the map. You can see in this gif how the dust storm increased in size and moves right over Opportunity during the first half of June. The robot remains hunkered down in a kind of hibernation mode waiting out the storm.<span
+class="text-gray-700 ml-2"><em>Image: NASA / JPL-Caltech / MSSS</em></span></figcaption></figure></div><div
+class="flex justify-center mx-auto"><div
+class="container-med w-full px-6"><p>Projections of the thermal models however indicate that Opportunity should be able to hang on in hibernation mode and recharge her batteries once the sky clears and the Sun shines again on Endeavour Crater and the rover. “It’s a matter of simply waiting,” said Lemmon. “We’re still optimistic. The temperatures are still where we expect them to be, and they’re fine. There are obviously risks with a rover that is not talking with us, but there has been no reason to suspect that things are any worse for the rover now.”&nbsp;</p><p>Beyond the waiting, it’s the not knowing that is most frustrating. When the storm will end and the skies will clear is anybody’s guess.&nbsp;As this report was being readied for posting, the storm continued to ‘live.’ “Maybe some individual lifting centers have stopped, but others have started to take their place,” said Smith. “The storm –&nbsp;<em>writ&nbsp;</em>large, meaning the sum of all the lifting centers – has not shown any signs of abating.”</p><p>Amidst a tenor of nervous optimism, members of the MER ops team seem to have generally accepted there is little they can do but ensure they are prepared to respond when the rover phones home. As usual, the bottom line is simple.&nbsp;“We will not know any answers until we have actual data from Opportunity,” MER Mission Manager Scott Lever summed it.</p><p>The pause in the regular routine of daily ops has been a welcomed one for some. “Having this break provides blocks of time to catch up on all the data that we’ve been acquiring and put together publications,” said MER Deputy Principal Investigator Ray Arvidson, of Washington University St. Louis.&nbsp;“There is plenty of work to do as we&nbsp;wait&nbsp;it out to see what happens when the skies clear of dust.”</p><p
+class="Body">For others however, it’s been anything&nbsp;<em>but&nbsp;</em>a pause that refreshes. “For all of 14 years, I’ve been checking on Opportunity,” said Herman. “It’s like checking on your child. Checking on power is like checking that your child is well fed. Now, knowing the baby is in trouble and not being able to do anything about it, it makes you feel kind of helpless.”&nbsp;</p><p>Provided Opportunity pulls out of this colossal dust event ready to rove on, the Martian spring has only just&nbsp;sprung and it’s a long season through summer. “We really don’t know what’s going to happen,” said Cantor. “This storm could pick up again, for all we know, tomorrow, and continue for half the season.”</p><p>On Earth, however, there’s a 19<sup>th</sup>century folklore weather predictor for the first month of spring, March. If it comes in roaring (stormy) like a lion, then it will go out mellow (calmly) like a lamb. Considering that&nbsp;the spring equinox in the southern hemisphere of Mars where Opportunity is located, occurred on May 22<sup>nd</sup>, and the mission was technically in its first “official” month of spring, there is hope the folklore is galactic and holds for Mars too.&nbsp;</p><p>Whatever happens, the MER team is tight as it ever was and holding steady. “All we really know is what we’ve seen in past storms,” said Herman. “People are hopeful.&nbsp;I’m confident the components we need in recovering are going to be warm enough, and once dust clears we&nbsp;<em>should&nbsp;</em>be okay.&nbsp;We all want to hear from Opportunity again.”</p></div></div><div
+class="flex justify-center mx-auto container-med w-full px-0 sm:px-6 my-12"><figure
+class="table mx-auto">
+<a
+href="https://www.planetary.org/space-images/hunkered-down-in-darkness">
+<picture
+class="block">
+<source
+class="lazyload" data-srcset="https://planetary.s3.amazonaws.com/web/assets/pictures/_576x262_crop_center-center_82_line/20180704_4-Opportunity-in-the-dark.jpg.webp 576w"
+sizes="100vw"
+type="image/webp" />
+<img
+class="lazyload" src="data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%27576%27%20height=%27262%27%20style=%27background:%23CCC%27%20/%3E"
+data-srcset="https://planetary.s3.amazonaws.com/web/assets/pictures/_576x262_crop_center-center_82_line/20180704_4-Opportunity-in-the-dark.jpg 576w"
+sizes="100vw"
+alt="Hunkered down in darkness"/>
+</picture>
+</a><figcaption
+class="px-6 sm:px-0 font-light mt-2 mb-0 leading-normal text-base"><span
+class="text-base font-semibold uppercase my-0">Hunkered down in darkness</span> Unreal. This image of the Mars Exploration Rovers promo picture against a backdrop of
+the ragged rim of Endeavour Crater was creatively processed a few years ago by Stuart
+Atkinson. But right now, it seems to feel like it could be a glimpse into the stormy scene
+the MER mission is confronting, though the rover isn’t outfitted with panther lights. A
+contributor to The Planetary Society’s <a
+href="http://www.planetary.org/explore/space-topics/space-imaging/amateur.html">Amateur Space Images Archive</a> and frequent
+image contributor to <i>The MER Update</i>, Atkinson has also followed this rover’s journey in
+his <a
+href="https://roadtoendeavour.wordpress.com/2017/06/">The Road to Endeavour</a>.<span
+class="text-gray-700 ml-2"><em>Image: NASA / JPL-Caltech / Cornell / ASU / additional processing S. Atkinson</em></span></figcaption></figure></div><div
+class="flex justify-center mx-auto"><div
+class="container-med w-full px-6"><p>Scientists have been tracking the big storms on Mars for more than a century, beginning with telescopes on Earth and over the last few decades with instruments on spacecraft orbiting Mars. “Dust storms are the largest weather event we see on Mars and that’s why we get excited about them,” Smith explained.</p><p>As much as we have learned about Mars’ infamous storms over the years, there is that much more and then some still to learn.&nbsp;“We are at the very beginning of understanding Martian dust storms globally,” said Cantor. “It’s not like the Earth where we have many thousands of temperature readings across the planet, and the vertical profiles from balloons and satellite observations from orbit that provide a global perspective.”</p><p>With the rarity of these planet-encircler storms, even 20 years of constant observation of Mars from orbit has provided limited data. “We just don’t have a lot of statistics from even the spacecraft era,” said Wolff. “You’ve got Mariner 9 that arrived during a storm. Viking had two global storms 1977A and 1977B. Outside of those, there hasn’t been a storm that has occurred when a spacecraft was in orbit until 2001,” he said.&nbsp;And, added Cantor: “The first ones we saw from orbit with a global view were in 2001 and 2007.”</p><p>Even with all of today’s high-tech, ever-increasingly capable instruments and orbiters, studying Mars’ monster dust storms and the subsequent planet-encircling dust clouds they produce isn’t easy, because of that darn dust. “The atmosphere is thin and it doesn’t take a lot of dust to make things look opaque,” Wolff pointed out. “The problem is when the dust gets above a certain optical depth level, one much lower than Opportunity last recorded, you really can’t see much more.”</p><p>Knowledge leads to success and survival on Mars, and models will play a critical role when it comes to understanding the physics behind these PEDEs. The scientists studying Mars’ atmosphere have adopted a two-prong research approach to uncovering the planet’s mysteries and finding out what causes some storms to encircle the planet while most others to peter out or fade away and disappear. Observers measure and document what they see, and then hand off their data to modelers who work to unravel the underlying processes.&nbsp;</p><p>“Observations are needed because we need to guide the models in some way,” said Smith. “Models can produce any conditions, but we need to use the models to match the observations we make.” From this storm for example, the atmospheric scientists will be looking to uncover clues about how this storm began and evolved, where the areas of active dust lifting were, the time of the season, the distribution of the sunlight coming in, and weather patterns, among other things.</p><p>“These kinds of things give us data to help guide the models,” Smith said. “Then, when we see the processes in the models create what we observed, that gives us data for the actual physical processes that are going on.” [At storm’s end,&nbsp;<em>The MER Update&nbsp;</em>will cover some of the modeling conducted on this storm.]</p></div></div><div
+class="flex justify-center mx-auto container-med w-full px-0 sm:px-6 my-12"><figure
+class="table mx-auto">
+<a
+href="https://www.planetary.org/space-images/mars-storm-watch">
+<picture
+class="block">
+<source
+class="lazyload" data-srcset="https://planetary.s3.amazonaws.com/web/assets/pictures/_576x324_crop_center-center_82_line/14966/20180615_8-zurek-3-duststorm_jun2018_scienceobservations.jpg.webp 576w, https://planetary.s3.amazonaws.com/web/assets/pictures/_768x432_crop_center-center_82_line/14966/20180615_8-zurek-3-duststorm_jun2018_scienceobservations.jpg.webp 768w, https://planetary.s3.amazonaws.com/web/assets/pictures/_1200x675_crop_center-center_82_line/14966/20180615_8-zurek-3-duststorm_jun2018_scienceobservations.jpg.webp 1200w, https://planetary.s3.amazonaws.com/web/assets/pictures/_2400x1350_crop_center-center_82_line/14966/20180615_8-zurek-3-duststorm_jun2018_scienceobservations.jpg.webp 2400w"
+sizes="100vw"
+type="image/webp" />
+<img
+class="lazyload" src="data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%272400%27%20height=%271350%27%20style=%27background:%23CCC%27%20/%3E"
+data-srcset="https://planetary.s3.amazonaws.com/web/assets/pictures/_576x324_crop_center-center_82_line/14966/20180615_8-zurek-3-duststorm_jun2018_scienceobservations.jpg 576w, https://planetary.s3.amazonaws.com/web/assets/pictures/_768x432_crop_center-center_82_line/14966/20180615_8-zurek-3-duststorm_jun2018_scienceobservations.jpg 768w, https://planetary.s3.amazonaws.com/web/assets/pictures/_1200x675_crop_center-center_82_line/14966/20180615_8-zurek-3-duststorm_jun2018_scienceobservations.jpg 1200w, https://planetary.s3.amazonaws.com/web/assets/pictures/_2400x1350_crop_center-center_82_line/14966/20180615_8-zurek-3-duststorm_jun2018_scienceobservations.jpg 2400w"
+sizes="100vw"
+alt="Mars Storm Watch"/>
+</picture>
+</a><figcaption
+class="px-6 sm:px-0 font-light mt-2 mb-0 leading-normal text-base"><span
+class="text-base font-semibold uppercase my-0">Mars Storm Watch</span> In its fury, the current storm threatening Opportunity presents &ldquo;an unprecedented opportunity to learn more about Mars, and the many challenges that it presents for exploration,&rdquo; as Jim Watzin, Director of the Mars Exploration Program at NASA Headquarters, defined it during the teleconference. NASA is all in, directing every one of its assets at Mars to enable scientists to observe and study this rare, massive storm from many different instruments and perspectives. This storm is &ldquo;just days away from meeting the classification of a planet-encircling dust event,&rdquo; Rich Zurek, the Mars Program Office Chief Scientist at JPL, announced at a teleconference June 13, 2018.<span
+class="text-gray-700 ml-2"><em>Image: NASA</em></span></figcaption></figure></div><div
+class="flex justify-center mx-auto"><div
+class="container-med w-full px-6"><p>“Models have really caught up quite a bit quite a bit with observations in the last 10 years,” added Wolff. “Every dust storm like this provides additional clues and they are each probably important in the ability to model these dust events. Empirically, the sort of thing I work on – characterizing the dust being lifted, how long was it being lifted – there are ways in our ability to process this stuff in which we can start to put together perhaps a little more of a 3D picture and that will open a new window of research.”</p><p>The scientists don’t expect their research to show that any bizarre Martian kind of physics is needed to explain how these huge dust storms generate.&nbsp;Like dust devils in the desert&nbsp;southwest USA<strong>,&nbsp;</strong>winds blow and&nbsp;spontaneously lift dust into funnel clouds that whirl across the surface. “The same processes work on both planets,” said Smith.</p><p>The radiative heat of sunlight reaching the surface is what drives dust storms. As sunlight hits the ground, it warms the air closest to the surface, leaving the upper air cooler. Just like weather storms on Earth, the warm and cool air together become unstable and the warm air rises in columns up into the atmosphere. On Mars, the winds whip up the dust from the surface into these&nbsp;columns of warm air, creating&nbsp;everything from small dust devils, similar to those in deserts on Earth, to larger continent-sized storms that cover the entire planet in one huge cloud of dust.</p><p>In simpler terms, “the wind blows, raises up dust from the surface, and gets in the air in much the same way you would see dust devils on Earth or the haboob, the large dust fronts that have happened in Phoenix, Arizona, as well as the Middle East,” said Smith. “It gets dark and you see this swall come through. ”That’s where the similarities generally end.&nbsp;</p><p>Seasons on Mars are caused by the tilt of the planet, like on Earth. But on Earth, spring, summer, autumn, and winter are all similar in length, because our planet’s orbit is nearly circular, so it moves at nearly constant speed around the Sun. In contrast, Mars' elliptical orbit makes the Red Planet’s distance from the Sun change with time and also makes it&nbsp;speed up and slow down in its orbit.</p><p>For part of a Martian year – which is roughly equivalent to two Earth years – during the southern hemisphere’s summer, the planet is closer to the Sun and radiative heat forces are strongest then; therefore, it is significantly warmer at the surface.&nbsp;“Little dust storms can happen almost any time of year, but&nbsp;there is this definite seasonality, spring and summer, for the large regional and global dust storms,” said Smith. “This is also the time of the Mars year where the planet is at perihelion – closest to the Sun, so you get the most solar input at that time. It seems,” he suggested, “that you definitely need that solar forcing to be enough to start these storms.”</p></div></div><div
+class="flex justify-center mx-auto container-med w-full px-0 sm:px-6 my-12"><figure
+class="table mx-auto">
+<a
+href="https://www.planetary.org/space-images/dust-devil-spotted-by-opportunity-sol-4332">
+<picture
+class="block">
+<source
+class="lazyload" data-srcset="https://planetary.s3.amazonaws.com/web/assets/pictures/_576x578_crop_center-center_82_line/20180704_6-Dust-devil-Oppy-March-2016-climbing-Knudsen-Ridge.jpg.webp 576w, https://planetary.s3.amazonaws.com/web/assets/pictures/_768x771_crop_center-center_82_line/20180704_6-Dust-devil-Oppy-March-2016-climbing-Knudsen-Ridge.jpg.webp 768w"
+sizes="100vw"
+type="image/webp" />
+<img
+class="lazyload" src="data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%27768%27%20height=%27771%27%20style=%27background:%23CCC%27%20/%3E"
+data-srcset="https://planetary.s3.amazonaws.com/web/assets/pictures/_576x578_crop_center-center_82_line/20180704_6-Dust-devil-Oppy-March-2016-climbing-Knudsen-Ridge.jpg 576w, https://planetary.s3.amazonaws.com/web/assets/pictures/_768x771_crop_center-center_82_line/20180704_6-Dust-devil-Oppy-March-2016-climbing-Knudsen-Ridge.jpg 768w"
+sizes="100vw"
+alt="Dust devil spotted by Opportunity, sol 4332"/>
+</picture>
+</a><figcaption
+class="px-6 sm:px-0 font-light mt-2 mb-0 leading-normal text-base"><span
+class="text-base font-semibold uppercase my-0">Dust devil spotted by Opportunity, sol 4332</span> Opportunity took this image of a Martian dust devil twisting through the valley below her perch high on Knudsen Ridge with her navigation camera (Navcam) on March 31, 2016, the rover&rsquo;s sol 4332. The view looks back at the rover's tracks leading up the north-facing slope of the ridge, which forms part of the southern edge of Marathon Valley. Some dust devils are mini-storms that can &lsquo;grow&rsquo; a regional storm or even a planet-encircler; others just wind down and disappear.<span
+class="text-gray-700 ml-2"><em>Image: NASA / JPL-Caltech</em></span></figcaption></figure></div><div
+class="flex justify-center mx-auto"><div
+class="container-med w-full px-6"><p>Then there is the atmosphere. Mars’ atmosphere is only about 1 percent as dense as Earth’s atmosphere. This impacts the winds and the dust, as well as atmospheric pressure. The wind in the largest dust storm, for example, would probably not be able to shred and thrash equipment or a rover like Opportunity (as you might think if you took that dust storm in the movie&nbsp;<em>The Martian&nbsp;</em>as fact).&nbsp;Yes, the winds can blow similar speeds as on Earth, at say 10, 20, 30, 40 miles per hour on Mars, but you wouldn’t&nbsp;<em>feel&nbsp;</em>that. “To actually feel&nbsp;the winds of Mars, it would have to be hurricane force,” Smith pointed out.</p><p>Another significant difference between Earth and Mars is the dust. In a way, dust is a lot of what Mars is all about.&nbsp;Dust&nbsp;is a major component to understanding the planet’s infamous storms both small and large, said Wolff. “Understanding how dust interacts with the Sun and how that feeds back into the dynamics and the motions of the atmosphere, dust is a key piece to understanding Mars,” he said. Moreover, he noted, “that dust is always there and will always be a problem whether there’s a dust storm or not.” [For human astronauts, breathing in dusty Martian air actually may well be as life threatening as the radiation.]</p><p>Martian dust is different than what Earthlings usually view as dust. It’s more like powder than sand. “The size of these particles of dust in these storms is on average a micron, just 1/1000<sup>th&nbsp;</sup>of a millimeter,” Smith pointed out. “It’s really, really fine with some electrostatic charge, is kind of magnetic, and gets into everything.”&nbsp;</p><p>The dust&nbsp;annoyingly sticks to surfaces, like Opportunity’s solar arrays. That consequently decreases the amount of sunlight penetrating them. Less sunlight = less energy created. You get the problem for a solar-powered rover.</p><p>“The winds blow around and lift the dust because it’s light,” said Cantor. “There are thicker layers and larger particles, sand-sized particles that clearly move short distances across the Martian surface back and forth, but those are not lofted high into the atmosphere, creating planet-encircling clouds. We’re not lifting sand dunes in these storms.”</p><p>Although scientists have found that, on average, a regional storm will evolve into a PEDE about once every three Mars years (approximately six Earth years), they don’t know why. “What causes them to get so large and turn into these planet-encircling events,” said Cantor, “we have no idea.”&nbsp;</p><p>More than anything, that is the stormiest mystery on Mars and the grand objective for research.&nbsp;“We want to understand all of the conditions under which very typical localized storms that happen every Mars year connect and produce a planet-encircling event,” said Wolff.&nbsp;</p></div></div><div
+class="flex justify-center mx-auto container-med w-full px-0 sm:px-6 my-12"><figure
+class="table mx-auto">
+<a
+href="https://www.planetary.org/space-images/electrical-dust-storms-on-mars">
+<picture
+class="block">
+<source
+class="lazyload" data-srcset="https://planetary.s3.amazonaws.com/web/assets/pictures/_576x433_crop_center-center_82_line/20180704_7-Electrical-dust-storms-lightning-mars-art-NASA.jpg.webp 576w"
+sizes="100vw"
+type="image/webp" />
+<img
+class="lazyload" src="data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%27576%27%20height=%27433%27%20style=%27background:%23CCC%27%20/%3E"
+data-srcset="https://planetary.s3.amazonaws.com/web/assets/pictures/_576x433_crop_center-center_82_line/20180704_7-Electrical-dust-storms-lightning-mars-art-NASA.jpg 576w"
+sizes="100vw"
+alt="Electrical dust storms on Mars?"/>
+</picture>
+</a><figcaption
+class="px-6 sm:px-0 font-light mt-2 mb-0 leading-normal text-base"><span
+class="text-base font-semibold uppercase my-0">Electrical dust storms on Mars?</span> This artist’s concept illustrates a Martian dust storm crackling with electricity. Scientists
+believe at least some Martian dust storms produce electricity, but so far no mission has
+been able to image it.<span
+class="text-gray-700 ml-2"><em>Image: NASA / JPL-Caltech</em></span></figcaption></figure></div><div
+class="flex justify-center mx-auto"><div
+class="container-med w-full px-6"><p>With the current, ongoing big storm in the mix, scientists can conduct some comparative research to see what answers may be lurking in the data. For example, Smith, a co-investigator&nbsp;the Thermal Emission Imaging System (THEMIS), an instrument onboard Mars Odyssey, will be making direct comparisons using data taken of the 2007 storm and this storm. He will then compare those data to the 2001 monster storm data viewed by the Thermal Emission Spectrometer (TES), an instrument onboard the now decommissioned Mars Global Surveyor orbiter.</p><p>“They’re pretty comparable, the kind of data you can get from those instruments,” he said. “So we’ll be looking to compare the evolution of these storms, to see how they’re the same and how they’re different. Hopefully, that along with modeling will give us clues to better understand the underlying physical processes at work.”</p><p>The scientists also hope at some point to learn more about potential lightning discharges in dust storms. “We need to understand them better in case the electric fields effects could be problematic for instrumentation or for humans on the surface,” said Wolff. “There have been theoretical calculations about lightning discharges and people have looked for lightning on Mars that might be associated with dust storms, but we really haven’t seen that or measured any lightning discharges yet.” Wolff.&nbsp;</p><p>Once started, PEDEs can last weeks to months,&nbsp;and that is the other major storm mystery the scientists are hoping to resolve.“We don’t really know how these storms evolve, initiate, evolve, and then decay, though it does seem to require some kind of combination of forces,” said Smith. “It’s always been several kind of different regions where there’s active dust lifting and some kind of complicated interactions between these that leads to storms getting to the scale where they produce enough dust to cover the entire planet. That’s one of the things we’ll be trying to learn as we watch this storm. The short answer is: it’s complicated.”</p><p>Knowing that everything is interconnected, the scientists will have to figure out all the complex interactions taking place during one of these storms – from the dust to the winds, the lifting, the planet’s circulation patterns, solar heating input, the clouds, and the water cycle, among other things – before their work is done and Mars’ dust storm mystery is unraveled. “Understanding what’s missing in our understanding, the known unknown, is definitely an active area of research,” said Wolff.</p><p>Despite the fact that planetary scientists have been studying Mars’ dust storms for many years and to some extent because of that research, words and descriptors that accurately describe these distinctive dust events are slowly being worked out.&nbsp;During the Mainer days in the 1970s, these planet-encircling storms were known simply as global storms.</p></div></div><div
+class="flex justify-center mx-auto container-med w-full px-0 sm:px-6 my-12"><figure
+class="table mx-auto">
+<a
+href="https://www.planetary.org/space-images/the-2001-cloaking">
+<picture
+class="block">
+<source
+class="lazyload" data-srcset="https://planetary.s3.amazonaws.com/web/assets/pictures/_576x306_crop_center-center_82_line/20180908_8-2001-cloaking-storm.jpg.webp 576w, https://planetary.s3.amazonaws.com/web/assets/pictures/_768x408_crop_center-center_82_line/20180908_8-2001-cloaking-storm.jpg.webp 768w, https://planetary.s3.amazonaws.com/web/assets/pictures/_1200x639_crop_center-center_82_line/20180908_8-2001-cloaking-storm.jpg.webp 1200w"
+sizes="100vw"
+type="image/webp" />
+<img
+class="lazyload" src="data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%271200%27%20height=%27639%27%20style=%27background:%23CCC%27%20/%3E"
+data-srcset="https://planetary.s3.amazonaws.com/web/assets/pictures/_576x306_crop_center-center_82_line/20180908_8-2001-cloaking-storm.jpg 576w, https://planetary.s3.amazonaws.com/web/assets/pictures/_768x408_crop_center-center_82_line/20180908_8-2001-cloaking-storm.jpg 768w, https://planetary.s3.amazonaws.com/web/assets/pictures/_1200x639_crop_center-center_82_line/20180908_8-2001-cloaking-storm.jpg 1200w"
+sizes="100vw"
+alt="The 2001 cloaking"/>
+</picture>
+</a><figcaption
+class="px-6 sm:px-0 font-light mt-2 mb-0 leading-normal text-base"><span
+class="text-base font-semibold uppercase my-0">The 2001 cloaking</span> Two images, taken in 2001 by the Mars Orbiter Camera (MOC) onboard the now decommissioned Mars Global Surveyor orbiter, show the dramatic change in the planet's appearance when dust raised by a planet-circling dust event grew and became globally distributed. The images were taken about a month apart. This was the first planetencircling dust event that NASA&rsquo;s Mars Exploration Program witnessed in 20 years of constant observation. The June 2018 storm, the third such massive storm during the last two decades, seems to be &ldquo;behaving&rdquo; a lot like the 2001 planet-encircling dust event, says Mars weatherman Bruce Cantor, of Malin Space Science Systems.<span
+class="text-gray-700 ml-2"><em>Image: NASA / JPL-Caltech / MSSS</em></span></figcaption></figure></div><div
+class="flex justify-center mx-auto"><div
+class="container-med w-full px-6"><p>“But what&nbsp;<em>is&nbsp;</em>a dust storm?” questioned Smith, reviewing the scientists early thought process. “Is it the active region where dust is physically being raised from the surface? Once the dust gets up into the atmosphere, the winds carry the dust and transport it around the globe, so you may have dust lifting in one region and then winds blowing into another region where there may be no active dust lifting yet you have their shroud of dust over you. Consider that at the Curiosity site, there hasn’t been a lot of dust lifting in that region, and yet they have seen plenty of dust in the atmosphere and are basically operating in dust storm conditions,” he said.</p><p>While the current storm that has Opportunity hunkered down has not yet reached the southern polar latitudes, the veil or the cloud has gone all the way around the planet. “So, in that sense, this storm is planet-encircling, but is it truly&nbsp;<em>global</em>?” asked Smith, elucidating the issue. The short of it, for now anyway, is that a dust&nbsp;<em>event&nbsp;</em>can be planet-encircling and&nbsp;<em>not global</em>.</p><p
+class="Body">Compounding the descriptor dilemma however is the reality that these planet-encirclers don’t emerge as&nbsp;<em>one&nbsp;</em>storm, but rather multiple dust storms that picked up and merged into an event.</p><p>In recent years, in an attempt to be more accurate, to refine the definitions have emerged, most frequently from Cantor.&nbsp;If a dust storm is small and doesn’t last long, it is now generally considered a local storm. If a storm lasts a week and covers a good chunk of the planet, it’s tagged regional. But a monster storm like this current one that boasts lifting centers all over the map and grows to obscure the planet with a huge dust cloud, is a planet-encircling dust event or simply a PEDE.</p><p>“What’s encircling the planet is not a&nbsp;<em>storm</em>, but a huge dust&nbsp;<em>cloud&nbsp;</em>generated by the storms’ lifting centers,” Cantor pointed out. “It’s just that the cloud gets so optically thick you can’t tell the difference.”</p><p>In any case, this storm&nbsp;is “very unique,” Cantor said.&nbsp;“It didn’t develop as rapidly in expanding around the plant as the last couple of storms and seemed to be fighting against the general circulation patterns this time of year. But it was persistent.”</p></div></div><div
+class="flex justify-center mx-auto container-med w-full px-0 sm:px-6 my-12"><figure
+class="table mx-auto">
+<a
+href="https://www.planetary.org/space-images/in-perseverance-valley">
+<picture
+class="block">
+<source
+class="lazyload" data-srcset="https://planetary.s3.amazonaws.com/web/assets/pictures/_576x99_crop_center-center_82_line/20180704_9-Perseverance-Valley.jpg.webp 576w, https://planetary.s3.amazonaws.com/web/assets/pictures/_768x133_crop_center-center_82_line/20180704_9-Perseverance-Valley.jpg.webp 768w, https://planetary.s3.amazonaws.com/web/assets/pictures/_1200x208_crop_center-center_82_line/20180704_9-Perseverance-Valley.jpg.webp 1200w, https://planetary.s3.amazonaws.com/web/assets/pictures/_2400x416_crop_center-center_82_line/20180704_9-Perseverance-Valley.jpg.webp 2400w"
+sizes="100vw"
+type="image/webp" />
+<img
+class="lazyload" src="data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%272400%27%20height=%27416%27%20style=%27background:%23CCC%27%20/%3E"
+data-srcset="https://planetary.s3.amazonaws.com/web/assets/pictures/_576x99_crop_center-center_82_line/20180704_9-Perseverance-Valley.jpg 576w, https://planetary.s3.amazonaws.com/web/assets/pictures/_768x133_crop_center-center_82_line/20180704_9-Perseverance-Valley.jpg 768w, https://planetary.s3.amazonaws.com/web/assets/pictures/_1200x208_crop_center-center_82_line/20180704_9-Perseverance-Valley.jpg 1200w, https://planetary.s3.amazonaws.com/web/assets/pictures/_2400x416_crop_center-center_82_line/20180704_9-Perseverance-Valley.jpg 2400w"
+sizes="100vw"
+alt="In Perseverance Valley"/>
+</picture>
+</a><figcaption
+class="px-6 sm:px-0 font-light mt-2 mb-0 leading-normal text-base"><span
+class="text-base font-semibold uppercase my-0">In Perseverance Valley</span> Opportunity is about hallway down Perseverance Valley pictured in this orbital image
+taken by the HiRISE camera on MRO on the left. You can see the notch where the
+valley cuts the crater rim in lower left quadrant of image. Its branching pattern becomes
+apparent in the center of image. The rover has been hunkered down about halfway
+down the valley since early June 2018, under a veil of Mars’ rusty red dust not far from
+where the rover took the image on the right.<span
+class="text-gray-700 ml-2"><em>Image: Left: NASA / JPL-Caltech / University of Arizona; Right: NASA / JPL-Caltech / Cornell / ASU / additional processing S. Atkinson</em></span></figcaption></figure></div><div
+class="flex justify-center mx-auto"><div
+class="container-med w-full px-6"><h3>Deep Dive into June 2018</h3><p>When June dawned at Endeavour Crater on Mars, Opportunity, with&nbsp;45.16 kilometers (28.06 miles) on her odometer, woke up and got to work on a 3-sol plan. She was to finish up imaging of the site and the in-depth work on a tabular rock target called La Joya.</p><p>That evening on Earth, Cantor, who had been watching a little dust storm grow in the MARCI imagery, reached out to the MER team to advise them a dust storm was brewing some 1000 kilometers (about 621.371 miles), still well away from Opportunity. However, it could begin affecting the atmospheric opacity over Endeavour Crater if it followed what is known as the Acidalia storm-track, a kind of natural thoroughfare for wind and dust storms, into the southern hemisphere.</p><p>“In the very beginning, on&nbsp;May 29<sup>th</sup>, the storm was a small local storm. That is the start point. We don’t always record small, local storms, but the next day, it was still there and slightly bigger than before, and I remember thinking, ‘That’s odd,’” recalled Cantor.&nbsp;</p></div></div><div
+class="flex justify-center mx-auto container-med w-full px-0 sm:px-6 my-12"><figure
+class="table mx-auto">
+<a
+href="https://www.planetary.org/space-images/bruce-cantor-and-the-weather-on-mars">
+<picture
+class="block">
+<source
+class="lazyload" data-srcset="https://planetary.s3.amazonaws.com/web/assets/pictures/_576x432_crop_center-center_82_line/20180704_10-Cantor-at-work.jpg.webp 576w, https://planetary.s3.amazonaws.com/web/assets/pictures/_768x576_crop_center-center_82_line/20180704_10-Cantor-at-work.jpg.webp 768w, https://planetary.s3.amazonaws.com/web/assets/pictures/_1200x900_crop_center-center_82_line/20180704_10-Cantor-at-work.jpg.webp 1200w, https://planetary.s3.amazonaws.com/web/assets/pictures/_2400x1800_crop_center-center_82_line/20180704_10-Cantor-at-work.jpg.webp 2400w"
+sizes="100vw"
+type="image/webp" />
+<img
+class="lazyload" src="data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%272400%27%20height=%271800%27%20style=%27background:%23CCC%27%20/%3E"
+data-srcset="https://planetary.s3.amazonaws.com/web/assets/pictures/_576x432_crop_center-center_82_line/20180704_10-Cantor-at-work.jpg 576w, https://planetary.s3.amazonaws.com/web/assets/pictures/_768x576_crop_center-center_82_line/20180704_10-Cantor-at-work.jpg 768w, https://planetary.s3.amazonaws.com/web/assets/pictures/_1200x900_crop_center-center_82_line/20180704_10-Cantor-at-work.jpg 1200w, https://planetary.s3.amazonaws.com/web/assets/pictures/_2400x1800_crop_center-center_82_line/20180704_10-Cantor-at-work.jpg 2400w"
+sizes="100vw"
+alt="Bruce Cantor and the weather on Mars"/>
+</picture>
+</a><figcaption
+class="px-6 sm:px-0 font-light mt-2 mb-0 leading-normal text-base"><span
+class="text-base font-semibold uppercase my-0">Bruce Cantor and the weather on Mars</span> This image show Bruce Cantor at work on his MARCI Mars Weather Report at Malin
+Space Science Systems in San Diego, CA. Each week, he announces the weather using
+data from the Mars Color Imager onboard the Mars Reconnaissance Orbiter. And on
+Mars, you need a weatherman to know which way the wind blows.<span
+class="text-gray-700 ml-2"><em>Image: NASA / JPL-Caltech / MSSS</em></span></figcaption></figure></div><div
+class="flex justify-center mx-auto"><div
+class="container-med w-full px-6"><p>Even so, it was not that big and because small local storms can last one or two sols and then just disappear, Cantor thought it might not be there the next day. But it was. By June 1<sup>st</sup>, the storm had gotten “big,” he said. “That’s when I sent out the warning to the Opportunity mission.This storm&nbsp;<em>is&nbsp;</em>coming down the Acidalia storm-track and it may pass to the west of the rover site, but it’s close and this is early [in the season], so it’s hard to say what it’s going to do.”</p><p>When the storm reached into the southern hemisphere, it merged with other storms along the south polar cap edge, Cantor said, and other activity in Solis-Sinai was “clearly an independent storm itself.” It speaks to the complexity of Martian dust storms, where one big storm is rarely just a storm, but rather storms, which, if they become planet-encircling dust events, wind up producing a cloud of dust that shrouds the planet.</p><p>On June 2<sup>nd</sup>, Opportunity sent home a report that showed the atmospheric opacity or Tau to be 0.6, “about normal for this time of year,” said Callas. The rover was generating 645 watt-hours&nbsp;</p><p>The ops team continued to watch things over the weekend. The sky would become dustier by the hour and soon encompass the rover site.</p><p>The next sol, 5105 (June 3, 2018), Opportunity carried out the last sol of the pre-storm planned weekend plan, but reported that she only produced 468 watt-hours of power, about 100 watt-hours less of energy than the previous Martian day. The&nbsp;Tau jumped to 1.5, a significant increase in one day, but not uncommon for the onset of a dust storm.</p><p>“We decided we needed to cease science operations and configure the rover for a lower power operation as this dust storm was increasing and looking to be more threatening,” said Callas.&nbsp;Opportunity followed commands and reduced her work and energy consumption deploying low-power plans the team developed for her Sols 5106 and 5107, Monday, June 4, and Tuesday, June 5, 2018.</p><p>The Tau rose to a little over 2.1 on Sol 5106 (June 4, 2018), reported Lemmon, while the rover’s energy production dropped to 345 watt-hours.&nbsp;On Tuesdays, jaws on Earth dropped.&nbsp;The rover’s energy dropped to 133 watt-hours, dropping “by more than a factor of two in one day,” noted Callas. “We were unable to get a measurement of Tau, but it is estimated to be above 3.0.” It may have increased to such a high level, he said, that the rover team’s ability to measure it was “diminished.”</p></div></div><div
+class="flex justify-center mx-auto container-med w-full px-0 sm:px-6 my-12"><figure
+class="table mx-auto">
+<a
+href="https://www.planetary.org/space-images/opportunitys-long-and-winding-road">
+<picture
+class="block">
+<source
+class="lazyload" data-srcset="https://planetary.s3.amazonaws.com/web/assets/pictures/_576x270_crop_center-center_82_line/20180603_7-Endeavour-overhead-labeled-to-Tribulation.jpg.webp 576w, https://planetary.s3.amazonaws.com/web/assets/pictures/_768x360_crop_center-center_82_line/20180603_7-Endeavour-overhead-labeled-to-Tribulation.jpg.webp 768w, https://planetary.s3.amazonaws.com/web/assets/pictures/_1200x563_crop_center-center_82_line/20180603_7-Endeavour-overhead-labeled-to-Tribulation.jpg.webp 1200w, https://planetary.s3.amazonaws.com/web/assets/pictures/_2400x1127_crop_center-center_82_line/20180603_7-Endeavour-overhead-labeled-to-Tribulation.jpg.webp 2400w"
+sizes="100vw"
+type="image/webp" />
+<img
+class="lazyload" src="data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%272400%27%20height=%271127%27%20style=%27background:%23CCC%27%20/%3E"
+data-srcset="https://planetary.s3.amazonaws.com/web/assets/pictures/_576x270_crop_center-center_82_line/20180603_7-Endeavour-overhead-labeled-to-Tribulation.jpg 576w, https://planetary.s3.amazonaws.com/web/assets/pictures/_768x360_crop_center-center_82_line/20180603_7-Endeavour-overhead-labeled-to-Tribulation.jpg 768w, https://planetary.s3.amazonaws.com/web/assets/pictures/_1200x563_crop_center-center_82_line/20180603_7-Endeavour-overhead-labeled-to-Tribulation.jpg 1200w, https://planetary.s3.amazonaws.com/web/assets/pictures/_2400x1127_crop_center-center_82_line/20180603_7-Endeavour-overhead-labeled-to-Tribulation.jpg 2400w"
+sizes="100vw"
+alt="Opportunity’s long and winding road"/>
+</picture>
+</a><figcaption
+class="px-6 sm:px-0 font-light mt-2 mb-0 leading-normal text-base"><span
+class="text-base font-semibold uppercase my-0">Opportunity’s long and winding road</span> The gold line on the image on the left shows Opportunity's route from the Eagle Crater landing site to Cape Tribulation, which is north of her current location in Perseverance Valley. The base image for the map is a mosaic of images taken by the Context Camera onboard the MRO. Larry Crumpler, of the New Mexico Museum of Natural History and Science, provided the route. Right graphic shows the rover&rsquo;s movements up to Sol 5100 (May 29, 2018) and her approximate location. Phil Stooke, author of <i>The International Atlas of Mars Exploration Volumes 1 and 2</i>, (Cambridge University Press), of the University of Western Ontario, Canada, documented this graphic with sol and site annotations. The base image was taken by the HiRISE camera also onboard MRO.<span
+class="text-gray-700 ml-2"><em>Image: NASA / JPL-Caltech / MSSS / UA / add-ons L. Crumpler (left) / P. Stooke (right)</em></span></figcaption></figure></div><div
+class="flex justify-center mx-auto"><div
+class="container-med w-full px-6"><p>“It looked bad,&nbsp;<em>really&nbsp;</em>bad,” summed up Herman.&nbsp;</p><p>Opportunity had not seen this level of atmospheric opacity in more than a decade, not since the last planet-encircling storm in 2007.</p><p>The MER ops team decided to send a minimal 2-sol, plan to the rover, for her Sols 5009 and 5010. Opportunity was commanded to wake up, receive commands, and then go back to sleep through the night into the next day. After a brief wake in the morning, the robot would again go back to sleep, and then wake up in the afternoon to measure the Tau, and then link with MRO to send that data. Then the robot was to shut down and go back to sleep.&nbsp;</p><p>At mission control at JPL Thursday morning, the ops team received Oppy’s confirming beep on the receipt of the command load, and the first week of June came to an end.“We essentially shut everything down, with the exception of one wake-up for a Tau, and a coincident communication with a relay orbiter, MRO,” said Callas. “And we chose not to have the rover communicate to us on the first day but wait until the second day, as a power saving measure.”</p><p>Opportunity surprised almost everyone when she dutifully completed her assignment and sent the Tau home. The MER ops team received the rover’s sol 5109 data on Sunday, June 10<sup>th</sup>. Somehow, the rover was still active even though the&nbsp;Tau she recorded was over the top at 10.8,&nbsp;a record high for atmospheric opacity measurements on Mars, and her&nbsp;power levels dropped to a stunning low of ~22 watt hours. It has always been advised that the rover needs at least&nbsp;<em>90&nbsp;</em>watt-hours per sol to survive.</p><p>How could Opportunity still be under master sequence control? How was it the rover hadn’t&nbsp;<em>already&nbsp;</em>tripped a low-power fault? “Opportunity was using the batteries, draining them a little bit each sol,” concluded Herman.</p><p>She knew then that there was no way that Opportunity was not going to drain the batteries and fault. “I told John [Callas] that I could see the battery state of charge dropping from sol 5107 to sol 5109 to sol 5111.&nbsp;I remember saying: ‘<em>We can’t avoid low power fault</em>.’ The sky could not clear fast enough to recharge the batteries,” Herman said.</p></div></div><div
+class="flex justify-center mx-auto container-med w-full px-0 sm:px-6 my-12"><figure
+class="table mx-auto">
+<a
+href="https://www.planetary.org/space-images/power-plunge">
+<picture
+class="block">
+<source
+class="lazyload" data-srcset="https://planetary.s3.amazonaws.com/web/assets/pictures/_576x174_crop_center-center_82_line/20180704_13-oppy-tau.jpg.webp 576w, https://planetary.s3.amazonaws.com/web/assets/pictures/_768x232_crop_center-center_82_line/20180704_13-oppy-tau.jpg.webp 768w, https://planetary.s3.amazonaws.com/web/assets/pictures/_1200x363_crop_center-center_82_line/20180704_13-oppy-tau.jpg.webp 1200w"
+sizes="100vw"
+type="image/webp" />
+<img
+class="lazyload" src="data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%271200%27%20height=%27363%27%20style=%27background:%23CCC%27%20/%3E"
+data-srcset="https://planetary.s3.amazonaws.com/web/assets/pictures/_576x174_crop_center-center_82_line/20180704_13-oppy-tau.jpg 576w, https://planetary.s3.amazonaws.com/web/assets/pictures/_768x232_crop_center-center_82_line/20180704_13-oppy-tau.jpg 768w, https://planetary.s3.amazonaws.com/web/assets/pictures/_1200x363_crop_center-center_82_line/20180704_13-oppy-tau.jpg 1200w"
+sizes="100vw"
+alt="Power plunge"/>
+</picture>
+</a><figcaption
+class="px-6 sm:px-0 font-light mt-2 mb-0 leading-normal text-base"><span
+class="text-base font-semibold uppercase my-0">Power plunge</span> Graphic on left shows six slices of Mars, taken at different times, and the impact of the
+growing dust storm on Opportunity’s visibility as of June 6, 2018. The images were
+produced by the Mars Color Imager (MARCI) camera onboard MRO and processed by
+the camera team. The blue dot indicates the rover’s approximate location. Graphic on
+right shows how the rover’s power level, in watt-hours, dropped dramatically as the
+storm and its dust moved in on Endeavour Crater in early June 2018.<span
+class="text-gray-700 ml-2"><em>Image: Left: NASA / JPL-Caltech / MSSS / TAMU; Right: NASA / JPL-Caltech / New Mexico Museum of Natural History</em></span></figcaption></figure></div><div
+class="flex justify-center mx-auto"><div
+class="container-med w-full px-6"><p>Anticipating the low-power fault and because there wasn’t enough energy for the rover to sustain activities,&nbsp;Callas declared a 72-hour spacecraft emergency that Sunday afternoon.</p><p>The ops team debated sending an uplink with another low-power plan for the rover to record another Tau.&nbsp;Should they pull everything from the docket to save power?&nbsp;Could they save enough power? “The answer was ‘no,’” said Herman.&nbsp;“We weren’t getting enough sunlight to recharge the batteries, so we were pulling batteries down, down, down. We could turn off everything and we were going to fault. It wouldn’t have made a difference.&nbsp;This storm was just too big.”</p><p>As most everyone anticipated, Opportunity was silent. Presumably, if everything went as it should, the rover&nbsp;sensed she didn’t have enough energy to maintain activities and turned off everything except the master clock connected to the batteries,&nbsp;and drifted into hibernation mode. “So all of the energy coming out of the solar arrays is going into the batteries and the master clock until there is sufficient energy to charge the batteries back above a certain threshold,” said Callas. “At that point, the rover will autonomously try to wake up and communicate with us.”</p><p>Although the MER team knew then they would likely not hear from the rover until the storm subsides and the skies clear over the rover’s site, the ops engineers with a little help from their friends working the radiowaves are either reaching out or listening or both every day, just in case.</p><p>“We use the Deep Space Network (DSN) to listen three days per week, Monday, Wednesday, and Friday,” said Nelson. “On each of these listening sessions, we also command a  'beep,' to try and to elicit a beep if the rover happens to be awake. This is is a 5-minute, carrier only downlink. If there is a low-power fault window, the command to execute a beep will also terminate the 40-minute low-power fault window, which will save some energy.&nbsp;</p><p>Every day, someone is also listening for Opportunity with the radio science group's Very Long Baseline Interferometry (VLBI) Science Receiver, a wideband receiver capable of listening for signals over a range of frequencies. “If a MER fault window is active, this receiver should hear it. Capable of eavesdropping on any station listening to signals from Mars, it doesn't require a dedicated MER  DSN track, but it cannot transmit,” Nelson noted.&nbsp;</p><p>Since the last telemetry, Opportunity could have also experienced a mission clock fault, but there is just no way of knowing at this point.&nbsp;“It takes about 1 watt to run the mission clock, about 24 watt-hours over a sol,” said Nelson. “Since on our last two downlinks, which showed the power level at 28 and 22 watt-hours respectively, we feel we are on the edge of a mission clock fault. If the storm gets worse than it was on sol 5111, the last downlink, the clock will fault. If it's no worse, we may not. The suspense is killing us.”&nbsp;</p><p>Whether the clock stopped or not, Opportunity is still recoverable. Since the rover wouldn’t know what time it is when she is powered back up again, the ops recovery team would have to spend more time listening for her signals, but the loss of the clock doesn’t really impact the robot’s recovery.</p></div></div><div
+class="flex justify-center mx-auto container-med w-full px-0 sm:px-6 my-12"><figure
+class="table mx-auto">
+<a
+href="https://www.planetary.org/space-images/mars-regions">
+<picture
+class="block">
+<source
+class="lazyload" data-srcset="https://planetary.s3.amazonaws.com/web/assets/pictures/_576x288_crop_center-center_82_line/20180615_4-MSSS-mars-map.jpg.webp 576w"
+sizes="100vw"
+type="image/webp" />
+<img
+class="lazyload" src="data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%27576%27%20height=%27288%27%20style=%27background:%23CCC%27%20/%3E"
+data-srcset="https://planetary.s3.amazonaws.com/web/assets/pictures/_576x288_crop_center-center_82_line/20180615_4-MSSS-mars-map.jpg 576w"
+sizes="100vw"
+alt="Mars Regions"/>
+</picture>
+</a><figcaption
+class="px-6 sm:px-0 font-light mt-2 mb-0 leading-normal text-base"><span
+class="text-base font-semibold uppercase my-0">Mars Regions</span> A global map of major named Mars regions, courtesy of Malin Space Science Systems (MSSS) personnel who processed the images and provided the annotations.<span
+class="text-gray-700 ml-2"><em>Image: NASA / JPL-Caltech / Malin Space Science Systems</em></span></figcaption></figure></div><div
+class="flex justify-center mx-auto"><div
+class="container-med w-full px-6"><p>Meanwhile, the surface temperatures have been true to the models’ predictions,&nbsp;not too far below freezing to damage the rover’s computer or instruments. Another analysis of Opportunity's long-term temperature trends, conservatively assuming no solar array input, indicates that the rover's electronics and batteries will stay above their flight-allowable temperatures. The scientific reason for optimism is still there.</p><p>There is, however, a small concern with the health of the batteries if they discharge completely. The batteries could lose some of their capacity if the cell voltages drop to near zero.&nbsp;</p><p>Interestingly, Cantor reported seeing some surface features&nbsp;through the planet-encircling cloud in some regions on June 21<sup>st</sup>. “In Arabia, north of Opportunity – and as well as Acidalia and Chryse – we’re starting to see some of the surface features and albedo of the surface through some of the dust,” he said. “Other regions, like Elysium to the east all the way to Olympus Mons, are almost completely obscured from view, and there is clearly lots of lifting.&nbsp;</p><p>But whether that meant new lifting centers appeared, essentially replacing those that petered out, or if it the patches of clearing in the planet-encircling cloud marked the beginning of the storm’s decay, it was just too soon to say.&nbsp;</p><p>The storm will end when “when the lifting centers stop lifting dust and the storm<em>s</em>on the surface are over,” said Cantor.&nbsp;“Usually the lifting ends gradually, region to region.”&nbsp;</p><p
+class="Body">But the impact of the storm will be with Opportunity for months, and possibly years, possibly forever, depending. Because when the dust lifting stops, that signals the end of the first phase of a Martian dust storm. The second phase – the decay – brings rains of dust as what went up comes down all over the place. The decay phase is “a gray area,” Cantor noted. “There’s not one day where you say, ‘Okay everything shifted on this one day.’ It’s a gradual change, from the expansive phase to the decay phase.”</p><p>Rains of dust&nbsp;can last a month or two or more. “The decay phase can be up to several months, sometimes longer than the actual lifting itself,” said Cantor. “How long that takes really depends on how high the dust was lofted. The higher it is lofted, the longer it takes for it to fall out. It also depends on the season, the strength of the general circulation and diurnal tides, which are stronger in certain times of year than others and which will keep the dust lofted longer. And, because the atmospheric density changes quite significantly as the south polar cap recedes.”</p></div></div><div
+class="flex justify-center mx-auto container-med w-full px-0 sm:px-6 my-12"><figure
+class="table mx-auto">
+<a
+href="https://www.planetary.org/space-images/the-global-view-in-mid-june">
+<picture
+class="block">
+<source
+class="lazyload" data-srcset="https://planetary.s3.amazonaws.com/web/assets/pictures/_576x289_crop_center-center_82_line/20180704_14-PEDE-MSSS-June-16-2018.jpg.webp 576w, https://planetary.s3.amazonaws.com/web/assets/pictures/_768x385_crop_center-center_82_line/20180704_14-PEDE-MSSS-June-16-2018.jpg.webp 768w"
+sizes="100vw"
+type="image/webp" />
+<img
+class="lazyload" src="data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%27768%27%20height=%27385%27%20style=%27background:%23CCC%27%20/%3E"
+data-srcset="https://planetary.s3.amazonaws.com/web/assets/pictures/_576x289_crop_center-center_82_line/20180704_14-PEDE-MSSS-June-16-2018.jpg 576w, https://planetary.s3.amazonaws.com/web/assets/pictures/_768x385_crop_center-center_82_line/20180704_14-PEDE-MSSS-June-16-2018.jpg 768w"
+sizes="100vw"
+alt="The global view in mid-June"/>
+</picture>
+</a><figcaption
+class="px-6 sm:px-0 font-light mt-2 mb-0 leading-normal text-base"><span
+class="text-base font-semibold uppercase my-0">The global view in mid-June</span> The images above, taken by MARCI – the Mars Color Imager camera onboard MRO and processed by Cantor and his team at Malin Space Science Systems (MSSS) — show the global view of Mars from the beginning of the storm to mid-June just before it was declared a planet-encircling dust event (PEDE).<span
+class="text-gray-700 ml-2"><em>Image: NASA / JPL-Caltech / MSSS</em></span></figcaption></figure></div><div
+class="flex justify-center mx-auto"><div
+class="container-med w-full px-6"><p>Bleak as it may seem, it&nbsp;may not take as long for the dust to settle out as many are inclined to think. “Things do mix up in the atmosphere,” reiterated Lemmon.&nbsp;</p><p>While the 10.8 Tau has a lot of team members concerned, Lemmon is not as concerned. “It really depends on the overall perspective. If you say optical depth was 10 or 11 or more for Opportunity and you look at how fast it decays exponentially, that projects a very bad answer in terms of how long it’s going to take. But frankly, Opportunity was sitting in the worst of it,” he said.&nbsp;</p><p>“Once the lifting stops and the normal circulation averages the dust out, usually on a timescale of many days to a few weeks, the Tau can go from 10 to 5 or 3 very fast,” Lemmon continued. “Then, once you’re around 3 or 4, you start going into this very slow decay. But it depends very much on exactly how much dust was picked up everywhere around Mars with this storm and we can’t measure that with what we have very accurately, so we will just have to wait and see how that plays out.”</p><p>When the storm transitions well into the decay phase, Curiosity’s measurements should help the MER team understand what’s going on at the Meridiani site as well, said Lemmon. Basically, the Tau Curiosity records at Gale Crater will likely be the Tau Opportunity will see at Meridiani Planum about a week later. “Right now, they’re just in different weather,” he said.</p><p>Figuring out what causes these dust storms to stop once they get started will go a long way to understanding how humans, as well as robots, can survive these PEDEs. The scientists studying this PEDE will be looking for more clues about the decay processes in coming days and weeks. There are plenty of good, seemingly scientifically sound theories.</p><p>Maybe these monster dust storms just run out of power. Since the radiative heat of sunlight reaching the surface of the planet is what drives these dust storms, the large planet-encircling dust storms may ultimately doom themselves.“It could be that the winds die down because once all that dust gets into the atmosphere it blocks a lot of the sunlight and there is less heating at the surface,” said Wolff, who will be working to quantify the evolution and the amount of dust in the atmosphere with imaging instruments, including TES onboard Odyssey. “Dust in the atmosphere may absorb energy and make the atmosphere warmer, but the surface gets colder, because there’s not as much sunlight getting down to the surface. At some point that lack of solar energy will cut off the ability to lift dust.”</p><p>Or, perhaps the lifting centers have lifted all the Martian dust in their paths there is to lift.&nbsp;“It could be there are these reservoirs of dust on the surface that are easily lofted and they kind of run out,” suggested Smith. “That could also be why we see these global scale dust storms in some years but not every Mars year, because there’s just not any more dust that can get picked up until those resources restore, and as dust falls out all over planet these reservoirs eventually build back up.”</p><p>With all the research efforts underway, this storm may offer up telling clues. With a little of the MER luck, maybe the storm will be over soon.</p></div></div><div
+class="flex justify-center mx-auto container-med w-full px-0 sm:px-6 my-12"><figure
+class="table mx-auto">
+<a
+href="https://www.planetary.org/space-images/been-there-done-that">
+<picture
+class="block">
+<source
+class="lazyload" data-srcset="https://planetary.s3.amazonaws.com/web/assets/pictures/_576x225_crop_center-center_82_line/20180704_15-Oppy-dusty-and-clean-arrays.jpg.webp 576w, https://planetary.s3.amazonaws.com/web/assets/pictures/_768x301_crop_center-center_82_line/20180704_15-Oppy-dusty-and-clean-arrays.jpg.webp 768w"
+sizes="100vw"
+type="image/webp" />
+<img
+class="lazyload" src="data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%27768%27%20height=%27301%27%20style=%27background:%23CCC%27%20/%3E"
+data-srcset="https://planetary.s3.amazonaws.com/web/assets/pictures/_576x225_crop_center-center_82_line/20180704_15-Oppy-dusty-and-clean-arrays.jpg 576w, https://planetary.s3.amazonaws.com/web/assets/pictures/_768x301_crop_center-center_82_line/20180704_15-Oppy-dusty-and-clean-arrays.jpg 768w"
+sizes="100vw"
+alt="Been there, done that"/>
+</picture>
+</a><figcaption
+class="px-6 sm:px-0 font-light mt-2 mb-0 leading-normal text-base"><span
+class="text-base font-semibold uppercase my-0">Been there, done that</span> Opportunity used her Pancam to take the self portraits above, in January 2014 (left),
+when her solar arrays was coated in the powdery Martian dust, and in late March 2014
+(right) after the winds of Mars whisked off much of the dust from the arrays. As the
+Martian winds giveth, they also take away. A curse and a blessing the winds of Mars
+have enabled to live long and prosper.<span
+class="text-gray-700 ml-2"><em>Image: NASA / JPL-Caltech / Cornell / ASU</em></span></figcaption></figure></div><div
+class="flex justify-center mx-auto"><div
+class="container-med w-full px-6"><p>Once there is a significant reduction in the storm and the associated atmospheric opacity over Opportunity’s site in Perseverance Valley, the team hopes the rover will phone home. “We expect to hear something when the sunlight starts to come through the dust cloud. So we’re frustrated but also hopeful,” said Herman. “We don’t know how the dust storm is going to decay or when it’s going to decay. But we definitely need the sky to clear,” said Herman</p><p>As June turned to July, Mars was still “very&nbsp;dusty,” said Smith. “You do have lifting in different areas at different times, and the winds carry this dust according to whatever the weather patterns are at the time. You can get some variability in the amount of dust you see at any one given location, the rover site for example or a surface feature there might sort of fade in and out a little bit between breaks in the planet-encircling cloud, but it’s still plenty dusty except at the highest southern latitudes up near the pole.”&nbsp;</p><p>The MER ops engineers are thinking the Tau will have to drop to around 2 and Opportunity will need to power-up and produce somewhere between 150 to 180 watt-hours per sol for them to get sporadic contact. “We don't need a solar array wakeup if we're in low-power fault, but we do need them if we're in mission clock fault,” Nelson said. “These wakeups require around 240 watt-hours per sol to get the peak array current above 2.0 amps, the solar array wakeup (SAW)  threshold.”</p><p>That’s going to take some sunlight.&nbsp;While waiting for the storm to end, the Sun to start shining through, and the sky over Endeavour Crater to clear, the MER team’s plan is to continue listening and reaching out every day, just in case.</p><p>“I’m optimistic because our team is well prepared,” said Herman. “We’ve worked really hard and the season is on our side. We&nbsp;<em>should&nbsp;</em>be okay once the storm ends and the dust clears. We just don’t know when that’s going to happen,” she said. “But Mars&nbsp;<em>has&nbsp;</em>to run of dust eventually, right?”</p></div></div><div
+class="flex justify-center mx-auto container-med w-full px-0 sm:px-6 my-12"><figure
+class="table mx-auto">
+<a
+href="https://www.planetary.org/space-images/under-the-blanket">
+<picture
+class="block">
+<source
+class="lazyload" data-srcset="https://planetary.s3.amazonaws.com/web/assets/pictures/_576x254_crop_center-center_82_line/20180802_5-Under-the-blanket-20180614-003530bSA.jpg.webp 576w, https://planetary.s3.amazonaws.com/web/assets/pictures/_768x339_crop_center-center_82_line/20180802_5-Under-the-blanket-20180614-003530bSA.jpg.webp 768w, https://planetary.s3.amazonaws.com/web/assets/pictures/_1200x531_crop_center-center_82_line/20180802_5-Under-the-blanket-20180614-003530bSA.jpg.webp 1200w, https://planetary.s3.amazonaws.com/web/assets/pictures/_2400x1062_crop_center-center_82_line/20180802_5-Under-the-blanket-20180614-003530bSA.jpg.webp 2400w"
+sizes="100vw"
+type="image/webp" />
+<img
+class="lazyload" src="data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%272400%27%20height=%271062%27%20style=%27background:%23CCC%27%20/%3E"
+data-srcset="https://planetary.s3.amazonaws.com/web/assets/pictures/_576x254_crop_center-center_82_line/20180802_5-Under-the-blanket-20180614-003530bSA.jpg 576w, https://planetary.s3.amazonaws.com/web/assets/pictures/_768x339_crop_center-center_82_line/20180802_5-Under-the-blanket-20180614-003530bSA.jpg 768w, https://planetary.s3.amazonaws.com/web/assets/pictures/_1200x531_crop_center-center_82_line/20180802_5-Under-the-blanket-20180614-003530bSA.jpg 1200w, https://planetary.s3.amazonaws.com/web/assets/pictures/_2400x1062_crop_center-center_82_line/20180802_5-Under-the-blanket-20180614-003530bSA.jpg 2400w"
+sizes="100vw"
+alt="Under the blanket"/>
+</picture>
+</a><figcaption
+class="px-6 sm:px-0 font-light mt-2 mb-0 leading-normal text-base"><span
+class="text-base font-semibold uppercase my-0">Under the blanket</span> Although this is not an authentic color view of this scene along the rim of Endeavour Crater, Stuart Atkinson colorized this image to give a feel for what it might be like for Opportunity in all that darkness and dust during the planet-encircling dust event (PEDE) on Mars. A contributor to The Planetary Society&rsquo;s <a
+href="http://www.planetary.org/explore/space-topics/space-imaging/amateur.html">Amateur Space Images Archive</a> and frequent image contributor to The MER Update, Atkinson has also followed this rover&rsquo;s journey in his <a
+href="https://roadtoendeavour.wordpress.com/2017/06/">The Road to Endeavour</a>.<span
+class="text-gray-700 ml-2"><em>Image: NASA / JPL-Caltech / Cornell / ASU / additional processing S. Atkinson</em></span></figcaption></figure></div><div
+class="flex justify-center mx-auto"><div
+class="container-med w-full px-6 text-center"><div
+class="bg-gray-200 mb-10 text-2xl text-center"><div
+class="text-center bg-cover bg-center mb-0 py-8 flex justify-center items-center" role="img" aria-label="Person sampling a saline lake" style="background-image: url(https://planetary.s3.amazonaws.com/sites/planetary/images/cta-saline-lakes.jpg); background-position: 0% 50%; min-height: 180px;"></div><div
+class="p-6"><h3 class="mt-2 mb-6">You Power the Next Great Discovery!</h3><p>Fund future scientific research that advances space science and exploration with your gift today.</p>
+<a
+class="btn btn-orange px-6 py-2 text-lg mb-4" href="https://connect.planetary.org/73?s_cid=step2026&s_pkgsrc=step2026-unsol&s_src=step2026&s_subsrc=card">Donate</a></div></div></div></div><footer
+class="flex justify-center mx-auto"><div
+class="container-med w-full px-6"><div
+class="border-t border-gre-lightery pt-2 my-9"><div
+class="m-b-10" style="text-indent:-1.7rem; margin-left:2.8rem;"><p
+class="text-base mb-2"><span
+class="icon-book" aria-hidden="true" role="presentation"></span> Read more: <a
+href="/articles?keywords=mars" class="text-planetary-blue hover:border-b-2 hover:border-planetary-blue"> Mars</a>, <a
+href="/articles?keywords=spirit" class="text-planetary-blue hover:border-b-2 hover:border-planetary-blue"> Mars Exploration Rover Spirit</a>, <a
+href="/articles?keywords=mars-exploration-rovers" class="text-planetary-blue hover:border-b-2 hover:border-planetary-blue"> Mars Exploration Rovers</a>, <a
+href="/articles?keywords=past-mars-missions" class="text-planetary-blue hover:border-b-2 hover:border-planetary-blue"> Mars missions</a>, <a
+href="/articles?keywords=mission-status" class="text-planetary-blue hover:border-b-2 hover:border-planetary-blue"> Mission status</a>, <a
+href="/articles?keywords=space-missions" class="text-planetary-blue hover:border-b-2 hover:border-planetary-blue"> Space missions</a>, <a
+href="/articles?keywords=mars-system" class="text-planetary-blue hover:border-b-2 hover:border-planetary-blue"> The Mars system</a>, <a
+href="/articles?keywords=space-places" class="text-planetary-blue hover:border-b-2 hover:border-planetary-blue"> Worlds</a></p><p
+class="text-base mt-2 mb-8"><span
+class="icon-location" aria-hidden="true" role="presentation"></span> You are here: <a
+href="/" class="text-planetary-blue hover:border-b-2 hover:border-planetary-blue">Home</a> &gt; <a
+href="/articles/" class="text-planetary-blue hover:border-b-2 hover:border-planetary-blue">Articles</a></p></div><div
+class="bg-gray-200 p-6 mb-10 "><div
+class="flex items-top md:items-center ">
+<picture
+class="flex-none rounded-full h-24 w-24 mr-6">
+<source
+data-srcset="https://planetary.s3.amazonaws.com/web/assets/pictures/_200x200_crop_center-center_82_line/20181105_rayl-thumbnail.jpg.webp 200w, https://planetary.s3.amazonaws.com/web/assets/pictures/_576x576_crop_center-center_82_line/20181105_rayl-thumbnail.jpg.webp 576w"
+data-sizes="auto"
+type="image/webp" />
+<img
+class="lazyload rounded-full h-24 w-24 mr-6" src="data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%27576%27%20height=%27576%27%20style=%27background:%23CCC%27%20/%3E"
+data-srcset="https://planetary.s3.amazonaws.com/web/assets/pictures/_200x200_crop_center-center_82_line/20181105_rayl-thumbnail.jpg 200w, https://planetary.s3.amazonaws.com/web/assets/pictures/_576x576_crop_center-center_82_line/20181105_rayl-thumbnail.jpg 576w"
+data-sizes="auto"
+alt="A.J.S. Rayl" />
+</picture><div><h3 class="mt-0 mb-2 leading-tight"><a
+href="https://www.planetary.org/profiles/a-j-s-rayl" class="text-black hover:text-planetary-blue-darker hover:border-b-2 hover:border-planetary-blue-darker">A.J.S. Rayl</a></h3><p
+class="m-0 text-lg">Contributing Editor for The Planetary Society<br><a
+href="/articles?listauthor=a-j-s-rayl" class="text-planetary-blue-darker hover:border-b-2 hover:border-planetary-blue-darker font-medium">Read more articles by A.J.S. Rayl</a></p></div></div></div><div
+class="bg-gray-200 p-6 mb-10 text-2xl"><h3 class="mt-0 mb-6">Related Articles</h3><div
+class="flex items-top ">
+<img
+src="https://planetary.s3.amazonaws.com/web/assets/pictures/_576x576_crop_center-center_82_line/448588/Perseverances-First-Selfie.jpg" alt="Perseverances First Selfie" class="h-24 w-24 mr-6"><div><h3 class="mt-0 mb-2 leading-none"><a
+href="https://www.planetary.org/articles/mars-rover-samples-what-could-be-one-of-the-oldest-rocks-on-mars-surface" class="text-planetary-blue-darker hover:border-b-2 hover:border-planetary-blue-darker text-lg">Mars rover samples what could be one of the oldest rocks on the Martian surface</a></h3><p
+class="m-0 text-base">
+Asa Stahl</p></div></div><div
+class="flex items-top  mt-6">
+<img
+src="https://planetary.s3.amazonaws.com/web/assets/pictures/_576x576_crop_center-center_82_line/863452/mmx-sampling.jpg" alt="Mmx sampling" class="h-24 w-24 mr-6"><div><h3 class="mt-0 mb-2 leading-none"><a
+href="https://www.planetary.org/articles/mars-moon-mission-set-to-launch-with-tech-funded-by-planetary-society-onboard" class="text-planetary-blue-darker hover:border-b-2 hover:border-planetary-blue-darker text-lg">Mars moon mission set to launch with tech funded by Planetary Society on board</a></h3><p
+class="m-0 text-base">
+Asa Stahl</p></div></div><div
+class="flex items-top  mt-6">
+<img
+src="https://planetary.s3.amazonaws.com/web/assets/pictures/_576x576_crop_center-center_82_line/star-party-in-daytime.jpg" alt="Star party in daytime" class="h-24 w-24 mr-6"><div><h3 class="mt-0 mb-2 leading-none"><a
+href="https://www.planetary.org/articles/a-guide-to-sidewalk-astronomy" class="text-planetary-blue-darker hover:border-b-2 hover:border-planetary-blue-darker text-lg">A guide to sidewalk astronomy</a></h3><p
+class="m-0 text-base">
+Asa Stahl</p></div></div></div></div></div></footer></article></main><aside><div
+class="flex flex-wrap mx-auto container-med px-6 mb-16 w-full"><div
+class="bg-gray-200 mb-10 text-2xl text-center" style="border-top: 4px solid #cc4e12"><div
+class="p-6"><h3 class="mt-0 mb-6">Become A Member</h3><p>When you become a member, you join our mission to increase discoveries in our Solar System and beyond, elevate the search for life outside our planet, and decrease the risk of Earth being hit by an asteroid.</p><p>Your role in space exploration starts now.</p><div
+class="flex justify-center"><div
+class="w-full pb-4"><div
+class="inline-block mr-2 mt-2">
+<a
+class="btn btn-orange px-4 py-1 text-lg w-32" href="https://www.planetary.org/membership?level=Explorer&s_src=cardjoin">$4<span
+class="text-xs">/month</span></a></div><div
+class="inline-block mr-2 mt-2">
+<a
+class="btn btn-orange px-4 py-1 text-lg w-32" href="https://www.planetary.org/membership?level=Mariner&s_src=cardjoin">$10<span
+class="text-xs">/month</span></a></div><div
+class="inline-block mr-2 mt-2">
+<a
+class="btn btn-orange px-4 py-1 text-lg w-32"  href="https://www.planetary.org/membership?level=Pathfinder&s_src=cardjoin">$20<span
+class="text-xs">/month</span></a></div><div
+class="inline-block mr-2 mt-2">
+<a
+class="btn btn-orange px-4 py-1 text-lg w-32" href="https://www.planetary.org/membership?level=Visionary&s_src=cardjoin">$40<span
+class="text-xs">/month</span></a></div></div></div></div><div
+class="text-center bg-cover bg-center mb-0 py-8" style="background-image: url(https://planetary.s3.amazonaws.com/assets/images/cards/space-explorer-join.jpg); background-position: center 20%; min-height: 60px;" role="img" aria-label="space enthusiasts"></div></div><div
+class="bg-gray-200 mb-10 text-2xl text-center" style="border-top: 4px solid #037cc2"><div
+class="p-6"><h3 class="mt-0 mb-6">Get More Space<br
+class="sm:hidden"> In Your Inbox</h3><p>Sign up for updates, weekly tools, and exclusive opportunities to support space exploration.</p><form
+name="emailForm"
+id="66"
+novalidate="novalidate"
+method="post"
+action="#"
+class="hintsBelow labelsAbove flex flex-col w-full pt-6"
+role="form"
+><style>form[name=emailForm] div label[for=tfa_1].error,form[name=emailForm] div label[for=tfa_6].error,form[name=emailForm] label[for=tfa_7].error{font-size:.8rem;color:red;position:absolute;margin-left:5px;left:0;top:-14px;line-height:1;text-align:left}form[name=emailForm] input.error{border-color:red}form[name=emailForm] input::placeholder{color:#76766b;opacity:1}</style><div
+class="flex flex-col sm:flex-row w-full sm:flex-row items-center"><div
+class="relative w-full sm:w-1/4">
+<input
+type="text" name="tfa_6" id="tfa_6" size="45" maxlength="255" class="inline-block border-2 sm:rounded-r-none border-planetary-blue rounded w-full p-2 text-sm hover:border-planetary-blue-darker mb-4 sm:mb-0 text-center sm:text-left" placeholder="First Name" aria-label="Enter first name" required></div><div
+class="relative w-full sm:w-1/4">
+<input
+type="text" name="tfa_7" id="tfa_7" size="45" maxlength="255" class="inline-block border-2 sm:rounded-l-none sm:rounded-r-none sm:border-l-0 border-planetary-blue rounded w-full p-2 text-sm hover:border-planetary-blue-darker mb-4 sm:mb-0 text-center sm:text-left" placeholder="Last Name" aria-label="Enter last name" required></div><div
+class="relative w-full sm:w-1/4">
+<input
+type="email" name="tfa_1" id="tfa_1" size="45" maxlength="255" class="inline-block border-2 border-planetary-blue rounded sm:rounded-l-none sm:rounded-r-none sm:border-l-0 sm:border-r-0 w-full p-2 text-sm hover:border-planetary-blue-darker mb-4 sm:mb-0 text-center sm:text-left" placeholder="Email" aria-label="Enter email address" required></div>
+<input
+type="text" name="tfa_11" id="tfa_11" size="45" maxlength="255" tabindex="-1" autocomplete="off" style="display:none !important;">
+<input
+type="checkbox" name="tfa_10" id="tfa_10" style="display:none!important;" checked><div
+class="relative w-full sm:w-1/4">
+<button
+type="button"
+data-label="Submit"
+id="submit_button"
+value="Submit"
+name="eNewsSubmit"
+class="primaryAction btn btn-blue px-6 py-2 w-full text-lg hover:border-2 focus:border-2 border-2 sm:rounded-l-none text-sm" style="font-size:.875rem !important;">
+Subscribe
+</button></div></div><p
+class="text-xs text-center sm:text-left mt-2 mb-0">You may opt out any time. View our <a
+class="text-planetary-blue-darker border-b border-planetary-blue" href="https://www.planetary.org/privacy-policy">Privacy Policy</a>.</p><div
+class="cf-turnstile text-left" data-sitekey="0x4AAAAAAA7ipLpl9s42LiR8" data-response-field-name="tfa_12" data-appearance="interaction-only" data-callback="javascriptCallback"></div>
+<input
+type="hidden" value="66" name="tfa_dbFormId" id="tfa_dbFormId">
+<input
+type="hidden" value="" name="tfa_dbResponseId" id="tfa_dbResponseId">
+<input
+type="hidden" value="9aeb2d4ae9bb85f7becf6f8d517f4ef1" name="tfa_dbControl" id="tfa_dbControl">
+<input
+type="hidden" value="" name="tfa_dbWorkflowSessionUuid" id="tfa_dbWorkflowSessionUuid">
+<input
+type="hidden" value="1" name="tfa_dbVersionId" id="tfa_dbVersionId">
+<input
+type="hidden" value="" name="tfa_switchedoff" id="tfa_switchedoff"></form></div> <script>loadjs.ready(['jquery'],{success:function(){loadjs('https://ajax.aspnetcdn.com/ajax/jquery.validate/1.11.1/jquery.validate.js','validate');loadjs.ready('validate',function(){loadjs('https://planetary.s3.amazonaws.com/sites/planetary/js/craft-connect-newsletter-sf-v3.js?v=20251124103356','signup');});}});</script> </div><div
+class="flex text-2xl justify-center mb-18 mx-auto">
+<a
+class="custom-social-share" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://www.planetary.org/articles/06-mer-update-planet-encircling-dust-cloud"><span
+class="icon-facebook bg-facebook mr-4 hover:bg-black  focus:bg-black hover:cursor-pointer text-white rounded-full h-12 w-12 p-6 flex justify-center items-center flex-row" aria-label="share on facebook" role="img"></span></a>
+<a
+class="custom-social-share" target="_blank" href="https://x.com/intent/tweet?text=The Mars Exploration Rovers Update: Opportunity Sleeps as Storm Chasers Study Planet-Encircling Dust Cloud&url=https://www.planetary.org/articles/06-mer-update-planet-encircling-dust-cloud&via=exploreplanets"><span
+class="mr-4 bg-black focus:bg-black hover:cursor-pointer text-white rounded-full h-12 w-12 p-6 flex justify-center items-center flex-row" aria-label="share on X" role="img"><img
+src="https://planetary.s3.amazonaws.com/sites/planetary/images/x-logo.svg" style="max-width:16px;" alt="X icon"></span></a>
+<a
+class="custom-social-share" href="https://www.linkedin.com/shareArticle?mini=true&url=https://www.planetary.org/articles/06-mer-update-planet-encircling-dust-cloud&title=The Mars Exploration Rovers Update: Opportunity Sleeps as Storm Chasers Study Planet-Encircling Dust Cloud&source=The%20Planetary%20Society" target="_blank"><span
+class="icon-linkedin bg-linkedin hover:bg-black focus:bg-black hover:cursor-pointer text-white rounded-full h-12 w-12 p-6 flex justify-center items-center flex-row" aria-label="share on linkedin" role="img"></span></a></div></div></aside><footer
+class="bg-black text-white px-10 py-12"><div
+class="flex flex-wrap mx-auto py-12 mb-8 container-wide"><div
+class="w-full xs:w-full sm:w-1/2 md:w-1/4 text-center md:text-left"><ul
+class="mb-8"><li
+class="font-semibold tracking-wide text-white uppercase py-2">Explore Space</li><li
+class="py-2">
+<a
+class="tracking-wide font-light text-white hover:text-planetary-blue-lighter" href="/worlds">Planets & Other Worlds</a></li><li
+class="py-2">
+<a
+class="tracking-wide font-light text-white hover:text-planetary-blue-lighter py-4" href="/space-missions">Space Missions</a></li><li
+class="py-2">
+<a
+class="tracking-wide font-light text-white hover:text-planetary-blue-lighter py-4" href="/night-sky">Night Sky</a></li><li
+class="py-2">
+<a
+class="tracking-wide font-light text-white hover:text-planetary-blue-lighter py-4" href="/space-policy">Space Policy</a></li><li
+class="py-2">
+<a
+class="tracking-wide font-light text-white hover:text-planetary-blue-lighter py-4" href="/kids">For Kids</a></li></div><div
+class="w-full xs:w-full sm:w-1/2 md:w-1/4 text-center md:text-left"><ul
+class="mb-8"><li
+class="font-semibold tracking-wide text-white uppercase py-2">Learn</li><li
+class="py-2">
+<a
+class="tracking-wide font-light text-white hover:text-planetary-blue-lighter" href="/articles">Articles</a></li><li
+class="py-2">
+<a
+class="tracking-wide font-light text-white hover:text-planetary-blue-lighter py-4" href="/planetary-radio">Planetary Radio</a></li><li
+class="py-2">
+<a
+class="tracking-wide font-light text-white hover:text-planetary-blue-lighter py-4" href="/space-images">Space Images</a></li><li
+class="py-2">
+<a
+class="tracking-wide font-light text-white hover:text-planetary-blue-lighter py-4" href="/video">Videos</a></li><li
+class="py-2">
+<a
+class="tracking-wide font-light text-white hover:text-planetary-blue-lighter py-4" href="/courses">Courses</a></li><li
+class="py-2">
+<a
+class="tracking-wide font-light text-white hover:text-planetary-blue-lighter py-4" href="/planetary-report">The Planetary Report</a></li></div><div
+class="w-full xs:w-full sm:w-1/2 md:w-1/4 text-center md:text-left"><ul
+class="mb-8"><li
+class="font-semibold tracking-wide text-white uppercase py-2">Get Involved</li><li
+class="py-2">
+<a
+class="tracking-wide font-light text-white hover:text-planetary-blue-lighter" href="/action-center">Action Center</a></li><li
+class="py-2">
+<a
+class="tracking-wide font-light text-white hover:text-planetary-blue-lighter py-4" href="/connect">Email Signup</a></li><li
+class="py-2">
+<a
+class="tracking-wide font-light text-white hover:text-planetary-blue-lighter py-4" href="/membership">Become A Member</a></li><li
+class="py-2">
+<a
+class="tracking-wide font-light text-white hover:text-planetary-blue-lighter py-4" href="/about/contact">Contact</a></li></div><div
+class="w-full xs:w-full sm:w-1/2 md:w-1/4 text-center md:text-left"><ul
+class="mb-8"><li
+class="font-semibold tracking-wide text-white uppercase py-2">Give</li><li
+class="py-2">
+<a
+class="tracking-wide font-light text-white hover:text-planetary-blue-lighter" href="/membership">Renew Membership</a></li><li
+class="py-2">
+<a
+class="tracking-wide font-light text-white hover:text-planetary-blue-lighter py-4" href="/donate">Support A Project</a></li><li
+class="py-2">
+<a
+class="tracking-wide font-light text-white hover:text-planetary-blue-lighter py-4" href="/shop">Shop to Support</a></li><li
+class="py-2">
+<a
+class="tracking-wide font-light text-white hover:text-planetary-blue-lighter py-4" href="/travel">Travel</a></li><li
+class="py-2">
+<a
+class="tracking-wide font-light text-white hover:text-planetary-blue-lighter py-4" href="https://www.planetary.org/giving">Other Ways to Give</a></li></div></div><div
+class="flex flex-wrap mx-auto pt-12 container-wide border-t border-white"><div
+class="w-full sm:w-full md:w-1/2 text-center md:text-left">
+<a
+class="footer-logo inline-block" href="https://www.planetary.org/">
+<img
+class="w-48" alt="The Planetary Society logo" src="https://planetary.s3.amazonaws.com/sites/planetary/images/TPS_Logo_3Stack-White.svg">
+</a><p
+class="text-white max-w-sm mx-auto md:mx-0 mt-4 text-lg">Empowering the world's citizens to advance space science and exploration.</p></div><div
+class="w-full sm:w-full md:w-1/2"><ul
+class="text-xl flex justify-center p-0 md:justify-end"><li
+class="list-reset inline-block pr-2 scale10 transition-all">
+<a
+href="https://www.facebook.com/planetarysociety"><span
+class="icon-facebook text-white rounded-full border-2 h-10 w-10 flex justify-center items-center flex-row hover:border-facebook" role="img" aria-label="facebook icon"></span></a></li><li
+class="list-reset inline-block pr-2 scale10 transition-all">
+<a
+href="https://bsky.app/profile/planetarysociety.bsky.social"><span
+class="text-white rounded-full border-2 h-10 w-10 flex justify-center items-center flex-row hover:border-twitter" role="img" aria-label="Bluesky icon"><img
+src="https://planetary.s3.amazonaws.com/sites/planetary/images/bluesky-logo.svg" style="max-width:16px;" alt="Bluesky icon"></span></a></li><li
+class="list-reset inline-block pr-2 scale10 transition-all">
+<a
+href="https://x.com/exploreplanets"><span
+class="text-white rounded-full border-2 h-10 w-10 flex justify-center items-center flex-row hover:border-twitter" role="img" aria-label="x icon"><img
+src="https://planetary.s3.amazonaws.com/sites/planetary/images/x-logo.svg" style="max-width:16px;" alt="X icon"></span></a></li><li
+class="list-reset inline-block pr-2 scale10 transition-all">
+<a
+href="https://www.planetary.org/rss/articles"><span
+class="icon-rss text-white rounded-full border-2 h-10 w-10 flex justify-center items-center flex-row hover:border-green-dark" role="img" aria-label="rss icon"></span></a></li><li
+class="list-reset inline-block pr-2 scale10 transition-all">
+<a
+href="https://www.youtube.com/user/planetarysociety?sub_confirmation=1"><span
+class="icon-youtube text-white rounded-full border-2 h-10 w-10 flex justify-center items-center flex-row hover:border-youtube" role="img" aria-label="youtube icon"></span></a></li><li
+class="list-reset inline-block pr-2 scale10 transition-all">
+<a
+href="https://www.linkedin.com/company/the-planetary-society"><span
+class="icon-linkedin text-white rounded-full border-2 h-10 w-10 flex justify-center items-center flex-row hover:border-linkedin" role="img" aria-label="linkedin icon"></span></a></li><li
+class="list-reset inline-block scale10 transition-all">
+<a
+href="https://www.instagram.com/planetarysociety/"><span
+class="icon-instagram text-white rounded-full border-2 h-10 w-10 flex justify-center items-center flex-row hover:border-instagram" role="img" aria-label="instagram icon"></span></a></li></ul></div></div><div
+class="w-full md:pt-18 text-center md:text-left mx-auto block container-wide"><p
+class="mb-12 font-medium"><a
+class="text-planetary-white text-base border-b hover:border-0 hover:text-planetary-blue-lighter" href="https://www.planetary.org/accountcenter">Account Center</a> • <a
+class="text-planetary-white text-base border-b hover:border-0 hover:text-planetary-blue-lighter" href="https://www.planetary.org/about/contact">Contact Us</a> • <a
+class="text-planetary-white text-base border-b hover:border-0 hover:text-planetary-blue-lighter" href="https://www.planetary.org/privacy-policy">Privacy Policy</a></p>
+<a
+class="inline-block" href="https://www.charitynavigator.org/ein/953423566" target="_blank" rel="noopener noreferrer"><img
+alt="Charity Navigator four stars" src="https://planetary.s3.amazonaws.com/sites/planetary/images/charity-navigator-4star.png" style="height:80px; margin-right: 10px;"></a><a
+class="inline-block" href="https://app.candid.org/profile/8444271/the-planetary-society/" target="_blank" rel="noopener noreferrer"><img
+alt="Guidestar logo" src="https://planetary.s3.amazonaws.com/sites/planetary/images/guidestar.png" style="height: 60px; margin-bottom:10px;"></a><p
+class="text-sm text-white mt-0 mb-0">Give with confidence. The Planetary Society is a registered 501(c)(3) nonprofit organization.</p><p
+class="text-sm text-white mt-0">&copy; 2026 The Planetary Society. All rights reserved.<br><a
+class="text-white border-b hover:border-0 hover:text-planetary-blue-lighter" href="https://www.planetary.org/cookie-declaration">Cookie Declaration</a></p></div></footer>
+<!--[if lt IE 9]> <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script> <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script> <![endif]--> <script>loadjs('https://www.planetary.org/js/lazysizes.min.js','lazysizes');loadjs('https://www.planetary.org/js/jquery-2.2.4.min.js','jquery');loadjs.ready(['jquery'],{success:function(){loadjs('https://planetary.s3.amazonaws.com/sites/planetary/js/before-after-min.js','beforeafter');loadjs('https://www.planetary.org/js/newmenu.min.js?mtime=20221122063825','newmenu');loadjs('https://www.planetary.org/js/videoembeds.js?mtime=20250130120947','vidembeds');}});</script> <script>loadjs.ready(['jquery'],{success:function(){loadjs(['https://www.planetary.org/css/bugmev3.css','https://www.planetary.org/js/jquery.cookie.js','https://www.planetary.org/js/jquery.bugme.js?mtime=20261026153246'],function(){jQuery(document).ready(function(){jQuery('body').bugme();});});}});</script> <script>function windowPopup(url,width,height){var left=(screen.width/2)-(width/2),top=(screen.height/2)-(height/2);window.open(url,"","menubar=no,toolbar=no,resizable=yes,scrollbars=yes,width="+width+",height="+height+",top="+top+",left="+left);}
+var customSocialShares=document.querySelectorAll(".custom-social-share");if(customSocialShares){[].forEach.call(customSocialShares,function(anchor){anchor.addEventListener("click",function(e){e.stopPropagation();e.preventDefault();windowPopup(this.href,500,300);});});}</script> <noscript
+aria-hidden="true"><div
+class="w-full fixed bottom-0 bg-planetary-blue text-white"><p
+class="text-center m-0 p-2 leading-tight">For full functionality of this site it is necessary to enable JavaScript. Here are <a
+class="underline" href="https://www.enable-javascript.com/" target="_blank"> instructions on how to enable JavaScript in your web browser</a>.</p></div>
+</noscript><script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebPage","author":{"@id":"https://www.planetary.org#identity"},"copyrightHolder":{"@id":"https://www.planetary.org#identity"},"copyrightYear":"2018","creator":{"@id":"#creator"},"dateCreated":"2020-05-06T12:20:36-07:00","dateModified":"2020-05-06T12:20:36-07:00","datePublished":"2018-07-04T00:00:00-07:00","description":"As a monster dust storm grew to encircle the Red Planet in June, Opportunity spent most of the month in the dark, presumably sleeping in a hibernation mode as the skies over Endeavour Crater became darker and darker.","headline":"The Mars Exploration Rovers Update: Opportunity Sleeps as Storm Chasers Study Planet-Encircling Dust Cloud","image":{"@type":"ImageObject","url":"https://planetary.s3.amazonaws.com/web/assets/pictures/_1200x630_crop_center-center_82_none/20180802_3-PEDE-single-070118-Cantor.jpg?mtime=1753475259"},"inLanguage":"en-us","mainEntityOfPage":"https://www.planetary.org/articles/06-mer-update-planet-encircling-dust-cloud","name":"The Mars Exploration Rovers Update: Opportunity Sleeps as Storm Chasers Study Planet-Encircling Dust Cloud","publisher":{"@id":"#creator"},"url":"https://www.planetary.org/articles/06-mer-update-planet-encircling-dust-cloud"},{"@id":"https://www.planetary.org#identity","@type":"NGO","address":{"@type":"PostalAddress","addressCountry":"US","addressLocality":"Pasadena","addressRegion":"California","postalCode":"91101","streetAddress":"60 South Los Robles Avenue"},"description":"The Planetary Society is the largest and most effective nonprofit organization that promotes the exploration of space through education, advocacy, and innovative projects.","image":{"@type":"ImageObject","height":"630","url":"https://planetary.s3.amazonaws.com/web/assets/pictures/TPS-logo.png","width":"1200"},"logo":{"@type":"ImageObject","height":"315","url":"https://planetary.s3.amazonaws.com/web/assets/pictures/_600x600_fit_center-center_82_none/TPS-logo.png?mtime=1753477397","width":"600"},"name":"The Planetary Society","sameAs":["https://twitter.com/exploreplanets","https://www.facebook.com/planetarysociety","https://www.youtube.com/user/planetarysociety","https://www.instagram.com/planetarysociety/"],"telephone":"+1-626-793-5100","url":"https://www.planetary.org"},{"@id":"#creator","@type":"NGO","image":{"@type":"ImageObject","height":"630","url":"https://planetary.s3.amazonaws.com/craft/assets/pictures/TPS-logo.png","width":"1200"},"name":"The Planetary Society"},{"@type":"BreadcrumbList","description":"Breadcrumbs list","itemListElement":[{"@type":"ListItem","item":"https://www.planetary.org/","name":"Homepage","position":1},{"@type":"ListItem","item":"https://www.planetary.org/articles","name":"Articles","position":2},{"@type":"ListItem","item":"https://www.planetary.org/articles/06-mer-update-planet-encircling-dust-cloud","name":"The Mars Exploration Rovers Update: Opportunity Sleeps as Storm Chasers Study Planet-Encircling Dust Cloud","position":3}],"name":"Breadcrumbs"}]}</script></body>
+</html><!-- Cached by Blitz on 2026-11-07T23:15:19-08:00 -->

@@ -16,6 +16,8 @@
     "models:lunar": "node scripts/generate-lunar-models.js"
   },
   "dependencies": {
+    "@fontsource-variable/fredoka": "^5.3.0",
+    "@fontsource-variable/nunito": "^5.3.0",
     "three": "0.186.1"
   },
   "devDependencies": {

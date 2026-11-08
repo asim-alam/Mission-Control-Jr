@@ -1,4 +1,5 @@
 import lines from './dialogue-lines.json';
+import {freshClip,speakLine,stopSpeech,pauseSpeech} from './voice-clips.js';
 const voiceFiles=import.meta.glob('./assets/audio/*.ogg',{eager:true,query:'?url',import:'default'});
 
 export class MissionAudio {
@@ -66,15 +67,15 @@ export class MissionAudio {
     if(this.active||!this.queue.length)return;
     const id=this.queue.shift(),line=lines[id];this.active=id;this.last=id;this.onLine(id,line);this.settings();this.effect('radio');
     const done=()=>{if(this.active!==id)return;this.active=null;this.voice=null;clearTimeout(this.fallbackTimer);this.onEnd();this.settings();this.next();};
-    const fallback=()=>{this.fallbackTimer=setTimeout(done,Math.max(5000,line.text.length*65));};
-    const url=voiceFiles[`./assets/audio/${id}.ogg`];
+    const fallback=()=>{speakLine(line,{muted:this.muted,volume:this.volumes.master*this.volumes.voice});this.fallbackTimer=setTimeout(done,Math.max(5000,line.text.length*70));};
+    const url=freshClip('storm',id,line,voiceFiles[`./assets/audio/${id}.ogg`]);
     if(url){
       this.voice=new Audio(url);this.voice.preload='auto';this.settings();this.voice.onended=done;this.voice.onerror=fallback;
       this.voice.play().catch(error=>{if(error?.name!=='AbortError')fallback();});
     } else fallback();
   }
-  skip() {this.voice?.pause();clearTimeout(this.fallbackTimer);this.active=null;this.voice=null;this.onEnd();this.settings();this.next();}
+  skip() {stopSpeech();this.voice?.pause();clearTimeout(this.fallbackTimer);this.active=null;this.voice=null;this.onEnd();this.settings();this.next();}
   stop() {this.queue=[];this.skip();}
-  pause(value) {this.paused=value;if(this.voice){if(value)this.voice.pause();else this.voice.play().catch(()=>{});}}
+  pause(value) {this.paused=value;pauseSpeech(value);if(this.voice){if(value)this.voice.pause();else this.voice.play().catch(()=>{});}}
   replay() {if(this.last)this.say(this.last,true);}
 }

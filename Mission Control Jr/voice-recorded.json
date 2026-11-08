@@ -1,0 +1,53 @@
+{
+ "storm": {
+  "intro": "Jin, welcome to Meridian. A dust front is closing in. Check the habitat terminal, restore our collectors, and get the crew behind a sealed airlock. We are counting on you.",
+  "diagnosis": "Collectors are contaminated, and the reserve battery is dead. I can clean the array, salvage the rover battery, and rebuild the power connection. The clock is running.",
+  "panel-clean": "Collector output is rising. Keep going. Every watt gives our oxygen recycler more time.",
+  "solar-complete": "All three collectors are online. Good work. The rover has a reserve battery in its rear service bay. Recover it before the front arrives.",
+  "battery": "Reserve battery recovered. Taking it to the power junction. The habitat still needs a stable connection.",
+  "install": "Battery seated. The three connectors must read one, two, three. Then I can engage the relay.",
+  "repair": "Habitat power is stable. Return to the diagnostic terminal and choose our reserve allocation. Oxygen first, or keep the science systems running. Your call.",
+  "life": "Oxygen reserves are full. That gives everyone a margin. The front is here. Get to the airlock, Jin.",
+  "research": "Science systems remain powered, but we have limited oxygen. We can get through this if you reach shelter quickly. The front is here.",
+  "storm": "Visibility is collapsing. Stop exterior work and return to the marked airlock. Whatever is unfinished, we deal with it later. Get inside.",
+  "shelter": "You are inside. Water tanks are shielding the sleep area. Use the shelter console to seal the airlock and account for the crew.",
+  "sealed": "Seal confirmed. All four of us are here. Stay calm, watch the reserves, and transmit our status when the front has passed.",
+  "prepared": "Meridian to Earth. All four crew are safe. Collectors restored, power stable, oxygen reserves secure. Today, preparation made the difference. Mission Control Jr. holds.",
+  "survived": "Meridian to Earth. All crew survived, but our reserves are depleted. We must review the unfinished preparations before the next mission. We made it. Barely.",
+  "evacuated": "Meridian to Earth. Initiating emergency evacuation. The outpost cannot sustain life support. We will preserve the mission logs so the next crew can learn from our decisions.",
+  "elena": "A good mission protects its people. Look at the diagnostics, prepare with evidence, and finish one task at a time. I will keep the crew ready for shelter.",
+  "amara": "Our recycler depends on steady power. Clean collectors help now. A working battery helps when sunlight disappears. Restoring both gives us a much better chance.",
+  "luca": "Fatigue makes small mistakes dangerous. Take a breath, check your connectors, and do not trade away the oxygen margin without understanding the cost.",
+  "water": "These water tanks store our drinking supply. Around the sleep area, they also add shielding. Here, every kilogram has more than one job."
+ },
+ "m2": {
+  "brief": "Meridian survived the storm. On sol sixteen, your next qualification is a short rover traverse to the Kestrel outcrop. Bring back useful evidence, and bring both crew home.",
+  "spare": "The habitat power pack stays connected. A separate, charged rover spare is seated and secured.",
+  "checks": "Before departure, check the wheel pin, navigation camera, cargo latch, radio, and brakes. Report what you find before you clear each item.",
+  "ready": "Both suits are ready. Keep enough oxygen and battery for the return, plus a reserve for delays.",
+  "route": "Compare the terrain along each route with the reserve you will need to get home. The shortest line may cost more than it saves.",
+  "departure": "Meridian, Rover Two is rolling with Amara aboard. We will call out changes and reassess the route as we go.",
+  "haze": "That haze is hiding the far markers. Use our heading and nearby landmarks, and slow down so we can stop within what we can see.",
+  "hazard": "There is broken crust and fine soil across the planned approach. Stop on firm ground so we can inspect it before committing the rover.",
+  "slip": "The wheels are spinning without much progress. Release the throttle, inspect the ground, and retreat gently only if the way behind is clear.",
+  "detour": "The soft patch is marked in our log. We will take the firm perimeter and update our return estimate.",
+  "ridge": "At the outcrop, photograph both rock units first. Then move closer to record their boundary with a scale in the image.",
+  "science": "Dark rock below, pale layers above. Location and context are logged; the images alone do not establish how these rocks formed.",
+  "sample": "That loose fragment is optional. Collect it only if we can keep our planned home reserve; the photographs already preserve useful evidence.",
+  "return": "Meridian, Rover Two is returning along the revised route. Our observations and remaining reserves are logged.",
+  "dock": "Rover stopped, parking brake set. Both crew are home at Meridian.",
+  "success": "You changed the plan when the evidence changed, recorded useful science, and returned with a margin. That is a successful traverse.",
+  "abort": "Both crew are back safely. The expedition log will guide our next attempt. We can return for the unfinished science another day.",
+  "margin": "You are home, but below the planned reserve. Review where the extra time and energy went before the next departure.",
+  "suspended": "The simulation is paused. Review the warning, then retry from your last safe checkpoint."
+ },
+ "orbit": {
+  "arrival": "Welcome to Mars, Jin. It is sol eleven. First, dock with Asteria station. Our surface crew needs a reliable relay before a dust storm reaches Meridian. Restore the link, secure your field kit, and prepare the lander. Tomorrow, you will help protect the outpost. Once the storm passes, a rover survey awaits.",
+  "docked": "Docking capture confirmed. Welcome aboard Asteria. Move through the station to the briefing console. Take your time, and check each system before you change it.",
+  "brief": "The surface relay has lost its pointing solution. Review the fault report, identify the antenna branch, and isolate that circuit before the repair. Keep habitat power and life support online. Then realign the antenna and verify the link.",
+  "relay": "The relay test is complete. Meridian has a stable local link again. Messages to Earth still take time to travel. Collect your field kit, then complete the transfer pressure check before boarding the lander.",
+  "lander": "You are aboard the lander. Confirm the guidance solution and inspect propulsion readiness. Both checks must be complete before you commit to descent. Your destination is Meridian outpost.",
+  "descent": "Descent authorized. Meridian is waiting below. Guidance is tracking the landing corridor. Stay with the vehicle through entry and powered descent.",
+  "touchdown": "Touchdown confirmed. Welcome to Meridian, Jin. Your orbital qualification is complete. On sol twelve, an approaching dust storm will test the outpost's power and oxygen systems. Your next mission begins on the surface."
+ }
+}

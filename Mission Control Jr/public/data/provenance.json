@@ -202,5 +202,61 @@
       "lunar-relay"
     ],
     "limitation": "The fictional ridge geometry and relay budget are teaching assumptions rather than a validated radio-link calculation."
+  },
+  {
+    "id": "hirise-jezero-dtm-023524",
+    "basisKind": "observation",
+    "title": "HiRISE digital terrain model of Jezero crater (DTEEC_023524_1985_023379_1985_U01)",
+    "agency": "NASA MRO HiRISE / University of Arizona",
+    "sourceUrl": "https://www.uahirise.org/PDS/DTM/ESP/ORB_023500_023599/ESP_023524_1985_ESP_023379_1985/",
+    "recordId": "DTEEC_023524_1985_023379_1985_U01",
+    "version": "U01",
+    "retrievedAt": "2026-11-08",
+    "location": "Jezero crater, about 18.3°N 77.5°E",
+    "units": {
+      "height": "metres above the Mars areoid"
+    },
+    "qualityNotes": [
+      "1 m/pixel stereo terrain; small-scale stereo noise removed with a 3x3 box filter."
+    ],
+    "rawFile": "data/raw/jezero-dtm/window.json",
+    "sha256": "64bf505636d698684511bdd069d1e9df68a3db320602a1b553102b269d6c2b64",
+    "transforms": [
+      "HTTP range read of 240 lines x 210 samples starting at line 3960, sample 3480.",
+      "3x3 smoothing, sampled every 2 m, heights made relative to the outpost (data/jezero-terrain.js).",
+      "Flattened near the outpost pad; one authored rim mound added for the Rim track."
+    ],
+    "usedBy": [
+      "expedition"
+    ],
+    "limitation": "Real terrain shape for a fictional outpost. The small window is somewhere inside the crater, not a specific rover spot. Routes, hazards and rocks are authored."
+  },
+  {
+    "id": "opportunity-2018-dust-storm-power",
+    "basisKind": "reference",
+    "title": "Opportunity rover solar energy during the June 2018 planet-encircling dust storm",
+    "agency": "NASA JPL MER team (reported by The Planetary Society)",
+    "sourceUrl": "https://www.planetary.org/articles/06-mer-update-planet-encircling-dust-cloud",
+    "recordId": "Sols 5103-5109 (1-8 June 2018)",
+    "version": "1",
+    "retrievedAt": "2026-11-08",
+    "location": "Perseverance Valley, Endeavour crater, Meridiani Planum",
+    "units": {
+      "energy": "watt-hours per sol"
+    },
+    "qualityNotes": [
+      "Values are as quoted in MER team updates; sol 5107 tau was only estimated above 3.0.",
+      "Second update: https://www.planetary.org/articles/06-mer-update-opportunity-dust-storm-sleep"
+    ],
+    "rawFile": "data/raw/opportunity-2018/planetary-encircling.html",
+    "sha256": "f64dfb8d5ede6011e43d78f2f72a4ce4176e9789e66b3e8b49b6a81b9e559b94",
+    "transforms": [
+      "Energy per sol divided by the pre-storm 645 Wh to give a sunlight fraction (data/opportunity-2018.js).",
+      "Five days of real decline are squeezed into the storm chapter's preparation time."
+    ],
+    "usedBy": [
+      "storm"
+    ],
+    "limitation": "Shape of a real power drop, compressed in time. Base power numbers in the game are simplified percentages, not rover engineering data."
   }
 ]

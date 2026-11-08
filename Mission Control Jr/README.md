@@ -38,6 +38,20 @@ See `MISSION-2-WALKTHROUGH.md` for the complete presentation route and
 The latest gameplay/visual implementation is recorded in `MISSION-2-IMPROVEMENTS.md`;
 supplied model provenance and optimizations are documented in `ASSET-REFERENCES.md`.
 
+## Player age: Cadet (7–9) and Explorer (10–12)
+
+The title screen has a **Player age** setting. **Cadet · ages 7–9** is the default. It keeps every choice and trade-off, but gives wider margins: more starting power, slower air loss, shorter work steps, earlier warnings, a longer storm preparation window, and HUD reserves shown as a percentage with a word ("60% · Good") instead of Wh or units. **Explorer · ages 10–12** uses the original authored values. The level is applied when a mission starts. Cadet values live in `simulation/difficulty.js` and are game tuning, not NASA data.
+
+## Written for kids: Pip, plain words, real NASA data
+
+- **Kid text.** All story, dialogue, objectives, tips and debriefs are written for 7–9 readers: short sentences, everyday words ("solar panel", "safe room", "radio"), and a reason for every step.
+- **Pip the helper robot** (`companion.js`, `companion-tips.js`) watches each chapter's current step and gives a one- or two-sentence "why". It has a 🔊 Read button, and clicking Pip hides it. Pip never plays for the child. `test/kid-data.test.js` checks that every objective has a tip.
+- **Real Mars ground in the rover chapter.** The rover chapter's hills come from a NASA HiRISE 3D terrain model of Jezero crater (`DTEEC_023524_1985_023379_1985_U01`). `scripts/fetch-jezero-dtm.py` downloads only a 210 m × 240 m window and writes `data/jezero-terrain.js`. The ground around the outpost pad is flattened.
+- **Real storm power curve.** In the storm chapter, sunlight follows Opportunity's real energy readings from the June 2018 dust storm (645 Wh down to 22 Wh per sol), squeezed into the preparation window (`data/opportunity-2018.js`).
+- Both sources are listed in `public/data/provenance.json` with hashes of the archived raw files.
+- **Voice clips.** A recorded clip plays only while its text matches `voice-recorded.json`. Rewritten lines fall back to the browser's speech voice. The rewritten orbit, storm and rover lines currently use that fallback. To re-record, run `scripts/generate-voices-*.py` (needs Kokoro) and then `node scripts/mark-voices-recorded.mjs storm|m2|orbit`.
+- **Playtesting.** See `PLAYTEST-KIT.md` for testing with 3–5 kids.
+
 ## Run from Windows Terminal / PowerShell
 
 ```powershell

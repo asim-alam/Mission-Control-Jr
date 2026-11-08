@@ -1,3 +1,4 @@
+import {startPip} from './companion.js';startPip('storm');
 import * as THREE from 'three';
 const sampleMode=new URLSearchParams(location.search).get('sampler')==='1';
 import {connectChapter,completeChapter,goToChapter,openJourney,journeyPaused} from './campaign-bridge.js';
@@ -6,6 +7,7 @@ attachArrivalContext();
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DEMO_ASSETS } from './demo-assets.js';
 import { createMission, act, advance, objective, PREPARATION_SECONDS } from './mission.js';
+import { chapterTuning } from './simulation/difficulty.js';
 import { Player } from './player.js';
 import { MissionAudio } from './demo-audio.js';
 import lines from './dialogue-lines.json';
@@ -14,7 +16,7 @@ import { installHiddenScrollUI } from './scroll-ui.js';
 installHiddenScrollUI();
 
 const $=id=>document.getElementById(id);
-let mission=createMission(),ready=false,selected=null,job=null,transition=null,clock=0,toastTimer,endingShown=false;
+let mission=createMission(chapterTuning('storm')),ready=false,selected=null,job=null,transition=null,clock=0,toastTimer,endingShown=false;
 const journal=[],stations=[],mixers=[],crew=[],panels=[];
 let panelCollapseTimer;
 const renderer=new THREE.WebGLRenderer({antialias:true});
@@ -88,12 +90,12 @@ function closeDialog() {$('dialog').hidden=true;$('hud').inert=false;player.enab
 function togglePause() {
   if(!mission.started||mission.ended)return;
   if(!$('dialog').hidden){closeDialog();return;}
-  showDialog('Take a breath.',`<p>The mission clock pauses here. Your preparations are preserved.</p>
+  showDialog('Paused',`<p>The clock is stopped. Take your time. Nothing changes while this is open.</p>
     ${Object.entries(audio.volumes).map(([name,value])=>`<label>${name[0].toUpperCase()+name.slice(1)} volume <input aria-label="${name} volume" type="range" min="0" max="1" step="0.05" value="${value}" data-volume="${name}"></label>`).join('')}
     <label><span>Mute all audio</span><input id="master-mute" type="checkbox" ${audio.muted?'checked':''}></label>
     <label><span>Reduce motion and particles</span><input id="reduce-motion" type="checkbox" ${reducedMotion?'checked':''}></label>
-    <p><strong>Controls:</strong> WASD / arrows to move, drag to look, E to interact. V or the View button switches first person / third person. T opens the checklist and walk-to menu. F2 keeps Power and the storm timer; F3 clears the HUD for a photo. Press ? for controls. Escape pauses; Mouse look captures the pointer.</p>`,[
-    {label:'Resume mission',run:closeDialog},{label:'Restart mission',run:()=>startMission()}]);
+    <p><strong>How to play:</strong> WASD or arrow keys to walk. Drag to look around. Press E to use things. V changes the camera. T shows your to-do list. Escape pauses.</p>`,[
+    {label:'Keep playing',run:closeDialog},{label:'Start over',run:()=>startMission()}]);
   $('dialog-body').querySelectorAll('[data-volume]').forEach(input=>input.oninput=()=>audio.settings({[input.dataset.volume]:Number(input.value)}));
   $('master-mute').onchange=e=>audio.setMuted(e.target.checked);$('reduce-motion').onchange=e=>{reducedMotion=e.target.checked;};
 }
@@ -112,15 +114,15 @@ $('mission-panel').addEventListener('pointermove',()=>{if($('mission-panel').cla
 $('mission-panel').addEventListener('focusin',()=>{if($('mission-panel').classList.contains('expanded'))scheduleTasksCollapse();});
 $('view').onclick=()=>{if(player.enabled)player.toggleView();};
 $('skip-voice').onclick=()=>audio.skip();$('replay-voice').onclick=()=>audio.replay();
-$('journal').onclick=()=>showDialog('Mission journal',`<p>Current objective: <strong>${objective(mission)}</strong></p>${mission.log.map(text=>`<p>• ${text}</p>`).join('')}${journal.map(entry=>`<div class="journal-entry"><b>${entry.speaker}</b><p>${entry.text}</p></div>`).join('')}`,[{label:'Return to mission',run:closeDialog}], 'EXPEDITION RECORD');
+$('journal').onclick=()=>showDialog('Mission journal',`<p>Your next job: <strong>${objective(mission)}</strong></p>${mission.log.map(text=>`<p>• ${text}</p>`).join('')}${journal.map(entry=>`<div class="journal-entry"><b>${entry.speaker}</b><p>${entry.text}</p></div>`).join('')}`,[{label:'Back to the mission',run:closeDialog}], 'WHAT HAPPENED SO FAR');
 addEventListener('keydown',e=>{if(e.code==='KeyJ'&&player.enabled)$('journal').click();if(e.code==='KeyT'&&player.enabled)toggleTasks();});
 installHudPresentation({hud:$('hud'),toolbar:document.querySelector('#topbar .toolbar'),onHelp:()=>{if(player.enabled)togglePause();},onJourney:openJourney});
 
 function navigateTo(s) {
   if(!player.enabled||job)return;
   selected=s;
-  if(player.navigate(s.stand,s.point))toast(`Walking to ${s.title}. WASD cancels guided walking.`);
-  else toast('That route is obstructed. Walk around the equipment using WASD.');
+  if(player.navigate(s.stand,s.point))toast(`Walking to ${s.title}. Press WASD to walk yourself.`);
+  else toast('Something is in the way. Walk around it with WASD.');
   renderNavigation();renderInteraction();
 }
 function renderNavigation() {
@@ -151,44 +153,44 @@ function perform(type,value) {
 }
 function startCleaning(index) {
   if(job)return;
-  if(!mission.diagnosed){toast('Read the habitat diagnostics first.');return;}
+  if(!mission.diagnosed){toast('Check the computer inside first.');return;}
   if(mission.cleaned[index])return;
   job={station:selected,index,time:0,duration:2.5};audio.effect('brush');renderInteraction();
 }
 function interact() {
   if(!player.enabled||job)return;
   const s=nearby(selected)?selected:stations.filter(s=>s.parent.visible&&nearby(s)).sort((a,b)=>distance(a)-distance(b))[0]||selected;
-  if(!s){toast('Approach a marked location to interact.');return;}
+  if(!s){toast('Walk up to a glowing marker, then press E.');return;}
   selected=s;
-  if(!nearby(s)){toast(`Move closer to ${s.title}, or use its navigation button.`);return;}
+  if(!nearby(s)){toast(`Get closer to ${s.title}. Or tap its button to walk there.`);return;}
   if(s.id==='terminal') {
     if(!mission.diagnosed)perform('diagnose');
     else if(mission.repaired&&mission.cleaned.every(Boolean)&&!mission.allocation)chooseAllocation();
-    else toast(mission.allocation?'Reserves allocated. Return to shelter.':'Restore the solar array, then repair the power junction.');
+    else toast(mission.allocation?'Choice made! Now go inside.':'Clean the panels, then fix the power box.');
   } else if(s.id.startsWith('solar'))startCleaning(Number(s.id.slice(-1)));
   else if(s.id==='rover')perform(mission.bayOpen?'battery':'openBay');
-  else if(s.id==='junction'){if(!mission.installed)perform('install');else if(!mission.repaired)toast('Set the three connectors to 1 / 2 / 3, then engage the relay.');else toast('Power bus is stable.');}
+  else if(s.id==='junction'){if(!mission.installed)perform('install');else if(!mission.repaired)toast('Turn the three plugs to 1, 2, 3. Then connect.');else toast('The power is working.');}
   else if(s.id==='airlock') {
     if(!mission.diagnosed)perform('enter');
-    else if(!mission.repaired||!mission.allocation)showDialog('Shelter before preparation?',`<p>You can bring the crew inside now, but unfinished repairs and missing reserves will affect the outcome.</p>`,[{label:'Keep preparing',run:closeDialog},{label:'Enter emergency shelter',run:()=>{closeDialog();perform('enter');}}]);
+    else if(!mission.repaired||!mission.allocation)showDialog('Go inside now?',`<p>You can go in now. But some jobs are not done yet. That means less power and air during the storm.</p>`,[{label:'Keep getting ready',run:closeDialog},{label:'Go inside now',run:()=>{closeDialog();perform('enter');}}]);
     else perform('enter');
   } else if(['elena','amara','luca'].includes(s.id)) {
     perform('talk',s.id);
-    if(!mission.responded.includes(s.id))showDialog(s.title,`<p>${lines[s.id].text}</p><p>How will you respond?</p>`,[
-      {label:'We can do this together',run:()=>{closeDialog();perform('respond',{crew:s.id,choice:'encourage'});}},
-      {label:'Follow the emergency procedure',run:()=>{closeDialog();perform('respond',{crew:s.id,choice:'procedure'});}}
+    if(!mission.responded.includes(s.id))showDialog(s.title,`<p>${lines[s.id].text}</p><p>What do you say?</p>`,[
+      {label:'We can do this together!',run:()=>{closeDialog();perform('respond',{crew:s.id,choice:'encourage'});}},
+      {label:'Let’s follow the safety steps',run:()=>{closeDialog();perform('respond',{crew:s.id,choice:'procedure'});}}
     ],'CREW CHECK-IN');
   }
   else if(s.id==='room-console')perform(mission.sealed?'report':'seal');
-  else if(s.id==='water'){audio.say('water');toast('Drinking supply and shielding for the sleep area.');}
+  else if(s.id==='water'){audio.say('water');toast('Drinking water. It also protects the beds from radiation.');}
 }
 const distance=s=>Math.hypot(player.position.x-s.point.x,player.position.z-s.point.z);
 function chooseAllocation() {
   // Caption-only decision context. Existing recorded dialogue keys are left untouched to keep voice/subtitle sync.
-  showDialog('What gets the reserve power?',`<p>The repaired battery can support oxygen reserves or keep the science systems running through the front.</p><p><strong>Amara:</strong> “The hydroponics and soil experiment needs power to keep its measurements going. I am also tracking a pale fungus; we will study it before anyone considers it food.”</p><p><strong>Luca:</strong> “Air reserve protects all four of us if the storm lasts longer than forecast.”</p><p><strong>Life support:</strong> add oxygen reserve and protect the crew's margin. <strong>Science:</strong> keep the experiment running with a thinner oxygen reserve. Either choice has a cost.</p>`,[
-    {label:'Prioritize life support',run:()=>{closeDialog();perform('allocate','life');}},
-    {label:'Keep science systems running',run:()=>{closeDialog();perform('allocate','research');}},
-    {label:'Decide later',run:closeDialog}], 'MISSION DECISION');
+  showDialog('Where should the battery power go?',`<p>The battery has power for one big job. You choose!</p><p><strong>Amara:</strong> “My plant experiment needs power. If it stops, we lose our notes.”</p><p><strong>Luca:</strong> “Extra air keeps all four of us safe, even if the storm lasts a long time.”</p><p><strong>Extra air:</strong> everyone is safer. <strong>Science:</strong> the experiment keeps going, but we have less spare air. Both choices have a cost.</p>`,[
+    {label:'Save extra air',run:()=>{closeDialog();perform('allocate','life');}},
+    {label:'Keep the experiment running',run:()=>{closeDialog();perform('allocate','research');}},
+    {label:'Decide later',run:closeDialog}], 'YOUR CHOICE');
 }
 let lastInteractionKey='';
 function renderInteraction(force=false) {
@@ -199,37 +201,37 @@ function renderInteraction(force=false) {
   let description='',buttons=[];
   const action=(label,fn,extra=false)=>buttons.push(button(label,fn,!near||!!job||extra));
   if(s.id==='terminal') {
-    description=!mission.diagnosed?'Inspect the power and oxygen fault report.':mission.allocation?'Reserve plan confirmed. The crew is ready for shelter.':'Restore the collectors and battery, then choose reserve power priorities.';
-    action(!mission.diagnosed?'Run diagnostics':'Allocate reserves',interact,mission.diagnosed&&(!mission.repaired||!mission.cleaned.every(Boolean)||!!mission.allocation));
+    description=!mission.diagnosed?'The computer shows what is broken.':mission.allocation?'Choice made. The crew is ready to go inside.':'Clean the panels and fix the battery. Then make your choice here.';
+    action(!mission.diagnosed?'Check the computer':'Air or science?',interact,mission.diagnosed&&(!mission.repaired||!mission.cleaned.every(Boolean)||!!mission.allocation));
   } else if(s.id.startsWith('solar')) {
-    const i=Number(s.id.slice(-1));description=mission.cleaned[i]?'Collector restored. Tracking the sun and supplying power.':'Dust coats the cells. Run the EVA brush to restore output.';
-    action(mission.cleaned[i]?'Collector online':job?'Cleaning…':'Clean collector',interact,mission.cleaned[i]);
+    const i=Number(s.id.slice(-1));description=mission.cleaned[i]?'Clean! This panel is making power from sunlight.':'Dust is blocking the sunlight. Brush it off!';
+    action(mission.cleaned[i]?'Panel is clean':job?'Cleaning…':'Clean the panel',interact,mission.cleaned[i]);
   } else if(s.id==='rover') {
-    description=mission.installed||mission.battery?'Reserve battery recovered.':'A reserve battery is mounted in the rear service bay.';
-    action(mission.bayOpen?'Recover battery':'Open service bay',interact,mission.battery||mission.installed);
+    description=mission.installed||mission.battery?'You have the spare battery.':'The spare battery is in the back of the rover.';
+    action(mission.bayOpen?'Take the battery':'Open the hatch',interact,mission.battery||mission.installed);
   } else if(s.id==='junction') {
-    description=!mission.installed?'Fit the rover battery, then align the relay connectors.':mission.repaired?'Stable connection. Habitat systems are online.':'Turn the connectors to 1 / 2 / 3, then engage the relay.';
-    if(!mission.installed)action('Install reserve battery',interact);
+    description=!mission.installed?'Put the battery in. Then turn the plugs.':mission.repaired?'The power is working!':'Click each plug until they show 1, 2, 3. Then press connect.';
+    if(!mission.installed)action('Put the battery in',interact);
     else if(!mission.repaired) {
-      for(let i=0;i<3;i++)action(`Connector ${i+1}: ${mission.connector[i]}`,()=>perform('rotate',i));
-      action('Engage relay',()=>perform('connect'));
-    }else action('Power restored',()=>{},true);
-  } else if(s.id==='airlock'){description='Enter Meridian and secure the crew. Unfinished preparations will affect your result.';action('Enter shelter',interact);}
-  else if(s.id==='room-console'){description=mission.sealed?'Crew accounted for. Transmit our status once the front passes.':'Confirm all four crew and seal the airlock.';action(mission.sealed?'Transmit status':'Seal airlock',interact,mission.sealed&&mission.insideAge<5);}
-  else if(s.id==='water'){description='Water reserves protect the sleeping area and supply the crew.';action('Inspect water shielding',interact);}
-  else {description='Check in with the crew. Their advice can help you prepare.';action('Talk to crew',interact);}
+      for(let i=0;i<3;i++)action(`Plug ${i+1} shows ${mission.connector[i]}`,()=>perform('rotate',i));
+      action('Connect',()=>perform('connect'));
+    }else action('Power is on',()=>{},true);
+  } else if(s.id==='airlock'){description='Go inside the base. Jobs you skip will make the storm harder.';action('Go inside',interact);}
+  else if(s.id==='room-console'){description=mission.sealed?'Everyone is here. Send a message home when the storm passes.':'Count the crew and close the door tight.';action(mission.sealed?'Send message home':'Close the door',interact,mission.sealed&&mission.insideAge<5);}
+  else if(s.id==='water'){description='Our drinking water. It also blocks radiation near the beds.';action('Look at the water',interact);}
+  else {description='Talk with your crew. They have good tips!';action('Talk',interact);}
   $('target-description').textContent=description;$('action-buttons').replaceChildren(...buttons);
-  $('job-track').hidden=!job;$('action-help').textContent=!near?'Walk closer, or choose this location in navigation.':job?'Brush running. Stay near the collector.':'Press E or use the controls above.';
+  $('job-track').hidden=!job;$('action-help').textContent=!near?'Walk closer, or tap this place in the walk-to list.':job?'Brushing… Stay next to the panel.':'Press E or tap a button above.';
 }
 function renderMission() {
   $('objective').textContent=objective(mission);
-  const time=Math.max(0,Math.ceil(PREPARATION_SECONDS-mission.elapsed));
-  $('forecast').textContent=mission.inside?(mission.sealed?'Airlock secure · storm passage in progress':'Shelter reached · airlock unsealed'):mission.storm?'DUST FRONT ARRIVED · Return to shelter':`Dust front ETA ${Math.floor(time/60)}:${String(time%60).padStart(2,'0')} · mission time pauses in menus`;
+  const time=Math.max(0,Math.ceil((mission.prepSeconds??PREPARATION_SECONDS)-mission.elapsed));
+  const sun=`Sunlight ${Math.round((mission.sunlight??1)*100)}%`;$('forecast').textContent=mission.inside?(mission.sealed?'Door sealed · waiting for the storm to pass':'You are inside · close the door'):mission.storm?`THE STORM IS HERE · Go inside! · ${sun}`:`Storm arrives in ${Math.floor(time/60)}:${String(time%60).padStart(2,'0')} · ${sun}`;
   $('minimal-forecast').textContent=$('forecast').textContent;
-  const tasks=[['Diagnostics',mission.diagnosed],['Collectors '+mission.cleaned.filter(Boolean).length+'/3',mission.cleaned.every(Boolean)],['Reserve battery',mission.battery||mission.installed],['Power connection',mission.repaired],['Reserve allocation',!!mission.allocation],['Airlock secured',mission.sealed]];
-  const firstOpen=tasks.findIndex(([,done])=>!done);$('mission-step').textContent=`OBJECTIVE ${firstOpen<0?6:firstOpen+1} OF 6`;
+  const tasks=[['Check computer',mission.diagnosed],['Clean panels '+mission.cleaned.filter(Boolean).length+'/3',mission.cleaned.every(Boolean)],['Get battery',mission.battery||mission.installed],['Fix power',mission.repaired],['Air or science?',!!mission.allocation],['Close the door',mission.sealed]];
+  const firstOpen=tasks.findIndex(([,done])=>!done);$('mission-step').textContent=`JOB ${firstOpen<0?6:firstOpen+1} OF 6`;
   const nextId=mission.inside?'room-console':!mission.diagnosed?'terminal':mission.cleaned.some(done=>!done)?`solar${mission.cleaned.findIndex(done=>!done)}`:!mission.battery&&!mission.installed?'rover':!mission.installed||!mission.repaired?'junction':!mission.allocation?'terminal':'airlock';
-  const nextTarget=stations.find(s=>s.id===nextId);$('next-action').textContent=mission.ended?'Mission record complete':nextTarget?`${nextTarget.title} · ${Math.round(distance(nextTarget))} m · E interact`:'Return to shelter';
+  const nextTarget=stations.find(s=>s.id===nextId);$('next-action').textContent=mission.ended?'Mission finished!':nextTarget?`${nextTarget.title} · ${Math.round(distance(nextTarget))} m · press E`:'Go inside';
   const completeCount=tasks.filter(([,done])=>done).length;$('mission-panel').style.setProperty('--mission-progress',`${completeCount/tasks.length*100}%`);
   const vital=(icon,label,value,essential=false)=>{const n=Math.round(value),state=n<20?'danger':n<40?'warning':'healthy';return `<span class="vital-chip ${essential?'vital-essential':''}" data-state="${state}" role="img" aria-label="${label} ${n} percent" title="${label} ${n}%"><span class="vital-icon" aria-hidden="true">${icon}</span><b>${n}%</b><i style="width:${n}%"></i></span>`;};
   $('vitals').innerHTML=vital('⚡','Power',mission.resources.power,true)+vital('O₂','Oxygen',mission.resources.oxygen)+vital('♡','Morale',mission.resources.morale)+'<span class="vital-chip" role="img" aria-label="Four crew members safe" title="Crew 4 of 4"><span class="vital-icon" aria-hidden="true">♙</span><b>4/4</b><i style="width:100%"></i></span>';
@@ -237,7 +239,7 @@ function renderMission() {
   $('inventory').textContent=mission.battery?'INVENTORY / RESERVE BATTERY + EVA BRUSH':mission.installed?'EQUIPPED / EVA BRUSH · BATTERY INSTALLED':'EQUIPPED / EVA CLEANING BRUSH';
 }
 function enterShelter() {
-  job=null;transition={elapsed:0};player.release();player.enabled=false;audio.effect('door');toast('Airlock cycling. Entering Meridian…');
+  job=null;transition={elapsed:0};player.release();player.enabled=false;audio.effect('door');toast('The door is opening. Going inside…');
 }
 function completeEntry() {
   exterior.visible=false;interior.visible=true;scene.fog.near=80;scene.fog.far=130;
@@ -255,35 +257,35 @@ function updateVisuals() {
   habitatLamp.intensity=mission.repaired?12:1.5;
 }
 function startMission() {
-  if(!ready)return;closeDialog();audio.stop();audio.start();mission=createMission();act(mission,'start');if(sampleMode){act(mission,'diagnose');for(let i=0;i<3;i++)act(mission,'clean',i);for(const id of ['openBay','battery','install'])act(mission,id);for(let i=0;i<3;i++)for(let turn=0;turn<=i;turn++)act(mission,'rotate',i);act(mission,'connect');}
+  if(!ready)return;closeDialog();audio.stop();audio.start();mission=createMission(chapterTuning('storm'));act(mission,'start');if(sampleMode){act(mission,'diagnose');for(let i=0;i<3;i++)act(mission,'clean',i);for(const id of ['openBay','battery','install'])act(mission,id);for(let i=0;i<3;i++)for(let turn=0;turn<=i;turn++)act(mission,'rotate',i);act(mission,'connect');}
   journal.length=0;endingShown=false;job=null;transition=null;selected=null;lastInteractionKey='';alarmClock=0;brushClock=0;player.reset();player.bounds={minX:-18,maxX:18,minZ:-18,maxZ:18};player.obstacles=outsideObstacles;
   exterior.visible=true;interior.visible=false;$('landing').hidden=true;$('hud').hidden=false;
   toggleTasks(false);$('controls').classList.remove('controls-faded');setTimeout(()=>{if(mission.started)$('controls').classList.add('controls-faded');},30000);
   airlock.getObjectByName('door_left').position.x=-.5;airlock.getObjectByName('door_right').position.x=.5;
   for(const c of crew){c.model.position.copy(c.base);c.model.rotation.y=0;c.station.point.x=c.base.x;c.station.point.z=c.base.z;}
   renderView();renderNavigation();renderMission();renderInteraction(true);updateVisuals();
-  if(sampleMode){showDialog('Sampler: reserve choice',`<p>The collectors and battery are already restored in this practice snapshot. Walk to the diagnostic terminal and choose whether reserve power supports life support or the experiment, then shelter the crew.</p><p>Use WASD or arrows to walk, drag to look, and E to interact. The checklist can guide you. This sampler does not mark campaign progress.</p>`,[{label:'Start practice',run:closeDialog}],'MISSION SAMPLER / PRACTICE');return;}
+  if(sampleMode){showDialog('Practice: the big choice',`<p>The panels and battery are already fixed here. Walk to the computer. Choose: extra air or the experiment? Then bring the crew inside.</p><p>WASD or arrows to walk. Drag to look. E to use things. Practice does not change your journey.</p>`,[{label:'Start practice',run:closeDialog}],'PRACTICE');return;}
   audio.say('intro');
-  showDialog('Engineer, you have the outpost.',`<p>You are <strong>Jin Park</strong>. A dust front is approaching Meridian. Keep the four-person crew safe.</p><p>Start at the <strong>habitat diagnostic terminal</strong>, then restore solar output, recover the rover battery, and reconnect power.</p><p><strong>WASD / arrows:</strong> walk. <strong>Drag:</strong> look around. <strong>E:</strong> interact. <strong>V / View button:</strong> switch between first person and third person to see your astronaut. Navigation buttons guide you to a location; you still operate the equipment yourself.</p><p>The six-minute preparation clock starts after diagnostics. It pauses in menus. You can shelter early, but your choices affect the result.</p>`,[{label:'Start EVA',run:closeDialog}], 'SOL 12 / MISSION BRIEF');
+  showDialog('A dust storm is coming!',`<p>You are <strong>Jin</strong>, the base fixer. Four friends live here at Meridian on Mars. A giant dust storm is on its way. Help keep everyone safe!</p><p><strong>Your jobs:</strong> check the computer, clean the solar panels, get the spare battery, and fix the power.</p><p><strong>WASD or arrows:</strong> walk. <strong>Drag:</strong> look around. <strong>E:</strong> use things. <strong>V:</strong> change the camera. The buttons can walk you to each place.</p><p>The storm clock starts after you check the computer. It stops while you read menus. Pip the robot will help you.</p>`,[{label:'Let’s go!',run:closeDialog}], 'MARS DAY 12');
 }
 function showEnding() {
   if(endingShown)return;endingShown=true;job=null;toolObject.visible=false;player.release();audio.say(mission.outcome,true);
   const prepared=mission.outcome==='prepared',evacuated=mission.outcome==='evacuated';completeChapter('storm',{outcome:mission.outcome,attemptCompleted:true,success:mission.outcome!=='evacuated',mastered:mission.outcome==='prepared',carry:{stormOutcome:mission.outcome,allocation:mission.allocation||'none',batteryRecovered:mission.batteryRecovered,batteryInstalled:mission.batteryInstalled,experimentData:mission.experimentData,cleanedCollectors:mission.cleaned.filter(Boolean).length}});
   // The journal records cause and effect in player language; no game values or outcome rules change here.
-  journal.unshift({speaker:'SYSTEM NOTE',text:`Cleaned ${mission.cleaned.filter(Boolean).length} collectors increased available solar input. Dust later reduced input and power fell to ${Math.round(mission.resources.power)}%.`});
-  journal.unshift({speaker:'DECISION RECORD',text:`${mission.allocation==='life'?'Reserve power went to life support':mission.allocation==='research'?'Reserve power went to Amara’s experiment':'No reserve allocation was made'}; oxygen ended at ${Math.round(mission.resources.oxygen)}%.`});
+  journal.unshift({speaker:'WHAT HAPPENED',text:`You cleaned ${mission.cleaned.filter(Boolean).length} of 3 panels. Then the storm blocked the Sun, and power fell to ${Math.round(mission.resources.power)}%.`});
+  journal.unshift({speaker:'YOUR CHOICE',text:`${mission.allocation==='life'?'You saved extra air':mission.allocation==='research'?'You kept Amara’s experiment running':'You did not choose yet'}. Air ended at ${Math.round(mission.resources.oxygen)}%.`});
   const detailsMode=(()=>{try{return localStorage.getItem('mission-control-jr.learning-mode.v1')==='details';}catch{return false;}})();
-  showDialog(prepared?'Meridian holds.':evacuated?'Emergency evacuation.':'Everyone made it. Barely.',
-    `<p>${prepared?'All four astronauts are safe. Your repairs and life-support reserves protected the outpost.':evacuated?'The crew activates the emergency evacuation plan. Unsecured life support makes Meridian unsafe.':'All four astronauts reached shelter, but incomplete preparation or reduced oxygen reserves left little margin.'}</p>
-    <div class="report-row"><span>Solar collectors</span><b>${mission.cleaned.filter(Boolean).length} / 3 restored</b></div>
-    <div class="report-row"><span>Battery and relay</span><b>${mission.repaired?'Stable':'Incomplete'}</b></div>
-    <div class="report-row"><span>Reserve priority</span><b>${mission.allocation==='life'?'Life support':mission.allocation==='research'?'Science systems':'Unallocated'}</b></div>
-    <div class="report-row"><span>Airlock</span><b>${mission.sealed?'Sealed':'Unsecured'}</b></div>
-    <section class="learning-summary"><h3>Decision → System → Crew → Mission</h3><p><b>Decision:</b> ${mission.allocation==='life'?'Life support received reserve power.':mission.allocation==='research'?`The experiment received reserve power and recorded ${Math.round(mission.experimentData)} units of observations.`:'No reserve priority was selected.'}</p><p><b>System:</b> cleaning restored ${mission.cleaned.filter(Boolean).length} / 3 collectors. ${detailsMode?`Power: ${Math.round(mission.resources.power)}%. Oxygen: ${Math.round(mission.resources.oxygen)}%.`:'Less sunlight means less power to share.'}</p><p><b>Crew:</b> ${prepared?'all four have a strong shelter margin.':evacuated?'the crew evacuated when the outpost was no longer safe.':'the crew sheltered with less margin.'}</p><p><b>Mission:</b> ${mission.batteryInstalled?'The recovered battery was installed at the habitat.':mission.batteryRecovered?'The spare battery was recovered but not installed.':'The rover battery was not recovered.'} ${prepared?'Rover Two starts at full charge.':'The recovery traverse starts with reduced charge and a larger return reserve.'}</p></section><p><strong>Try another choice:</strong> power sent to life support can maintain more air; power sent to science can preserve observations.</p><p><strong>Real NASA connection:</strong> dust storms can lower solar input, and rover teams conserve energy when the array output falls. <a href="https://www.jpl.nasa.gov/news/nasa-mars-rovers-braving-severe-dust-storms/" target="_blank" rel="noopener">NASA/JPL dust-storm operations</a></p>`,[
-    {label:`Continue · ${evacuated?'Recovery traverse':'Tracks in the Dust'}`,run:()=>goToChapter('rover')},
-    {label:'Replay mission',run:startMission},{label:'Thirty-sol campaign',run:()=>goToChapter('extended')},
-    {label:'Expedition journey',run:openJourney}
-  ], 'EXPEDITION DEBRIEF');
+  showDialog(prepared?'You did it! Everyone is safe.':evacuated?'Time to leave the base.':'Everyone is safe, just barely!',
+    `<p>${prepared?'All four friends are safe. Your repairs and the extra air protected the base.':evacuated?'The air machine did not have enough power. So the crew left the base to stay safe. You can try again!':'All four friends got inside. But some jobs were not done, so supplies got very low.'}</p>
+    <div class="report-row"><span>Solar panels</span><b>${mission.cleaned.filter(Boolean).length} of 3 clean</b></div>
+    <div class="report-row"><span>Battery and power</span><b>${mission.repaired?'Working':'Not finished'}</b></div>
+    <div class="report-row"><span>Your choice</span><b>${mission.allocation==='life'?'Extra air':mission.allocation==='research'?'Science':'Not chosen'}</b></div>
+    <div class="report-row"><span>Door</span><b>${mission.sealed?'Closed tight':'Not closed'}</b></div>
+    <section class="learning-summary"><h3>What you chose → what happened</h3><p><b>You chose:</b> ${mission.allocation==='life'?'extra air.':mission.allocation==='research'?`science. The experiment wrote ${Math.round(mission.experimentData)} new notes.`:'nothing yet.'}</p><p><b>The machines:</b> you cleaned ${mission.cleaned.filter(Boolean).length} of 3 panels. ${detailsMode?`Power ${Math.round(mission.resources.power)}%. Air ${Math.round(mission.resources.oxygen)}%.`:'Less sunlight means less power to share.'}</p><p><b>The crew:</b> ${prepared?'everyone has lots of spare air.':evacuated?'everyone left to stay safe.':'everyone is safe, but spare air is low.'}</p><p><b>Next mission:</b> ${prepared?'the rover starts fully charged.':'the rover starts with less charge.'}</p></section><p><strong>Try it again?</strong> Extra air keeps people safer. Science saves the experiment. What would you pick next time?</p><p><strong>This really happened!</strong> In June 2018, a huge dust storm covered all of Mars. NASA’s rover Opportunity used sunlight for power. In one week its power fell from 645 to just 22 watt-hours. That is like going from a bright day to a dark night. The storm in this game follows Opportunity’s real power drop. <a href="https://www.jpl.nasa.gov/news/nasa-mars-rovers-braving-severe-dust-storms/" target="_blank" rel="noopener">Read about it at NASA/JPL</a></p>`,[
+    {label:`Next mission · ${evacuated?'Rover rescue drive':'Tracks in the Dust'}`,run:()=>goToChapter('rover')},
+    {label:'Play again',run:startMission},{label:'30-day Mars base game',run:()=>goToChapter('extended')},
+    {label:'Back to the mission map',run:openJourney}
+  ], 'HOW DID IT GO?');
   audio.pause(false);
 }
 $('begin').onclick=startMission;
@@ -307,28 +309,28 @@ try {
   cloneAsset(assets.habitat,exterior,[0,0,0],.12,1);
   rover=cloneAsset(assets.rover,exterior,[9,0,-5],-.35,1.1);
   const terminal=cloneAsset(assets.terminal,exterior,[-1.5,0,4.7]);
-  station('terminal','Habitat diagnostics','CONTROL TERMINAL',terminal,{x:-1.5,z:4.7},{x:-1.5,z:6.7});
+  station('terminal','Base computer','COMPUTER',terminal,{x:-1.5,z:4.7},{x:-1.5,z:6.7});
   for(let i=0;i<3;i++) {
     const x=-11+i*3,model=cloneAsset(assets.solar,exterior,[x,0,4.8]);
     const hinge=model.getObjectByName('panel_hinge');hinge.rotation.x=.35;
     const dirt=new THREE.Mesh(new THREE.PlaneGeometry(2.68,1.56),new THREE.MeshStandardMaterial({color:0x925b38,transparent:true,opacity:.72,roughness:1,depthWrite:false}));
     dirt.rotation.x=-Math.PI/2;dirt.position.y=.079;hinge.add(dirt);panels.push({model,hinge,dust:dirt});
-    station(`solar${i}`,`Solar collector ${i+1}`,'SOLAR ARRAY',model,{x,z:4.8},{x,z:7.1});
+    station(`solar${i}`,`Solar panel ${i+1}`,'SOLAR PANEL',model,{x,z:4.8},{x,z:7.1});
   }
   const bay=new THREE.Group();bay.position.set(9,.75,-2.8);exterior.add(bay);
   roverLid=new THREE.Mesh(new THREE.BoxGeometry(.76,.13,.48),new THREE.MeshStandardMaterial({color:0xbac7cb,metalness:.6,roughness:.4}));roverLid.position.set(0,.6,0);bay.add(roverLid);
   batteryObject=cloneAsset(assets.battery,bay,[0,0,0]);batteryObject.visible=false;
-  station('rover','Rover service bay','BATTERY SALVAGE',bay,{x:9,z:-2.8},{x:9,z:-.65});
+  station('rover','Rover hatch','SPARE BATTERY',bay,{x:9,z:-2.8},{x:9,z:-.65});
   rover.userData.stationId='rover';
   const junction=cloneAsset(assets.junction,exterior,[5,0,5]);
-  station('junction','Power junction','POWER RELAY',junction,{x:5,z:5},{x:5,z:7.1});
+  station('junction','Power box','POWER BOX',junction,{x:5,z:5},{x:5,z:7.1});
   for(let i=0;i<3;i++) {
     const dial=new THREE.Mesh(new THREE.BoxGeometry(.024,.106,.021),new THREE.MeshStandardMaterial({color:0x9de3ce,emissive:0x3d786b}));
     dial.position.set(-.23+i*.23,.79,.424);junction.add(dial);connectorVisuals.push(dial);
   }
   installedBattery=cloneAsset(assets.battery,junction,[0,.1,.5],Math.PI,.6);installedBattery.visible=false;
   airlock=cloneAsset(assets.airlock,exterior,[5.6,0,-.7],Math.PI/2);
-  station('airlock','Meridian airlock','CREW SHELTER',airlock,{x:5.6,z:-.7},{x:7.5,z:-.7});
+  station('airlock','Base door','GO INSIDE',airlock,{x:5.6,z:-.7},{x:7.5,z:-.7});
   for(const [id,name,pos]of[['elena','Elena · Commander',[-3.3,0,9]],['amara','Amara · Biologist',[-6.8,0,9.5]],['luca','Luca · Medic',[3,0,9]]]) {
     const model=cloneAsset(assets.crew,exterior,pos,0,.96),mixer=new THREE.AnimationMixer(model);
     const animations=Object.fromEntries(assets.crew.animations.map(clip=>[clip.name,mixer.clipAction(clip)]));animations.Idle?.play();
@@ -337,10 +339,10 @@ try {
   }
   cloneAsset(assets.interior,interior,[0,0,-45]);
   roomConsole=cloneAsset(assets.terminal,interior,[0,.18,-47]);
-  station('room-console','Shelter console','AIRLOCK / COMMUNICATIONS',roomConsole,{x:0,z:-47},{x:0,z:-44.8},interior);
+  station('room-console','Door console','DOOR AND RADIO',roomConsole,{x:0,z:-47},{x:0,z:-44.8},interior);
   const tanks=new THREE.Group();tanks.position.set(2.6,.18,-47);interior.add(tanks);
   for(let i=0;i<3;i++)cloneAsset(assets.water,tanks,[(i-1)*.8,0,0]);
-  station('water','Water shielding','LIFE SUPPORT',tanks,{x:2.6,z:-47},{x:2.2,z:-45.1},interior);
+  station('water','Water tanks','WATER',tanks,{x:2.6,z:-47},{x:2.2,z:-45.1},interior);
   for(const pos of [[-1.8,.18,-46],[1.7,.18,-45.8],[1.4,.18,-43.1]]) {
     const model=cloneAsset(assets.crew,interior,pos,.1,.96),mixer=new THREE.AnimationMixer(model);mixer.clipAction(assets.crew.animations.find(c=>c.name==='Idle')).play();mixers.push(mixer);
     insideObstacles.push(obstacle(pos[0],pos[2],.5,.5));
@@ -352,8 +354,8 @@ try {
   avatarTool=cloneAsset(assets.tool,avatar.getObjectByName('arm_right')||avatar,[0,-.78,.10],Math.PI,.55);avatarTool.visible=false;
   ready=true;$('begin').disabled=false;$('begin').textContent='Begin Mission →';$('load-status').textContent='MISSION CONTROL JR. ONLINE / ALL SYSTEMS LOADED';
 } catch(error) {
-  console.error(error);$('load-status').textContent='Mission assets could not load. Check the terminal server and reload.';
-  $('begin').disabled=false;$('begin').textContent='Reload mission';$('begin').onclick=()=>location.reload();
+  console.error(error);$('load-status').textContent='The game could not load. Ask a grown-up to check the game server, then reload.';
+  $('begin').disabled=false;$('begin').textContent='Try loading again';$('begin').onclick=()=>location.reload();
 }
 
 const timer=new THREE.Timer();timer.connect(document);let uiClock=0,alarmClock=0,brushClock=0;
@@ -385,7 +387,7 @@ renderer.setAnimationLoop(time=> {
     }
     const event=advance(mission,dt,paused);if(event)audio.say(event,true);if(mission.ended)showEnding();
     if(job&&!paused) {
-      if(!nearby(job.station)){job=null;toolObject.visible=false;toast('Cleaning cancelled: you moved away.');renderInteraction(true);}
+      if(!nearby(job.station)){job=null;toolObject.visible=false;toast('You walked away, so cleaning stopped. Come back to finish.');renderInteraction(true);}
       else {job.time+=dt;brushClock+=dt;if(brushClock>.5){audio.effect('brush');brushClock=0;}
         toolObject.position.x=.29+Math.sin(clock*16)*.045;toolObject.rotation.z=Math.sin(clock*16)*.12;
         $('job-bar').style.width=`${job.time/job.duration*100}%`;
@@ -397,7 +399,7 @@ renderer.setAnimationLoop(time=> {
       if(next&&next!==selected){selected=next;renderNavigation();}
     }
   }
-  const weather=mission.storm?Math.min(1,mission.stormAge/7):Math.min(.16,mission.elapsed/PREPARATION_SECONDS*.16);
+  const weather=mission.storm?Math.min(1,mission.stormAge/7):Math.min(.16,mission.elapsed/(mission.prepSeconds??PREPARATION_SECONDS)*.16);
   if(exterior.visible) {
     scene.background=skyColor.clone().lerp(stormColor,weather);scene.fog.color.copy(scene.background);
     scene.fog.near=weather?6:45;scene.fog.far=130-weather*112;sun.intensity=2.3-weather*1.85;hemi.intensity=1.6-weather*.5;

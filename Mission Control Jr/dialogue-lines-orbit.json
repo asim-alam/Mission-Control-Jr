@@ -1,9 +1,9 @@
 {
-  "arrival": {"speaker":"Elena Reyes · Commander","text":"Welcome to Mars, Jin. It is sol eleven. First, dock with Asteria station. Our surface crew needs a reliable relay before a dust storm reaches Meridian. Restore the link, secure your field kit, and prepare the lander. Tomorrow, you will help protect the outpost. Once the storm passes, a rover survey awaits."},
-  "docked": {"speaker":"Elena Reyes · Commander","text":"Docking capture confirmed. Welcome aboard Asteria. Move through the station to the briefing console. Take your time, and check each system before you change it."},
-  "brief": {"speaker":"Elena Reyes · Commander","text":"The surface relay has lost its pointing solution. Review the fault report, identify the antenna branch, and isolate that circuit before the repair. Keep habitat power and life support online. Then realign the antenna and verify the link."},
-  "relay": {"speaker":"Elena Reyes · Commander","text":"The relay test is complete. Meridian has a stable local link again. Messages to Earth still take time to travel. Collect your field kit, then complete the transfer pressure check before boarding the lander."},
-  "lander": {"speaker":"Elena Reyes · Commander","text":"You are aboard the lander. Confirm the guidance solution and inspect propulsion readiness. Both checks must be complete before you commit to descent. Your destination is Meridian outpost."},
-  "descent": {"speaker":"Elena Reyes · Commander","text":"Descent authorized. Meridian is waiting below. Guidance is tracking the landing corridor. Stay with the vehicle through entry and powered descent."},
-  "touchdown": {"speaker":"Elena Reyes · Commander","text":"Touchdown confirmed. Welcome to Meridian, Jin. Your orbital qualification is complete. On sol twelve, an approaching dust storm will test the outpost's power and oxygen systems. Your next mission begins on the surface."}
+  "arrival": {"speaker":"Elena Reyes · Commander","text":"Welcome to Mars, Jin! First, fly to the space station and dock. Our radio antenna is broken. We must fix it before a dust storm reaches the base. Then we fly down to Mars."},
+  "docked": {"speaker":"Elena Reyes · Commander","text":"You docked! Welcome to the space station. Go to the window console. Take your time, and check each machine before you change it."},
+  "brief": {"speaker":"Elena Reyes · Commander","text":"The radio antenna is broken. Look at the screen to find the broken part. Turn off power to just that part. Keep the station power on. Then fix it and test it."},
+  "relay": {"speaker":"Elena Reyes · Commander","text":"The radio works! The base can hear us again. Now pack your kit. Then check the door to the lander."},
+  "lander": {"speaker":"Elena Reyes · Commander","text":"You are in the lander. Check the landing path. Check the fuel and seat belts. Then we can fly down to the base."},
+  "descent": {"speaker":"Elena Reyes · Commander","text":"Here we go! The base is waiting below. The computer is steering us down. Hold on tight!"},
+  "touchdown": {"speaker":"Elena Reyes · Commander","text":"We landed! Welcome to Meridian base, Jin. Great flying. Tomorrow a big dust storm is coming. Your next job is to keep the base safe."}
 }

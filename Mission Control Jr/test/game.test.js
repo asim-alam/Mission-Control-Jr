@@ -93,7 +93,7 @@ test('shelter reallocates water and greenhouse work yields a delayed supplement'
   const {api}=game();api.state.sol=24;const before=api.state.res.water;
   api.resolveChoice(api.currentEvent().choices[0]);assert.equal(api.state.res.water,before);assert.equal(api.state.shieldWater,15);assert.equal(api.state.shelterType,'water');
   const g=game().api;const initialFood=g.state.res.food;g.chooseWork(WORK[2]);assert.ok(g.state.res.food<initialFood);assert.equal(g.state.cropProgress,1);
-  g.chooseWork(WORK[2]);g.state.eventDone=3;g.chooseWork(WORK[4]);assert.equal(g.state.cropProgress,0);assert.ok(g.state.log.some(line=>line.includes('fresh-food supplement')));
+  g.chooseWork(WORK[2]);g.state.eventDone=3;g.chooseWork(WORK[4]);assert.equal(g.state.cropProgress,0);assert.ok(g.state.log.some(line=>line.includes('fresh food is ready')));
 });
 test('water and rover shelter choices show distinct physical protection at the outpost',()=>{
  const water=game(),rover=game();water.api.state.sol=24;rover.api.state.sol=24;rover.api.state.flags.roverSalvaged=true;

@@ -1,62 +1,62 @@
 // Story events keyed by sol. Each choice applies resource deltas and sets flags.
 export const EVENTS = {
   3: {
-    title: 'Sol 3 — Unexpected Growth',
-    text: 'Biologist Amara Okafor finds a pale fungus growing in the hydroponics bay. Early tests show it is high in protein, but nobody knows yet whether it is safe to eat.',
+    title: 'Day 3 — A Strange Plant',
+    text: 'Amara finds a pale mushroom growing with the plants. It could be good food. But is it safe to eat? Nobody knows yet.',
     choices: [
-      { label: 'Study toxicity before eating it (−10 power)', fx: { power: -10, morale: 5 }, flag: 'fungusStudied', note: 'Patience. Full results are due on Sol 21.' },
-      { label: 'Start eating it now to save food', fx: { food: 15, morale: -5 }, flag: 'fungusRushed', note: 'A risky shortcut.' },
-      { label: 'Destroy it; contamination risk', fx: { morale: -8, equipment: 3 }, note: 'Safe, but a discovery is lost.' },
+      { label: 'Test it first to see if it is safe (−10 power)', fx: { power: -10, morale: 5 }, flag: 'fungusStudied', note: 'Good thinking! The test results come on Day 21.' },
+      { label: 'Eat it now to save food', fx: { food: 15, morale: -5 }, flag: 'fungusRushed', note: 'That was a risky guess.' },
+      { label: 'Throw it away, just in case', fx: { morale: -8, equipment: 3 }, note: 'Safe, but we will never know what it was.' },
     ],
   },
   8: {
-    title: 'Sol 8 — The Silent Rover',
-    text: 'Orbital images show an abandoned rover from an earlier mission 6 km away. It may still have a working battery and spare parts.',
+    title: 'Day 8 — An Old Rover',
+    text: 'Space photos show an old rover 6 km away. It might still have a good battery and spare parts!',
     choices: [
-      { label: 'Plan a careful EVA with a full suit check (−8 O₂)', fx: { oxygen: -8, equipment: 15, power: 10 }, flag: 'roverSalvaged', fatigue: 15, note: 'Preparation paid off.' },
-      { label: 'Send one astronaut out fast, no checks', fx: { oxygen: -4, equipment: 8 }, hurt: 30, fatigue: 10, note: 'A suit seal failed on the way back.' },
-      { label: 'Leave it; the risk is too high', fx: { morale: -4 }, note: 'Caution, at a cost to curiosity.' },
+      { label: 'Check the spacesuit well, then walk there (−8 air)', fx: { oxygen: -8, equipment: 15, power: 10 }, flag: 'roverSalvaged', fatigue: 15, note: 'Checking first paid off!' },
+      { label: 'Rush out fast with no checks', fx: { oxygen: -4, equipment: 8 }, hurt: 30, fatigue: 10, note: 'The spacesuit leaked a little on the way back. Ouch.' },
+      { label: 'Leave it. It is too far.', fx: { morale: -4 }, note: 'Safe, but we missed the spare parts.' },
     ],
   },
   12: {
-    title: 'Sol 12 — Dust Storm Warning',
-    text: 'A regional dust storm is coming. It will cut solar output for days.',
+    title: 'Day 12 — Dust Storm Coming!',
+    text: 'A big dust storm is coming. The dust will hide the Sun, so the solar panels will make less power for days.',
     choices: [
-      { label: 'Lower power use and stockpile oxygen now', fx: { power: -5, oxygen: 10, morale: -3 }, flag: 'stormReady', note: 'The crew rides out the storm in the dim light.' },
-      { label: 'Keep working as normal', fx: { morale: 3 }, flag: 'stormIgnored', note: 'They will feel this later.' },
+      { label: 'Save power and store extra air now', fx: { power: -5, oxygen: 10, morale: -3 }, flag: 'stormReady', note: 'The crew is ready. They wait in the dim light.' },
+      { label: 'Keep working like normal', fx: { morale: 3 }, flag: 'stormIgnored', note: 'Hmm. That might be a problem later.' },
     ],
   },
   13: { storm: true },
   14: { storm: true },
   18: {
-    title: 'Sol 18 — Running on Empty',
-    text: 'Commander Reyes notices mistakes piling up. The crew is worn out after weeks of long shifts.',
+    title: 'Day 18 — Very Tired Crew',
+    text: 'Elena sees the crew making mistakes. They have worked hard for weeks and are very tired.',
     choices: [
-      { label: 'Call a full rest day (no production today)', fx: { morale: 12 }, rest: 40, skipWork: true, note: 'Rested crews make fewer mistakes.' },
-      { label: 'Push through; the schedule matters', fx: { equipment: -10, morale: -10 }, fatigue: 10, note: 'Exhaustion breeds errors.' },
+      { label: 'Take a rest day (no work today)', fx: { morale: 12 }, rest: 40, skipWork: true, note: 'Rested people make fewer mistakes.' },
+      { label: 'Keep working anyway', fx: { equipment: -10, morale: -10 }, fatigue: 10, note: 'Tired people break things by accident.' },
     ],
   },
   21: {
-    title: 'Sol 21 — Fungus Results',
+    title: 'Day 21 — Mushroom Test Results',
     cond: (s) => s.flags.fungusStudied || s.flags.fungusRushed,
     text: null,
   },
   24: {
-    title: 'Sol 24 — Solar Particle Event Forecast',
-    text: 'Earth reports a major solar flare. A radiation storm will hit Mars around Sol 27. The hab walls alone will not be enough.',
+    title: 'Day 24 — Sun Storm Coming!',
+    text: 'Earth says the Sun just had a huge flash. Invisible radiation will reach Mars on Day 27. The base walls are not enough to block it.',
     choices: [
-      { label: 'Move 15 water units around the sleep area as shielding', cond: (s) => s.res.water >= 15, fx: { radiation: 35 }, shieldWater: 15, shelterType: 'water', flag: 'shelterBuilt', note: 'The water stays in the shelter with less open access; the model still counts exposure.' },
-      { label: 'Shelter inside the salvaged rover cabin', cond: (s) => s.flags.roverSalvaged, fx: { power: -10, radiation: 25 }, shelterType: 'rover', flag: 'shelterBuilt', note: 'The rover cabin adds a different modeled protection level and uses power.' },
-      { label: 'Trust the hab walls', fx: {}, note: 'Hope is not a plan.' },
+      { label: 'Put 15 water around the beds to block it', cond: (s) => s.res.water >= 15, fx: { radiation: 35 }, shieldWater: 15, shelterType: 'water', flag: 'shelterBuilt', note: 'Water blocks radiation. The beds are safer now.' },
+      { label: 'Hide inside the old rover', cond: (s) => s.flags.roverSalvaged, fx: { power: -10, radiation: 25 }, shelterType: 'rover', flag: 'shelterBuilt', note: 'The rover walls help block it, but it uses power.' },
+      { label: 'Just hope the walls are enough', fx: {}, note: 'Hoping is not a plan!' },
     ],
   },
   27: { solarStorm: true },
 };
 
 export const WORK = [
-  { id: 'power', label: 'Clean solar panels', fx: { power: 12 } },
-  { id: 'life', label: 'Run O₂ / water recycling', fx: { oxygen: 8, water: 8, power: -4 } },
-  { id: 'farm', label: 'Tend established greenhouse crops (−4 power, −3 water)', fx: { morale: 2, water: -3, power: -4 } },
-  { id: 'repair', label: 'Maintain equipment', fx: { equipment: 12 } },
-  { id: 'rest', label: 'Light duty & rest', fx: { morale: 6 }, rest: 20 },
+  { id: 'power', label: 'Clean the solar panels', fx: { power: 12 } },
+  { id: 'life', label: 'Make air and clean water', fx: { oxygen: 8, water: 8, power: -4 } },
+  { id: 'farm', label: 'Look after the plants (−4 power, −3 water)', fx: { morale: 2, water: -3, power: -4 } },
+  { id: 'repair', label: 'Fix machines', fx: { equipment: 12 } },
+  { id: 'rest', label: 'Easy jobs and rest', fx: { morale: 6 }, rest: 20 },
 ];

@@ -44,9 +44,9 @@ test('v1 saves migrate without losing extended carry; suspended attempts do not 
   assert.equal(state.records.rover.outcome,'success');saveJourney(state,storage);assert.deepEqual(readJourney(storage),state);
 });
 test('chapter cards distinguish goal completion from a safe stop and replay option',()=>{
- assert.equal(completionStatus({success:true,mastered:true}),'✓ GOAL MET');
- assert.equal(completionStatus({success:true,mastered:false}),'✓ COMPLETE · TRY ANOTHER PLAN');
- assert.equal(completionStatus({success:false,mastered:false}),'SAFE STOP · REPLAY AVAILABLE');
+ assert.equal(completionStatus({success:true,mastered:true}),'🏆 Super job!');
+ assert.equal(completionStatus({success:true,mastered:false}),'✓ Done! Try another plan?');
+ assert.equal(completionStatus({success:false,mastered:false}),'Stopped safely · try again!');
 });
 test('every orbital briefing subtitle has a bundled Vorbis voice clip',()=>{
   const lines=JSON.parse(readFileSync(new URL('../dialogue-lines-orbit.json',import.meta.url)));assert.equal(Object.keys(lines).length,7);

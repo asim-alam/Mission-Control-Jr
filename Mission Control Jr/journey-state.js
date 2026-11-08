@@ -5,9 +5,9 @@ export const storyChapters=missionsFor('mars');
 export const chapterById=missionById;
 export const createJourney=()=>({version:2,current:'orbit',selectedCampaign:'mars',campaigns:{mars:{current:'orbit'},moon:{current:'lunar-sunlight'}},completed:[],records:{},attempts:{}});
 export function completionStatus(record){
-  if(record?.mastered)return '✓ GOAL MET';
-  if(record?.success)return '✓ COMPLETE · TRY ANOTHER PLAN';
-  return 'SAFE STOP · REPLAY AVAILABLE';
+  if(record?.mastered)return '🏆 Super job!';
+  if(record?.success)return '✓ Done! Try another plan?';
+  return 'Stopped safely · try again!';
 }
 
 // Bound untrusted save data without truncating carry at twelve fields.

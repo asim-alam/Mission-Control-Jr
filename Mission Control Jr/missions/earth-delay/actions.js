@@ -21,38 +21,38 @@ export function advanceMission(state,seconds){
   if(m.message)updateMessage(m.message,m.simSeconds+dt,true);
   return m.airReserveUnits>0;
  });
- if(state.airReserveUnits<=0){state.phase='suspended';state.notice='Training paused: the breathing reserve was exhausted.';}
+ if(state.airReserveUnits<=0){state.phase='suspended';state.notice='Game paused: the spare air ran out.';}
  return true;
 }
 export function applyAction(m,{id,payload}={}){
  const no=message=>({ok:false,message}),yes=message=>({ok:true,message});
- if(id==='begin'&&m.phase==='brief'){m.phase='active';recordDecision(m,id);return yes('The pump fault needs a local plan.');}
- if(m.phase!=='active')return no('Begin the exercise or restart.');if(m.paused)return no('Resume the exercise first.');
+ if(id==='begin'&&m.phase==='brief'){m.phase='active';recordDecision(m,id);return yes('The pump is broken. We need a plan!');}
+ if(m.phase!=='active')return no('Start the game, or play again.');if(m.paused)return no('Unpause the game first.');
  const work=(seconds)=>{advanceMission(m,seconds);return m.phase==='active';};
- if(id==='inspectFault'){if(m.faultInspected)return no('The fault is already inspected.');m.faultInspected=true;recordDecision(m,id);return yes('The coolant pump is stopped.');}
+ if(id==='inspectFault'){if(m.faultInspected)return no('You already looked at it.');m.faultInspected=true;recordDecision(m,id);return yes('The cooling pump has stopped.');}
  if(id==='sendEarthRequest'){
-  if(!m.faultInspected||m.message)return no('Inspect the fault first; only one request is needed.');
-  m.message=createMessage({id:'earth-advice',createdAt:m.simSeconds,outboundSeconds:m.scenario.oneWaySeconds,processingSeconds:m.scenario.processingSeconds,inboundSeconds:m.scenario.oneWaySeconds,payload:'Check isolation before restoring the pump.'});updateMessage(m.message,m.simSeconds,true);recordDecision(m,id);return yes('Status sent. Earth cannot reply until both journeys and processing are complete.');
+  if(!m.faultInspected||m.message)return no('Look at the pump first. You only need to send one message.');
+  m.message=createMessage({id:'earth-advice',createdAt:m.simSeconds,outboundSeconds:m.scenario.oneWaySeconds,processingSeconds:m.scenario.processingSeconds,inboundSeconds:m.scenario.oneWaySeconds,payload:'Turn the pump power off before you fix it.'});updateMessage(m.message,m.simSeconds,true);recordDecision(m,id);return yes('Message sent! Earth needs time to get it and send a reply.');
  }
- if(id==='connectReserve'){if(m.reserveConnected)return no('The reserve is already connected.');if(!work(60))return no('Training paused during connection.');m.reserveConnected=true;recordDecision(m,id);return yes('Reserve connected.');}
+ if(id==='connectReserve'){if(m.reserveConnected)return no('The spare air is already on.');if(!work(60))return no('The game stopped while connecting.');m.reserveConnected=true;recordDecision(m,id);return yes('Reserve connected.');}
  if(id==='selectSupportPolicy'){
-  if(!['normal','conserve'].includes(payload)||m.policy===payload)return no('Choose a different support policy.');m.policy=payload;m.experimentOn=payload!=='conserve';recordDecision(m,id,{policy:payload});return yes(payload==='conserve'?'Optional study paused to protect reserves.':'Optional study resumed.');
+  if(!['normal','conserve'].includes(payload)||m.policy===payload)return no('Pick the other choice.');m.policy=payload;m.experimentOn=payload!=='conserve';recordDecision(m,id,{policy:payload});return yes(payload==='conserve'?'Science paused to save air.':'Science is on again.');
  }
- if(id==='isolatePumpBranch'){if(!m.faultInspected||m.branchIsolated||m.processorRunning)return no('Inspect the fault before isolating the stopped branch.');if(!work(60))return no('Training paused during isolation.');m.branchIsolated=true;recordDecision(m,id);return yes('Pump branch isolated.');}
- if(id==='openServiceCover'){if(!m.branchIsolated||m.coverOpen||m.cartridgeReplaced)return no('Isolate the stopped branch first.');if(!work(45))return no('Training paused during inspection.');m.coverOpen=true;m.coverLatched=false;recordDecision(m,id);return yes('Training service cover opened.');}
- if(id==='replaceCartridge'){if(!m.branchIsolated||!m.coverOpen||m.cartridgeReplaced||m.spareCartridges<1)return no('Open the isolated service cover and use the available spare.');if(!work(120))return no('Training paused during replacement.');m.cartridgeReplaced=true;m.spareCartridges--;recordDecision(m,id);return yes('The spare cartridge is installed.');}
- if(id==='latchCover'){if(!m.coverOpen||!m.cartridgeReplaced)return no('Fit the replacement cartridge first.');if(!work(30))return no('Training paused before the cover was latched.');m.coverOpen=false;m.coverLatched=true;recordDecision(m,id);return yes('Cover latched.');}
- if(id==='restoreBranch'){if(!m.branchIsolated||!m.cartridgeReplaced||!m.coverLatched||m.processorRunning)return no('Complete the isolated service sequence first.');if(!work(30))return no('Training paused before restoration.');m.branchIsolated=false;m.processorRunning=true;m.restoredAt=m.simSeconds;recordDecision(m,id);return yes('Pump restarted using the local procedure.');}
+ if(id==='isolatePumpBranch'){if(!m.faultInspected||m.branchIsolated||m.processorRunning)return no('Look at the pump before you turn it off.');if(!work(60))return no('The game stopped while turning it off.');m.branchIsolated=true;recordDecision(m,id);return yes('Pump power is off. It is safe to fix.');}
+ if(id==='openServiceCover'){if(!m.branchIsolated||m.coverOpen||m.cartridgeReplaced)return no('Turn the pump power off first.');if(!work(45))return no('The game stopped while looking.');m.coverOpen=true;m.coverLatched=false;recordDecision(m,id);return yes('The cover is open.');}
+ if(id==='replaceCartridge'){if(!m.branchIsolated||!m.coverOpen||m.cartridgeReplaced||m.spareCartridges<1)return no('Open the cover and put in the spare part.');if(!work(120))return no('The game stopped while swapping the part.');m.cartridgeReplaced=true;m.spareCartridges--;recordDecision(m,id);return yes('The new part is in!');}
+ if(id==='latchCover'){if(!m.coverOpen||!m.cartridgeReplaced)return no('Put in the new part first.');if(!work(30))return no('The game stopped before the cover was closed.');m.coverOpen=false;m.coverLatched=true;recordDecision(m,id);return yes('Cover latched.');}
+ if(id==='restoreBranch'){if(!m.branchIsolated||!m.cartridgeReplaced||!m.coverLatched||m.processorRunning)return no('Finish the repair steps first.');if(!work(30))return no('The game stopped before the pump was turned on.');m.branchIsolated=false;m.processorRunning=true;m.restoredAt=m.simSeconds;recordDecision(m,id);return yes('The pump is running again. You fixed it yourself!');}
  if(id==='applyAdvice'){
-  if(m.message?.status!=='delivered'||m.processorRunning)return no('Earth advice is not available yet, or the pump already runs.');
-  if(!m.branchIsolated||m.coverOpen)return no('Isolate the pump branch and close its cover before the suggested reset.');if(!work(120))return no('Training paused before the reset was complete.');m.replyApplied=true;m.branchIsolated=false;m.processorRunning=true;m.restoredAt=m.simSeconds;recordDecision(m,id);return yes('Earth’s advice confirmed the training reset; the pump restarted.');
+  if(m.message?.status!=='delivered'||m.processorRunning)return no('Earth has not answered yet, or the pump already works.');
+  if(!m.branchIsolated||m.coverOpen)return no('Turn the pump off and close the cover before you try Earth’s idea.');if(!work(120))return no('The game stopped before the reset finished.');m.replyApplied=true;m.branchIsolated=false;m.processorRunning=true;m.restoredAt=m.simSeconds;recordDecision(m,id);return yes('Earth’s idea worked! The pump is running.');
  }
- if(id==='wait'){if(!Number.isFinite(payload)||payload<=0||payload>3600)return no('Choose a valid wait.');work(payload);recordDecision(m,id,{requestedSeconds:payload});return yes('Waiting used reserves and advanced the message.');}
- if(id==='verifyFlow'){if(!m.processorRunning||m.energyWh<=0)return no('Restore powered flow before verifying it.');if(!work(60))return no('Training paused during verification.');if(m.energyWh<=0)return no('Stored energy ran out before the flow check finished.');m.verified=true;recordDecision(m,id);return yes('Flow and reserve trend verified.');}
- if(id==='finish'){if(!m.verified)return no('Verify flow, or suspend the exercise.');m.phase='debrief';recordDecision(m,id);return yes('Recovery complete.');}
- if(id==='suspendExercise'){m.phase='debrief';recordDecision(m,id);return yes('The crew is safe; the unresolved fault remains for review.');}
+ if(id==='wait'){if(!Number.isFinite(payload)||payload<=0||payload>3600)return no('Pick how long to wait.');work(payload);recordDecision(m,id,{requestedSeconds:payload});return yes('You waited. The message moved along, and some air was used.');}
+ if(id==='verifyFlow'){if(!m.processorRunning||m.energyWh<=0)return no('Turn the pump on before you test it.');if(!work(60))return no('The game stopped during the test.');if(m.energyWh<=0)return no('The power ran out before the test finished.');m.verified=true;recordDecision(m,id);return yes('Test passed! The water flows and the air is OK.');}
+ if(id==='finish'){if(!m.verified)return no('Test the pump, or stop the game.');m.phase='debrief';recordDecision(m,id);return yes('Recovery complete.');}
+ if(id==='suspendExercise'){m.phase='debrief';recordDecision(m,id);return yes('The crew is safe. The pump still needs fixing.');}
  return no('Unknown action.');
 }
-export function getObjective(m){if(m.phase==='brief')return 'Inspect the stopped coolant pump.';if(m.phase==='suspended')return 'Training paused: restore a safe checkpoint.';if(m.phase==='debrief')return 'Review the local decision and message timeline.';if(!m.faultInspected)return 'Inspect the pump fault.';if(!m.message)return 'Send a status request to Earth.';if(!m.processorRunning)return 'Repair locally, conserve while waiting, or suspend safely.';return m.verified?'Finish the recovery exercise.':'Verify powered flow.';}
+export function getObjective(m){if(m.phase==='brief')return 'Look at the broken pump';if(m.phase==='suspended')return 'Game stopped. Try again from a safe spot.';if(m.phase==='debrief')return 'Look at what you chose';if(!m.faultInspected)return 'Look at the broken pump';if(!m.message)return 'Send a message to Earth';if(!m.processorRunning)return 'Fix it yourself, or save air while you wait for Earth';return m.verified?'Finish the mission':'Test the pump';}
 export function getResult(m){return {outcome:m.phase==='suspended'?'reserve-limit':!m.verified?'protected-suspension':m.replyApplied?'bridge-and-verify':'local-recovery',completed:m.phase==='debrief',energyWh:m.energyWh,airReserveUnits:m.airReserveUnits,spareRemaining:m.spareCartridges,processorRunning:m.processorRunning,verified:m.verified,experimentPoweredSeconds:m.experimentPoweredSeconds,crops:m.crops.map(c=>({...c})),cropCarryUsed:m.cropCarryUsed,replyReceivedAt:m.message?.deliveredAt??null,restoredAt:m.restoredAt,message:m.message?structuredClone(m.message):null,sourceId:m.scenario.sourceId};}
 export {serializeSnapshot,restoreSnapshot};
