@@ -1,11 +1,11 @@
 import inputs from '../../data/normalized.json' with {type: 'json'};
 
-// "The Greenhouse Promise" — grow a fresh salad for Elena's birthday in three Mars days.
+// "The Greenhouse Promise" — harvest already-established crops for Elena's birthday during a short, fictional Mars training window.
 // SOURCED: the light schedule (NASA OSDR study OSD-269: 16 h light, 8 h dark, ISS Veggie lettuce),
 // and the crops themselves (red romaine lettuce and mizuna grown in Veggie; chile peppers harvested on the ISS in 2021).
 // AUTHORED (game tuning): growth per day, power use, water use, the leak and portions. Not measured Mars farming.
 export const greenhouseScenario = {
-  id: 'meridian-cultivation-v2', version: 2, sourceIds: ['osdr-osd-269', 'osd-269-veggie-fan-anomaly', 'nasa-life-support-baseline'],
+  id: 'meridian-cultivation-v3', version: 3, sourceIds: ['osdr-osd-269', 'osd-269-veggie-fan-anomaly', 'nasa-life-support-baseline'],
   lightHours: inputs.lettuceReference.lightHours, darkHours: inputs.lettuceReference.darkHours, startSol: 32,
   // Study conditions from VEG-03A (ISS Veggie). These are learning references, not calculated Mars lamp settings.
   lightReference: {parUmolM2S: 200, redBlueGreen: [12, 3, 1], ledDistanceCm: [30.5, 31.75]},
