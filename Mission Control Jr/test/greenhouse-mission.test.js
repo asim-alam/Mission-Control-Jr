@@ -1,21 +1,22 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createMission} from '../missions/greenhouse/state.js';
-import {applyAction, getResult, getObjective, getSteps, serializeSnapshot, restoreSnapshot, batteryNeeded} from '../missions/greenhouse/actions.js';
+import {createMission, migrateGreenhouseState, GREENHOUSE_SAVE_SCHEMA} from '../missions/greenhouse/state.js';
+import {applyAction, getResult, getObjective, getSteps, serializeSnapshot, restoreSnapshot, batteryNeeded, leafSurfaceState} from '../missions/greenhouse/actions.js';
 import {greenhouseScenario} from '../missions/greenhouse/scenario.js';
 import {tuneScenario} from '../simulation/difficulty.js';
 
 const explorer = () => createMission({scenario: tuneScenario('greenhouse', greenhouseScenario, 'explorer')});
 const act = (m, id, targetId, payload) => { const r = applyAction(m, {id, targetId, payload}); return r; };
 const must = (m, id, targetId, payload) => { const r = act(m, id, targetId, payload); assert.ok(r.ok, `${id} ${targetId ?? ''}: ${r.message}`); return r; };
-function start(plan) { const m = explorer(); must(m, 'begin'); must(m, 'choosePlan', null, plan); return m; }
+function restoreAirflow(m) { must(m, 'checkAirflow'); must(m, 'resetFan'); }
+function start(plan, {repairFan = true} = {}) { const m = explorer(); must(m, 'begin'); must(m, 'choosePlan', null, plan); if (repairFan) restoreAirflow(m); return m; }
 function fixLeak(m) { must(m, 'toggleIsolation'); must(m, 'removeHose'); must(m, 'takeSpare'); must(m, 'fitHose'); must(m, 'toggleIsolation'); }
 function day(m, lights, water = Object.keys(lights)) {
   for (const [bed, light] of Object.entries(lights)) must(m, 'setLight', bed, light);
   for (const bed of water) must(m, 'water', bed);
   return act(m, 'endDay');
 }
-function harvestAndServe(m) { must(m, 'takeBasket'); for (const bed of ['a', 'b', 'c']) act(m, 'harvest', bed); must(m, 'serve'); return getResult(m); }
+function harvestAndServe(m) { must(m, 'takeBasket'); for (const bed of ['a', 'b', 'c']) act(m, 'harvest', bed); must(m, 'inspectHarvest'); must(m, 'serve'); return getResult(m); }
 
 test('salad plan: lettuce + mizuna on full light serves the salad and keeps the battery', () => {
   const m = start('salad');
@@ -85,4 +86,37 @@ test('steps and objectives follow the mission and Cadet tuning is gentler', () =
   const cadet = tuneScenario('greenhouse', greenhouseScenario, 'cadet');
   assert.ok(cadet.batteryKWh > greenhouseScenario.batteryKWh); assert.ok(cadet.leakLPerDay < greenhouseScenario.leakLPerDay);
   assert.ok(cadet.moistureBand[1] - cadet.moistureBand[0] > greenhouseScenario.moistureBand[1] - greenhouseScenario.moistureBand[0]);
+});
+
+test('the fan readout can say LOW while the fan is off; checking the vent reveals the mismatch', () => {
+  const m = start('salad', {repairFan: false});
+  assert.equal(m.fanStatusReported, 'LOW'); assert.equal(m.fanRunning, false);
+  assert.equal(act(m, 'resetFan').ok, false, 'must inspect airflow before resetting');
+  const check = must(m, 'checkAirflow'); assert.match(check.message, /LOW.*actually OFF/);
+  must(m, 'resetFan'); assert.equal(m.fanRunning, true); assert.equal(m.fanStatusReported, 'RUNNING');
+});
+
+test('without airflow, leaf-surface moisture can rise separately from root-zone moisture', () => {
+  const m = start('salad', {repairFan: false});
+  day(m, {a: 'full', b: 'full'}); assert.equal(leafSurfaceState(m), 'dry');
+  fixLeak(m); day(m, {a: 'full', b: 'full'});
+  assert.equal(leafSurfaceState(m), 'damp'); assert.ok(m.leafWetness > m.scenario.leafWetnessCaution);
+  assert.equal(m.beds.a.moisture, m.beds.b.moisture, 'leaf-surface status is not the soil moisture dial');
+});
+
+test('the harvest handling check is required before dinner and is not a laboratory safety test', () => {
+  const m = start('salad'); day(m, {a: 'full', b: 'full'}); fixLeak(m); day(m, {a: 'full', b: 'full'});
+  must(m, 'takeBasket'); for (const bed of ['a', 'b', 'c']) act(m, 'harvest', bed);
+  assert.equal(act(m, 'serve').ok, false);
+  const checked = must(m, 'inspectHarvest'); assert.match(checked.message, /visual check/i);
+  must(m, 'serve'); assert.equal(getResult(m).harvestChecked, true);
+});
+
+test('older greenhouse saves gain the new fields without changing other mission saves', () => {
+  const old = explorer(); old.schema = GREENHOUSE_SAVE_SCHEMA - 1;
+  delete old.airflowChecked; delete old.fanRunning; delete old.fanStatusReported; delete old.leafWetness; delete old.harvestChecked;
+  const migrated = migrateGreenhouseState(old);
+  assert.equal(migrated.schema, GREENHOUSE_SAVE_SCHEMA); assert.equal(migrated.fanRunning, false);
+  assert.equal(migrated.fanStatusReported, 'LOW'); assert.equal(migrated.leafWetness, greenhouseScenario.leafWetnessStart);
+  assert.equal(migrateGreenhouseState({missionId:'storm'}), null);
 });
