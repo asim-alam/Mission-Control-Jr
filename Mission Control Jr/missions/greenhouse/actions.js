@@ -154,6 +154,7 @@ export function getObjective(s) {
   if (!s.fanRunning) return 'Reset the fan controller to restore airflow';
   if (s.day > s.scenario.growDays) {
     if (BEDS.some(id => isReady(s, id))) return s.holding === 'basket' ? 'Pick the ready plants' : 'Harvest day! Get the basket';
+    if (s.holding === 'basket' && !s.harvestChecked) return 'Check the leaves and clean basket at the table';
     return s.holding === 'basket' ? 'Serve dinner: put the basket on the table' : 'Harvest day! Get the basket';
   }
   if (batteryNeeded(s) > s.batteryKWh + 1e-9) return 'Too much light! Turn a light down';
