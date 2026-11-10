@@ -258,5 +258,31 @@
       "storm"
     ],
     "limitation": "Shape of a real power drop, compressed in time. Base power numbers in the game are simplified percentages, not rover engineering data."
+  },
+  {
+    "id": "osd-269-veggie-fan-anomaly",
+    "basisKind": "observation",
+    "title": "Microbiological and Nutritional Analysis of Lettuce Crops Grown on the International Space Station",
+    "agency": "Frontiers in Plant Science; study of NASA Veggie ISS experiments",
+    "sourceUrl": "https://doi.org/10.3389/fpls.2020.00199",
+    "recordId": "Khodadad et al., 2020; DOI 10.3389/fpls.2020.00199",
+    "version": "Frontiers in Plant Science, volume 11, article 199",
+    "observationTime": null,
+    "retrievedAt": "2026-11-10",
+    "location": "ISS Veggie; VEG-03A lettuce experiment",
+    "units": {},
+    "qualityNotes": [
+      "Paper reports a fan status readout of LOW while the fan was actually off after power cycling.",
+      "The authors describe excess early moisture, likely due to a fan malfunction.",
+      "The authors state that incomplete environmental logging prevents assigning a causal link between microbial findings and chamber conditions."
+    ],
+    "transforms": [
+      "Use as a qualitative scenario clue for checking actual airflow against an equipment indicator.",
+      "Do not transfer the paper's fan anomaly into a Mars hardware repair procedure or infer microbial safety from visual moisture."
+    ],
+    "usedBy": [
+      "greenhouse"
+    ],
+    "limitation": "ISS experiment context only. The fictional Mars fan reset, leaf-surface moisture index, stress response and outcomes are authored training rules, not measured NASA values."
   }
 ]
