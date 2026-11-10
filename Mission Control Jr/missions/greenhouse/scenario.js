@@ -7,6 +7,8 @@ import inputs from '../../data/normalized.json' with {type: 'json'};
 export const greenhouseScenario = {
   id: 'meridian-cultivation-v2', version: 2, sourceIds: ['osdr-osd-269', 'nasa-life-support-baseline'],
   lightHours: inputs.lettuceReference.lightHours, darkHours: inputs.lettuceReference.darkHours, startSol: 32,
+  // Study conditions from VEG-03A (ISS Veggie). These are learning references, not calculated Mars lamp settings.
+  lightReference: {parUmolM2S: 200, redBlueGreen: [12, 3, 1], ledDistanceCm: [30.5, 31.75]},
   growDays: 2,                        // two nights of growing, then harvest day
   powerBudgetKWh: 2.2,                // solar power for grow lights each day
   batteryKWh: 1.2,                    // extra stored power you may borrow over the whole mission
@@ -15,11 +17,14 @@ export const greenhouseScenario = {
   plantUseL: {off: .4, half: .8, full: 1.2},
   moistureBand: [1, 3.2], startMoisture: 1.6, waterPerTurnL: 1, tankStartL: 18, babyHarvest: .8,
   leakDay: 2, leakLPerDay: 6, leakFlowFactor: .5,
+  // Authored scenario fault and leaf-surface teaching values; not measurements from NASA.
+  fanStatusReported: 'LOW', leafWetnessStart: .15, leafWetnessGainPerNight: .3,
+  leafWetnessDryingPerNight: .22, leafWetnessCaution: .55, leafWetnessStressPerNight: .08,
   crops: {
     a: {crop: 'lettuce', name: 'Red lettuce', icon: '🥬', start: 1.4, ready: 3, portions: 4},
     b: {crop: 'mizuna', name: 'Mizuna greens', icon: '🌿', start: 1.2, ready: 3, portions: 3},
     c: {crop: 'pepper', name: 'Chile peppers', icon: '🌶️', start: 3.5, ready: 5, portions: 2},
   },
   saladGoal: 6,
-  limitation: 'The 16-hour light schedule and the crops are real NASA space-farming examples. How fast the plants grow, the power and water numbers, the leak and the portions are made up for this game.',
+  limitation: 'The 16:8 photoperiod and selected lettuce light conditions are ISS study references. Crop growth, power and water budgets, hose leak, fan fault response, leaf-surface moisture values, stress and portions are authored for this short Mars training game.',
 };
