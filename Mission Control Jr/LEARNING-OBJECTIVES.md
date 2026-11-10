@@ -11,6 +11,7 @@ This prototype aims to use language for learners ages 7–12, the age range desc
 5. **Safe traverse planning:** compare terrain evidence, route cost and a return reserve; revise plans when the observed ground differs from the map.
 6. **Crew autonomy:** Mars communication delays mean a crew cannot depend on real-time Earth guidance for every decision.
 7. **Evidence before interpretation:** record observable features and uncertainty before drawing a scientific conclusion.
+8. **Plant-system checks:** compare a fan's status display with actual airflow, keep root-zone moisture separate from leaf-surface moisture, and treat a visual harvest check as handling practice rather than proof of food safety.
 
 ## NASA and partner-agency references
 
@@ -22,6 +23,9 @@ This prototype aims to use language for learners ages 7–12, the age range desc
 - NASA, [Mars communications disruption and delay](https://www.nasa.gov/wp-content/uploads/2024/01/mars-communications-disruption-and-delay.pdf): Mars mission delay and blackout conditions require substantial crew and system autonomy.
 - NASA/JPL Robotics, [Surface system software and rover navigation](https://robotics.jpl.nasa.gov/what-we-do/flight-projects/mars-science-laboratory/surface-system-software-and-rover-navigation/): rover planners assess terrain images and choose safe routes.
 - NASA Science, [How Perseverance drives on Mars](https://science.nasa.gov/resource/how-perseverance-drives-on-mars/): rover drivers use terrain imagery and 3D views to plan drives.
+- NASA OSDR, [OSD-269 ISS lettuce study](https://osdr.nasa.gov/bio/repo/data/studies/OSD-269), and Khodadad et al. (2020), [microbiological and nutritional analysis](https://doi.org/10.3389/fpls.2020.00199): 16:8 photoperiod, lettuce experiment conditions, and a documented Veggie fan-status anomaly; the in-game reset is fictional.
+- NASA, [Growing Plants in Space](https://www.nasa.gov/exploration-research-and-technology/growing-plants-in-space/), and [Plant Water Management](https://science.nasa.gov/science-research/science-enabling-technology/technology-highlights/how-do-you-water-plants-in-space/): plant pillows and water-delivery considerations in microgravity.
+- NASA, [Life Support Baseline Values and Assumptions (2022)](https://ntrs.nasa.gov/citations/20210024855): a broad engineering baseline, not a per-plant recipe for this game.
 
 ## Credits and limits
 

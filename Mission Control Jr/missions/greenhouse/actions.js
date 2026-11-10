@@ -18,6 +18,8 @@ export const isReady = (s, id) => !s.beds[id].harvested && s.beds[id].progress >
 export const isFull = (s, id) => s.beds[id].progress >= crop(s, id).ready - 1e-9;
 export const flowFactor = s => !s.isolationOpen ? 0 : s.leak === 'leaking' ? s.scenario.leakFlowFactor : 1;
 export function moistureState(s, id) { const m = s.beds[id].moisture, [lo, hi] = s.scenario.moistureBand; return m < lo ? 'dry' : m > hi ? 'soggy' : 'good'; }
+/** Leaf-surface dampness is a different observation from water stored in the root zone. */
+export function leafSurfaceState(s) { return s.leafWetness >= s.scenario.leafWetnessCaution ? 'damp' : 'dry'; }
 export function saladPortions(s) { return s.basketContents.filter(c => c.crop !== 'pepper').reduce((n, c) => n + c.portions, 0); }
 
 export function applyAction(s, {id, targetId, payload} = {}) {
@@ -25,6 +27,19 @@ export function applyAction(s, {id, targetId, payload} = {}) {
   if (s.phase !== 'active') return fail('Start the mission first.');
   if (id === 'choosePlan') { if (!PLANS[payload] || s.plan) return fail('Pick one of the plans.'); s.plan = payload; recordDecision(s, id, {plan: payload}); return ok(`Plan: ${PLANS[payload].title}.`); }
   if (!s.plan) return fail('Pick a plan first.');
+  if (id === 'checkAirflow') {
+    if (s.airflowChecked) return fail('You already checked the fan.');
+    s.airflowChecked = true;
+    recordDecision(s, id, {readout: s.fanStatusReported, actual: s.fanRunning ? 'running' : 'off'});
+    return ok(s.fanRunning ? 'Air is moving through the greenhouse.' : 'The panel says LOW, but the airflow marker does not move. The fan is actually OFF.');
+  }
+  if (id === 'resetFan') {
+    if (!s.airflowChecked) return fail('Check the air at the vent first.');
+    if (s.fanRunning) return fail('The fan is already running.');
+    s.fanRunning = true; s.fanStatusReported = 'RUNNING';
+    recordDecision(s, id, {restored: true});
+    return ok('Airflow restored. Check the leaf surfaces again after the next night.');
+  }
   const bed = s.beds[targetId];
   if (id === 'setLight') {
     if (!bed || !['off', 'half', 'full'].includes(payload)) return fail('Pick a light setting.');
@@ -69,9 +84,21 @@ export function applyAction(s, {id, targetId, payload} = {}) {
     bed.harvested = true; bed.light = 'off'; s.basketContents.push({bed: targetId, crop: crop(s, targetId).crop, portions});
     recordDecision(s, id, {bed: targetId, portions}); return ok(`Picked ${size < 1 ? 'baby ' : ''}${crop(s, targetId).name}! ${portions} portions.`);
   }
+  if (id === 'inspectHarvest') {
+    if (s.day <= s.scenario.growDays) return fail('Wait until harvest day.');
+    if (s.holding !== 'basket' || !s.basketContents.length) return fail('Pick the ready plants into the clean basket first.');
+    if (s.harvestChecked) return fail('You already completed the harvest check.');
+    s.harvestChecked = true;
+    const surface = leafSurfaceState(s);
+    recordDecision(s, id, {leafSurface: surface, portions: s.basketContents.reduce((n, c) => n + c.portions, 0)});
+    return ok(surface === 'damp'
+      ? 'Some leaves still look damp. Keep the harvest separate and record that clue. A visual check cannot test for tiny germs.'
+      : 'The leaf surfaces look dry. Keep the harvest in the clean basket. A visual check is not a laboratory test.');
+  }
   if (id === 'serve') {
     if (s.holding !== 'basket') return fail('Bring the basket to the table.');
     if (s.day <= s.scenario.growDays) return fail('Let the plants grow first. Dinner is on harvest day.');
+    if (!s.harvestChecked) return fail('Check the leaves and clean basket before serving.');
     s.holding = null; s.basket = 'table'; s.served = true; s.phase = 'debrief'; recordDecision(s, id); return ok('Dinner is served!');
   }
   if (id === 'endDay') {
@@ -100,6 +127,14 @@ export function endDay(s, battery = batteryNeeded(s)) {
     report.beds[id] = {light: b.light, condition, grow: +grow.toFixed(2)}; b.wateredToday = 0;
   }
   if (s.leak === 'leaking') { const lost = Math.min(s.tankL, sc.leakLPerDay); s.tankL -= lost; s.leakedL += lost; report.leakedL = lost; }
+  // Authored teaching indicator: a stopped fan lets leaf-surface moisture build; it is not soil moisture or RH.
+  const leafChange = s.fanRunning ? -sc.leafWetnessDryingPerNight : sc.leafWetnessGainPerNight;
+  s.leafWetness = Math.max(0, Math.min(1, s.leafWetness + leafChange));
+  const leafSurface = leafSurfaceState(s);
+  if (!s.fanRunning && leafSurface === 'damp') {
+    for (const id of BEDS) if (!s.beds[id].harvested) s.beds[id].stress = Math.min(.9, s.beds[id].stress + sc.leafWetnessStressPerNight);
+  }
+  report.airflow = s.fanRunning ? 'restored' : 'no airflow'; report.leafSurface = leafSurface;
   s.history.push(report); s.day += 1; s.simSeconds += 86400;
   if (s.day === sc.leakDay && s.leak === 'none') { s.leak = 'leaking'; s.notice = 'Drip, drip… A water hose is leaking!'; }
   if (s.day > sc.growDays) s.notice = 'Harvest day! Pick the plants that are ready.';
@@ -115,8 +150,11 @@ export function getObjective(s) {
   if (s.leak === 'isolated') return 'Fix the leak: take off the old hose';
   if (s.leak === 'hose-off') return 'Fix the leak: get the spare hose';
   if (s.leak === 'hose-fitted') return 'Fix the leak: open the red valve';
+  if (!s.airflowChecked) return 'Check the fan: does air move when the panel says LOW?';
+  if (!s.fanRunning) return 'Reset the fan controller to restore airflow';
   if (s.day > s.scenario.growDays) {
     if (BEDS.some(id => isReady(s, id))) return s.holding === 'basket' ? 'Pick the ready plants' : 'Harvest day! Get the basket';
+    if (s.holding === 'basket' && !s.harvestChecked) return 'Check the leaves and clean basket at the table';
     return s.holding === 'basket' ? 'Serve dinner: put the basket on the table' : 'Harvest day! Get the basket';
   }
   if (batteryNeeded(s) > s.batteryKWh + 1e-9) return 'Too much light! Turn a light down';
@@ -127,10 +165,12 @@ export function getSteps(s) {
   const grow = s.day > s.scenario.growDays, fixed = s.leak === 'fixed' || s.leak === 'none';
   const list = [
     {text: 'Pick a plan', done: !!s.plan},
+    {text: 'Check and restore airflow', done: s.fanRunning},
     {text: 'Day 1: lights + water', done: s.day > 1},
     {text: 'Day 2: lights + water', done: s.day > 2},
     {text: 'Fix the leak', done: s.day >= s.scenario.leakDay && fixed},
     {text: 'Harvest the ready plants', done: grow && !BEDS.some(id => isReady(s, id))},
+    {text: 'Check the harvest', done: s.harvestChecked},
     {text: 'Serve dinner', done: s.served},
   ];
   if (s.phase !== 'brief') { const now = list.find(x => !x.done); if (now) now.now = true; }
@@ -147,6 +187,7 @@ export function getResult(s) {
     plan: s.plan, rating, saladPortions: salad, peppers, portions: s.basketContents.reduce((n, c) => n + c.portions, 0),
     tankL: +s.tankL.toFixed(1), waterUsedL: +s.waterUsedL.toFixed(1), leakedL: +s.leakedL.toFixed(1), leakFixed: s.leak === 'fixed',
     batteryLeftKWh: +s.batteryKWh.toFixed(2), powerUsedKWh: +s.powerUsedKWh.toFixed(2), health: Math.round(avgHealth * 100),
+    airflowRestored: s.fanRunning, leafSurface: leafSurfaceState(s), harvestChecked: s.harvestChecked,
     trays: BEDS.map(id => ({id, harvested: s.beds[id].harvested, stress: +s.beds[id].stress.toFixed(2)})),
   };
 }

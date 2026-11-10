@@ -35,7 +35,15 @@
     "repairSeconds": 1800,
     "repairEnergyWh": 40,
     "referencePhotoperiod": "16 hours light and 8 hours dark from NASA OSD-269 metadata; 24-hour training period is an approximation.",
-    "limitation": "Growth, stress, energy, water, fault, yield and initial maturity are authored and are not measurements of Mars crop performance."
+    "limitation": "Growth, stress, energy, water, fault, yield, initial maturity, fan reset response and leaf-surface moisture are authored and are not measurements of Mars crop performance.",
+    "airflowFaultReadout": "LOW",
+    "airflowFaultActual": "OFF",
+    "leafSurfaceMoistureStart": 0.15,
+    "leafSurfaceMoistureGainPerNightWithoutAirflow": 0.3,
+    "leafSurfaceMoistureReductionPerNightWithAirflow": 0.22,
+    "leafSurfaceMoistureCautionThreshold": 0.55,
+    "leafWetnessStressPerNight": 0.08,
+    "airflowAndLeafMoistureLimitation": "The LOW/off fan mismatch is inspired by the OSD-269 VEG-03A report. The reset action, moisture index, thresholds and stress response are authored training rules; the index is not relative humidity, root-zone moisture, microbial count or a food-safety test."
   },
   "earth-delay": {
     "startingBatteryWh": 120,
