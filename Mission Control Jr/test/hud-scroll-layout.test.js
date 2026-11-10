@@ -50,8 +50,10 @@ test('surface globe prop and its collision are absent while archive and atlas as
 
 test('Arrival uses the shared mission HUD with Pause and Map buttons and a 3D world container', () => {
   const html = read('orbit.html'), hud = read('missions/shared/hud.js'), controller = read('missions/shared/controller.js');
-  assert.match(html, /id="world"/);
-  assert.match(html, /missions\/orbit\/ui\.js/);
+  const entry = read('missions/orbit/entry.js');
+  assert.match(html, /missions\/orbit\/entry\.js/);
+  assert.match(entry, /id="world"/);
+  assert.match(entry, /import\('\.\/ui\.js'\)/);
   assert.match(hud, /id="pause"[^>]*>⏸️ Pause/);
   assert.match(hud, /id="journey"[^>]*>🗺️ Map/);
   assert.match(controller, /\$\('journey'\)\.onclick = openJourney/);

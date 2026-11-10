@@ -18,7 +18,14 @@ for (const mission of ['orbit', 'solar-shelter', 'greenhouse', 'earth-delay', 'l
     const bindsOwn = /const\s+\$\s*=\s*id\s*=>\s*document\.getElementById\(id\)/.test(source);
     assert.ok(usesController || bindsOwn, `${mission}: no DOM bootstrap`);
     const html = await read(missionById(mission).file);
-    assert.match(html, new RegExp(`missions/${mission}/ui\\.js`));
-    if (usesController) assert.match(html, /id="world"/);
+    if (mission === 'orbit') {
+      assert.match(html, /missions\/orbit\/entry\.js/);
+      const entry = await read('missions/orbit/entry.js');
+      assert.match(entry, /import\('\.\/ui\.js'\)/);
+      assert.match(entry, /id="world"/);
+    } else {
+      assert.match(html, new RegExp(`missions/${mission}/ui\\.js`));
+      if (usesController) assert.match(html, /id="world"/);
+    }
   });
 }

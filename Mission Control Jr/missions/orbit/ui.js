@@ -1,12 +1,14 @@
 // "Arrival at Mars" — briefing, radio-part and locker choices, landing planner, hatch check and debrief.
 import {runMission} from '../shared/controller.js';
 import {planCards, compareTable} from '../shared/hud.js';
-import {readHistory, pushHistory, snapshot} from '../shared/runtime.js';
+import {readHistory, pushHistory, snapshot, clearSaved} from '../shared/runtime.js';
 import {tuneScenario} from '../../simulation/difficulty.js';
 import {arrivalScenario} from './scenario.js';
 import {createMission, ORBIT_SCHEMA, readLegacyOrbit} from './state.js';
 import {applyAction, getObjective, getSteps, getResult, powerUsed, powerAvailable, inShadow, minutesToShadow, minutesToSun, nextPass, hazardCamReady, partLabel, loadLabel} from './actions.js';
 import {createArrivalScene} from './scene.js';
+
+import {clearApproach} from './approach-state.js';
 
 const ID = 'orbit';
 const cap = t => t[0].toUpperCase() + t.slice(1);
@@ -79,18 +81,28 @@ function hatch(ctx) {
   const s = ctx.mission, sc = s.scenario;
   if (!s.site) { ctx.hud.toast('Pick a landing site at the planner table first.', 'warn'); return; }
   const site = sc.sites[s.site], warn = [];
+  const land = async cameraView => {
+    ctx.checkpoint = snapshot(ctx.mission);
+    ctx.close(); const r = ctx.act({id: 'board'}); if (!r.ok) return;
+    ctx.busy = true; ctx.setControls();
+    try {
+      await ctx.view.fly(cameraView);
+    } finally {
+      ctx.busy = false; ctx.setControls();
+    }
+    ctx.act({id: 'touchdown'}, {quiet: true});
+  };
   if (!s.comms) warn.push('📻 The radio is still broken, so the base beacon is off. The landing ellipse is big.');
   if (!hazardCamReady(s)) warn.push(`📷 The lander is ${Math.round(s.charge)}% charged. The hazard camera needs ${sc.lander.hazardCamAt}% to steer around rocks.`);
   ctx.dialog({label: 'LANDER HATCH', title: 'Ready to land?', body: `
     <p>Site: <b>${site.icon} ${site.label}</b> (${site.ground}).</p>
     ${warn.length ? `<ul class="mx-howto">${warn.map(w => `<li>${w}</li>`).join('')}</ul>` : '<p>✅ Beacon on and hazard camera ready. Everything looks good!</p>'}
-    <p class="mx-last">${timeLine(s)}. We undock on that pass.</p>`,
-    actions: [{label: '🚀 Get in and land', primary: true, run: async () => {
-      ctx.checkpoint = snapshot(ctx.mission);
-      ctx.close(); const r = ctx.act({id: 'board'}); if (!r.ok) return;
-      ctx.busy = true; ctx.setControls(); await ctx.view.fly(); ctx.busy = false;
-      ctx.act({id: 'touchdown'}, {quiet: true});
-    }}, {label: 'Not yet', run: () => ctx.close()}]});
+    <p class="mx-last">${timeLine(s)}. We undock on that pass.</p>
+    <p><b>Choose your view:</b> look through the cockpit window, or watch the lander from outside.</p>`,
+    actions: [
+      {label: '🚀 Land · First person', primary: true, run: () => land('cockpit')},
+      {label: '🎥 Land · Outside camera', run: () => land('exterior')},
+      {label: 'Not yet', run: () => ctx.close()}]});
 }
 
 function talk(ctx, who) {
@@ -106,6 +118,7 @@ function talk(ctx, who) {
 }
 
 function debrief(ctx) {
+  clearApproach();
   const r = getResult(ctx.mission), sc = ctx.mission.scenario, L = r.landing;
   ctx.report.send({outcome: r.outcome, completed: r.completed, success: r.success, mastered: r.mastered, score: r.score,
     carry: {comms: r.comms, site: r.site, landing: L ? (L.rough ? 'rough' : 'smooth') : null, distanceKm: L?.distanceKm ?? null, passIndex: r.passIndex, arrivalMinute: r.minute}});
@@ -133,7 +146,7 @@ function debrief(ctx) {
     <p class="mx-tip">💡 ${tip}</p>${compare}
     <aside class="mx-detail"><b>More details</b><br>The broken part was the <b>${partLabel(ctx.mission, r.fault)}</b>. ${r.usedTester ? 'You found it with the tester.' : r.inspected ? 'You found it by looking closely.' : 'You found it by trying fixes.'} Next, the base gets ready for a dust storm. ${r.comms ? 'Because the radio works, the base heard about the storm early.' : ''}</aside>`,
     actions: [
-      {label: '🔁 Try the landing again', primary: true, disabled: !ctx.checkpoint || !r.completed, run: () => ctx.retry(() => { ctx.close(); })},
+      {label: '🔁 Try the landing again', primary: true, disabled: !ctx.checkpoint || !r.completed, run: () => ctx.retry(() => { ctx.view.returnToInterior?.(); ctx.close(); })},
       {label: '↺ Play again (new broken part)', run: () => ctx.restart()}, {label: '🗺️ Back to the map', run: ctx.openJourney}, {label: 'Sources', run: () => ctx.sourcesDialog(() => debrief(ctx))}]});
 }
 
@@ -148,6 +161,10 @@ runMission({
     view.world.onInspect = text => ctx.hud.toast(text, 'quiet'); return view;
   },
   brief, sources, debrief,
+  ready(ctx) {
+    // Replay includes the Mars opening and docking; landing-only retry stays in the cabin.
+    ctx.restart = () => { clearSaved(ID); clearApproach(); location.reload(); };
+  },
   sampler(ctx) { ctx.act({id: 'begin'}, {quiet: true}); ctx.saveCheckpoint(); },
   hud(ctx) {
     const s = ctx.mission, used = powerUsed(s), avail = powerAvailable(s), {hud} = ctx;

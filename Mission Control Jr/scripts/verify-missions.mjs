@@ -2,6 +2,7 @@
 // Usage: npm run dev   (in another terminal), then
 //        node scripts/verify-missions.mjs [shelter|orbit|storm|rover|all] [--shots=docs/mission-redesign-v2/after] [--width=1440]
 // Each flow: start → play to completion → completion record → retry → save/reload → (legacy save where it applies).
+// Arrival camera: --landing-view=cockpit or --landing-view=exterior (default).
 import {mkdir} from 'node:fs/promises';
 import {openPage} from './cdp.mjs';
 
@@ -136,18 +137,19 @@ async function shelter() {
 const stand = (page, x, z, yaw, pitch = -.1) => page.eval(`(() => { const p = __mission.view.world.player; p.position.set(${x}, 1.62, ${z}); p.yaw = ${yaw}; p.pitch = ${pitch}; p.syncCamera(); })()`);
 async function orbit() {
   console.log('\n— Arrival at Mars —');
-  const page = await open('orbit');
+  // This check covers the cabin; the exterior prologue has its own docking checks.
+  const page = await open('orbit', {setup: `localStorage.setItem('mission-control-jr.arrival-approach.v1', JSON.stringify({version: 1, phase: 'docked'}));`});
   await page.shot(`${SHOTS}/orbit-1-brief.png`);
   check('orbit: briefing explains radio and power', /Arrival at Mars/.test(await dialogTitle(page)));
   await primary(page); await sleep(400);
   check('orbit: mission active', await state(page, 'm.phase') === 'active');
-  await stand(page, -2.6, 0, Math.PI / 2, -.05); await sleep(800);
+  await stand(page, 9.5, 2.5, -Math.PI / 2, -.05); await sleep(800);
   await page.shot(`${SHOTS}/orbit-2-window.png`);
   // Real look-to-use: press the switch on the power panel and the rack test button.
-  await stand(page, 1.2, -.7, 0, -.2); await sleep(400);
+  await stand(page, -1.5, -3.5, 0, -.2); await sleep(400);
   await page.eval(`__mission.view.world.interaction.useById('switch:motor')`); await sleep(200);
   check('orbit: E on a panel switch turns the load on', await state(page, 'm.loads.motor === true'));
-  await stand(page, -2.2, -.6, 0, -.25); await sleep(300);
+  await stand(page, -1.5, -11, 0, -.25); await sleep(300);
   await page.eval(`__mission.view.world.interaction.useById('test')`); await sleep(200);
   check('orbit: plain test says no signal', await state(page, "m.lastTest === 'plain' && !m.diagnosed"));
   for (const a of [{id: 'take', payload: 'tester'}, {id: 'clipTester'}, {id: 'testSignal'}]) await act(page, a);
@@ -171,26 +173,40 @@ async function orbit() {
   for (const l of ['radio', 'amp', 'motor']) await act(page, {id: 'toggleLoad', targetId: l});
   await act(page, {id: 'toggleLoad', targetId: 'charger'});
   await page.eval(`(() => { while (__mission.state.charge < 80) __mission.act({id: 'wait', payload: 1}, {quiet: true}); __mission.act({id: 'toggleLoad', targetId: 'charger'}, {quiet: true}); })()`);
-  await stand(page, 1.9, .2, -Math.PI / 2, -.5); await sleep(300);
+  await stand(page, 5.5, 0, -Math.PI / 2, -.5); await sleep(300);
   await page.eval(`__mission.view.world.interaction.useById('planner')`); await sleep(300);
   await page.eval(`document.querySelector('#dialog-body [data-plan="pad"]').click()`); await sleep(400);
   check('orbit: planner picks a site', await state(page, "m.site === 'pad'"));
   await clickLabel(page, 'Close'); await sleep(900);
   await page.shot(`${SHOTS}/orbit-5-planner.png`);
-  await stand(page, 4.6, -.2, -Math.PI / 2, 0); await page.eval(`document.querySelectorAll('canvas').forEach(c => c.dispatchEvent(new PointerEvent('pointerleave')))`); await sleep(300);
+  await stand(page, 0, 16.5, Math.PI, 0); await page.eval(`document.querySelectorAll('canvas').forEach(c => c.dispatchEvent(new PointerEvent('pointerleave')))`); await sleep(300);
   await page.eval(`__mission.view.world.interaction.useById('hatch')`); await sleep(400);
   check('orbit: hatch shows a ready check', /Ready to land/.test(await dialogTitle(page)));
-  await clickLabel(page, 'Get in and land'); await sleep(25000);
+  check('orbit: ready check offers both landing cameras', await page.eval(`(() => {
+    const text = document.getElementById('dialog-actions').textContent;
+    return text.includes('First person') && text.includes('Outside camera');
+  })()`));
+  const firstPerson = args['landing-view'] === 'cockpit';
+  await clickLabel(page, firstPerson ? 'First person' : 'Outside camera'); await sleep(1000);
+  check(`orbit: ${firstPerson ? 'cockpit' : 'outside'} camera is active`, await page.eval(`(() => {
+    const w = __mission.view.world;
+    return w.camera.getObjectByName('Meridian landing cockpit').visible === ${firstPerson}
+      && w.scene.getObjectByName('Meridian crew transfer vehicle').visible === ${!firstPerson}
+      && !w.hand.visible && __mission.state.stage === 'descent';
+  })()`));
+  await page.shot(`${SHOTS}/orbit-landing-${firstPerson ? 'cockpit' : 'exterior'}.png`);
+  await sleep(24000);
   check('orbit: landing ends in a debrief', await soon(page, `/landing|Steered/i.test(document.querySelector('#dialog:not([hidden]) #dialog-title')?.textContent)`, 150000));
   await sleep(500); await page.shot(`${SHOTS}/orbit-6-debrief.png`);
   const rec = await journey(page, 'orbit');
   check('orbit: completion recorded on the journey map', rec && rec.attemptCompleted !== false && rec.carry?.comms === true, JSON.stringify(rec)?.slice(0, 140));
   await clickLabel(page, 'Try the landing again');
   check('orbit: retry returns to just before boarding', await soon(page, `(() => { const m = __mission.state; return m.phase === 'active' && !m.boarded && m.comms && m.site === 'pad'; })()`));
+  check('orbit: retry restores cabin camera and hands', await page.eval(`!__mission.view.world.camera.getObjectByName('Meridian landing cockpit').visible && __mission.view.world.hand.visible`));
   const errs = errorsOf(page); check('orbit: no page errors', !errs.length, errs.join(' | '));
   await page.close();
   // Legacy save from the old orbit chapter + narrow viewport.
-  const legacy = await open('orbit', {width: 390, height: 844, setup: `localStorage.setItem('mission-control-jr.orbit.v1', JSON.stringify({phase: 'station', stage: 2, checks: {brief: true}, complete: false}));`});
+  const legacy = await open('orbit', {width: 390, height: 844, setup: `localStorage.setItem('mission-control-jr.arrival-approach.v1', JSON.stringify({version: 1, phase: 'docked'})); localStorage.setItem('mission-control-jr.orbit.v1', JSON.stringify({phase: 'station', stage: 2, checks: {brief: true}, complete: false}));`});
   check('orbit: old unfinished save gets a fresh start note', /old version/.test(await legacy.eval(`document.getElementById('dialog-body').textContent`)));
   await legacy.shot(`${SHOTS}/orbit-7-narrow-brief.png`);
   await primary(legacy); await sleep(600);

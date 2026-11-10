@@ -1,49 +1,58 @@
-// 3D view of "Arrival at Mars": the orbiter cabin, the radio rack, the power panel and the landing hologram.
+// 3D view of "Arrival at Mars": the original Asteria station interior with the redesigned radio rack, the power panel and the landing hologram.
 import * as THREE from 'three';
 import {createWorld, loadModel, part} from '../shared/engine.js';
 import {missionAsset} from '../shared/assets.js';
 import {makeCrew} from '../shared/crew.js';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import {createOrbitalEnvironment} from '../../orbital-environment.js';
+import {createShuttle} from '../../station-model.js';
+import {createLandingCockpit} from './landing-cockpit.js';
+import {createArrivalInterior, equipmentObstacle, EQUIPMENT, STATION_BOUNDS, STATION_START, WALK_TARGETS} from './station-layout.js';
 import {LOADS} from './state.js';
 import {powerUsed, powerAvailable, inShadow, testLights, hazardCamReady} from './actions.js';
 
-const RACK = [-2.2, -1.55], PANEL = [1.2, -1.7], CASE = [-2.0, 1.55], TABLE = [3.0, .2];
+const RACK = [EQUIPMENT.rack.x, EQUIPMENT.rack.z], PANEL = [EQUIPMENT.panel.x, EQUIPMENT.panel.z], CASE = [EQUIPMENT.locker.x, EQUIPMENT.locker.z], TABLE = [EQUIPMENT.planner.x, EQUIPMENT.planner.z];
 const LED = {green: [0x2bff86, 1.8], red: [0xff3a3a, 2.2], off: [0x3a3020, .05], amber: [0xffb02e, 1.2]};
 
-function marsTexture() {
-  const c = document.createElement('canvas'); c.width = 512; c.height = 256; const g = c.getContext('2d');
-  g.fillStyle = '#b5532c'; g.fillRect(0, 0, 512, 256);
-  let a = 7; const rnd = () => (a = (a * 16807) % 2147483647) / 2147483647;
-  for (let i = 0; i < 260; i++) { const x = rnd() * 512, y = 20 + rnd() * 216, r = 6 + rnd() * 38; g.fillStyle = `rgba(${rnd() < .5 ? '90,40,25' : '220,140,90'},${.08 + rnd() * .18})`; g.beginPath(); g.ellipse(x, y, r * 1.6, r, 0, 0, Math.PI * 2); g.fill(); }
-  g.fillStyle = 'rgba(250,240,235,.85)'; g.fillRect(0, 0, 512, 12); g.fillRect(0, 246, 512, 10);
-  g.strokeStyle = 'rgba(70,30,20,.5)'; g.lineWidth = 5; g.beginPath(); g.moveTo(150, 128); g.bezierCurveTo(220, 120, 280, 140, 340, 132); g.stroke(); // a long canyon
-  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
-}
-
 export async function createArrivalScene({container, getState, act, onPause, openPart, openCase, openPlanner, openHatch, talk}) {
-  const world = await createWorld({container, preset: 'interior', bounds: {minX: -4.5, maxX: 4.45, minZ: -1.25, maxZ: 1.25}, start: {x: 3.9, z: -.2, yaw: Math.PI / 2}, onPause});
+  const world = await createWorld({container, preset: 'interior', bounds: STATION_BOUNDS, start: STATION_START, onPause});
   const {scene, player} = world, s = getState;
+  // Match the original station's space lighting and avoid shadow-map overhead on school laptops.
+  world.renderer.shadowMap.enabled = false;
+  world.renderer.toneMappingExposure = 1.05;
+  scene.background = new THREE.Color(0x03070c);
+  scene.environmentIntensity = 0;
+  for (const light of [...scene.children]) if (light.isDirectionalLight || light.isHemisphereLight) scene.remove(light);
   const load = id => loadModel(missionAsset(id));
-  const [cabin, rack, panel, planner, locker, spareAmp, tester, elena, jin] = await Promise.all(['orbiter-cabin', 'comm-rack', 'power-panel', 'landing-planner', 'spares-case', 'amp-module', 'signal-tester'].map(load).concat([makeCrew('elena'), makeCrew('jin')]));
-  scene.add(cabin);
-  world.place3d(rack, RACK[0], 0, RACK[1]); world.place3d(panel, PANEL[0], 0, PANEL[1]);
-  world.place3d(locker, CASE[0], 0, CASE[1], Math.PI); world.place3d(planner, TABLE[0], 0, TABLE[1], -Math.PI / 2);
-  const cabinLights = []; for (const x of [-3.5, -1, 1.5, 4]) { const l = new THREE.PointLight(0xfff0dc, 2.4, 7, 1.6); l.position.set(x, 2.3, 0); scene.add(l); cabinLights.push(l); }
-  const strips = []; part(cabin, 'ceiling_lights').traverse(o => { if (o.isMesh) strips.push(o.material); });
-  const amberLamps = []; part(cabin, 'shadow_lamp').traverse(o => { if (o.isMesh) amberLamps.push(o.material); });
-  const glass = []; part(cabin, 'window').traverse(o => { if (o.isMesh && o.material.name === 'glass') glass.push(o.material); });
+  const [rack, panel, planner, locker, spareAmp, tester, elena, jin] = await Promise.all(['comm-rack', 'power-panel', 'landing-planner', 'spares-case', 'amp-module', 'signal-tester'].map(load).concat([makeCrew('elena'), makeCrew('jin')]));
+  const interior = createArrivalInterior(), {cabin, exterior: station, hatch: hatchControl} = interior;
+  const missionSpace = new THREE.Group(); scene.add(missionSpace); missionSpace.add(cabin);
+  for (const [id, object] of Object.entries({rack, panel, planner, locker})) {
+    const at = EQUIPMENT[id]; world.place3d(object, at.x, 0, at.z, at.yaw);
+    missionSpace.add(object);
+  }
+  // The panel used to hang on the small cabin wall; mount it on a floor stand here.
+  const standMaterial = new THREE.MeshStandardMaterial({color: 0x263641, metalness: .6, roughness: .45});
+  for (const dx of [-.65, .65]) {
+    const leg = new THREE.Mesh(new THREE.BoxGeometry(.08, 1.7, .08), standMaterial);
+    leg.position.set(PANEL[0] + dx, .85, PANEL[1] - .12); missionSpace.add(leg);
+    const foot = new THREE.Mesh(new THREE.BoxGeometry(.2, .06, .5), standMaterial);
+    foot.position.set(PANEL[0] + dx, .03, PANEL[1]); missionSpace.add(foot);
+  }
+  const cabinLights = interior.lights, strips = interior.strips;
+  const glass = [interior.window.material];
+  const shadowLamp = new THREE.PointLight(0xffb02e, 0, 15); shadowLamp.position.set(0, 3.8, 0); scene.add(shadowLamp);
 
-  // Outside the window: Mars, the Sun's light on it and some stars.
-  const sun = new THREE.DirectionalLight(0xfff2e0, 2.2); sun.position.set(-20, 30, 40); sun.target.position.set(-38, -8, 0); scene.add(sun, sun.target);
-  const marsMat = new THREE.MeshStandardMaterial({map: marsTexture(), roughness: 1});
-  const mars = new THREE.Mesh(new THREE.SphereGeometry(22, 48, 32), marsMat); mars.position.set(-38, -8, 0); mars.rotation.z = .3; scene.add(mars);
-  const glow = new THREE.Mesh(new THREE.SphereGeometry(22.6, 32, 20), new THREE.MeshBasicMaterial({color: 0xff9a5a, transparent: true, opacity: .12, side: THREE.BackSide})); mars.add(glow);
-  const starGeo = new THREE.BufferGeometry(), sp = [];
-  for (let i = 0; i < 500; i++) { const v = new THREE.Vector3().randomDirection().multiplyScalar(300); if (v.x > -30) v.x = -30 - Math.random() * 200; sp.push(v.x, v.y, v.z); }
-  starGeo.setAttribute('position', new THREE.Float32BufferAttribute(sp, 3));
-  scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({color: 0xffffff, size: 1.4, sizeAttenuation: false})));
+  // Restore the original detailed Mars globe beyond the panoramic observation window.
+  world.camera.fov = 52; world.camera.far = 30000; world.camera.updateProjectionMatrix();
+  const environment = await createOrbitalEnvironment(scene, new GLTFLoader());
+  environment.setOverview(false);
+  const mars = environment.planet, orbitPosition = mars.position.clone(), orbitLights = [];
+  scene.traverse(o => { if (o.isDirectionalLight) { o.userData.sunIntensity = o.intensity; orbitLights.push(o); } });
 
-  // Crew.
-  scene.add(elena.model, jin.model); elena.teleport(3.2, -1.0, -Math.PI / 2); jin.teleport(-1.1, -.7, Math.PI * .8); jin.mode = 'work';
+  station.visible = false; scene.add(station);
+  missionSpace.add(elena.model, jin.model);
+  elena.teleport(8.5, 3, -Math.PI / 2); jin.teleport(-.5, -13, Math.PI * .8); jin.mode = 'work';
 
   // ---- radio rack parts -----------------------------------------------------------------
   const leds = Object.fromEntries(['feed', 'amp', 'card', 'radio'].map(st => [st, part(rack, `led_${st}`).material]));
@@ -62,11 +71,11 @@ export async function createArrivalScene({container, getState, act, onPause, ope
   const lamps = Object.fromEntries(LOADS.map(l => [l, part(panel, `lamp_${l}`).material]));
   const mainLamp = part(panel, 'main_lamp').material, needle = part(panel, 'power_needle'), mark = part(panel, 'budget_mark'), breaker = part(panel, 'main_breaker');
   for (const l of LOADS) { const lab = world.sign(`${s().scenario.loads[l].icon}${s().scenario.loads[l].units}`, {width: .17, font: 48}); part(panel, `label_${l}`).add(lab); }
-  const panelSign = world.sign('⚡ POWER PANEL', {width: .9}); panelSign.position.set(PANEL[0], 2.28, PANEL[1] + .1); scene.add(panelSign);
-  const rackSign = world.sign('📻 RADIO RACK', {width: .9}); rackSign.position.set(RACK[0], 2.15, RACK[1] + .3); scene.add(rackSign);
-  const lockerSign = world.sign('🧰 SPARES', {width: .7}); lockerSign.position.set(CASE[0], 1.9, CASE[1] - .3); scene.add(lockerSign);
-  const tableSign = world.sign('🗺️ LANDING PLANNER', {width: 1.1}); tableSign.position.set(TABLE[0], 2.05, TABLE[1]); scene.add(tableSign);
-  const hatchSign = world.sign('🚀 LANDER HATCH', {width: .9}); hatchSign.position.set(4.8, 2.2, 0); scene.add(hatchSign);
+  const panelSign = world.sign('⚡ POWER PANEL', {width: .9}); panelSign.position.set(PANEL[0], 2.28, PANEL[1] + .1); missionSpace.add(panelSign);
+  const rackSign = world.sign('📻 RADIO RACK', {width: .9}); rackSign.position.set(RACK[0], 2.15, RACK[1] + .3); missionSpace.add(rackSign);
+  const lockerSign = world.sign('🧰 SPARES', {width: .7}); lockerSign.position.set(CASE[0], 1.9, CASE[1]); missionSpace.add(lockerSign);
+  const tableSign = world.sign('🗺️ LANDING PLANNER', {width: 1.1}); tableSign.position.set(TABLE[0], 2.05, TABLE[1]); missionSpace.add(tableSign);
+  const hatchSign = world.sign('🚀 LANDER HATCH', {width: .9}); hatchSign.position.set(0, 2.5, 17.85); missionSpace.add(hatchSign);
 
   // ---- landing hologram: shows the chosen (or first) site large, with its ellipse and rocks --------
   const holo = part(planner, 'holo_surface'), holoRing = part(planner, 'holo_ring').material;
@@ -117,18 +126,38 @@ export async function createArrivalScene({container, getState, act, onPause, ope
   world.register({id: 'locker', object: lockerDoor, range: 2.2, enabled: playing, label: () => s().holding ? 'Put it back in the spares locker' : 'Open the spares locker', onUse: openCase});
   world.register({id: 'planner', object: part(planner, 'planner_screen'), range: 2.4, enabled: playing, label: () => 'Plan the landing', onUse: openPlanner});
   world.register({id: 'holo', object: ground, range: 1.9, enabled: playing, label: () => 'Plan the landing', onUse: openPlanner});
-  world.register({id: 'hatch', object: part(cabin, 'hatch_wheel'), range: 2.2, enabled: playing, label: () => s().site ? 'Open the hatch and get in the lander' : 'Lander hatch (pick a landing site first)', onUse: openHatch});
+  world.register({id: 'hatch', object: hatchControl, range: 2.2, enabled: playing, label: () => s().site ? 'Open the hatch and get in the lander' : 'Lander hatch (pick a landing site first)', onUse: openHatch});
   world.register({id: 'elena', object: elena.model, range: 2.2, enabled: playing, label: () => 'Talk to Elena', onUse: () => talk('elena')});
   world.register({id: 'jin', object: jin.model, range: 2.2, enabled: playing, label: () => 'Talk to Jin', onUse: () => talk('jin')});
-  world.register({id: 'window', object: part(cabin, 'window'), range: 3, enabled: playing, label: () => 'Look at Mars', onUse: () => talk('window')});
+  world.register({id: 'window', object: interior.window, range: 3, enabled: playing, label: () => 'Look at Mars', onUse: () => talk('window')});
 
-  player.obstacles = [
-    {minX: RACK[0] - .65, maxX: RACK[0] + .65, minZ: -1.8, maxZ: RACK[1] + .3}, {minX: CASE[0] - .6, maxX: CASE[0] + .6, minZ: CASE[1] - .3, maxZ: 1.8},
-    {minX: TABLE[0] - .8, maxX: TABLE[0] + .8, minZ: TABLE[1] - .8, maxZ: TABLE[1] + .8},
-  ];
+  player.obstacles = [...interior.obstacles, ...[rack, panel, locker, planner].map(equipmentObstacle)];
+  player.cameraObjects = [cabin, rack, panel, locker, planner];
 
   // ---- per-frame look ------------------------------------------------------------------------
-  let zapTime = 0, shake = 0, descent = 0;
+  let zapTime = 0, shake = 0, descent = 0, landingView = false, landingCamera = 'exterior';
+  const cockpit = createLandingCockpit(); world.camera.add(cockpit);
+  const descentCraft = createShuttle(); descentCraft.scale.setScalar(9); descentCraft.visible = false; scene.add(descentCraft);
+  const flameMaterial = new THREE.MeshBasicMaterial({color: 0xffa43a, transparent: true, opacity: .88, depthWrite: false});
+  const flame = new THREE.Mesh(new THREE.ConeGeometry(.26, 1.25, 12), flameMaterial);
+  flame.rotation.x = -Math.PI / 2; flame.position.z = -2.1; descentCraft.add(flame);
+  const landingAxis = new THREE.Vector3(-.34, .13, 1).normalize();
+  const landingTarget = orbitPosition.clone().addScaledVector(landingAxis, environment.radius * 1.025);
+  const orbitCamera = orbitPosition.clone().add(new THREE.Vector3(0, environment.radius * .85, environment.radius * 3.1));
+  const stationOrbitPosition = orbitPosition.clone().add(new THREE.Vector3(0, 0, environment.radius + 1250));
+  const cabinStart = {position: player.position.clone(), yaw: player.yaw, pitch: player.pitch};
+  function updateLandingCamera(dt) {
+    const firstPerson = landingCamera === 'cockpit';
+    missionSpace.visible = false; station.visible = true; descentCraft.visible = !firstPerson;
+    cockpit.visible = firstPerson; world.hand.visible = false;
+    if (firstPerson) {
+      world.camera.position.copy(descentCraft.position).add(new THREE.Vector3(0, 1.55, .3));
+      world.camera.lookAt(orbitPosition);
+    } else {
+      world.camera.position.lerp(orbitCamera, Math.min(1, dt * 1.8));
+      world.camera.lookAt(descentCraft.position);
+    }
+  }
   const setLed = (m, kind, t) => { const [c, i] = LED[kind]; m.color.setHex(c); m.emissive.setHex(c); m.emissiveIntensity = kind === 'red' ? i * (.6 + .4 * Math.sin(t * 8)) : i; };
   world.onFrame((dt, t) => {
     const st = s(), shade = inShadow(st), lights = testLights(st);
@@ -137,7 +166,7 @@ export async function createArrivalScene({container, getState, act, onPause, ope
     feedPlug.position.copy(plugHome); if (st.fault === 'feed' && !st.fixed) { feedPlug.position.x += .05; feedPlug.rotation.x = .25; } else feedPlug.rotation.x = 0;
     card.position.copy(cardHome); if (st.fault === 'card' && !st.fixed) card.position.z += .05;
     if (st.fault === 'card' && !st.fixed) card.traverse(o => { if (o.isMesh && o.material.name === 'signal-green') { o.material.emissive?.setHex(0x2bff86); o.material.emissiveIntensity = Math.sin(t * 10) > 0 ? .8 : 0; } });
-    smoke.rate = st.fault === 'amp' && !st.fixed && st.loads.amp && !st.tripped ? 6 : 0;
+    smoke.rate = st.fault === 'amp' && !st.fixed && st.loads.amp && !st.tripped && !landingView ? 6 : 0;
     oldAmp.traverse(o => { if (o.isMesh && st.fault === 'amp' && !st.fixed) o.material.color.setHex(o.material.name === 'aluminium' ? 0x6a5a50 : 0x3a3330); });
     // Where the tester and the spare amplifier are.
     const wantTester = st.tester === 'hand' ? world.hand : st.tester === 'rack' ? port : slotTester;
@@ -153,13 +182,18 @@ export async function createArrivalScene({container, getState, act, onPause, ope
     needle.rotation.z += (ang(powerUsed(st)) - needle.rotation.z) * Math.min(1, dt * 6); mark.rotation.z = ang(powerAvailable(st));
     // Cabin lights: dim when the breaker is off; amber lamps in Mars' shadow; frost when cold.
     const dim = st.tripped ? .25 : 1;
-    for (const l of cabinLights) l.intensity += (2.4 * dim - l.intensity) * Math.min(1, dt * 4);
+    for (const l of cabinLights) l.intensity += (l.userData.nominalIntensity * dim - l.intensity) * Math.min(1, dt * 4);
     for (const m of strips) m.emissiveIntensity = 2.2 * dim;
-    for (const m of amberLamps) m.emissiveIntensity = shade ? 1.4 + .3 * Math.sin(t * 2) : 0;
+    shadowLamp.intensity = shade ? 4 + Math.sin(t * 2) : 0;
     for (const m of glass) { m.color.setHex(shade && !st.loads.heat ? 0xe8f4ff : 0xa9dcff); m.opacity = shade && !st.loads.heat ? .55 : .32; }
     // Mars in shadow: night side faces us.
-    sun.intensity += ((shade ? .05 : 2.2) - sun.intensity) * Math.min(1, dt * 2);
-    mars.rotation.y += dt * .01;
+    for (const light of orbitLights) light.intensity += ((shade && !landingView ? .05 : light.userData.sunIntensity) - light.intensity) * Math.min(1, dt * 2);
+    environment.update(dt);
+    if (landingView) {
+      updateLandingCamera(dt);
+      flame.scale.setScalar(.9 + Math.sin(t * 18) * .14);
+      flameMaterial.opacity = .72 + Math.sin(t * 22) * .18;
+    } else { missionSpace.visible = true; station.visible = false; descentCraft.visible = false; cockpit.visible = false; }
     // Hologram.
     const id = st.site || 'pad'; if (id !== shownSite) buildSite(id);
     const site = st.scenario.sites[id], shrink = st.comms ? st.scenario.beaconShrink : 1;
@@ -176,15 +210,31 @@ export async function createArrivalScene({container, getState, act, onPause, ope
   });
 
   function zap(pid) { ({feed: feedPlug, amp: oldAmp, card})[pid].getWorldPosition(sparkAt); zapTime = .5; shake = .4; }
-  /** Undock and fly down: Mars grows in the window, the hologram lander drops to its spot. */
-  async function fly() {
-    player.position.set(1.6, 1.62, .2); player.yaw = Math.PI / 2; player.pitch = -.05; player.syncCamera();
-    const from = mars.position.clone();
-    await world.tween(4, t => { mars.position.lerpVectors(from, new THREE.Vector3(-26, -12, 0), t); glow.material.opacity = .12 + Math.sin(t * Math.PI) * .5; shake = Math.sin(t * Math.PI) * .6; descent = t * .8; });
-    player.position.set(1.9, 1.62, .2); player.yaw = -Math.PI / 2; player.pitch = -.55; player.syncCamera();
-    await world.tween(2.2, t => { descent = .8 + t * .2; });
+  /** Leave the station view for a cinematic approach over the actual Mars globe. */
+  async function fly(cameraView = 'exterior') {
+    landingCamera = cameraView === 'cockpit' ? 'cockpit' : 'exterior';
+    landingView = true; missionSpace.visible = false; station.position.copy(stationOrbitPosition); station.visible = true;
+    const start = orbitPosition.clone().addScaledVector(landingAxis, environment.radius * 2.85);
+    const cameraStart = start.clone().add(new THREE.Vector3(0, environment.radius * .62, environment.radius * 1.1));
+    descentCraft.position.copy(start); descentCraft.lookAt(landingTarget); world.camera.position.copy(cameraStart); world.camera.lookAt(start);
+    updateLandingCamera(0);
+    await world.tween(3.2, t => {
+      descentCraft.position.lerpVectors(start, landingTarget, t * .88);
+      descentCraft.lookAt(landingTarget); descent = t * .88; shake = Math.sin(t * Math.PI) * .2;
+    });
+    const beforeTouchdown = descentCraft.position.clone();
+    await world.tween(1.7, t => {
+      descentCraft.position.lerpVectors(beforeTouchdown, landingTarget, t);
+      descentCraft.lookAt(landingTarget); descent = .88 + t * .12;
+    });
     shake = s().landing?.rough ? 1.4 : .3; descent = 1;
     await new Promise(r => setTimeout(r, 900));
+  }
+
+  function returnToInterior() {
+    landingView = false; station.visible = false; station.position.set(0, 0, 0); missionSpace.visible = true;
+    cockpit.visible = false; descentCraft.visible = false; world.hand.visible = true;
+    player.position.copy(cabinStart.position); player.yaw = cabinStart.yaw; player.pitch = cabinStart.pitch; player.syncCamera();
   }
 
   const guideTarget = () => {
@@ -196,16 +246,14 @@ export async function createArrivalScene({container, getState, act, onPause, ope
       if (st.fixed || st.diagnosed) { const p = st.fixed ? null : st.scenario.parts[st.diagnosed]; if (p && st.loads[p.load]) return toggles[p.load].parent; if (st.fixed) { const off = st.scenario.testNeeds.find(l => !st.loads[l]); return off ? toggles[off].parent : testBtn; } return st.diagnosed === 'amp' ? lockerDoor : ({feed: feedPlug, card})[st.diagnosed]; }
       const need = st.scenario.testNeeds.find(l => !st.loads[l]); return need ? toggles[need].parent : testBtn;
     }
-    return st.site ? part(cabin, 'hatch_wheel') : ground;
+    return st.site ? hatchControl : ground;
   };
   world.onFrame(() => world.guide(guideTarget(), .35));
 
-  return {world, zap, fly,
-    walkTargets: [{id: 'rack', label: '📻 Radio rack', x: RACK[0], z: -.6}, {id: 'panel', label: '⚡ Power panel', x: PANEL[0], z: -.7}, {id: 'locker', label: '🧰 Spares', x: CASE[0], z: .5},
-      {id: 'planner', label: '🗺️ Planner', x: TABLE[0] - 1.1, z: TABLE[1]}, {id: 'hatch', label: '🚀 Hatch', x: 4.2, z: -.6}, {id: 'window', label: '🪐 Window', x: -3.8, z: 0}],
+  return {world, zap, fly, returnToInterior,
+    walkTargets: WALK_TARGETS,
     walk(id) {
-      const t = this.walkTargets.find(w => w.id === id); if (!t) return;
-      const look = {rack: {x: RACK[0], z: -1.8}, panel: {x: PANEL[0], z: -1.8}, locker: {x: CASE[0], z: 1.8}, planner: {x: TABLE[0], z: TABLE[1]}, hatch: {x: 5, z: 0}, window: {x: -5, z: 0}}[id];
-      player.navigate({x: t.x, z: t.z}, look);
+      const t = WALK_TARGETS.find(w => w.id === id); if (!t) return;
+      if (!player.navigate({x: t.x, z: t.z}, t.look)) world.onInspect?.('The path is blocked. Walk to the middle of the hall and try again.');
     }};
 }
