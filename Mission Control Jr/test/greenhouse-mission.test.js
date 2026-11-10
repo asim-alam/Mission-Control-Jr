@@ -108,7 +108,9 @@ test('the harvest handling check is required before dinner and is not a laborato
   const m = start('salad'); day(m, {a: 'full', b: 'full'}); fixLeak(m); day(m, {a: 'full', b: 'full'});
   must(m, 'takeBasket'); for (const bed of ['a', 'b', 'c']) act(m, 'harvest', bed);
   assert.equal(act(m, 'serve').ok, false);
+  assert.equal(getObjective(m), 'Check the leaves and clean basket at the table');
   const checked = must(m, 'inspectHarvest'); assert.match(checked.message, /visual check/i);
+  assert.equal(getObjective(m), 'Serve dinner: put the basket on the table');
   must(m, 'serve'); assert.equal(getResult(m).harvestChecked, true);
 });
 
