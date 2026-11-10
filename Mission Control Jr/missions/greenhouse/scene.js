@@ -58,6 +58,27 @@ export async function createGreenhouseScene({container, getState, act, onPause, 
   const tableSpot = new THREE.Group(); tableSpot.position.set(0, .81, -.45); table.add(tableSpot); tableSpot.add(basket);
   const contents = part(basket, 'contents'), bowl = part(table, 'bowl_contents');
 
+  // A small procedural fan makes the airflow check visible without adding a new downloaded asset.
+  const fanUnit = new THREE.Group();
+  const fanBody = new THREE.Mesh(new THREE.CylinderGeometry(.48, .48, .18, 32), new THREE.MeshStandardMaterial({color: 0x26364a, metalness: .55, roughness: .38}));
+  fanBody.rotation.x = Math.PI / 2; fanUnit.add(fanBody);
+  const fanFrame = new THREE.Mesh(new THREE.TorusGeometry(.46, .045, 8, 32), new THREE.MeshStandardMaterial({color: 0x91a7b8, metalness: .72, roughness: .28}));
+  fanFrame.position.z = .12; fanUnit.add(fanFrame);
+  const fanRotor = new THREE.Group(); fanRotor.position.z = .17; fanUnit.add(fanRotor);
+  const fanBladeMaterial = new THREE.MeshStandardMaterial({color: 0x70a8b8, metalness: .24, roughness: .42});
+  for (let i = 0; i < 3; i++) {
+    const angle = i * Math.PI * 2 / 3;
+    const blade = new THREE.Mesh(new THREE.BoxGeometry(.13, .34, .045), fanBladeMaterial);
+    blade.position.set(Math.cos(angle) * .2, Math.sin(angle) * .2, 0); blade.rotation.z = angle + Math.PI / 2; fanRotor.add(blade);
+  }
+  const fanHub = new THREE.Mesh(new THREE.SphereGeometry(.105, 16, 12), new THREE.MeshStandardMaterial({color: 0xd5e2e9, metalness: .6, roughness: .25}));
+  fanHub.position.z = .21; fanUnit.add(fanHub);
+  const fanLedMaterial = new THREE.MeshStandardMaterial({color: 0xffc857, emissive: 0xffc857, emissiveIntensity: 1.2});
+  const fanLed = new THREE.Mesh(new THREE.SphereGeometry(.065, 12, 10), fanLedMaterial);
+  fanLed.position.set(.55, .42, .15); fanUnit.add(fanLed);
+  fanUnit.position.set(-6.1, 2.8, -4.12); scene.add(fanUnit);
+  const fanLabel = world.sign('AIRFLOW', {width: .88}); fanLabel.position.set(-6.1, 2.12, -4.02); scene.add(fanLabel);
+
   player.obstacles = [
     ...BEDS.map(id => ({minX: BED_X[id] - .95, maxX: BED_X[id] + .95, minZ: BED_Z - .5, maxZ: BED_Z + .5})),
     {minX: 5.15, maxX: 6.25, minZ: -4.4, maxZ: -3.8}, {minX: -7.2, maxX: -6.2, minZ: 3.4, maxZ: 4.4}, {minX: 4.5, maxX: 5.5, minZ: 1.5, maxZ: 3.1},
@@ -93,8 +114,13 @@ export async function createGreenhouseScene({container, getState, act, onPause, 
     label: () => 'Fit the new hose and tighten the clamps', onUse: () => act({id: 'fitHose'})});
   world.register({id: 'spare', object: spare, range: 2.4, enabled: () => playing() && s().leak === 'hose-off' && !s().holding, label: () => 'Take the spare hose', onUse: () => act({id: 'takeSpare'})});
   world.register({id: 'basket', object: basket, range: 2.4, enabled: () => playing() && s().basket === 'table' && !s().holding, label: () => 'Pick up the harvest basket', onUse: () => act({id: 'takeBasket'})});
-  world.register({id: 'table', object: table, range: 2.4, enabled: () => playing() && s().holding === 'basket', label: () => s().day > s().scenario.growDays ? 'Serve dinner!' : 'Put the basket down', onUse: () => act({id: 'serve'})});
+  world.register({id: 'table', object: table, range: 2.4, enabled: () => playing() && s().holding === 'basket',
+    label: () => s().day > s().scenario.growDays ? (s().harvestChecked ? 'Serve dinner!' : 'Check leaf surfaces and clean basket') : 'Put the basket down',
+    onUse: () => act({id: s().harvestChecked ? 'serve' : 'inspectHarvest'})});
   world.register({id: 'console', object: consoleM, range: 2.4, enabled: () => playing(), label: () => s().day > s().scenario.growDays ? 'Check the greenhouse screen' : 'Plan power and end the day', onUse: onConsole});
+  world.register({id: 'airflow-fan', object: fanUnit, range: 2.5, enabled: () => playing() && !s().fanRunning,
+    label: () => s().airflowChecked ? 'Reset the fan controller' : 'Check airflow at the vent',
+    onUse: () => act({id: s().airflowChecked ? 'resetFan' : 'checkAirflow'})});
 
   // ---- per-frame look --------------------------------------------------------------------
   const pink = new THREE.Color(0xff2a5a), night = new THREE.Color(0x4c5cff), day = new THREE.Color(0xfff1d6);
@@ -138,6 +164,9 @@ export async function createGreenhouseScene({container, getState, act, onPause, 
     if (sprayTime > 0) { sprayTime -= dt; spray.rate = 120; } else spray.rate = 0;
     sparkle.rate = st.phase === 'active' && BEDS.some(id => isReady(st, id)) ? 30 : 0;
     for (const m of ambientStrips) m.emissive.copy(day).lerp(night, nightAmount);
+    if (st.fanRunning) fanRotor.rotation.z += dt * 4.2;
+    fanLedMaterial.color.setHex(st.fanRunning ? 0x43dca5 : st.airflowChecked ? 0xff647c : 0xffc857);
+    fanLedMaterial.emissive.copy(fanLedMaterial.color);
     amara.update(dt); party.forEach(p => p.update(dt));
   });
 
@@ -159,6 +188,7 @@ export async function createGreenhouseScene({container, getState, act, onPause, 
     if (st.leak === 'leaking' || st.leak === 'hose-fitted') return isoValve;
     if (st.leak === 'isolated') return oldHose;
     if (st.leak === 'hose-off') return spare;
+    if (!st.airflowChecked || !st.fanRunning) return fanUnit;
     if (st.day > st.scenario.growDays) { const ready = BEDS.find(id => isReady(st, id)); if (st.holding !== 'basket') return basket; return ready ? beds[ready].plants[0].model : table; }
     const dry = BEDS.find(id => !st.beds[id].harvested && st.beds[id].light !== 'off' && moistureState(st, id) === 'dry');
     return dry ? beds[dry].valve : consoleM;
@@ -166,7 +196,7 @@ export async function createGreenhouseScene({container, getState, act, onPause, 
   world.onFrame(() => world.guide(guideTarget(), .3));
 
   return {world, nightfall, celebrate,
-    walkTargets: [{id: 'a', label: '🥬 Lettuce bed', x: BED_X.a, z: -2.6}, {id: 'b', label: '🌿 Mizuna bed', x: BED_X.b, z: -2.6}, {id: 'c', label: '🌶️ Pepper bed', x: BED_X.c, z: -2.6},
+    walkTargets: [{id: 'fan', label: '🌀 Air vent', x: -6.1, z: -2.65}, {id: 'a', label: '🥬 Lettuce bed', x: BED_X.a, z: -2.6}, {id: 'b', label: '🌿 Mizuna bed', x: BED_X.b, z: -2.6}, {id: 'c', label: '🌶️ Pepper bed', x: BED_X.c, z: -2.6},
       {id: 'line', label: '🚰 Water pipe', x: -3, z: 3.4}, {id: 'shelf', label: '🧰 Tool shelf', x: 1.3, z: 3.5}, {id: 'table', label: '🍽️ Table', x: 3.6, z: 2.3}, {id: 'console', label: '📺 Console', x: 5.7, z: -2.7}],
     walk(id) { const t = this.walkTargets.find(w => w.id === id); if (t) player.navigate({x: t.x, z: t.z}, {x: t.x, z: t.z + (t.z < 0 ? -1 : 1)}); }};
 }
