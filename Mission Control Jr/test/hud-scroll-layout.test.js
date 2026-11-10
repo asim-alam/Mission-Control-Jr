@@ -48,14 +48,13 @@ test('surface globe prop and its collision are absent while archive and atlas as
   assert.match(read('mission2.html'), /id="map-button"[^>]*>Map · M/);
 });
 
-test('Arrival puts secondary controls in Menu and gives opening copy its own scroll surface', () => {
-  const html = read('orbit.html'), css = read('hud-redesign.css'), js = read('orbit-demo.js');
-  assert.match(html, /id="menu-toggle"[^>]*>Menu/);
-  assert.match(html, /id="pause"[^>]*>Pause/);
-  assert.match(js, /onJourney:openJourney/);
-  assert.match(css, /body:has\(#space\) #opening\s*\{[^}]*overflow-y:\s*auto/s);
-  assert.match(css, /#station-overview-marker \{ display: none !important; \}/);
-  assert.match(js, /menu-toggle/);
+test('Arrival uses the shared mission HUD with Pause and Map buttons and a 3D world container', () => {
+  const html = read('orbit.html'), hud = read('missions/shared/hud.js'), controller = read('missions/shared/controller.js');
+  assert.match(html, /id="world"/);
+  assert.match(html, /missions\/orbit\/ui\.js/);
+  assert.match(hud, /id="pause"[^>]*>⏸️ Pause/);
+  assert.match(hud, /id="journey"[^>]*>🗺️ Map/);
+  assert.match(controller, /\$\('journey'\)\.onclick = openJourney/);
 });
 
 test('Meridian home uses the requested headline and a low-rate disposable Three.js scene', () => {

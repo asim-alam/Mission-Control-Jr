@@ -11,7 +11,7 @@ test('the shared mission controller binds its DOM helper before using it', async
   assert.ok(source.indexOf('const $') < source.indexOf("$('"));
 });
 
-for (const mission of ['solar-shelter', 'greenhouse', 'earth-delay', 'lunar-sunlight', 'lunar-dust', 'lunar-relay']) {
+for (const mission of ['orbit', 'solar-shelter', 'greenhouse', 'earth-delay', 'lunar-sunlight', 'lunar-dust', 'lunar-relay']) {
   test(`${mission} page loads its mission script and a world container`, async () => {
     const source = await read(`missions/${mission}/ui.js`);
     const usesController = /from '\.\.\/shared\/controller\.js'/.test(source) && /runMission\(\{/.test(source);

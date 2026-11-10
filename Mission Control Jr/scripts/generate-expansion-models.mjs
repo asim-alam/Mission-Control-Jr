@@ -11,6 +11,7 @@ import * as farm from './expansion-models/greenhouse.mjs';
 import * as repair from './expansion-models/repair.mjs';
 import * as lunar from './expansion-models/lunar.mjs';
 import * as refuge from './expansion-models/refuge.mjs';
+import * as marsOps from './expansion-models/mars-ops.mjs';
 
 globalThis.FileReader ??= class { readAsArrayBuffer(blob) { blob.arrayBuffer().then(v => { this.result = v; this.onloadend?.(); }).catch(e => { this.error = e; this.onerror?.(e); }); } };
 
@@ -22,7 +23,7 @@ export const DESIGNS = {
   'storm-shelter': hab.stormShelter, 'water-wall-bag': hab.waterBag, 'poly-shield-panel': hab.polyPanel,
   'cargo-shield-stack': hab.cargoStack, 'space-weather-console': hab.weatherConsole, 'stowage-rack': hab.stowageRack,
   'drinking-water-station': hab.waterStation, 'crew-member': hab.crewMember,
-  ...refuge.DESIGNS, ...farm.DESIGNS, ...repair.DESIGNS, ...lunar.DESIGNS,
+  ...refuge.DESIGNS, ...marsOps.DESIGNS, ...farm.DESIGNS, ...repair.DESIGNS, ...lunar.DESIGNS,
 };
 
 const target = process.argv[2];

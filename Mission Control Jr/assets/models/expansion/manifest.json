@@ -404,6 +404,180 @@
   "warnings": 0
  },
  {
+  "id": "orbiter-cabin",
+  "bytes": 301604,
+  "triangles": 8120,
+  "draws": 30,
+  "materials": 13,
+  "boundsMeters": [
+   10.12,
+   2.705,
+   3.68
+  ],
+  "interactionNodes": [
+   "window",
+   "hatch",
+   "hatch_wheel",
+   "hatch_light",
+   "ceiling_lights",
+   "shadow_lamp"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "comm-rack",
+  "bytes": 174192,
+  "triangles": 3492,
+  "draws": 32,
+  "materials": 9,
+  "boundsMeters": [
+   1.2,
+   2.661,
+   0.675
+  ],
+  "interactionNodes": [
+   "feed_plug",
+   "feed_cable",
+   "amp_slot",
+   "amp_module",
+   "controller_card",
+   "card_handle",
+   "radio_screen",
+   "led_feed",
+   "led_amp",
+   "led_card",
+   "led_radio",
+   "test_button",
+   "tester_port",
+   "smoke_point"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "power-panel",
+  "bytes": 108952,
+  "triangles": 2320,
+  "draws": 30,
+  "materials": 9,
+  "boundsMeters": [
+   1.6,
+   1.25,
+   0.25
+  ],
+  "interactionNodes": [
+   "switch_life",
+   "toggle_life",
+   "lamp_life",
+   "label_life",
+   "switch_heat",
+   "toggle_heat",
+   "lamp_heat",
+   "label_heat",
+   "switch_radio",
+   "toggle_radio",
+   "lamp_radio",
+   "label_radio",
+   "switch_amp",
+   "toggle_amp",
+   "lamp_amp",
+   "label_amp",
+   "switch_motor",
+   "toggle_motor",
+   "lamp_motor",
+   "label_motor",
+   "switch_charger",
+   "toggle_charger",
+   "lamp_charger",
+   "label_charger",
+   "switch_camera",
+   "toggle_camera",
+   "lamp_camera",
+   "label_camera",
+   "main_breaker",
+   "main_lamp",
+   "power_gauge",
+   "power_needle",
+   "budget_mark"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "landing-planner",
+  "bytes": 40792,
+  "triangles": 1032,
+  "draws": 6,
+  "materials": 5,
+  "boundsMeters": [
+   1.56,
+   1.757,
+   1.596
+  ],
+  "interactionNodes": [
+   "holo_surface",
+   "planner_screen",
+   "holo_ring"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "spares-case",
+  "bytes": 50920,
+  "triangles": 492,
+  "draws": 7,
+  "materials": 7,
+  "boundsMeters": [
+   1.14,
+   1.67,
+   0.53
+  ],
+  "interactionNodes": [
+   "case_door",
+   "slot_amp",
+   "slot_tester"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "amp-module",
+  "bytes": 45292,
+  "triangles": 396,
+  "draws": 9,
+  "materials": 3,
+  "boundsMeters": [
+   0.6,
+   0.26,
+   0.185
+  ],
+  "interactionNodes": [
+   "amp_body"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "signal-tester",
+  "bytes": 25784,
+  "triangles": 620,
+  "draws": 5,
+  "materials": 4,
+  "boundsMeters": [
+   0.295,
+   0.347,
+   0.08
+  ],
+  "interactionNodes": [
+   "tester_screen",
+   "clip"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
   "id": "hab-greenhouse-interior",
   "bytes": 697920,
   "triangles": 21576,

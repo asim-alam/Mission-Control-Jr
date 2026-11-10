@@ -132,7 +132,74 @@ async function shelter() {
   await legacy.close();
 }
 
-const FLOWS = {shelter};
+// ---- Arrival at Mars ------------------------------------------------------------------------
+const stand = (page, x, z, yaw, pitch = -.1) => page.eval(`(() => { const p = __mission.view.world.player; p.position.set(${x}, 1.62, ${z}); p.yaw = ${yaw}; p.pitch = ${pitch}; p.syncCamera(); })()`);
+async function orbit() {
+  console.log('\n— Arrival at Mars —');
+  const page = await open('orbit');
+  await page.shot(`${SHOTS}/orbit-1-brief.png`);
+  check('orbit: briefing explains radio and power', /Arrival at Mars/.test(await dialogTitle(page)));
+  await primary(page); await sleep(400);
+  check('orbit: mission active', await state(page, 'm.phase') === 'active');
+  await stand(page, -2.6, 0, Math.PI / 2, -.05); await sleep(800);
+  await page.shot(`${SHOTS}/orbit-2-window.png`);
+  // Real look-to-use: press the switch on the power panel and the rack test button.
+  await stand(page, 1.2, -.7, 0, -.2); await sleep(400);
+  await page.eval(`__mission.view.world.interaction.useById('switch:motor')`); await sleep(200);
+  check('orbit: E on a panel switch turns the load on', await state(page, 'm.loads.motor === true'));
+  await stand(page, -2.2, -.6, 0, -.25); await sleep(300);
+  await page.eval(`__mission.view.world.interaction.useById('test')`); await sleep(200);
+  check('orbit: plain test says no signal', await state(page, "m.lastTest === 'plain' && !m.diagnosed"));
+  for (const a of [{id: 'take', payload: 'tester'}, {id: 'clipTester'}, {id: 'testSignal'}]) await act(page, a);
+  const fault = await state(page, 'm.fault');
+  check('orbit: the tester finds the broken part', await state(page, 'm.diagnosed === m.fault'), fault);
+  await sleep(500); await page.shot(`${SHOTS}/orbit-3-rack-tester.png`);
+  // Touch the part with its power still on: the zap trips the breaker (recoverable).
+  if (fault === 'amp') await act(page, {id: 'take', payload: 'amp'});
+  await page.eval(`(() => { const L = __mission.state.scenario.parts[__mission.state.fault].load; if (!__mission.state.loads[L]) __mission.act({id: 'toggleLoad', targetId: L}, {quiet: true}); })()`);
+  await page.eval(`__mission.view.world.interaction.useById('part:${fault}')`); await sleep(300);
+  check('orbit: E on a radio part opens look/fix choices', /look|fix|swap/i.test(await page.eval(`document.getElementById('dialog-actions').textContent`)));
+  await clickLabel(page, fault === 'amp' ? 'Swap' : fault === 'feed' ? 'Push' : 'Pull'); await sleep(300);
+  check('orbit: touching a powered part trips the breaker', await state(page, 'm.tripped && m.zaps === 1'));
+  await sleep(300); await page.shot(`${SHOTS}/orbit-4-tripped.png`);
+  await act(page, {id: 'resetBreaker'}); await act(page, {id: 'fixPart', targetId: fault});
+  for (const l of ['radio', 'amp', 'motor']) await page.eval(`!__mission.state.loads.${l} && __mission.act({id: 'toggleLoad', targetId: '${l}'}, {quiet: true})`);
+  await act(page, {id: 'testSignal'});
+  check('orbit: the fixed radio reaches the base', await state(page, 'm.comms'));
+  const saveTitle = await reloadAndResume(page);
+  check('orbit: save/reload keeps the repair', /Welcome back/.test(saveTitle) && await state(page, 'm.comms && m.minute > 10'));
+  for (const l of ['radio', 'amp', 'motor']) await act(page, {id: 'toggleLoad', targetId: l});
+  await act(page, {id: 'toggleLoad', targetId: 'charger'});
+  await page.eval(`(() => { while (__mission.state.charge < 80) __mission.act({id: 'wait', payload: 1}, {quiet: true}); __mission.act({id: 'toggleLoad', targetId: 'charger'}, {quiet: true}); })()`);
+  await stand(page, 1.9, .2, -Math.PI / 2, -.5); await sleep(300);
+  await page.eval(`__mission.view.world.interaction.useById('planner')`); await sleep(300);
+  await page.eval(`document.querySelector('#dialog-body [data-plan="pad"]').click()`); await sleep(400);
+  check('orbit: planner picks a site', await state(page, "m.site === 'pad'"));
+  await clickLabel(page, 'Close'); await sleep(900);
+  await page.shot(`${SHOTS}/orbit-5-planner.png`);
+  await stand(page, 4.6, -.2, -Math.PI / 2, 0); await page.eval(`document.querySelectorAll('canvas').forEach(c => c.dispatchEvent(new PointerEvent('pointerleave')))`); await sleep(300);
+  await page.eval(`__mission.view.world.interaction.useById('hatch')`); await sleep(400);
+  check('orbit: hatch shows a ready check', /Ready to land/.test(await dialogTitle(page)));
+  await clickLabel(page, 'Get in and land'); await sleep(25000);
+  check('orbit: landing ends in a debrief', await soon(page, `/landing|Steered/i.test(document.querySelector('#dialog:not([hidden]) #dialog-title')?.textContent)`, 150000));
+  await sleep(500); await page.shot(`${SHOTS}/orbit-6-debrief.png`);
+  const rec = await journey(page, 'orbit');
+  check('orbit: completion recorded on the journey map', rec && rec.attemptCompleted !== false && rec.carry?.comms === true, JSON.stringify(rec)?.slice(0, 140));
+  await clickLabel(page, 'Try the landing again');
+  check('orbit: retry returns to just before boarding', await soon(page, `(() => { const m = __mission.state; return m.phase === 'active' && !m.boarded && m.comms && m.site === 'pad'; })()`));
+  const errs = errorsOf(page); check('orbit: no page errors', !errs.length, errs.join(' | '));
+  await page.close();
+  // Legacy save from the old orbit chapter + narrow viewport.
+  const legacy = await open('orbit', {width: 390, height: 844, setup: `localStorage.setItem('mission-control-jr.orbit.v1', JSON.stringify({phase: 'station', stage: 2, checks: {brief: true}, complete: false}));`});
+  check('orbit: old unfinished save gets a fresh start note', /old version/.test(await legacy.eval(`document.getElementById('dialog-body').textContent`)));
+  await legacy.shot(`${SHOTS}/orbit-7-narrow-brief.png`);
+  await primary(legacy); await sleep(600);
+  check('orbit: narrow viewport has no horizontal scroll', await legacy.eval('document.documentElement.scrollWidth <= innerWidth + 1'));
+  await legacy.shot(`${SHOTS}/orbit-8-narrow.png`);
+  await legacy.close();
+}
+
+const FLOWS = {shelter, orbit};
 try {
   for (const [name, fn] of Object.entries(FLOWS)) if (which === 'all' || which === name) await fn();
 } catch (e) { check('flow crashed', false, e.stack); console.log((lastPage?.logs || []).slice(-15).join('\n')); try { console.log(await lastPage.eval(`document.querySelector('#dialog-title')?.textContent`)); } catch {} }
