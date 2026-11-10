@@ -13,7 +13,7 @@ import {applyAction as actRelay} from '../missions/lunar-relay/actions.js';
 /** Fixed scenario entry states; they never grant campaign completion. */
 export function samplerSnapshot(id){
  const definitions={
-  'solar-shelter':[createShelter,actShelter,[{id:'begin'},{id:'choosePlan',payload:'roof'}]],
+  'solar-shelter':[createShelter,actShelter,[{id:'begin'},{id:'openMap'}]],
   greenhouse:[createGreenhouse,actGreenhouse,[{id:'begin'},{id:'choosePlan',payload:'salad'}]],
   'earth-delay':[createDelay,actDelay,[{id:'begin'},{id:'choosePlan',payload:'earth'},{id:'sendMessage'}]],
   'lunar-sunlight':[createSunlight,actSunlight,[{id:'begin'}]],

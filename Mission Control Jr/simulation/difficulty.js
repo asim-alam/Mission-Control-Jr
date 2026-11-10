@@ -10,8 +10,8 @@ export const LEVELS={
 
 /** Cadet overrides per mission. Values are authored game tuning, not NASA measurements. */
 export const CADET_TUNING={
- // Ten more minutes of warning and a gentler peak, so a slower builder still finishes the shelter.
- 'solar-shelter':{warningSeconds:1800,peakDoseRate:.033},
+ // Fifteen more work minutes before the particles rise, so a slower builder still finishes a layout.
+ 'solar-shelter':{onsetMinute:90},
  // A bigger battery, a slower leak and a wider "just right" soil band, so a careful plan still feasts.
  greenhouse:{batteryKWh:1.5,leakLPerDay:4,moistureBand:[.8,3.6]},
  // More water at the start, a quicker answer from Earth and shorter hand jobs. The light-time delay itself is never changed.

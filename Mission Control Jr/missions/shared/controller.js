@@ -7,7 +7,7 @@ import {readJourney} from '../../journey-state.js';
 import {loadSaved, makeSaver, clearSaved, snapshot, restore, reporter} from './runtime.js';
 
 /**
- * spec: {id, title, place, meters, carryFrom, create(carry), rules: {applyAction, advance?, getObjective, getSteps},
+ * spec: {id, title, place, meters, carryFrom, schema?, migrate?(oldState), create(carry), rules: {applyAction, advance?, getObjective, getSteps},
  *        scene(ctx) → view, brief(ctx), sources(ctx) → html, hud(ctx, dt), debrief(ctx), sampler(ctx)}
  */
 export async function runMission(spec) {
@@ -18,7 +18,7 @@ export async function runMission(spec) {
   const persist = makeSaver(spec.id, {sampleMode});
   const report = reporter(spec.id);
   let carry = {}; try { carry = spec.carryFrom ? readJourney(localStorage).records[spec.carryFrom]?.carry || {} : {}; } catch {}
-  const saved = sampleMode ? {state: null} : loadSaved(spec.id);
+  const saved = sampleMode ? {state: null} : loadSaved(spec.id, undefined, {schema: spec.schema, migrate: spec.migrate});
   let paused = false, hudClock = 0;
 
   const ctx = {
@@ -72,12 +72,14 @@ export async function runMission(spec) {
       }
       hud.edge(world.guideScreen()); persist(ctx.mission); ctx.setControls();
     });
+    if (saved.migrated) hud.toast(ctx.mission.notice || 'Your saved game was updated to the new version.', 'quiet');
     if (saved.discarded) hud.toast('Your old save was from an older version, so this is a fresh start.', 'quiet');
     if (sampleMode) spec.sampler(ctx);
     else if (saved.state && ctx.mission.phase === 'active') dialog({title: 'Welcome back!', body: '<p>We found your saved game. Keep going?</p>', actions: [{label: '▶ Keep playing', primary: true, run: () => ctx.close()}, {label: 'Start over', run: () => ctx.restart()}]});
     else if (ctx.mission.phase === 'debrief') spec.debrief(ctx);
     else spec.brief(ctx);
-    window.__mission = {get state() { return ctx.mission; }, act: ctx.act, view: ctx.view, ctx};
+    window.__mission = {get state() { return ctx.mission; }, act: ctx.act, view: ctx.view, ctx, step(seconds) { for (let t = 0; t < seconds; t += .1) spec.rules.advance?.(ctx.mission, .1, ctx); ctx.view.sync?.(); }};
+    spec.ready?.(ctx);
   } catch (error) {
     console.error(error);
     dialog({title: 'The mission did not load', body: '<p>Please reload the page.</p>', actions: [{label: '🗺️ Back to the map', run: openJourney}]});

@@ -1,192 +1,252 @@
-// 3D view of "A Place to Hide": a walk-in Mars habitat where shields are carried and fitted by hand.
+// 3D view of "A Place to Hide" (v3): a Mars habitat with a partly prepared refuge.
+// Water goes into a rack, plastic panels slide into rails and get fastened, supply bags are stacked and strapped.
 import * as THREE from 'three';
 import {createWorld, loadModel, part, setOpacity} from '../shared/engine.js';
 import {missionAsset} from '../shared/assets.js';
 import {makeCrew} from '../shared/crew.js';
 import {planRoute} from '../../navigation.js';
-import {CREW, SLOT_IDS} from './state.js';
-import {item, stormStrength} from './actions.js';
+import {CREW, PEOPLE, SEAT_IDS} from './state.js';
+import {item, rackWater, railPanels, zoneBags, surfaceTransmission, seatTransmission} from './actions.js';
 
-const SHELTER = {x: -4.2, z: -1.4};
-export const INSIDE = {minX: -5.8, maxX: -2.6, minZ: -2.6, maxZ: -.2};
-const WORK = {elena: [.6, -3.5, Math.PI], amara: [-6.7, 2.9, -Math.PI / 2], jin: [2.6, 1.6, .6], luca: [6.4, 2.6, Math.PI / 2]};
-const HOLD_POSE = {water: {scale: .3, offset: [-.05, -.32, 0], rotation: [0, -.5, 0]}, poly: {scale: .32, offset: [-.05, -.32, 0], rotation: [0, -.4, 0]}, cargo: {scale: .3, offset: [-.05, -.32, 0], rotation: [0, -.5, 0]}};
+const R0 = {x: -4.6, z: -1.6};                    // refuge origin in the habitat
+const W = (x, z) => [R0.x + x, R0.z + z];
+const WORK = {elena: [-1.4, -2.6, Math.PI], amara: [-6.6, 2.9, -Math.PI / 2], jin: [2.6, 1.6, .6], luca: [6.2, 2.6, Math.PI / 2]};
+const HOLD = {water: {scale: .7, offset: [-.1, -.28, 0], rotation: [0, -.3, 0]}, poly: {scale: .5, offset: [-.1, -.35, -.1], rotation: [0, -.2, 0]}, bag: {scale: .7, offset: [-.1, -.3, 0], rotation: [0, -.4, 0]}};
+const RAILS = ['roof_l', 'roof_r', 'back_l', 'back_r'], ZONES = ['shelf_l', 'shelf_r', 'stack_side', 'stack_back', 'stack_door'], RACKS = ['back_l', 'back_r', 'side_l'];
 
-function storeSpot(it) {
-  const n = +it.id.split('-')[1] - 1;
-  if (it.kind === 'water') return [-.2 + n * 1.42, 4.42, Math.PI];
-  if (it.kind === 'cargo') return [2.4 + n * 1.5, -4.38, 0];
-  return [7.62, n ? 2.7 : -2.7, -Math.PI / 2];
-}
-
-export async function createShelterScene({container, getState, act, onPause, onConsole}) {
-  const world = await createWorld({container, preset: 'interior', bounds: {minX: -7.4, maxX: 7.4, minZ: -4.4, maxZ: 4.4}, start: {x: 5.6, z: .6, yaw: Math.PI / 2}, onPause});
+export async function createShelterScene({container, getState, act, onPause, onTablet, onCheck, onElena}) {
+  const world = await createWorld({container, preset: 'interior', bounds: {minX: -7.4, maxX: 7.4, minZ: -4.4, maxZ: 4.4}, start: {x: 4.8, z: .6, yaw: Math.PI / 2}, onPause});
   const {scene, player} = world;
-  const [hab, shelter, console_, station, ...crewList] = await Promise.all([
-    loadModel(missionAsset('hab-quarters-interior')), loadModel(missionAsset('storm-shelter')), loadModel(missionAsset('space-weather-console')),
-    loadModel(missionAsset('drinking-water-station')), ...CREW.map(id => makeCrew(id))]);
+  const s = () => getState();
+  const st0 = s();
+  const [hab, refuge, console_, shelf, rack, trolley, duct, ...crewList] = await Promise.all([
+    loadModel(missionAsset('hab-quarters-interior')), loadModel(missionAsset('refuge-v3')), loadModel(missionAsset('space-weather-console')),
+    loadModel(missionAsset('stowage-rack')), loadModel(missionAsset('water-rack')), loadModel(missionAsset('water-trolley')), loadModel(missionAsset('vent-duct')),
+    ...CREW.map(id => makeCrew(id))]);
   scene.add(hab);
-  world.place3d(shelter, SHELTER.x, 0, SHELTER.z);
+  world.place3d(refuge, R0.x, 0, R0.z);
   world.place3d(console_, .6, 0, -4.45);
-  world.place3d(station, -2.1, 0, 4.5, Math.PI);
-  // Warm practical lights along the ceiling strips plus a cool fill near the shelter.
+  world.place3d(shelf, 4.2, 0, -3.95);
+  world.place3d(trolley, 1.6, 0, 3.2);
   const lamps = [];
   for (const x of [-5, 0, 5]) { const l = new THREE.PointLight(0xfff0dc, 3, 9, 1.6); l.position.set(x, 3.6, 0); scene.add(l); lamps.push(l); }
-  const shelterLamp = new THREE.PointLight(0xffc56b, 2.5, 4, 2); shelterLamp.position.set(SHELTER.x, 2, SHELTER.z + .3); scene.add(shelterLamp);
-  world.key.position.set(2, 9, 3); world.key.target.position.set(-1, 0, -1);
+  const refugeLamp = new THREE.PointLight(0xffe2b0, 2.2, 5, 2); refugeLamp.position.set(R0.x, 2, R0.z); scene.add(refugeLamp);
+  world.key.position.set(2, 9, 3); world.key.target.position.set(-2, 0, -1);
 
-  // Shield items.
-  const state0 = getState();
+  // Items.
+  const kindAsset = {water: 'water-container', poly: 'shield-panel', bag: 'supply-bag'};
   const models = {};
-  for (const it of state0.items) {
-    models[it.id] = await loadModel(missionAsset({water: 'water-wall-bag', poly: 'poly-shield-panel', cargo: 'cargo-shield-stack'}[it.kind]));
-    models[it.id].name = it.id;
+  for (const it of st0.items) { models[it.id] = await loadModel(missionAsset(kindAsset[it.kind])); models[it.id].name = it.id; }
+  const anchor = (x, y, z, yaw = 0) => { const a = new THREE.Group(); a.position.set(x, y, z); a.rotation.y = yaw; scene.add(a); return a; };
+  const stores = {}, floorSpots = {};
+  st0.items.forEach(it => {
+    const n = +it.id.split('-')[1] - 1;
+    if (it.kind === 'water') stores[it.id] = anchor(-.4 + (n % 3) * .58, n < 3 ? 0 : .55, 3.95, Math.PI);
+    else if (it.kind === 'poly') stores[it.id] = anchor(6.95, 0, -2.1 + n * 1.35, -Math.PI / 2);
+    else stores[it.id] = anchor(3.75 + (n % 2) * .85, [.11, .81, 1.51][Math.floor(n / 2)], -3.95);
+    const [fx, fz] = W(-1.2 + (n % 4) * .7, .3 + Math.floor(n / 4) * .3); floorSpots[it.id] = anchor(fx, .12, fz, n);
+  });
+  const rails = Object.fromEntries(RAILS.map(r => [r, [part(refuge, `rail_${r}_1`), part(refuge, `rail_${r}_2`)]]));
+  const zones = Object.fromEntries(ZONES.map(z => [z, part(refuge, `zone_${z}`)]));
+  const straps = Object.fromEntries(ZONES.map(z => [z, part(refuge, `strap_${z}`)]));
+  const mounts = Object.fromEntries(RACKS.map(r => [r, part(refuge, `rack_${r}`)]));
+  const rackSpots = [1, 2, 3, 4, 5, 6].map(i => part(rack, `spot_${i}`)), latch = part(rack, 'latch_bar');
+  const carts = [1, 2, 3, 4, 5, 6].map(i => part(trolley, `cart_${i}`));
+  const zoneSlot = {};
+  for (const z of ZONES) {
+    const shelfZone = z.startsWith('shelf');
+    zoneSlot[z] = [0, 1, 2].map(k => { const a = new THREE.Group(); if (shelfZone) a.position.set(0, k === 2 ? .33 : 0, [-.55, -.05, -.3][k]); else a.position.set(0, .135 + k * .33, 0); a.rotation.y = shelfZone ? Math.PI / 2 : 0; zones[z].add(a); return a; });
   }
-  const slotNodes = Object.fromEntries(SLOT_IDS.map(id => [id, part(shelter, `slot_${id}`)]));
-  const mounts = Object.fromEntries(SLOT_IDS.map(id => [id, part(shelter, `mount_${id}`)]));
-  const outlines = Object.fromEntries(SLOT_IDS.map(id => [id, part(shelter, `outline_${id}`)]));
-  // Invisible panels make each open slot easy to aim at (the outline itself is only thin bars).
-  const hitMat = new THREE.MeshBasicMaterial({transparent: true, opacity: 0, depthWrite: false});
-  for (const id of SLOT_IDS) { const hit = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 2.1), hitMat); hit.name = `hit_${id}`; hit.material.side = THREE.DoubleSide; outlines[id].add(hit); }
-  const storeAnchors = {};
-  for (const it of state0.items) {
-    const [x, z, yaw] = storeSpot(it); const a = new THREE.Group(); a.position.set(x, 0, z); a.rotation.y = yaw; scene.add(a); storeAnchors[it.id] = a;
+  rack.visible = false; duct.visible = false;
+  const vent = part(refuge, 'vent'), ventFan = part(refuge, 'vent_fan');
+  vent.add(duct); duct.rotation.y = -Math.PI / 2; duct.position.set(0, -.38, .05);
+
+  function anchorFor(st, it) {
+    if (it.at === 'store') return stores[it.id];
+    if (it.at === 'trolley') return carts[st.items.filter(i => i.kind === 'water').indexOf(it)];
+    if (it.at === 'rack') return rackSpots[rackWater(st).indexOf(it)];
+    if (it.at === 'floor') return floorSpots[it.id];
+    if (it.at.startsWith('rail:')) { const r = it.at.slice(5); return rails[r][railPanels(st, r).indexOf(it)]; }
+    if (it.at.startsWith('zone:')) { const z = it.at.slice(5); return zoneSlot[z][zoneBags(st, z).indexOf(it)]; }
+    return null;
   }
-  const where = {}; // what the scene currently shows for each item
-  function snap(it) {
+  const keyOf = (st, it) => it.at === 'hand' ? 'hand' : `${it.at}#${anchorFor(st, it)?.uuid}`;
+  const where = {};
+  function snap(st, it) {
     const m = models[it.id];
-    if (it.at === 'hand') { world.hand.add(m); const pose = HOLD_POSE[it.kind]; m.position.set(...pose.offset); m.rotation.set(...pose.rotation); m.scale.setScalar(pose.scale); }
-    else { (it.at === 'store' ? storeAnchors[it.id] : mounts[it.at]).add(m); m.position.set(0, 0, 0); m.rotation.set(0, 0, 0); m.scale.setScalar(1); }
-    where[it.id] = it.at;
+    if (it.at === 'hand') { world.hand.add(m); const p = HOLD[it.kind]; m.position.set(...p.offset); m.rotation.set(...p.rotation); m.scale.setScalar(p.scale); }
+    else { anchorFor(st, it).add(m); m.position.set(0, 0, 0); m.rotation.set(0, 0, 0); m.scale.setScalar(1); if (it.at === 'floor') m.rotation.set(.3, 0, .4); }
+    where[it.id] = keyOf(st, it);
   }
-  state0.items.forEach(snap);
 
   // Crew.
   const crew = Object.fromEntries(crewList.map(p => [p.id, p]));
-  const seats = CREW.map((_, i) => part(shelter, `seat_${i + 1}`));
+  const seatNodes = Object.fromEntries(SEAT_IDS.map(id => [id, part(refuge, `seat_${id}`)]));
+  const seatWorld = id => { const v = new THREE.Vector3(); seatNodes[id].getWorldPosition(v); return v; };
   const crewShown = {};
-  function seatPos(i) { const v = new THREE.Vector3(); seats[i].getWorldPosition(v); return v; }
   for (const id of CREW) { scene.add(crew[id].model); const [x, z, yaw] = WORK[id]; crew[id].teleport(x, z, yaw); crew[id].mode = 'work'; crewShown[id] = 'work'; }
-  function placeCrew(id, at, animate) {
-    const p = crew[id], i = CREW.indexOf(id), seat = seatPos(i);
-    if (at === 'work') { const [x, z, yaw] = WORK[id]; p.teleport(x, z, yaw); p.mode = 'work'; }
-    else if (!animate) { p.teleport(seat.x, seat.z + .25, 0); p.mode = 'sit'; }
-    else {
-      const route = planRoute(p.model.position, {x: seat.x, z: .4}, obstacles, {minX: -7.6, maxX: 7.6, minZ: -4.6, maxZ: 4.6});
-      p.mode = 'wave'; setTimeout(() => p.walkRoute([...route, {x: seat.x, z: seat.z + .25}], () => { p.model.rotation.y = 0; p.mode = 'sit'; }), 600);
-    }
-    crewShown[id] = at === 'work' ? 'work' : 'shelter';
-  }
-
-  // Walls of the shelter block walking (the front stays open).
+  const door = {x: R0.x, z: R0.z + 1.9};
   const obstacles = [
-    {minX: -5.95, maxX: -5.8, minZ: -2.75, maxZ: -.05}, {minX: -2.6, maxX: -2.45, minZ: -2.75, maxZ: -.05}, {minX: -5.95, maxX: -2.45, minZ: -2.78, maxZ: -2.62},
-    {minX: .05, maxX: 1.15, minZ: -4.8, maxZ: -4.05}, {minX: -6.5, maxX: -3.6, minZ: -5, maxZ: -4.1}, {minX: -2.5, maxX: -1.7, minZ: 4.1, maxZ: 5},
-    {minX: -1, maxX: 7.6, minZ: 4.15, maxZ: 5}, {minX: 1.6, maxX: 7.7, minZ: -5, maxZ: -4.05}, {minX: 7.2, maxX: 8, minZ: -3.5, maxZ: -1.9}, {minX: 7.2, maxX: 8, minZ: 1.9, maxZ: 3.5},
+    {minX: R0.x - 1.9, maxX: R0.x - 1.7, minZ: R0.z - 1.5, maxZ: R0.z + 1.5}, {minX: R0.x + 1.66, maxX: R0.x + 1.9, minZ: R0.z - 1.5, maxZ: R0.z + 1.5},
+    {minX: R0.x - 1.9, maxX: R0.x + 1.9, minZ: R0.z - 1.5, maxZ: R0.z - 1.33},
+    {minX: R0.x - 1.85, maxX: R0.x - .75, minZ: R0.z + 1.05, maxZ: R0.z + 1.45}, {minX: R0.x + .75, maxX: R0.x + 1.85, minZ: R0.z + 1.05, maxZ: R0.z + 1.45},
+    {minX: .05, maxX: 1.15, minZ: -4.8, maxZ: -4.05}, {minX: 3.0, maxX: 5.4, minZ: -4.5, maxZ: -3.55}, {minX: -1, maxX: 1.3, minZ: 3.65, maxZ: 5},
+    {minX: .75, maxX: 2.45, minZ: 2.8, maxZ: 3.6},
   ];
   player.obstacles = obstacles;
-
-  // ---- interactions --------------------------------------------------------------------
-  const s = () => getState();
-  const label = it => s().scenario.materials[it.kind].label;
-  const active = () => s().phase === 'active' && (s().stage === 'prep' || s().stage === 'storm');
-  for (const it of state0.items) {
-    world.register({id: `item:${it.id}`, object: models[it.id], range: 2.6,
-      enabled: () => active() && !s().held && item(s(), it.id).at !== 'hand',
-      label: () => item(s(), it.id).at === 'store' ? `Pick up the ${label(it)}` : `Take out the ${label(it)}`,
-      onUse: () => act({id: 'pickUp', targetId: it.id})});
+  const bounds = {minX: -7.6, maxX: 7.6, minZ: -4.6, maxZ: 4.6};
+  function sendToSeat(id, animate) {
+    const p = crew[id], seat = seatWorld(s().seats[id]);
+    if (!animate) { p.teleport(seat.x, seat.z + .05, 0); p.mode = 'sit'; crewShown[id] = `seat:${s().seats[id]}`; return; }
+    crewShown[id] = `seat:${s().seats[id]}`;
+    const route = planRoute(p.model.position, door, obstacles, bounds);
+    p.mode = 'wave'; setTimeout(() => p.walkRoute([...route, {x: door.x, z: R0.z + .9}, {x: seat.x, z: seat.z + .05}], () => { p.model.rotation.y = 0; p.mode = 'sit'; }), 400);
   }
-  for (const id of SLOT_IDS) {
-    world.register({id: `slot:${id}`, object: outlines[id], range: 2.7,
-      enabled: () => active() && !!s().held && !s().slots[id],
-      holdSeconds: () => s().held && item(s(), s().held).kind === 'poly' ? s().scenario.materials.poly.boltSeconds : 0,
-      label: () => s().held && item(s(), s().held).kind === 'poly' ? `Bolt the plastic shield ${id.startsWith('roof') ? 'onto the roof' : 'here'}` : `Put it ${id.startsWith('roof') ? 'on the roof' : 'in this wall spot'}`,
-      onUse: () => act({id: 'place', targetId: id})});
-  }
-  for (const id of CREW) {
-    world.register({id: `crew:${id}`, object: crew[id].model, range: 2.6, enabled: () => active() && s().crew[id].at === 'work',
-      label: () => `Tell ${crew[id].look.name} to go to the shelter`, onUse: () => act({id: 'callCrew', targetId: id})});
-  }
-  world.register({id: 'console', object: console_, range: 2.6, enabled: () => s().phase === 'active' && s().stage !== 'plan', label: () => 'Check the storm screen', onUse: onConsole});
 
-  // ---- storm effects ---------------------------------------------------------------------
-  const center = new THREE.Vector3(SHELTER.x, 1.1, SHELTER.z);
-  const streaks = world.particles({count: 260, color: 0xb18cff, size: .07, additive: true, gravity: 0, life: [.6, 1.2],
-    spawn(p, v) { p.set(-7 + Math.random() * 14, 4.3, -4.5 + Math.random() * 9); v.set((Math.random() - .5) * 2, -6 - Math.random() * 3, (Math.random() - .5) * 2); }});
-  const leaks = world.particles({count: 160, color: 0xff6bd5, size: .09, additive: true, gravity: 0, life: [.35, .6],
-    spawn(p, v) {
-      const open = SLOT_IDS.filter(id => !s().slots[id]); if (!open.length) { p.set(0, -99, 0); return; }
-      const id = open[Math.floor(Math.random() * open.length)], src = new THREE.Vector3(); slotNodes[id].getWorldPosition(src);
-      const out = src.clone().sub(center).setLength(1.4); p.copy(src).add(out).add(new THREE.Vector3((Math.random() - .5) * 1.2, (Math.random() - .5) * 1.2, (Math.random() - .5) * 1.2));
-      v.copy(center).sub(p).setLength(5 + Math.random() * 2);
-    }});
-  const sparks = world.particles({count: 90, color: 0xfff1a8, size: .06, additive: true, gravity: 0, life: [.2, .4],
-    spawn(p, v) {
-      const full = SLOT_IDS.filter(id => s().slots[id]); if (!full.length) { p.set(0, -99, 0); return; }
-      const id = full[Math.floor(Math.random() * full.length)], src = new THREE.Vector3(); slotNodes[id].getWorldPosition(src);
-      p.copy(src).add(src.clone().sub(center).setLength(.25)).add(new THREE.Vector3((Math.random() - .5) * 1.1, (Math.random() - .5) * 1.1, (Math.random() - .5) * 1.1));
-      v.set((Math.random() - .5), (Math.random() - .5), (Math.random() - .5));
-    }});
-  const beacon = part(console_, 'beacon_lamp'), doseScreen = part(shelter, 'dose_display'), screen = part(console_, 'display');
-  const strips = []; hab.traverse(o => { if (o.isMesh && o.material.name === 'light-strip') strips.push(o.material); });
-  const calm = new THREE.Color(0xfff1d6), alarm = new THREE.Color(0xff5a7a);
-
-  world.onFrame((dt, t) => {
-    const st = s(), strength = st.phase === 'active' ? stormStrength(st) : 0;
-    const warning = st.phase === 'active' && st.stage === 'prep';
-    streaks.rate = strength * 260; leaks.rate = strength * 220; sparks.rate = strength * 150;
-    beacon.material.emissiveIntensity = warning || strength > 0 ? (Math.sin(t * 8) > 0 ? 3 : .2) : .4;
-    const mood = Math.min(1, strength * 1.2 + (warning ? .15 : 0));
-    for (const m of strips) m.emissive.copy(calm).lerp(alarm, mood);
-    lamps.forEach(l => l.color.copy(calm).lerp(alarm, mood * .8));
-    screen.material.emissive.set(warning || strength > 0 ? 0xff8a3d : 0x2fd3c0);
-    const doseColor = st.stage === 'storm' ? (st.playerInShelter ? 0x3ee6b5 : 0xff5d73) : 0x2fd3c0;
-    doseScreen.material.emissive.set(doseColor);
-    // Slot guides: glow when the player carries a shield, red when the storm finds a gap.
-    for (const id of SLOT_IDS) {
-      const o = outlines[id], filled = !!st.slots[id];
-      o.visible = !filled && st.phase === 'active' && st.stage !== 'plan';
-      o.traverse(m => { if (m.isMesh) { m.material.emissive?.set(strength > 0 ? 0xff3a3a : 0xffc83a); m.material.emissiveIntensity = st.held ? 1 + Math.sin(t * 6) * .6 : .25; } });
+  // Elena's help, shown in 3D.
+  const trolleyHome = trolley.position.clone(), trolleyAtRefuge = new THREE.Vector3(R0.x + 1.1, 0, R0.z + 2.6);
+  let assistShown = null;
+  function showAssist(animate) {
+    const a = s().assist; if (a === assistShown) return; assistShown = a;
+    const elena = crew.elena;
+    if (a === 'trolley') {
+      if (!animate) { trolley.position.copy(trolleyAtRefuge); elena.teleport(trolleyAtRefuge.x + .9, trolleyAtRefuge.z, -Math.PI / 2); elena.mode = 'work'; return; }
+      elena.walkTo(trolleyHome.x + 1, trolleyHome.z, () => {
+        elena.mode = 'work'; const from = trolley.position.clone();
+        world.tween(4, t => { trolley.position.lerpVectors(from, trolleyAtRefuge, t); elena.model.position.set(trolley.position.x + .9, 0, trolley.position.z); elena.face(trolleyAtRefuge.x, trolleyAtRefuge.z); elena.mode = t < 1 ? 'walk' : 'work'; });
+      });
     }
-    for (const p of crewList) p.update(dt);
-    player.speedScale = st.held ? st.scenario.materials[item(st, st.held).kind].walkSpeed : 1;
+    if (a === 'airflow') {
+      const v = new THREE.Vector3(); vent.getWorldPosition(v);
+      const fit = () => { elena.model.position.set(v.x + .7, 0, v.z); elena.model.rotation.y = -Math.PI / 2; elena.mode = 'work'; duct.visible = true; duct.scale.set(1, .01, 1); world.tween(2.4, t => duct.scale.set(1, Math.max(.01, t), 1)); };
+      if (!animate) { fit(); duct.scale.set(1, 1, 1); return; }
+      elena.walkRoute([...planRoute(elena.model.position, door, obstacles, bounds), {x: door.x, z: R0.z + .9}, {x: v.x + .7, z: v.z}], fit);
+    }
+  }
+
+  // ---- interactions --------------------------------------------------------------------------
+  const prep = () => s().phase === 'active' && s().stage === 'prep';
+  const held = () => s().held && item(s(), s().held);
+  const name = it => ({water: 'water container', poly: 'plastic panel', bag: 'supply bag'})[it.kind];
+  for (const it of st0.items) {
+    world.register({id: `item:${it.id}`, object: models[it.id], range: 2.4,
+      enabled: () => { const i = item(s(), it.id); if (!prep() || i.at === 'hand' || i.at === 'floor') return false; if (s().held) return false; if (i.kind === 'poly' && i.at.startsWith('rail:') && !i.fastened) return true; return true; },
+      holdSeconds: () => { const i = item(s(), it.id); return i.kind === 'poly' && i.at.startsWith('rail:') && !i.fastened ? 1.1 : 0; },
+      label: () => { const i = item(s(), it.id); if (i.kind === 'poly' && i.at.startsWith('rail:') && !i.fastened) return 'Fasten the panel (turn both knobs)'; return ['store', 'trolley'].includes(i.at) ? `Pick up a ${name(i)}` : `Take out the ${name(i)} (2 min)`; },
+      onUse: () => { const i = item(s(), it.id); act(i.kind === 'poly' && i.at.startsWith('rail:') && !i.fastened ? {id: 'fastenPanel', targetId: it.id} : {id: 'pickUp', targetId: it.id}); }});
+  }
+  const hitPlane = (w, h) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide})); return m; };
+  for (const r of RACKS) {
+    const hit = hitPlane(1.3, 1.9); hit.position.set(0, .95, .2); mounts[r].add(hit);
+    world.register({id: `mount:${r}`, object: hit, range: 2.6, enabled: () => prep() && !s().rack.built && !s().held, holdSeconds: 1.5,
+      label: () => `Bolt the water rack frame here (${s().scenario.water.minutes.frame} min)`, onUse: () => act({id: 'buildRack', payload: r})});
+  }
+  world.register({id: 'rack', object: rack, range: 2.6, enabled: () => prep() && s().rack.built && ((held()?.kind === 'water') || (!s().held && rackWater(s()).length && !s().rack.latched)),
+    holdSeconds: () => s().held ? 0 : 1.2,
+    label: () => s().held ? `Load the water into the rack (${item(s(), s().held).from === 'trolley' ? s().scenario.water.minutes.loadTrolley : s().scenario.water.minutes.load} min)` : `Latch the rack bars (${s().scenario.water.minutes.latch} min)`,
+    onUse: () => act({id: s().held ? 'loadRack' : 'latchRack'})});
+  for (const r of RAILS) {
+    const roof = r.startsWith('roof'), hit = hitPlane(1.3, roof ? 2.5 : 2.1);
+    if (roof) { hit.rotation.x = -Math.PI / 2; } else hit.position.set(0, 1.05, .08);
+    part(refuge, `rail_${r}`).add(hit);
+    world.register({id: `rail:${r}`, object: hit, range: roof ? 3.2 : 2.6, enabled: () => prep() && held()?.kind === 'poly' && railPanels(s(), r).length < 2, holdSeconds: 1,
+      label: () => `Slide the panel into the ${s().scenario.surfaces[r].label.toLowerCase()} rails`, onUse: () => act({id: 'slidePanel', targetId: r})});
+  }
+  for (const z of ZONES) {
+    const shelfZone = z.startsWith('shelf'), hit = hitPlane(1, shelfZone ? .6 : 1.2); hit.position.set(0, shelfZone ? .2 : .6, shelfZone ? .2 : .3); zones[z].add(hit);
+    world.register({id: `zone:${z}`, object: hit, range: shelfZone ? 3 : 2.5,
+      enabled: () => prep() && ((held()?.kind === 'bag' && zoneBags(s(), z).length < 3) || (!s().held && zoneBags(s(), z).length && !s().zones[z].strapped)),
+      holdSeconds: () => s().held ? (shelfZone ? .8 : 0) : 1.2,
+      label: () => s().held ? `Stack the bag on the ${s().scenario.bags.zones[z].label}` : `Strap the stack down (${s().scenario.bags.minutes.strap} min)`,
+      onUse: () => act(s().held ? {id: 'placeBag', targetId: z} : {id: 'strapZone', targetId: z})});
+  }
+  world.register({id: 'elena', object: crew.elena.model, range: 2.6, enabled: () => prep() && !s().assist, label: () => 'Ask Elena to help', onUse: onElena});
+  world.register({id: 'tablet', object: console_, range: 2.6, enabled: () => s().phase === 'active', label: () => 'Open the refuge map', onUse: onTablet});
+  const doorFrame = part(refuge, 'door_frame');
+  const doorHit = hitPlane(1.4, 2.2); doorHit.position.set(0, 1.1, .05); doorFrame.add(doorHit);
+  world.register({id: 'check', object: doorHit, range: 2.6, enabled: () => prep() && !s().held, label: () => 'Run the refuge check', onUse: onCheck});
+
+  // ---- effects -------------------------------------------------------------------------------
+  const roofAvg = () => (surfaceTransmission(s(), 'roof_l') + surfaceTransmission(s(), 'roof_r')) / 2;
+  const top = () => R0.x - 1.7 + Math.random() * 3.4, depth = () => R0.z - 1.3 + Math.random() * 2.6;
+  const blocked = world.particles({count: 140, color: 0xc49bff, size: .06, additive: true, gravity: 0, life: [.28, .32],
+    spawn(p, v) { p.set(top(), 4.1, depth()); v.set(0, -6, 0); }});
+  const through = world.particles({count: 120, color: 0xff7bd8, size: .07, additive: true, gravity: 0, life: [.62, .7],
+    spawn(p, v) { p.set(top(), 4.1, depth()); v.set(0, -6, 0); }});
+  const roofNode = part(refuge, 'roof_cutaway'), display = part(refuge, 'refuge_display'), screen = part(console_, 'display'), beacon = part(console_, 'beacon_lamp');
+  const strips = []; hab.traverse(o => { if (o.isMesh && o.material.name === 'light-strip') strips.push(o.material); });
+  const calm = new THREE.Color(0xfff1d6), alert = new THREE.Color(0xffb36b);
+  let cutaway = false;
+  const seatSigns = {};
+  world.onFrame((dt, t) => {
+    const st = s(), live = st.phase === 'active' && (st.stage === 'event');
+    const intensity = live ? st.outsideRate / st.scenario.peakOutsideRate : 0;
+    const showOverlay = st.overlay && live;
+    blocked.rate = showOverlay ? intensity * 300 * (1 - roofAvg()) : 0; through.rate = showOverlay ? intensity * 300 * roofAvg() : 0;
+    beacon.material.emissiveIntensity = st.phase === 'active' && st.stage !== 'after' ? (Math.sin(t * 6) > 0 ? 2.4 : .3) : .4;
+    const mood = st.phase === 'active' && st.stage !== 'after' ? .5 : 0;
+    for (const m of strips) m.emissive.copy(calm).lerp(alert, mood);
+    lamps.forEach(l => l.color.copy(calm).lerp(alert, mood * .6));
+    screen.material.emissive.set(st.stage === 'prep' || live ? 0xff8a3d : 0x2fd3c0);
+    display.material.emissive.set(live ? 0x3ee6b5 : 0x2fd3c0);
+    ventFan.rotation.z += dt * (st.assist === 'airflow' || zoneBags(st, 'stack_side').length < st.scenario.ventBlockBags ? 9 : 1.2);
+    latch.rotation.y = THREE.MathUtils.lerp(latch.rotation.y, st.rack.latched ? 0 : -1.2, Math.min(1, dt * 6));
+    for (const z of ZONES) straps[z].visible = !!st.zones[z].strapped && zoneBags(st, z).length > 0;
+    for (const id of CREW) crew[id].update(dt);
+    player.speedScale = held() ? {water: .75, poly: .8, bag: .85}[held().kind] : 1;
+    // Seated during the event: you can look around, not walk away.
+    if (st.phase === 'active' && st.stage !== 'prep' && !cutaway) { const v = seatWorld(st.seats.you); player.position.set(v.x, 1.25, v.z); }
   });
 
-  /** Bring the 3D view in line with the rules state, animating anything that just changed. */
-  async function sync({animate = true} = {}) {
+  /** Bring the 3D view in line with the rules state. */
+  function sync({animate = true} = {}) {
     const st = s();
+    rack.visible = st.rack.built; if (st.rack.built && rack.parent !== mounts[st.rack.at]) { mounts[st.rack.at].add(rack); rack.position.set(0, 0, 0); }
     for (const it of st.items) {
-      if (where[it.id] === it.at) continue;
+      if (where[it.id] === keyOf(st, it)) continue;
       const m = models[it.id];
-      if (!animate) { snap(it); continue; }
-      where[it.id] = it.at;
-      if (it.at === 'hand') world.hold(m, HOLD_POSE[it.kind]);
-      else { const target = it.at === 'store' ? storeAnchors[it.id] : mounts[it.at]; world.place(m, target, {seconds: .6, arc: it.at.startsWith('roof') ? .8 : .3}); }
+      if (!animate || it.at === 'floor') { snap(st, it); continue; }
+      where[it.id] = keyOf(st, it);
+      if (it.at === 'hand') world.hold(m, HOLD[it.kind]); else world.place(m, anchorFor(st, it), {seconds: .6, arc: it.at.startsWith('rail:roof') || it.at.startsWith('zone:shelf') ? .7 : .3});
     }
+    showAssist(animate);
     for (const id of CREW) {
-      const at = st.crew[id].at === 'work' ? 'work' : 'shelter';
-      if (crewShown[id] !== at) placeCrew(id, at, animate && st.crew[id].at === 'walking');
+      const want = st.phase !== 'brief' && (st.stage !== 'prep') ? `seat:${st.seats[id]}` : 'work';
+      if (crewShown[id] === want) continue;
+      if (want === 'work') { const [x, z, yaw] = WORK[id]; crew[id].teleport(x, z, yaw); crew[id].mode = 'work'; crewShown[id] = 'work'; assistShown = null; }
+      else sendToSeat(id, animate);
     }
   }
   sync({animate: false});
 
-  const guideTargets = () => {
-    const st = s(); if (st.phase !== 'active' || st.stage === 'plan') return null;
-    if (st.stage === 'after') return console_;
-    if (st.held) { const open = SLOT_IDS.filter(id => !st.slots[id]); const pick = open.find(id => id.startsWith('roof')) || open[0]; return pick ? outlines[pick] : null; }
-    const called = CREW.find(id => st.crew[id].at === 'work');
-    const filled = SLOT_IDS.filter(id => st.slots[id]).length, left = st.items.filter(i => i.at === 'store');
-    const order = st.plan === 'fast' ? ['cargo', 'poly', 'water'] : st.plan === 'water' ? ['water', 'poly', 'cargo'] : ['poly', 'water', 'cargo'];
-    const late = st.simSeconds > st.scenario.warningSeconds * .7;
-    if (filled < 8 && left.length && !(late && called)) { for (const k of order) { const it = left.find(i => i.kind === k); if (it) return models[it.id]; } }
-    if (called) return crew[called].model;
-    if (!st.playerInShelter) return shelter;
-    return null;
-  };
-  world.onFrame(() => world.guide(guideTargets(), .4));
+  // Cutaway for the debrief: lift the camera above the refuge, fade its roof and show each person's result.
+  function setCutaway(on, labels = {}) {
+    cutaway = on;
+    setOpacity(roofNode, on ? .08 : 1);
+    for (const sp of Object.values(seatSigns)) sp.removeFromParent();
+    if (on) {
+      for (const p of PEOPLE) {
+        const v = seatWorld(s().seats[p]), sp = world.sign(labels[p] || p, {width: .95, color: labels[`${p}:color`] || '#ffd23f'});
+        sp.position.set(v.x, 1.75, v.z + .1); scene.add(sp); seatSigns[p] = sp;
+      }
+      player.enabled = false; player.position.set(R0.x + .2, 3.1, R0.z + 3.4);
+      const dx = R0.x - player.position.x, dy = .5 - 3.1, dz = R0.z - .3 - player.position.z;
+      player.yaw = Math.atan2(-dx, -dz); player.pitch = Math.atan2(dy, Math.hypot(dx, dz)); player.syncCamera();
+    }
+  }
 
-  return {world, sync, inShelter() { const p = player.position; return p.x > INSIDE.minX && p.x < INSIDE.maxX && p.z > INSIDE.minZ && p.z < INSIDE.maxZ; },
-    walkTargets: [{id: 'store-water', label: '💧 Water walls', x: 2.5, z: 3.2}, {id: 'store-cargo', label: '🎒 Supply bags', x: 4.6, z: -3.1}, {id: 'store-poly', label: '🧱 Plastic shields', x: 6.4, z: 0},
-      {id: 'shelter', label: '🏠 Shelter', x: -4.2, z: -1.2}, {id: 'console', label: '📺 Storm screen', x: .6, z: -3.2}],
+  const guideTarget = () => {
+    const st = s(); if (st.phase !== 'active' || st.stage !== 'prep') return null;
+    if (!st.mapViewed) return console_;
+    if (!st.assist) return crew.elena.model;
+    const h = held();
+    if (h?.kind === 'water') return st.rack.built ? rack : null;
+    return null; // no "best spot" hints: the player decides the layout
+  };
+  world.onFrame(() => world.guide(guideTarget(), .4));
+
+  return {world, sync, setCutaway, seatTransmission: seat => seatTransmission(s(), seat),
+    walkTargets: [{id: 'store-water', label: '💧 Water containers', x: .4, z: 3.1}, {id: 'store-bags', label: '🎒 Supply bags', x: 4.2, z: -2.8}, {id: 'store-poly', label: '🧱 Plastic panels', x: 6.1, z: 0},
+      {id: 'refuge', label: '🏠 Refuge door', x: R0.x, z: R0.z + 2.2}, {id: 'console', label: '📋 Refuge map', x: .6, z: -3.3}],
     walk(id) { const t = this.walkTargets.find(w => w.id === id); if (t) player.navigate({x: t.x, z: t.z}, {x: t.x, z: t.z - 1}); }};
 }

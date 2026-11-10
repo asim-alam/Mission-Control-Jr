@@ -50,10 +50,10 @@ test('Earth delay: waiting without saving water costs more on Explorer; Cadet ke
  assert.ok(explorer.waterL<explorer.waterStartL*.6,'the cost of waiting should still be obvious');
 });
 
-test('Shelter: a Cadet gets more warning time and a gentler storm than an Explorer',()=>{
+test('Shelter: a Cadet gets more work time before the particles rise; the shielding rules stay the same',()=>{
  const cadet=createShelter({scenario:tuneScenario('solar-shelter',shelterScenario,'cadet')}),explorer=createShelter({scenario:tuneScenario('solar-shelter',shelterScenario,'explorer')});
- assert.ok(cadet.scenario.warningSeconds>explorer.scenario.warningSeconds);assert.ok(cadet.scenario.peakDoseRate<explorer.scenario.peakDoseRate);
- for(const m of [cadet,explorer]){ok(shelterAction(m,{id:'begin'}));ok(shelterAction(m,{id:'choosePlan',payload:'water'}));}
+ assert.ok(cadet.scenario.onsetMinute>explorer.scenario.onsetMinute);assert.deepEqual(cadet.scenario.water,explorer.scenario.water);assert.equal(cadet.scenario.peakOutsideRate,explorer.scenario.peakOutsideRate);
+ for(const m of [cadet,explorer]){ok(shelterAction(m,{id:'begin'}));ok(shelterAction(m,{id:'chooseAssist',payload:'trolley'}));}
 });
 
 test('Lunar dust: Cadet starts with more power and two spare filters; tools work the same',()=>{

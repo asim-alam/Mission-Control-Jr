@@ -222,6 +222,188 @@
   "warnings": 0
  },
  {
+  "id": "refuge-v3",
+  "bytes": 582456,
+  "triangles": 16644,
+  "draws": 71,
+  "materials": 12,
+  "boundsMeters": [
+   3.8,
+   2.36,
+   2.92
+  ],
+  "interactionNodes": [
+   "roof_cutaway",
+   "vent",
+   "vent_fan",
+   "door_frame",
+   "refuge_screen",
+   "refuge_display",
+   "seat_A",
+   "seat_B",
+   "seat_C",
+   "seat_D",
+   "seat_E",
+   "seat_F",
+   "rack_back_l",
+   "rack_back_r",
+   "rack_side_l",
+   "rail_roof_l",
+   "rail_roof_l_1",
+   "rail_roof_l_2",
+   "rail_roof_r",
+   "rail_roof_r_1",
+   "rail_roof_r_2",
+   "rail_back_l",
+   "rail_back_l_1",
+   "rail_back_l_2",
+   "rail_back_r",
+   "rail_back_r_1",
+   "rail_back_r_2",
+   "zone_shelf_l",
+   "strap_shelf_l",
+   "zone_shelf_r",
+   "strap_shelf_r",
+   "zone_stack_side",
+   "strap_stack_side",
+   "zone_stack_back",
+   "strap_stack_back",
+   "zone_stack_door",
+   "strap_stack_door",
+   "surface_roof_l",
+   "surface_roof_r",
+   "surface_back_l",
+   "surface_back_r",
+   "surface_side_l",
+   "surface_front"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "water-rack",
+  "bytes": 116112,
+  "triangles": 3700,
+  "draws": 7,
+  "materials": 5,
+  "boundsMeters": [
+   1.425,
+   2,
+   0.405
+  ],
+  "interactionNodes": [
+   "spot_1",
+   "spot_2",
+   "spot_3",
+   "spot_4",
+   "spot_5",
+   "spot_6",
+   "latch_bar",
+   "tap"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "water-container",
+  "bytes": 63788,
+  "triangles": 1224,
+  "draws": 6,
+  "materials": 5,
+  "boundsMeters": [
+   0.51,
+   0.646,
+   0.315
+  ],
+  "interactionNodes": [
+   "handle",
+   "cap",
+   "water_level"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "shield-panel",
+  "bytes": 33684,
+  "triangles": 692,
+  "draws": 8,
+  "materials": 5,
+  "boundsMeters": [
+   1.2,
+   1,
+   0.157
+  ],
+  "interactionNodes": [
+   "fastener_l",
+   "fastener_r",
+   "grip"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "supply-bag",
+  "bytes": 33632,
+  "triangles": 860,
+  "draws": 6,
+  "materials": 5,
+  "boundsMeters": [
+   0.7,
+   0.425,
+   0.521
+  ],
+  "interactionNodes": [
+   "handle"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "water-trolley",
+  "bytes": 57408,
+  "triangles": 1316,
+  "draws": 12,
+  "materials": 6,
+  "boundsMeters": [
+   1.644,
+   1.045,
+   0.72
+  ],
+  "interactionNodes": [
+   "cart_1",
+   "cart_2",
+   "cart_3",
+   "cart_4",
+   "cart_5",
+   "cart_6",
+   "handle",
+   "wheel_1",
+   "wheel_2",
+   "wheel_3",
+   "wheel_4"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "vent-duct",
+  "bytes": 139480,
+  "triangles": 5444,
+  "draws": 4,
+  "materials": 4,
+  "boundsMeters": [
+   0.363,
+   1.61,
+   0.3
+  ],
+  "interactionNodes": [
+   "outlet"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
   "id": "hab-greenhouse-interior",
   "bytes": 697920,
   "triangles": 21576,

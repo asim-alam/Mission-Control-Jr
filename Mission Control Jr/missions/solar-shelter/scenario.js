@@ -1,26 +1,52 @@
 import inputs from '../../data/normalized.json' with {type: 'json'};
 
-// "A Place to Hide" — build a radiation shelter before a solar particle storm reaches Mars.
-// SOURCED: the archived GOES >10 MeV proton event (NASA DONKI, 10 May 2024), the idea that water,
-// polyethylene and packed supplies are useful shielding, and that Mars itself blocks about half the sky.
-// AUTHORED (game tuning): warning time, storm length, "dose points", slot weights and how much each
-// material blocks. They are teaching values, not a medical dose model.
+// "A Place to Hide" (v3) — reinforce a partly prepared refuge before a solar particle event.
+// OBSERVED (NASA): solar energetic particles exist, are invisible and can be dangerous to crews;
+//   water, polyethylene and packed supplies are hydrogen-rich and useful shielding; a planet blocks
+//   the half of the sky below you; the 10 May 2024 SEP was recorded by GOES near EARTH (NASA DONKI).
+// AUTHORED (game tuning, NOT measurements): every number below — work minutes, onset time, rate units,
+//   how much each item reduces exposure, the "sky share" of each refuge surface. They are teaching values.
 export const shelterScenario = {
-  id: 'meridian-sol18-v2', version: 2, sourceId: 'donki-sep-2024-05-10-goes', event: inputs.sep,
-  warningSeconds: 1200,     // simulated seconds between the alert and the particles arriving
-  stormSeconds: 3600,       // simulated seconds of strong particle flux (shortened for play)
-  prepTimeScale: 5,         // simulated seconds per real second while getting ready
-  stormTimeScale: 45,       // simulated seconds per real second during the storm
-  peakDoseRate: .04,        // dose points per simulated second at the storm peak, with no shielding
-  backgroundDoseRate: .0004,
-  habTransmission: .85,     // the habitat walls alone let most particles through
-  slots: {back_1: 1, back_2: 1, left_1: 1, left_2: 1, right_1: 1, right_2: 1, roof_1: 2, roof_2: 2},
-  materials: {
-    water: {count: 6, transmission: .25, walkSpeed: .6, label: 'water wall', icon: '💧'},
-    poly: {count: 2, transmission: .2, walkSpeed: .9, label: 'plastic shield', icon: '🧱', boltSeconds: 1.6},
-    cargo: {count: 4, transmission: .45, walkSpeed: .85, label: 'supply bags', icon: '🎒'},
+  id: 'meridian-sol18-v3', version: 3, sourceId: 'donki-sep-2024-05-10-goes', event: inputs.sep,
+  // The particle rise starts at this many work-minutes after the alert. The player is never shown this
+  // exact number: forecasters only give a rough window (see forecastText).
+  onsetMinute: 75,
+  forecastText: 'Forecasters think particles may start rising in about an hour or two. Nobody knows the exact time.',
+  eventHours: 10,                 // how long the event lasts in the story
+  eventRealSeconds: 70,           // how long it takes to watch at normal speed
+  coverMinutes: 4,                // story minutes for the crew to walk into the refuge
+  // Illustrative exposure-rate units per hour. Not a real dose unit.
+  backgroundRate: .004,
+  peakOutsideRate: 2,
+  habInteriorShare: .95,          // the habitat walls alone block a little
+  // Surfaces of the refuge. "base" = how much gets through the bare wall (0..1).
+  surfaces: {
+    roof_l: {label: 'Roof (left)', base: .86}, roof_r: {label: 'Roof (right)', base: .86},
+    back_l: {label: 'Back wall (left)', base: .84}, back_r: {label: 'Back wall (right)', base: .84},
+    side_l: {label: 'Side wall', base: .84}, front: {label: 'Front and door', base: .8},
   },
-  crewWalkSeconds: 90,      // simulated seconds for a crew member to walk to the shelter
-  ratings: {great: 40, ok: 65},
-  limitation: 'The GOES event was measured near Earth in May 2024. The warning time, storm length, shielding numbers and dose points in this game are made up for practice. They are not a real dose or a Mars forecast.',
+  // Share of each seat's open sky that each surface covers (made-up geometry; each row adds up to 1).
+  seats: {
+    A: {label: 'Seat A', sky: {roof_l: .34, roof_r: .12, back_l: .22, back_r: .06, side_l: .18, front: .08}},
+    B: {label: 'Seat B', sky: {roof_l: .30, roof_r: .18, back_l: .20, back_r: .10, side_l: .12, front: .10}},
+    C: {label: 'Seat C', sky: {roof_l: .18, roof_r: .30, back_l: .10, back_r: .20, side_l: .08, front: .14}},
+    D: {label: 'Seat D', sky: {roof_l: .12, roof_r: .34, back_l: .06, back_r: .22, side_l: .06, front: .20}},
+    E: {label: 'Seat E', sky: {roof_l: .25, roof_r: .25, back_l: .08, back_r: .08, side_l: .10, front: .24}},
+    F: {label: 'Door seat', sky: {roof_l: .14, roof_r: .28, back_l: .04, back_r: .10, side_l: .04, front: .40}},
+  },
+  startSeats: {elena: 'A', amara: 'B', jin: 'F', luca: 'D', you: 'E'},
+  // Each item multiplies what gets through its surface by this factor.
+  water: {count: 6, perContainer: .11, rackSpots: ['back_l', 'back_r', 'side_l'], minutes: {frame: 8, load: 5, loadTrolley: 3, latch: 3}},
+  poly: {count: 4, factor: .65, rails: {roof_l: 2, roof_r: 2, back_l: 2, back_r: 2}, minutes: {slide: 4, fasten: 3}},
+  bags: {count: 6, factor: .8, zones: {
+    shelf_l: {surface: 'roof_l', cap: 3, label: 'left roof shelf', overhead: true},
+    shelf_r: {surface: 'roof_r', cap: 3, label: 'right roof shelf', overhead: true},
+    stack_side: {surface: 'side_l', cap: 3, label: 'side wall (by the vent)'},
+    stack_back: {surface: 'back_r', cap: 3, label: 'back wall (right)'},
+    stack_door: {surface: 'front', cap: 3, label: 'next to the door'},
+  }, minutes: {place: 4, placeOverhead: 5, strap: 3}},
+  moveMinutes: 2,
+  ventBlockBags: 2,               // this many bags by the vent block the airflow (unless the duct is fitted)
+  ratings: {great: .42, ok: .28},  // share of exposure avoided compared with waiting in the plain habitat
+  limitation: 'The May 2024 particle event was measured by the GOES satellite near Earth, not at Mars. Everything else in this mission — the warning window, the refuge layout, the exposure units and how much each item blocks — is made up for practice. It is not a real dose or a forecast.',
 };

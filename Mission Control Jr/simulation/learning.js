@@ -1,5 +1,5 @@
 const explanations={
- 'solar-shelter':'The storm date and the GOES particle data are real NASA records. The shelter spots, dose points and walking times are made up for the game. Water and plastic block more particles than supply bags because they hold lots of hydrogen.',
+ 'solar-shelter':'The May 2024 particle event is a real NASA record, measured near Earth by GOES, not at Mars. The refuge layout, warning window and exposure units are made up for the game. Water, plastic and packed supplies all slow particles because they hold lots of hydrogen, and where you put them matters.',
  greenhouse:'NASA gave us the light schedule (16 hours on, 8 off) and the crops astronauts really grew: red lettuce, mizuna and chile peppers. The power budget, growth speed and leak are made up for the game. Packed meals are still the main food.',
  'earth-delay':'On this date a message takes about 11 minutes to go from Mars to Earth, even at the speed of light (NASA JPL data). The answer needs 11 more minutes to come back. The recycler, its parts, the meter numbers and the water use are made up for the game.',
  'lunar-sunlight':'NASA’s LOLA maps show how often real spots near the Moon’s south pole get sunlight. Our hills, cart, cable and battery are pretend.',
@@ -7,7 +7,7 @@ const explanations={
  'lunar-relay':'Radio goes in straight lines, so a hill blocks it. A relay on the ridge top needs two clear hops: base to relay, then relay to you. A message from the Moon to Earth takes about one second.'
 };
 const prompts={
- 'solar-shelter':'Water blocks the most particles, but it is heavy and slow to carry. What will you build first?',
+ 'solar-shelter':'Water, plastic panels and supply bags all help. There is not time for everything, so what will you build first?',
  greenhouse:'Which beds get full light? Borrowing battery power grows more, but the base needs it at night.',
  'earth-delay':'Earth’s answer takes over 20 minutes. Test the parts yourself, ask Earth, or do both?',
  'lunar-sunlight':'Is it better to go high on the ridge, or build a tall mast close to home?',

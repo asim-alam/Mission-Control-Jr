@@ -10,12 +10,18 @@ const storage = () => { try { return globalThis.localStorage; } catch { return n
 import {SAVE_SCHEMA} from './schema.js';
 export {SAVE_SCHEMA};
 
-export function loadSaved(id, store = storage()) {
+/**
+ * Load an active attempt. A mission may declare its own schema and a migrate(oldState) function that
+ * turns an older save into a valid new one (or returns null when nothing in it is still valid).
+ */
+export function loadSaved(id, store = storage(), {schema = SAVE_SCHEMA, migrate = null} = {}) {
   const raw = loadActiveAttempt(id, store ?? undefined);
   if (!raw) return {state: null, discarded: false};
   try {
     const state = restoreSnapshot(raw);
-    if (state.schema === SAVE_SCHEMA && state.missionId === id) return {state, discarded: false};
+    if (state.schema === schema && state.missionId === id) return {state, discarded: false};
+    const moved = migrate?.(state);
+    if (moved && moved.schema === schema && moved.missionId === id) return {state: moved, discarded: false, migrated: true};
   } catch {}
   clearActiveAttempt(id, store ?? undefined);
   return {state: null, discarded: true};

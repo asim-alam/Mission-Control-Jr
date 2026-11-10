@@ -52,17 +52,23 @@ export const PIP_TIPS={
   [/land on mars|landing on mars/i,'Mars air is thin, so a parachute is not enough. Rockets slow the lander at the end.']
  ],
  'solar-shelter':[
-  [/sun storm warning/i,'The Sun can throw out fast, invisible particles. NASA watches the Sun to warn crews.'],
-  [/shelter plan/i,'There is more than one good plan. Try one now and a different one next time.'],
-  [/glowing shelter spot/i,'Roof spots count double. Mars blocks particles from below, so most come from above.'],
-  [/build the shelter/i,'Water, plastic and packed supplies all slow down fast particles. Fill the empty spots.'],
-  [/call the crew/i,'Walk up to each crew member and press E. They need time to walk over.'],
-  [/inside the shelter yourself/i,'You count too! Step inside before the storm arrives.'],
-  [/storm passes/i,'Storms from the Sun fade after a while. Stay inside until the screen says all clear.'],
-  [/all clear/i,'Check the storm screen, then finish the mission.'],
-  [/shelter worked/i,'Look at the dose bars. Could a different plan block even more?'],
-  [/stopped/i,'That is OK! Real crews practice many times.']
+  [/space weather alert/i,'Forecasters on Earth watch the Sun and warn crews when particles might come.'],
+  [/refuge map/i,'The map is an estimate from what is built. It shows which walls and seats are weaker.'],
+  [/elena for one kind/i,'Elena can save you time with the water, or make the side wall safe to stack against.'],
+  [/load the water container/i,'Water is full of hydrogen, which slows fast particles. Each container helps a bit.'],
+  [/rack frame/i,'The rack can stand against the back wall or the side wall. Which seats does that protect?'],
+  [/slide the plastic panel/i,'Plastic panels are light and strong. Fasten them so they stay put.'],
+  [/stack the supply bag/i,'Packed food and clothes help too. Keep the door, the vent and the water tap clear.'],
+  [/fix the refuge/i,'The check found a problem. Fix it, then run the check again.'],
+  [/strengthen the refuge/i,'There is not time for everything. Pick what protects the people who need it most.'],
+  [/wait with the crew/i,'Nobody knows the exact time. Sensors will show when the particles rise.'],
+  [/hurrying into the refuge/i,'Getting inside slows down new exposure. It cannot undo what was already collected.'],
+  [/outside and refuge sensors/i,'Compare the two numbers. The difference is what your refuge is blocking.'],
+  [/all clear/i,'The levels are back to normal. Let us see how each person did.'],
+  [/refuge worked/i,'Look at who collected the most, and which wall let the most through.'],
+  [/stopped/i,'That is OK! Real crews practise many times.']
  ],
+
  greenhouse:[
   [/meet the plants/i,'Plants make food and fresh air. On Mars, a greenhouse is like a farm inside a tent.'],
   [/farming plan/i,'Every plan can work. Try one now and a different one next time to compare.'],

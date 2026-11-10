@@ -105,4 +105,20 @@ body.mx-details-on .mx-detail { display: block; }
   .mx-timer { position: fixed; top: 62px; left: 50%; translate: -50% 0; font-size: 1rem; }
   .mx-prompt { bottom: 96px; }
 }
+/* Phones (portrait): one compact column, nothing overlaps, no sideways scroll. */
+@media (max-width: 520px) {
+  .mx-top { padding: 6px 8px; gap: 6px; }
+  .mx-title small { display: none; } .mx-title h1 { font-size: .95rem; max-width: 34vw; }
+  .mx-actions { gap: 4px; max-width: 64vw; } .mx-actions button { font-size: .7rem; padding: .25rem .45rem; min-height: 32px; }
+  .mx-timer { top: 84px; max-width: calc(100vw - 16px); font-size: .78rem; padding: 4px 10px; text-align: center; }
+  .mx-meters { top: 118px; width: 148px; gap: 4px; }
+  .mx-meter { padding: 3px 6px; } .mx-meter-label { font-size: .62rem; } .mx-meter-value { font-size: .72rem; } .mx-meter-icon { font-size: .9rem; }
+  .mx-job { bottom: 64px; right: 8px; left: 8px; width: auto; padding: 6px 10px; } .mx-job h2 { font-size: .95rem; } .mx-eyebrow { font-size: .6rem; }
+  .mx-walk { padding: 4px 6px; border-radius: 14px; } .mx-walk .mx-eyebrow { display: none; }
+  .mx-walk #locations { display: flex; flex-wrap: nowrap; overflow-x: auto; gap: 4px; margin-top: 0; } .mx-walk #locations button { white-space: nowrap; flex: none; font-size: .75rem; min-height: 36px; }
+  .mx-prompt { bottom: 150px; } .mx-toast { left: 8px; right: 8px; max-width: none; translate: none; font-size: .85rem; }
+  .mx-toast.show { translate: none; }
+  #pip .pip-bubble { max-width: 62vw !important; font-size: .78rem !important; }
+  #dialog .card { max-height: calc(100dvh - 24px); overflow: auto; padding: 14px; }
+}
 @media (prefers-reduced-motion: reduce) { .mx-timer.urgent { animation: none; } .mx-bar i { transition: none; } }
