@@ -591,6 +591,84 @@ runMission({
           break;
         }
       }
+      updateStationGuidance(s);
     }
   },
 });
+
+function getStationTarget(s) {
+  if (s.stage === 'descent' || s.phase !== 'active') return null;
+  if (s.tripped) return {id: 'panel', name: 'Power panel', icon: '⚡'};
+  if (!inShadow(s) && minutesToShadow(s) <= 10 && powerUsed(s) > s.scenario.power.shadow) {
+    return {id: 'panel', name: 'Power panel', icon: '⚡'};
+  }
+  if (s.holding === 'tester') return {id: 'rack', name: 'Radio rack', icon: '📻'};
+  if (s.holding === 'amp' && !s.fixed) {
+    return s.loads.amp ? {id: 'panel', name: 'Power panel', icon: '⚡'} : {id: 'rack', name: 'Radio rack', icon: '📻'};
+  }
+  if (!s.comms) {
+    if (s.fixed) {
+      const off = s.scenario.testNeeds.find(l => !s.loads[l]);
+      return off ? {id: 'panel', name: 'Power panel', icon: '⚡'} : {id: 'rack', name: 'Radio rack', icon: '📻'};
+    }
+    if (s.diagnosed) {
+      const p = s.scenario.parts[s.diagnosed];
+      if (s.loads[p.load]) return {id: 'panel', name: 'Power panel', icon: '⚡'};
+      if (s.diagnosed === 'amp') return s.holding === 'amp' ? {id: 'rack', name: 'Radio rack', icon: '📻'} : {id: 'locker', name: 'Spares locker', icon: '🧰'};
+      return {id: 'rack', name: 'Radio rack', icon: '📻'};
+    }
+    const need = s.scenario.testNeeds.find(l => !s.loads[l]);
+    if (need) return {id: 'panel', name: 'Power panel', icon: '⚡'};
+    return {id: 'rack', name: 'Radio rack', icon: '📻'};
+  }
+  if (!s.site) {
+    if (!hazardCamReady(s) && !s.loads.charger) return {id: 'panel', name: 'Power panel', icon: '⚡'};
+    return {id: 'planner', name: 'Landing planner', icon: '🗺️'};
+  }
+  return {id: 'hatch', name: 'Lander hatch', icon: '🚀'};
+}
+
+function updateStationGuidance(s) {
+  const target = getStationTarget(s);
+
+  // Update walk buttons highlight
+  const locButtons = document.querySelectorAll('#locations button');
+  if (locButtons.length) {
+    locButtons.forEach(btn => {
+      const label = btn.textContent || '';
+      const isTarget = target && (
+        (target.id === 'panel' && label.includes('Power panel')) ||
+        (target.id === 'rack' && label.includes('Radio rack')) ||
+        (target.id === 'locker' && label.includes('Spares')) ||
+        (target.id === 'planner' && label.includes('Planner')) ||
+        (target.id === 'hatch' && label.includes('Hatch')) ||
+        (target.id === 'window' && label.includes('Window'))
+      );
+      btn.classList.toggle('is-next-target', !!isTarget);
+    });
+  }
+
+  // Update Waypoint Pill in Job card
+  let waypointEl = document.getElementById('mx-job-waypoint');
+  if (!waypointEl) {
+    waypointEl = document.createElement('div');
+    waypointEl.id = 'mx-job-waypoint';
+    waypointEl.className = 'mx-job-waypoint';
+    const jobSec = document.querySelector('.mx-job');
+    if (jobSec) {
+      const objEl = document.getElementById('objective');
+      if (objEl && objEl.nextSibling) {
+        jobSec.insertBefore(waypointEl, objEl.nextSibling);
+      } else {
+        jobSec.appendChild(waypointEl);
+      }
+    }
+  }
+
+  if (target) {
+    waypointEl.hidden = false;
+    waypointEl.innerHTML = `📍 <b>Next stop:</b> <span>${target.icon} ${target.name}</span> <small>(click button below to walk)</small>`;
+  } else if (waypointEl) {
+    waypointEl.hidden = true;
+  }
+}

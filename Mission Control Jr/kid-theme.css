@@ -1813,6 +1813,68 @@ body.kid-home #journey-count, body.kid-home .wordmark { white-space: nowrap; }
   }
 }
 
+/* ==========================================================================
+   Station Next-Step Guidance: Waypoint badge & Highlighted Walk Buttons
+   ========================================================================== */
+.mx-job-waypoint {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 6px 0 6px 0;
+  padding: 4px 10px;
+  background: rgba(43, 212, 160, 0.16);
+  border: 1.5px solid #3ee6b5;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  color: #c9ffea;
+  box-shadow: 0 0 10px rgba(62, 230, 181, 0.25);
+}
+.mx-job-waypoint b {
+  color: #ffffff;
+}
+.mx-job-waypoint small {
+  color: #ffd23f;
+  font-weight: 700;
+  margin-left: 2px;
+}
+
+#locations button.is-next-target {
+  background: linear-gradient(135deg, #205c42 0%, #163d2e 100%) !important;
+  border: 2px solid #3ee6b5 !important;
+  box-shadow: 0 0 14px rgba(62, 230, 181, 0.65), 0 4px 8px rgba(0, 0, 0, 0.4) !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  animation: walk-target-glow 1.6s ease-in-out infinite alternate !important;
+  position: relative;
+}
+
+#locations button.is-next-target::after {
+  content: "NEXT";
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  background: #ffd23f;
+  color: #171126;
+  font-size: 0.65rem;
+  font-weight: 900;
+  border-radius: 6px;
+  vertical-align: middle;
+  letter-spacing: 0.04em;
+}
+
+@keyframes walk-target-glow {
+  0% {
+    border-color: #3ee6b5;
+    box-shadow: 0 0 8px rgba(62, 230, 181, 0.45);
+  }
+  100% {
+    border-color: #ffd23f;
+    box-shadow: 0 0 18px rgba(255, 210, 63, 0.85), 0 0 25px rgba(62, 230, 181, 0.5);
+    transform: translateY(-1px);
+  }
+}
+
+
 
 
 
