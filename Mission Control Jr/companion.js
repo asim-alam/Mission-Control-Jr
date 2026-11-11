@@ -2,6 +2,7 @@
 // in one or two short sentences, with a "why" a 7-9 year old can follow. Pip never plays the
 // game for the child: it only explains. A speaker button reads the tip aloud.
 import {PIP_TIPS} from './companion-tips.js';
+import {isCadet} from './simulation/difficulty.js';
 
 const HIDDEN_KEY='mission-control-jr.pip-hidden.v1';
 const store={get(){try{return localStorage.getItem(HIDDEN_KEY)==='1';}catch{return false;}},set(v){try{localStorage.setItem(HIDDEN_KEY,v?'1':'0');}catch{}}};
@@ -14,16 +15,18 @@ export function pipTip(chapter,objective){
 }
 
 const css=`
-#pip{position:fixed;left:16px;bottom:96px;z-index:40;display:flex;align-items:flex-end;gap:8px;max-width:min(320px,calc(100vw - 32px));font:500 15px/1.35 system-ui,sans-serif;color:#eef2f5;pointer-events:none}
-#pip .pip-face{pointer-events:auto;flex:none;width:52px;height:52px;border-radius:50%;border:2px solid #6fe3c8;background:#172431;display:grid;place-items:center;cursor:pointer;padding:0;box-shadow:0 4px 14px #0008}
+#pip{position:fixed;left:16px;bottom:96px;z-index:40;display:flex;align-items:flex-end;gap:8px;max-width:min(340px,calc(100vw - 32px));font:500 15px/1.35 system-ui,sans-serif;color:#eef2f5;pointer-events:none}
+#pip .pip-face{pointer-events:auto;flex:none;width:52px;height:52px;border-radius:50%;border:2px solid #6fe3c8;background:#172431;display:grid;place-items:center;cursor:pointer;padding:0;box-shadow:0 4px 14px #0008;transition:transform .15s ease}
+#pip .pip-face:hover{transform:scale(1.08)}
 #pip .pip-face:focus-visible,#pip button:focus-visible{outline:3px solid #ffc857;outline-offset:2px}
-#pip .pip-bubble{pointer-events:auto;background:#0f1923ee;border:1px solid #2b3b4b;border-radius:14px 14px 14px 4px;padding:10px 12px;box-shadow:0 6px 20px #0009}
+#pip .pip-bubble{pointer-events:auto;background:#0f1923ee;border:1px solid #2b3b4b;border-radius:14px 14px 14px 4px;padding:10px 12px;box-shadow:0 6px 20px #0009;transition:opacity .3s ease,transform .2s ease}
+#pip.pip-resting .pip-bubble{opacity:.88}
+#pip.pip-hidden .pip-bubble{display:none}
 #pip .pip-name{font-size:12px;letter-spacing:.08em;color:#6fe3c8;font-weight:700;display:flex;justify-content:space-between;align-items:center;gap:8px}
 #pip .pip-next{margin:4px 0 0;font-weight:700}
 #pip .pip-why{margin:4px 0 0;color:#cfd8df}
 #pip .pip-tools{display:flex;gap:6px}
 #pip .pip-tools button{background:#172431;border:1px solid #2b3b4b;color:#eef2f5;border-radius:8px;font-size:13px;padding:2px 8px;cursor:pointer}
-#pip.pip-hidden .pip-bubble,#pip.pip-resting .pip-bubble{display:none}
 #pip.pip-idle,body:has(#opening:not([hidden])) #pip,body:has(#landing:not([hidden])) #pip,body:has(.ui-scrim:not([hidden])) #pip,body:has(#dialog:not([hidden])) #pip{display:none}
 body:has(#locations) #pip{left:auto;right:16px;flex-direction:row-reverse}body:has(#locations) #pip .pip-bubble{border-radius:14px 14px 4px 14px}
 #pip.pip-pop .pip-face{animation:pip-pop .5s ease}
@@ -39,7 +42,7 @@ export function objectiveText(target){
  const heading=target.querySelector?.('h2,h3');if(heading)return heading.textContent.trim();
  const copy=target.cloneNode(true);copy.querySelectorAll?.('button').forEach(b=>b.remove());return copy.textContent.trim();
 }
-const REST_AFTER_MS=9000;
+const REST_AFTER_MS=24000;
 
 /** Start Pip on a chapter page. Returns {say(next,why)} for chapters that want to add a moment. */
 export function startPip(chapter,{objective='objective'}={}){
@@ -53,9 +56,23 @@ export function startPip(chapter,{objective='objective'}={}){
  setHidden(store.get());
  let restTimer=0;const rest=()=>{clearTimeout(restTimer);root.classList.remove('pip-resting');restTimer=setTimeout(()=>root.classList.add('pip-resting'),REST_AFTER_MS);};
  toggle.onclick=()=>{if(root.classList.contains('pip-resting')&&!root.classList.contains('pip-hidden')){rest();return;}setHidden(!root.classList.contains('pip-hidden'));if(!root.classList.contains('pip-hidden'))rest();};
- root.querySelector('[data-read]').onclick=()=>{try{const s=speechSynthesis;s.cancel();const u=new SpeechSynthesisUtterance(`${next.textContent} ${why.textContent}`);u.rate=.9;u.pitch=1.35;s.speak(u);}catch{}};
+ root.querySelector('[data-read]').onclick=()=>{try{const s=speechSynthesis;s.cancel();const u=new SpeechSynthesisUtterance(`${next.textContent} ${why.textContent}`);u.rate=.92;u.pitch=1.25;s.speak(u);}catch{}};
  let last='';
- const say=(nextText,whyText)=>{if(!nextText||nextText===last)return;last=nextText;next.textContent=nextText;why.textContent=whyText||'';why.hidden=!whyText;root.classList.remove('pip-pop');void root.offsetWidth;root.classList.add('pip-pop');rest();};
+ const say=(nextText,whyText)=>{
+   if(!nextText||nextText===last)return;
+   last=nextText;next.textContent=nextText;why.textContent=whyText||'';why.hidden=!whyText;
+   root.classList.remove('pip-pop');void root.offsetWidth;root.classList.add('pip-pop');rest();
+   if(isCadet()&&typeof localStorage!=='undefined'&&localStorage.getItem('mission-control-jr.narration.v1')!=='off'){
+     try{
+       const s=speechSynthesis;
+       if(!s.speaking){
+         const u=new SpeechSynthesisUtterance(`${nextText}. ${whyText||''}`);
+         u.rate=0.92;u.pitch=1.25;
+         s.speak(u);
+       }
+     }catch{}
+   }
+ };
  const watch=()=>{const target=document.getElementById(objective);if(!target)return false;const update=()=>{const text=objectiveText(target);const idle=!text||/^loading/i.test(text);root.classList.toggle('pip-idle',idle);if(idle)return;const tip=pipTip(chapter,text);if(tip)say(`Next: ${tip.next}`,tip.why);};new MutationObserver(update).observe(target,{childList:true,characterData:true,subtree:true});update();return true;};
  if(!watch())addEventListener('DOMContentLoaded',watch,{once:true});
  return {say};

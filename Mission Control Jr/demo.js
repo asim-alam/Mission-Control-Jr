@@ -66,6 +66,31 @@ dustGeometry.setAttribute('position',new THREE.BufferAttribute(dustPositions,3))
 const dustMaterial=new THREE.PointsMaterial({color:0xd9ae84,size:.09,transparent:true,opacity:.02,depthWrite:false});
 const dust=new THREE.Points(dustGeometry,dustMaterial);exterior.add(dust);
 let airlock,rover,roverLid,batteryObject,installedBattery,toolObject,roomConsole,avatar,avatarMixer,avatarAnimations,avatarTool,avatarMode='Idle',connectorVisuals=[];
+let beaconGroup, beaconBeam, beaconGem, beaconRing;
+function initBeacon() {
+  beaconGroup=new THREE.Group();
+  const beamGeo=new THREE.CylinderGeometry(0.24,0.42,3.2,16,1,true);
+  const beamMat=new THREE.MeshBasicMaterial({color:0x3ee6b5,transparent:true,opacity:0.45,side:THREE.DoubleSide,depthWrite:false});
+  beaconBeam=new THREE.Mesh(beamGeo,beamMat);
+  beaconBeam.position.y=1.6;
+  beaconGroup.add(beaconBeam);
+
+  const gemGeo=new THREE.OctahedronGeometry(0.28,0);
+  const gemMat=new THREE.MeshBasicMaterial({color:0xffd23f});
+  beaconGem=new THREE.Mesh(gemGeo,gemMat);
+  beaconGem.position.y=3.3;
+  beaconGroup.add(beaconGem);
+
+  const ringGeo=new THREE.RingGeometry(0.55,0.72,32);
+  const ringMat=new THREE.MeshBasicMaterial({color:0x3ee6b5,transparent:true,opacity:0.8,side:THREE.DoubleSide,depthWrite:false});
+  beaconRing=new THREE.Mesh(ringGeo,ringMat);
+  beaconRing.rotation.x=-Math.PI/2;
+  beaconRing.position.y=0.04;
+  beaconGroup.add(beaconRing);
+
+  beaconGroup.visible=false;
+  scene.add(beaconGroup);
+}
 
 function cloneAsset(gltf,parent,position,yaw=0,scale=1) {
   const model=gltf.scene.clone(true),materials=new Map();model.position.set(...position);model.rotation.y=yaw;model.scale.setScalar(scale);
@@ -125,10 +150,18 @@ function navigateTo(s) {
   else toast('Something is in the way. Walk around it with WASD.');
   renderNavigation();renderInteraction();
 }
+function getNextTargetStationId() {
+  return mission.inside ? 'room-console' : !mission.diagnosed ? 'terminal' : mission.cleaned.some(done => !done) ? `solar${mission.cleaned.findIndex(done => !done)}` : !mission.battery && !mission.installed ? 'rover' : !mission.installed || !mission.repaired ? 'junction' : !mission.allocation ? 'terminal' : 'airlock';
+}
 function renderNavigation() {
   const available=stations.filter(s=>s.parent.visible);
+  const targetId=getNextTargetStationId();
   $('navigation').replaceChildren(...available.map(s=>{
-    const b=button(s.title,()=>navigateTo(s));b.setAttribute('aria-label',`Walk to ${s.title}`);b.classList.toggle('active',s===selected);return b;
+    const b=button(s.title,()=>navigateTo(s));
+    b.setAttribute('aria-label',`Walk to ${s.title}`);
+    b.classList.toggle('active',s===selected);
+    if(s.id===targetId&&!mission.ended)b.classList.add('is-next-target');
+    return b;
   }));
 }
 const reachRay=new THREE.Raycaster();
@@ -268,31 +301,24 @@ function startMission() {
   audio.say('intro');
   showDialog('A dust storm is coming!',`
     <div class="kid-mission-intro">
-      <p>🚨 <b>Emergency at Meridian Base!</b> You are <b>Jin</b>, the base engineer. A giant Mars dust storm is blowing in fast. Four crewmates live here. Get all systems ready, allocate reserves, and bring everyone safely inside before the storm hits!</p>
+      <p>🚨 <b>Emergency on Mars!</b> A giant dust storm is blowing in fast. You are <b>Jin</b>, the outpost engineer. Follow the glowing light beams, get our solar power ready, and bring the crew safely inside before the storm hits!</p>
     </div>
-    <div class="kid-section-title">🧰 What You Need This Level</div>
-    <div class="kid-supplies-grid">
-      <div class="kid-supply-pill"><span class="pill-icon">🧹</span><div class="pill-text"><b>Dust Brush</b><span>Cleans 3 solar collectors so panels catch sunlight</span></div></div>
-      <div class="kid-supply-pill"><span class="pill-icon">🔋</span><div class="pill-text"><b>Rover Battery</b><span>Pull the spare battery from the rover bay</span></div></div>
-      <div class="kid-supply-pill"><span class="pill-icon">🔌</span><div class="pill-text"><b>Power Hub</b><span>Turn connectors to line up the circuits</span></div></div>
-      <div class="kid-supply-pill"><span class="pill-icon">🏠</span><div class="pill-text"><b>Habitat Airlock</b><span>Seal the door and send your status report</span></div></div>
+    <div class="kid-first-step-card">
+      <div class="step-badge">👉 STEP 1 OF 6</div>
+      <h3>Check the Base Computer</h3>
+      <p>Walk to the glowing computer terminal to diagnose our power and begin preparations.</p>
     </div>
-    <div class="kid-section-title">📋 Your Jobs (Do in order)</div>
-    <ol class="kid-jobs-list">
-      <li><span class="step-num">1</span><b>Check Diagnostics:</b> Walk to the base computer to inspect what's broken and start the countdown.</li>
-      <li><span class="step-num">2</span><b>Clean 3 Solar Panels:</b> Stand near each panel and brush away Martian dust.</li>
-      <li><span class="step-num">3</span><b>Install Spare Battery:</b> Open the rover bay, take the battery, and slot it into the junction.</li>
-      <li><span class="step-num">4</span><b>Connect Power:</b> Rotate the junction connectors (1 / 2 / 3) to link the power grid.</li>
-      <li><span class="step-num">5</span><b>Choose Reserves &amp; Shelter:</b> Pick Extra Air or Science, then get inside and seal the airlock!</li>
-    </ol>
+    <div class="kid-tip-pill">
+      💡 <b>Astronaut Tip:</b> Follow the glowing <b>green light beam</b> in 3D or tap the <b>[Base computer NEXT]</b> button!
+    </div>
     <div class="kid-controls-bar">
       <span>🎮 <b>Controls:</b></span>
-      <span><kbd>WASD</kbd> or Arrows to walk</span>
-      <span><kbd>Drag</kbd> to look around</span>
-      <span><kbd>E</kbd> or Click to use</span>
-      <span><kbd>V</kbd> change camera</span>
-      <span>Location buttons walk you automatically!</span>
-    </div>`,[{label:'Let’s go!',run:closeDialog}], 'MARS DAY 12');
+      <span><kbd>WASD</kbd> Walk</span>
+      <span><kbd>Drag</kbd> Look</span>
+      <span><kbd>E</kbd> Use</span>
+      <span><kbd>V</kbd> Camera</span>
+      <span>Tap buttons to walk automatically!</span>
+    </div>`,[{label:'🚀 Let’s go!',run:closeDialog}], 'MARS DAY 12');
 }
 function showEnding() {
   if(endingShown)return;endingShown=true;job=null;toolObject.visible=false;player.release();audio.say(mission.outcome,true);
@@ -301,12 +327,19 @@ function showEnding() {
   journal.unshift({speaker:'WHAT HAPPENED',text:`You cleaned ${mission.cleaned.filter(Boolean).length} of 3 panels. Then the storm blocked the Sun, and power fell to ${Math.round(mission.resources.power)}%.`});
   journal.unshift({speaker:'YOUR CHOICE',text:`${mission.allocation==='life'?'You saved extra air':mission.allocation==='research'?'You kept Amara’s experiment running':'You did not choose yet'}. Air ended at ${Math.round(mission.resources.oxygen)}%.`});
   const detailsMode=(()=>{try{return localStorage.getItem('mission-control-jr.learning-mode.v1')==='details';}catch{return false;}})();
-  showDialog(prepared?'You did it! Everyone is safe.':evacuated?'Time to leave the base.':'Everyone is safe, just barely!',
-    `<p>${prepared?'All four friends are safe. Your repairs and the extra air protected the base.':evacuated?'The air machine did not have enough power. So the crew left the base to stay safe. You can try again!':'All four friends got inside. But some jobs were not done, so supplies got very low.'}</p>
-    <div class="report-row"><span>Solar panels</span><b>${mission.cleaned.filter(Boolean).length} of 3 clean</b></div>
-    <div class="report-row"><span>Battery and power</span><b>${mission.repaired?'Working':'Not finished'}</b></div>
-    <div class="report-row"><span>Your choice</span><b>${mission.allocation==='life'?'Extra air':mission.allocation==='research'?'Science':'Not chosen'}</b></div>
-    <div class="report-row"><span>Door</span><b>${mission.sealed?'Closed tight':'Not closed'}</b></div>
+  const stars=prepared?'⭐⭐⭐':evacuated?'⭐':'⭐⭐';
+  const starTitle=prepared?'You did it! Outstanding Mission!':evacuated?'Time to leave the base!':'Everyone is safe, just barely!';
+  showDialog(starTitle,
+    `<div class="kid-victory-header">
+      <div class="kid-stars">${stars}</div>
+      <p>${prepared?'All four friends are safe! Your fast repairs and extra air protected the base from the storm.':evacuated?'The air recycler ran out of power and the crew sheltered in the rover. You can try again to save the base!':'All four friends got inside safely! Supplies ran very low, but you braved the storm.'}</p>
+    </div>
+    <div class="kid-debrief-stats">
+      <div class="kid-stat-pill"><span>☀️ Solar Panels</span><b>${mission.cleaned.filter(Boolean).length} of 3 clean</b></div>
+      <div class="kid-stat-pill"><span>🔋 Battery &amp; Power</span><b>${mission.repaired?'Working':'Not finished'}</b></div>
+      <div class="kid-stat-pill"><span>🎯 Reserve Choice</span><b>${mission.allocation==='life'?'Extra air':mission.allocation==='research'?'Science':'Not chosen'}</b></div>
+      <div class="kid-stat-pill"><span>🚪 Base Door</span><b>${mission.sealed?'Closed tight':'Not closed'}</b></div>
+    </div>
     <section class="learning-summary"><h3>What you chose → what happened</h3><p><b>You chose:</b> ${mission.allocation==='life'?'extra air.':mission.allocation==='research'?`science. The experiment wrote ${Math.round(mission.experimentData)} new notes.`:'nothing yet.'}</p><p><b>The machines:</b> you cleaned ${mission.cleaned.filter(Boolean).length} of 3 panels. ${detailsMode?`Power ${Math.round(mission.resources.power)}%. Air ${Math.round(mission.resources.oxygen)}%.`:'Less sunlight means less power to share.'}</p><p><b>The crew:</b> ${prepared?'everyone has lots of spare air.':evacuated?'everyone left to stay safe.':'everyone is safe, but spare air is low.'}</p><p><b>Next mission:</b> ${prepared?'the rover starts fully charged.':'the rover starts with less charge.'}</p></section>
     <div class="kid-lesson-box">
       <span class="lesson-badge">🎓 Space Science Lesson</span>
@@ -318,8 +351,8 @@ function showEnding() {
       <p><b>💡 Your Astronaut Skill:</b> When unexpected storms strike in space, teamwork and prioritizing life support first is what keeps everyone alive!</p>
     </div>`,[
     {label:`Next mission · ${evacuated?'Rover rescue drive':'Tracks in the Dust'}`,run:()=>goToChapter('rover')},
-    {label:'Play again',run:startMission},{label:'30-day Mars base game',run:()=>goToChapter('extended')},
-    {label:'Back to the mission map',run:openJourney}
+    {label:'↺ Play again',run:startMission},{label:'👑 30-day Mars base game',run:()=>goToChapter('extended')},
+    {label:'🗺️ Back to mission map',run:openJourney}
   ], 'HOW DID IT GO?');
   audio.pause(false);
 }
@@ -387,7 +420,7 @@ try {
   avatarMixer=new THREE.AnimationMixer(avatar);
   avatarAnimations=Object.fromEntries(assets.crew.animations.map(clip=>[clip.name,avatarMixer.clipAction(clip)]));avatarAnimations.Idle?.play();
   avatarTool=cloneAsset(assets.tool,avatar.getObjectByName('arm_right')||avatar,[0,-.78,.10],Math.PI,.55);avatarTool.visible=false;
-  ready=true;$('begin').disabled=false;$('begin').textContent='Begin Mission →';$('load-status').textContent='MISSION CONTROL JR. ONLINE / ALL SYSTEMS LOADED';
+  ready=true;initBeacon();$('begin').disabled=false;$('begin').textContent='Begin Mission →';$('load-status').textContent='MISSION CONTROL JR. ONLINE / ALL SYSTEMS LOADED';
 } catch(error) {
   console.error(error);$('load-status').textContent='The game could not load. Ask a grown-up to check the game server, then reload.';
   $('begin').disabled=false;$('begin').textContent='Try loading again';$('begin').onclick=()=>location.reload();
@@ -469,6 +502,21 @@ renderer.setAnimationLoop(time=> {
       const point=new THREE.Vector3(s.point.x,2.2,s.point.z).project(camera);
       const visible=mission.started&&!mission.ended&&s.parent.visible&&point.z<1&&point.z>-1&&Math.abs(point.x)<.95&&Math.abs(point.y)<.9&&distance(s)<15;
       s.label.hidden=!visible;if(visible){s.label.style.left=`${(point.x*.5+.5)*innerWidth}px`;s.label.style.top=`${(-point.y*.5+.5)*innerHeight}px`;}
+    }
+    const activeTargetId=getNextTargetStationId();
+    const activeStation=stations.find(s=>s.id===activeTargetId&&s.parent.visible);
+    if(beaconGroup&&activeStation&&mission.started&&!mission.ended){
+      beaconGroup.visible=true;
+      beaconGroup.position.set(activeStation.point.x,mission.inside?.18:0,activeStation.point.z);
+      beaconBeam.rotation.y+=dt*0.9;
+      beaconGem.rotation.y+=dt*1.6;
+      beaconGem.position.y=3.3+Math.sin(clock*3.5)*0.18;
+      beaconRing.rotation.z+=dt*0.5;
+      const pulse=(Math.sin(clock*4)+1)*0.5;
+      beaconBeam.material.opacity=0.35+pulse*0.25;
+      beaconRing.material.opacity=0.6+pulse*0.35;
+    } else if(beaconGroup){
+      beaconGroup.visible=false;
     }
   }
   if(mission.storm&&!mission.inside&&!paused&&!mission.ended){alarmClock+=dt;if(alarmClock>12){audio.effect('alarm');alarmClock=0;}}

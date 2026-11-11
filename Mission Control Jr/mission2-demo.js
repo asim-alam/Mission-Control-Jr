@@ -211,8 +211,17 @@ function renderHud(){
   const vital=(icon,label,value,essential=false,max=100)=>{const n=Math.max(0,Math.min(100,Math.round(value/max*100))),state=n<20?'danger':n<40?'warning':'healthy';return `<span class="vital-chip ${essential?'vital-essential':''}" data-state="${state}" role="img" aria-label="${label} ${Math.round(value)}" title="${label}: ${Math.round(value)}"><span class="vital-icon" aria-hidden="true">${icon}</span><b>${Math.round(value)}</b><i style="width:${n}%"></i></span>`;};
   $('vitals').innerHTML=vital('⚡','Rover battery',m.battery,true)+vital('O₂','Suit air',m.oxygen)+vital('♙','Everyone here',2,true,2)+vital('⌂','Battery left at home',Math.max(0,f.battery),true)+vital('↩','Air left at home',Math.max(0,f.oxygen),true);
   const current=task2(m);$('stage-count').textContent=`${current.stage} / 8`;$('objective-progress').value=current.stage-1;
-  const marker=$('objective-marker'),target=current.target;
-  if(target&&!m.aboard){const distanceTo=distance(player.position,target),pos=groundPoint(target.x,target.z,2.6).project(camera),visible=pos.z<1&&pos.z>-1&&Math.abs(pos.x)<.96&&Math.abs(pos.y)<.92;marker.hidden=!visible;marker.textContent=`◇ ${current.title} · ${Math.round(distanceTo)} m`;marker.style.left=`${(pos.x*.5+.5)*innerWidth}px`;marker.style.top=`${(-pos.y*.5+.5)*innerHeight}px`;}
+  const marker=$('objective-marker'),target=m.aboard?t:current.target;
+  if(target){
+    const refPos=m.aboard?m.vehicle:player.position;
+    const distanceTo=distance(refPos,target);
+    const pos=groundPoint(target.x,target.z,m.aboard?4.2:2.6).project(camera);
+    const visible=pos.z<1&&pos.z>-1&&Math.abs(pos.x)<.96&&Math.abs(pos.y)<.92;
+    marker.hidden=!visible;
+    marker.textContent=`🎯 ${m.aboard?(m.phase==='return'?'Drive Home':current.title):current.title} · ${Math.round(distanceTo)} m`;
+    marker.style.left=`${(pos.x*.5+.5)*innerWidth}px`;
+    marker.style.top=`${(-pos.y*.5+.5)*innerHeight}px`;
+  }
   else marker.hidden=true;
   $('tasks').innerHTML=[['Hear the plan',m.briefAccepted],['Get ready + driving test',Object.values(m.checks).every(Boolean)],['Pick a path',!!m.route],['Two radio stops',m.reports.every(Boolean)],['Look at the strange ground',!!m.detour],['Rock photos',m.scienceComplete],['Drive home safe',m.returned]].map(([text,done],i)=>`<div class="${done?'done':current.stage===i+1?'current':''}">${done?'✓':String(i+1).padStart(2,'0')} ${text}</div>`).join('');
   $('inventory').textContent=m.sample?'CAMERA · ROCK IN A BAG':m.checks.battery?'CAMERA · TOOLS':'SPARE BATTERY · READY TO PUT IN';

@@ -2250,7 +2250,8 @@ body.kid-home #journey-count, body.kid-home .wordmark { white-space: nowrap; }
   margin-left: 2px;
 }
 
-#locations button.is-next-target {
+#locations button.is-next-target,
+#navigation button.is-next-target {
   background: linear-gradient(135deg, #205c42 0%, #163d2e 100%) !important;
   border: 2px solid #3ee6b5 !important;
   box-shadow: 0 0 14px rgba(62, 230, 181, 0.65), 0 4px 8px rgba(0, 0, 0, 0.4) !important;
@@ -2260,7 +2261,8 @@ body.kid-home #journey-count, body.kid-home .wordmark { white-space: nowrap; }
   position: relative;
 }
 
-#locations button.is-next-target::after {
+#locations button.is-next-target::after,
+#navigation button.is-next-target::after {
   content: "NEXT";
   display: inline-block;
   margin-left: 6px;
@@ -2287,6 +2289,266 @@ body.kid-home #journey-count, body.kid-home .wordmark { white-space: nowrap; }
 }
 
 /* ==========================================================================
+   Kid-Friendly HUD Enhancements: Persistent Walk Dock & High-Legibility Text
+   ========================================================================== */
+
+#walk-dock, .walk-dock {
+  position: fixed;
+  left: 16px;
+  bottom: 24px;
+  z-index: 25;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: min(560px, calc(100vw - 32px));
+  background: rgba(23, 19, 58, 0.94) !important;
+  border: 2px solid #5a4cc0 !important;
+  border-radius: 20px !important;
+  padding: 10px 14px !important;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+  backdrop-filter: blur(10px);
+}
+
+#walk-dock .nav-title, .walk-dock .nav-title {
+  margin: 0 !important;
+  font-family: var(--kid-display) !important;
+  font-size: 12.5px !important;
+  font-weight: 800 !important;
+  letter-spacing: .08em !important;
+  color: var(--kid-yellow) !important;
+}
+
+#navigation {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+}
+
+#navigation button {
+  min-height: 42px !important;
+  padding: 6px 14px !important;
+  font-family: var(--kid-display) !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  border-radius: 14px !important;
+  background: var(--kid-panel-2) !important;
+  border: 2px solid #5a4cc0 !important;
+  color: var(--kid-ink) !important;
+  box-shadow: 0 3px 0 #1b154c !important;
+  cursor: pointer;
+  transition: transform .12s, box-shadow .12s, border-color .15s;
+}
+
+#navigation button:hover {
+  transform: translateY(-2px);
+  border-color: var(--kid-yellow) !important;
+}
+
+#navigation button.active {
+  border-color: var(--kid-mint) !important;
+  background: #17594f !important;
+  color: #eafff8 !important;
+}
+
+/* Progressive Briefing Step Cards */
+.kid-first-step-card {
+  background: linear-gradient(135deg, rgba(42, 36, 104, 0.95), rgba(27, 23, 68, 0.95));
+  border: 2px solid var(--kid-mint);
+  border-radius: 18px;
+  padding: 14px 18px;
+  margin: 12px 0;
+  text-align: left;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+}
+.kid-first-step-card .step-badge {
+  display: inline-block;
+  font-family: var(--kid-display);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  color: #0f3a30;
+  background: var(--kid-mint);
+  padding: 3px 10px;
+  border-radius: 999px;
+  margin-bottom: 6px;
+}
+.kid-first-step-card h3 {
+  font-family: var(--kid-display);
+  font-size: 20px;
+  color: #fff8ee;
+  margin: 0 0 6px 0;
+}
+.kid-first-step-card p {
+  font-size: 15px !important;
+  color: #e5e0ff !important;
+  line-height: 1.45;
+  margin: 0 !important;
+}
+
+.kid-tip-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 210, 63, 0.14);
+  border: 1.5px solid var(--kid-yellow);
+  border-radius: 14px;
+  padding: 8px 12px;
+  margin: 8px 0 12px 0;
+  font-size: 14px;
+  color: #fff8ee;
+  line-height: 1.4;
+}
+
+/* Debrief Victory & Star Ratings */
+.kid-victory-header {
+  text-align: center;
+  margin-bottom: 14px;
+}
+.kid-stars {
+  font-size: 36px;
+  letter-spacing: 4px;
+  filter: drop-shadow(0 4px 8px rgba(255, 210, 63, 0.45));
+  margin-bottom: 6px;
+  animation: kid-pop-in .4s cubic-bezier(.2, 1.4, .4, 1);
+}
+.kid-victory-header p {
+  font-size: 16px !important;
+  color: #e5e0ff !important;
+  line-height: 1.5;
+  max-width: 580px;
+  margin: 0 auto !important;
+}
+
+.kid-debrief-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+  margin: 14px 0;
+}
+.kid-stat-pill {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(39, 32, 99, 0.85);
+  border: 1.5px solid #5a4cc0;
+  border-radius: 14px;
+  padding: 10px 14px;
+  font-size: 14px;
+}
+.kid-stat-pill span {
+  color: var(--kid-soft);
+  font-family: var(--kid-display);
+}
+.kid-stat-pill b {
+  color: var(--kid-mint);
+  font-family: var(--kid-display);
+  font-size: 15px;
+}
+
+/* High Legibility HUD Typography for Cadets & Explorers */
+#hud #mission-step { font-family: var(--kid-display) !important; font-size: 13px !important; font-weight: 800 !important; color: var(--kid-yellow) !important; }
+#hud #forecast { font-family: var(--kid-display) !important; font-size: 13px !important; font-weight: 700 !important; color: var(--kid-warn) !important; }
+#hud #next-action { font-family: var(--kid-body) !important; font-size: 14px !important; font-weight: 700 !important; color: #fff8ee !important; }
+#hud #tasks { font-family: var(--kid-display) !important; font-size: 14px !important; line-height: 1.9 !important; }
+#hud #tasks-toggle-card { font-family: var(--kid-display) !important; font-size: 13px !important; font-weight: 800 !important; }
+#hud #subtitle { font-family: var(--kid-body) !important; font-size: 16px !important; line-height: 1.45 !important; color: #fff8ee !important; }
+#hud #speaker { font-family: var(--kid-display) !important; font-size: 14px !important; font-weight: 800 !important; color: var(--kid-yellow) !important; }
+#hud #task-distance { font-family: var(--kid-display) !important; font-size: 14px !important; font-weight: 800 !important; color: var(--kid-mint) !important; }
+#hud #stage-count { font-family: var(--kid-display) !important; font-size: 14px !important; font-weight: 800 !important; color: var(--kid-yellow) !important; }
+#hud .toolbar button { font-family: var(--kid-display) !important; font-size: 13px !important; font-weight: 700 !important; }
+#hud #controls { font-family: var(--kid-display) !important; font-size: 13px !important; font-weight: 700 !important; }
+#hud #vitals .vital-chip { width: 68px !important; height: 46px !important; padding: 4px 8px !important; }
+#hud #vitals .vital-chip b { font-family: var(--kid-display) !important; font-size: 14px !important; font-weight: 800 !important; }
+#hud #vitals .vital-chip .vital-icon { font-size: 15px !important; }
+#hud #objective-marker { font-family: var(--kid-display) !important; font-size: 13.5px !important; font-weight: 800 !important; border-radius: 12px !important; border: 2px solid var(--kid-yellow) !important; background: rgba(18, 15, 46, 0.94) !important; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5) !important; }
+
+/* Astronaut Logbook & Badges Modal */
+.badges-card {
+  max-width: 680px !important;
+  width: 92vw !important;
+}
+.badges-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid #5a4cc0;
+  padding-bottom: 10px;
+  margin-bottom: 12px;
+}
+.badges-card-header h2 {
+  font-family: var(--kid-display);
+  font-size: 26px;
+  margin: 4px 0 0;
+  color: var(--kid-yellow);
+}
+.badges-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+  max-height: 55vh;
+  overflow-y: auto;
+  padding: 4px;
+}
+.badge-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(39, 32, 99, 0.7);
+  border: 2px solid #4a3e9c;
+  border-radius: 16px;
+  padding: 10px 14px;
+  transition: transform .15s ease, border-color .15s ease;
+}
+.badge-item.earned {
+  border-color: var(--kid-mint);
+  background: linear-gradient(135deg, rgba(23, 89, 79, 0.35), rgba(39, 32, 99, 0.8));
+  box-shadow: 0 4px 12px rgba(62, 230, 181, 0.2);
+}
+.badge-item.earned:hover {
+  transform: translateY(-2px);
+  border-color: var(--kid-yellow);
+}
+.badge-item.locked {
+  opacity: 0.65;
+  filter: grayscale(0.6);
+}
+.badge-icon {
+  font-size: 32px;
+  line-height: 1;
+  flex: none;
+}
+.badge-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.badge-info h4 {
+  font-family: var(--kid-display);
+  font-size: 15px;
+  color: #fff8ee;
+  margin: 0;
+}
+.badge-info p {
+  font-size: 12.5px !important;
+  color: var(--kid-soft) !important;
+  line-height: 1.35;
+  margin: 0 !important;
+}
+.badge-status {
+  font-family: var(--kid-display);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--kid-yellow);
+  margin-top: 2px;
+}
+.menu-btn-badges {
+  background: linear-gradient(180deg, #ffd23f, #e09f1d) !important;
+  border-color: #ffe685 !important;
+  color: #2b1d00 !important;
+  box-shadow: 0 4px 0 #946808 !important;
+}
+.menu-btn-badges:hover {
+  box-shadow: 0 6px 0 #946808 !important;
    Station Live 3D Navigation Telemetry (Dynamic Distance, Forward/Back, Left/Right)
    ========================================================================== */
 .station-nav-telemetry {
