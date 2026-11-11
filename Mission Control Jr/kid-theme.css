@@ -517,4 +517,83 @@ body.kid-home #journey-count, body.kid-home .wordmark { white-space: nowrap; }
   margin-top: 16px !important;
 }
 
+/* Docking alignment line and visual target */
+.dock-hud-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+}
+
+#dock-target-box {
+  position: absolute;
+  width: 68px;
+  height: 68px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 3;
+}
+
+#dock-target-box .dock-bracket {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border: 3px solid #4cc9ff;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+#dock-target-box .dock-bracket.tl { top: 0; left: 0; border-right: none; border-bottom: none; border-top-left-radius: 4px; }
+#dock-target-box .dock-bracket.tr { top: 0; right: 0; border-left: none; border-bottom: none; border-top-right-radius: 4px; }
+#dock-target-box .dock-bracket.bl { bottom: 0; left: 0; border-right: none; border-top: none; border-bottom-left-radius: 4px; }
+#dock-target-box .dock-bracket.br { bottom: 0; right: 0; border-left: none; border-top: none; border-bottom-right-radius: 4px; }
+
+#dock-target-box .dock-center-dot {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  background: #ffd23f;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 8px #ffd23f;
+  transition: background-color 0.15s, box-shadow 0.15s;
+}
+
+#dock-target-box #dock-target-text {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-family: var(--kid-display, sans-serif);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  color: #4cc9ff;
+  background: rgba(18, 15, 46, 0.9);
+  padding: 4px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(76, 201, 255, 0.4);
+  margin-top: 6px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+/* When aligned within tolerance */
+#dock-target-box.aligned .dock-bracket {
+  border-color: #3ee6b5;
+  box-shadow: 0 0 12px #3ee6b5;
+}
+#dock-target-box.aligned .dock-center-dot {
+  background: #3ee6b5;
+  box-shadow: 0 0 14px #3ee6b5;
+}
+#dock-target-box.aligned #dock-target-text {
+  color: #3ee6b5;
+  border-color: #3ee6b5;
+  box-shadow: 0 0 10px rgba(62, 230, 181, 0.3);
+}
+
+
 

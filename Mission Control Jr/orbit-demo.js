@@ -102,6 +102,29 @@ function frame(now){frameId=requestAnimationFrame(frame);const dt=document.hidde
   cockpit.visible=m.phase==='craft'&&!overview&&started;cockpit.position.copy(shuttle.position);if(cockpit.visible){camera.position.copy(shuttle.position).add(new T.Vector3(0,1.55,.3));camera.lookAt(env.planet.position);cockpit.quaternion.copy(camera.quaternion);cockpit.position.copy(camera.position).add(new T.Vector3(0,-1.55,0).applyQuaternion(camera.quaternion));shuttle.visible=false;}
   if(m.phase!=='descent')$('descent-label').hidden=true;
   const stationMarker=$('station-overview-marker');stationMarker.hidden=inside||!overview||m.phase==='descent';if(!stationMarker.hidden){camera.updateMatrixWorld();const projected=station.exterior.position.clone().project(camera);stationMarker.hidden=projected.z<0||projected.z>1||Math.abs(projected.x)>.9||Math.abs(projected.y)>.85;stationMarker.style.left=`${(projected.x*.5+.5)*innerWidth}px`;stationMarker.style.top=`${(-projected.y*.5+.5)*innerHeight}px`;}
+  const targetBox=$('dock-target-box'),alignSvg=$('dock-alignment-svg'),dockLine=$('dock-line'),dockHLine=$('dock-hline'),dockVLine=$('dock-vline');
+  if(targetBox&&alignSvg){
+    const isDocking=started&&!inside&&m.phase==='docking'&&!overview;
+    targetBox.hidden=!isDocking;
+    alignSvg.style.display=isDocking?'block':'none';
+    if(isDocking){
+      camera.updateMatrixWorld();
+      const portWorld=station.exterior.position.clone().add(new T.Vector3(0,0,20.9));
+      const projected=portWorld.clone().project(camera);
+      if(projected.z>0&&projected.z<1){
+        targetBox.hidden=false;
+        const px=(projected.x*.5+.5)*innerWidth,py=(-projected.y*.5+.5)*innerHeight,cx=innerWidth*.5,cy=innerHeight*.5;
+        targetBox.style.left=`${px}px`;targetBox.style.top=`${py}px`;
+        const ready=dockReady(m.dock),aligned=Math.abs(m.dock.x)<=.35&&Math.abs(m.dock.y)<=.35;
+        targetBox.classList.toggle('aligned',aligned);
+        const targetText=$('dock-target-text');
+        if(targetText){targetText.textContent=ready?'🎯 LOCKED · PRESS E TO DOCK':aligned?(m.dock.distance>2?'LINED UP · FLY CLOSER (W)':'LINED UP · SLOW DOWN'):'LINE UP HERE ↵';}
+        if(dockLine){dockLine.setAttribute('x1',String(cx));dockLine.setAttribute('y1',String(cy));dockLine.setAttribute('x2',String(px));dockLine.setAttribute('y2',String(py));dockLine.setAttribute('stroke',aligned?'#3ee6b5':'#ffd23f');dockLine.setAttribute('stroke-width',aligned?'2.5':'3.5');}
+        if(dockHLine){dockHLine.setAttribute('x1','0');dockHLine.setAttribute('y1',String(py));dockHLine.setAttribute('x2',String(innerWidth));dockHLine.setAttribute('y2',String(py));dockHLine.setAttribute('stroke',aligned?'rgba(62,230,181,0.5)':'rgba(76,201,255,0.4)');}
+        if(dockVLine){dockVLine.setAttribute('x1',String(px));dockVLine.setAttribute('y1','0');dockVLine.setAttribute('x2',String(px));dockVLine.setAttribute('y2',String(innerHeight));dockVLine.setAttribute('stroke',aligned?'rgba(62,230,181,0.5)':'rgba(76,201,255,0.4)');}
+      }else{targetBox.hidden=true;alignSvg.style.display='none';}
+    }
+  }
   const task=orbitalTask(m);marker.visible=inside&&!!task.target;if(marker.visible){marker.position.set(task.target.x,.025,task.target.z);const point=new T.Vector3(task.target.x,2.15,task.target.z).project(camera);$('marker').hidden=point.z<0||point.z>1||Math.abs(point.x)>.88||Math.abs(point.y)>.8;$('marker').style.left=`${(point.x*.5+.5)*innerWidth}px`;$('marker').style.top=`${(-point.y*.5+.5)*innerHeight}px`;$('marker-name').textContent=(task.place||'TRANSFER').toUpperCase();}else $('marker').hidden=true;
   if(live&&now-lastSave>2500){save();lastSave=now;}if(started&&now-lastHud>180){renderHud();lastHud=now;}renderer.render(scene,camera);
 }
