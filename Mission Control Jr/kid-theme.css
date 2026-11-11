@@ -667,6 +667,152 @@ body.kid-home #journey-count, body.kid-home .wordmark { white-space: nowrap; }
   box-shadow: 0 0 10px rgba(62, 230, 181, 0.3);
 }
 
+/* Kid-Friendly Post-Docking Science Debrief */
+.kid-dock-celebration {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.celebration-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(62, 230, 181, 0.14);
+  border: 1.5px solid var(--kid-mint);
+  border-radius: 18px;
+  padding: 10px 14px;
+}
+.kid-trophy {
+  font-size: 36px;
+  line-height: 1;
+  filter: drop-shadow(0 2px 8px rgba(255, 210, 63, 0.5));
+}
+.celebration-header {
+  flex: 1;
+}
+.celebration-tag {
+  font-family: var(--kid-display);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  color: var(--kid-mint);
+  display: block;
+}
+.celebration-title {
+  margin: 0 !important;
+  font-family: var(--kid-display);
+  font-size: 22px !important;
+  color: #fff !important;
+}
+.kid-read-btn {
+  background: rgba(255, 210, 63, 0.2) !important;
+  border: 1.5px solid var(--kid-yellow) !important;
+  color: var(--kid-yellow) !important;
+  border-radius: 14px !important;
+  font-size: 13px !important;
+  padding: 6px 12px !important;
+  cursor: pointer;
+  box-shadow: none !important;
+  flex-shrink: 0;
+  transition: all .15s;
+}
+.kid-read-btn:hover {
+  background: var(--kid-yellow) !important;
+  color: #120f2e !important;
+  translate: 0 -2px;
+}
+.kid-read-btn.speaking {
+  background: var(--kid-mint) !important;
+  border-color: var(--kid-mint) !important;
+  color: #0b2e20 !important;
+  animation: lesson-pulse 1.2s infinite ease-in-out;
+}
+.kid-golden-rules-banner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.rule-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(135deg, rgba(39, 32, 99, 0.8), rgba(27, 23, 68, 0.8));
+  border: 1.5px solid var(--kid-sky);
+  border-radius: 14px;
+  padding: 8px 12px;
+}
+.rule-chip .chip-icon {
+  font-size: 26px;
+  line-height: 1;
+}
+.rule-chip div {
+  display: flex;
+  flex-direction: column;
+}
+.rule-chip b {
+  font-size: 14px;
+  color: #fff;
+  font-family: var(--kid-display);
+}
+.rule-chip span {
+  font-size: 12px;
+  color: var(--kid-soft);
+}
+.kid-fact-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+@media (max-width: 580px) {
+  .kid-fact-grid { grid-template-columns: 1fr; }
+  .kid-golden-rules-banner { grid-template-columns: 1fr; }
+}
+.kid-fact-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: linear-gradient(180deg, #251e59, #1a1542);
+  border: 1.5px solid rgba(167, 139, 250, 0.35);
+  border-radius: 16px;
+  padding: 10px 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  transition: transform .15s ease, border-color .15s ease;
+}
+.kid-fact-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--kid-sky);
+}
+.kid-fact-card .fact-icon {
+  font-size: 28px;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.kid-fact-card .fact-text {
+  flex: 1;
+}
+.kid-fact-card h4 {
+  margin: 0 0 3px 0;
+  font-family: var(--kid-display);
+  font-size: 15px;
+  color: var(--kid-yellow);
+}
+.kid-fact-card p {
+  margin: 0 !important;
+  font-size: 13px !important;
+  color: #dcd6fd !important;
+  line-height: 1.35 !important;
+}
+.kid-nasa-fact-pill {
+  background: rgba(76, 201, 255, 0.12);
+  border: 1px solid rgba(76, 201, 255, 0.35);
+  border-radius: 12px;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: #c9efff;
+  line-height: 1.35;
+}
+
 /* Cadet Flight Lesson HUD Card */
 .flight-lesson-card {
   position: fixed;

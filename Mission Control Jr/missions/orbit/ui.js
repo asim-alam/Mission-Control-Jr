@@ -29,12 +29,16 @@ function brief(ctx) {
     <div class="kid-mission-intro">
       <p>🛰️ <b>Welcome to Mars Orbit!</b> You have docked with the Asteria orbital station. Before descending to Meridian Base on the surface, restore station communications and prepare the lander!</p>
     </div>
-    <div class="kid-lesson-box" style="margin-bottom:14px;">
-      <span class="lesson-badge">🎓 Docking Science Lesson</span>
-      <h3>Why Docking Needs Slow Speed &amp; Precision Adjustment</h3>
-      <p><b>🌌 Physics in Outer Space:</b> In outer space, there is zero air friction! A moving ship floats forever until reverse thrusters brake. That is why you had to keep speed below 0.2 m/s while adjusting your alignment to gently lock onto Asteria Station without bouncing off.</p>
-      <div class="lesson-fact">
-        <b>🚀 Real NASA Science:</b> NASA Apollo capsules and the ISS soft-capture docking rings require relative closure speed under 0.15 m/s to latch safely without damaging the airlock in zero gravity!
+    <div class="kid-dock-celebration" style="margin-bottom:12px;">
+      <div class="celebration-badge-row" style="padding:8px 12px;">
+        <span class="kid-trophy" style="font-size:28px;">🏆</span>
+        <div class="celebration-header">
+          <span class="celebration-tag">DOCKING LESSON LEARNED</span>
+          <h4 style="margin:0;font-family:var(--kid-display);font-size:16px;color:#fff;">Adjust Alignment &amp; Slow Speed (&lt; 0.2 m/s)</h4>
+        </div>
+      </div>
+      <div class="kid-nasa-fact-pill">
+        🌌 <b>Space Science:</b> In outer space, zero air friction means a ship never stops moving on its own. Slow speed and bullseye aim are the keys to safe space docking!
       </div>
     </div>
     <div class="kid-section-title">🧰 What You Need This Level</div>

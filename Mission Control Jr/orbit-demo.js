@@ -48,7 +48,7 @@ function showModal(title,html,actions,tag='ASTERIA / OPERATIONS'){
   clearInput();player.enabled=false;$('modal-title').textContent=title;$('modal-tag').textContent=tag;$('modal-body').innerHTML=html;$('modal-actions').replaceChildren();
   for(const action of actions){const button=document.createElement('button');button.textContent=action.label;if(action.primary)button.className='primary';button.onclick=()=>{button.blur();action.run();};$('modal-actions').append(button);}$('modal').hidden=false;$('modal-actions').querySelector('button')?.focus();
 }
-function closeModal(){$('modal').hidden=true;player.enabled=started&&m.phase==='station'&&!paused;}
+function closeModal(){try{speechSynthesis.cancel();}catch{}$('modal').hidden=true;player.enabled=started&&m.phase==='station'&&!paused;}
 function showDockingBriefing(){
   showModal('Detailed Flight Guide: How to Dock',`
     <div class="kid-mission-intro">
@@ -83,42 +83,75 @@ function showDockingSuccessLesson(){
   audio.ping();
   radio.say('docked');
   showModal(
-    '🎉 Docking Successful: Hatch Sealed!',
-    `<div class="kid-mission-intro" style="background:rgba(62,230,181,0.18);border-color:rgba(62,230,181,0.5);">
-      <p>🛰️ <b>Commander Elena:</b> “Soft capture latches engaged! Outstanding flying, Jin. Your alignment and approach speed were spot-on. Welcome aboard Asteria Station!”</p>
-    </div>
+    '🎉 Soft Capture Confirmed!',
+    `<div class="kid-dock-celebration">
+      <div class="celebration-badge-row">
+        <span class="kid-trophy">🏆</span>
+        <div class="celebration-header">
+          <span class="celebration-tag">CADET FLIGHT DEBRIEF</span>
+          <h2 class="celebration-title">Hatch Sealed! You Did It! 🎉</h2>
+        </div>
+        <button id="read-lesson-btn" class="kid-read-btn" type="button" aria-label="Read lesson out loud">🔊 Read to me</button>
+      </div>
 
-    <div class="kid-lesson-box">
-      <span class="lesson-badge" style="background:var(--kid-orange);color:#120f2e;">🎯 The Core Lesson of Docking</span>
-      <h3 style="margin-top:4px;">Mastered: Adjust Alignment &amp; Slow Speed!</h3>
-      <p>Docking in space comes down to two vital skills you just mastered:</p>
-      <ul style="margin:6px 0 12px 18px;line-height:1.5;color:var(--kid-soft);">
-        <li><b>1. Continuous Adjustment (<kbd>A/D</kbd> &amp; <kbd>R/F</kbd>):</b> You adjusted left/right and up/down to stay dead-center on the target. In space, even a tiny millimeter tilt can bounce the locking latches.</li>
-        <li><b>2. Controlled Slow Speed (<kbd>Space</kbd> Brake):</b> You kept your approach below <b>0.2 m/s</b> (crawling speed!). In space, a fast bump can damage the docking collar or push the entire space station out of its orbit.</li>
-      </ul>
-    </div>
+      <div class="kid-golden-rules-banner">
+        <div class="rule-chip">
+          <span class="chip-icon">🎯</span>
+          <div><b>Rule 1: Adjust Aim</b><span>Centered the port [ 🎯 ]</span></div>
+        </div>
+        <div class="rule-chip">
+          <span class="chip-icon">🛑</span>
+          <div><b>Rule 2: Slow Speed</b><span>Kept speed &lt; 0.2 m/s</span></div>
+        </div>
+      </div>
 
-    <div class="kid-lesson-box" style="margin-top:14px;">
-      <span class="lesson-badge">🌌 Scientific Lesson: Physics of Outer Space</span>
-      <h3 style="margin-top:4px;">What Makes Outer Space So Unique?</h3>
-      
-      <p><b>🌠 1. The Vacuum of Space &amp; Inertia (Newton’s First Law):</b><br>
-      On Earth, things slow down because air friction and gravity drag on them. But space is a <b>vacuum</b> (completely empty space with no air). Once a spacecraft starts moving, it will keep coasting forever at that exact speed until an opposite force acts on it! That is why you had to manually fire your thrusters to brake.</p>
+      <div class="kid-section-title" style="margin: 8px 0 6px;">🌌 4 Mind-Blowing Outer Space Facts</div>
 
-      <p><b>⚡ 2. Orbiting at 12,000 km/h, Docking at 0.5 km/h:</b><br>
-      Both you and Asteria Station are zooming around Mars at <b>over 12,000 km/h (3.4 km every single second!)</b>. But because you flew into the exact same orbit, your <i>relative speed</i> between each other was only <b>0.15 m/s</b>. You matched orbital speeds so perfectly that you gently touched like feathers!</p>
+      <div class="kid-fact-grid">
+        <div class="kid-fact-card">
+          <span class="fact-icon">🛑</span>
+          <div class="fact-text">
+            <h4>Space Has ZERO Air!</h4>
+            <p>On Earth, air stops a rolling ball. In space, there is NO air—you float forever until you hit the brake!</p>
+          </div>
+        </div>
 
-      <p><b>🤫 3. The Sound of Silence:</b><br>
-      Notice the calm quiet? Sound needs air molecules to vibrate and travel. In the vacuum of outer space, sound cannot travel at all—space is completely silent outside the hull.</p>
+        <div class="kid-fact-card">
+          <span class="fact-icon">🎯</span>
+          <div class="fact-text">
+            <h4>Bullseye or Bounce!</h4>
+            <p>In zero gravity, even a tiny millimeter bump can push the station away. That's why you aimed dead-center!</p>
+          </div>
+        </div>
 
-      <div class="lesson-fact" style="margin-top:10px;">
-        <b>🚀 Real NASA Science:</b>
-        Real spacecraft (like Apollo to the Moon, the Space Shuttle, and SpaceX Crew Dragon) use automated soft-capture rings with sensitive laser radar (LIDAR). The capture hooks only engage when relative closure speed is less than 0.2 m/s to prevent bounce-back.
+        <div class="kid-fact-card">
+          <span class="fact-icon">🏎️</span>
+          <div class="fact-text">
+            <h4>12,000 km/h High-Five!</h4>
+            <p>You and Asteria zoom around Mars at rocket speed, but touched as gently as a butterfly!</p>
+          </div>
+        </div>
+
+        <div class="kid-fact-card">
+          <span class="fact-icon">🤫</span>
+          <div class="fact-text">
+            <h4>Total Silence Outside!</h4>
+            <p>Sound cannot travel without air. Outside your spaceship hull, outer space is completely silent!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="kid-nasa-fact-pill">
+        🚀 <b>Real NASA Fact:</b> Real astronauts on the Space Station dock at only <b>0.15 m/s</b> so soft-capture hooks latch safely!
       </div>
     </div>`,
     [
-      {label: '🚀 Open Hatch & Enter Cabin', primary: true, run: () => boardCabin()},
+      {label: '🚀 Open Hatch & Enter Cabin', primary: true, run: () => {
+        try{speechSynthesis.cancel();}catch{}
+        boardCabin();
+      }},
       {label: '🪐 Look at Mars from Orbit', run: () => {
+        try{speechSynthesis.cancel();}catch{}
         closeModal();
         $('action').disabled = false;
         $('action').textContent = 'Open hatch & enter cabin';
@@ -127,6 +160,37 @@ function showDockingSuccessLesson(){
     ],
     'MARS ORBIT · SCIENTIFIC DEBRIEF'
   );
+
+  const readBtn = $('read-lesson-btn');
+  if (readBtn) {
+    readBtn.onclick = () => {
+      try {
+        const s = speechSynthesis;
+        if (s.speaking) {
+          s.cancel();
+          readBtn.classList.remove('speaking');
+          readBtn.textContent = '🔊 Read to me';
+          return;
+        }
+        s.cancel();
+        const textToRead = "Mission accomplished, Cadet! You docked with Asteria Station! Remember the two space rules: Rule one, adjust your aim to hit the target. Rule two, keep slow speed. In space, there is zero air, so you float forever unless you tap the brake! Outer space is completely silent, and you were orbiting at twelve thousand kilometers per hour while touching gently like a butterfly. Outstanding flying!";
+        const u = new SpeechSynthesisUtterance(textToRead);
+        u.rate = 0.95;
+        u.pitch = 1.25;
+        u.onend = () => {
+          readBtn.classList.remove('speaking');
+          readBtn.textContent = '🔊 Read to me';
+        };
+        u.onerror = () => {
+          readBtn.classList.remove('speaking');
+          readBtn.textContent = '🔊 Read to me';
+        };
+        readBtn.classList.add('speaking');
+        readBtn.textContent = '⏹️ Stop voice';
+        s.speak(u);
+      } catch {}
+    };
+  }
 }
 function help(){if(m.phase==='overview'||m.phase==='docking'){showDockingBriefing();return;}showModal('How to play',`<p><strong>Your arrival:</strong> Explore Mars from orbit, then dock with Asteria. Once the hatch seals, you will enter the cabin to repair the radio and plan your landing.</p><p><strong>Docking:</strong> W/S go forward and back. A/D go left and right. R/F go up and down. Space slows you down. Line up the cross, get inside 2 m, and keep speed below 0.2 m/s. Then press E. “Help me dock” can fly for you.</p><p><strong>Camera:</strong> drag to look around. Use the wheel or + / − to zoom. F3 hides everything for a photo. Press ? to see this again. Esc pauses the game.</p><p>Asteria is a pretend future space station. In space there is no air, so there is no wind sound!</p><p>The story: land on Mars day 11 → <em>Before the Storm</em> on day 12 → <em>Tracks in the Dust</em> on day 16.</p>`,[{label:'Back to the game',run:closeModal}],'HOW TO PLAY');}
 function atlas(){showModal('Mars / the world below',`<p>This is Mars, spinning below you. One side is in sunlight, one side is in night.</p><p class="planet-note"><strong>Olympus Mons</strong> is the biggest volcano in the solar system. It is about three times taller than Mount Everest! <strong>Valles Marineris</strong> is a giant canyon. It is long enough to stretch across the United States. This picture is art, not a real map.</p><p>Learn more: <a href="https://science.nasa.gov/mars/facts/" target="_blank" rel="noopener">NASA Mars facts</a> · <a href="https://science.nasa.gov/resource/planet-mars-3d-model/" target="_blank" rel="noopener">NASA 3D Mars</a></p><p><strong>Planet model:</strong> Mars by Akshat, supplied by you; <a href="https://sketchfab.com/3d-models/mars-9c7bbc64d8c74acfa9ec344c0fc10e1a" target="_blank" rel="noopener">source</a> · <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>. Optimized from the original; diffuse map preserved and material converted to core PBR. Station and spacecraft are original procedural models.</p>`,[{label:'Back',run:closeModal}],'MARS FACTS');}
