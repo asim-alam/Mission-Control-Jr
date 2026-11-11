@@ -265,11 +265,13 @@ function toggleMissionMap(open){
   const show=open!=null?Boolean(open):map.hidden;
   map.hidden=!show;
   document.body.classList.toggle('map-open',show);
-  const backBtn=$('header-map-back');
-  if(backBtn)backBtn.hidden=!show;
+  const mapContent=$('header-map-content');
+  if(mapContent)mapContent.hidden=!show;
+  const defaultContent=$('header-default-content');
+  if(defaultContent)defaultContent.hidden=show;
   const jBtn=$('journey-button');
   if(jBtn && $('journey') && !$('journey').hidden){
-    jBtn.textContent=show?'← Back to Title':'🗺️ Mission Map';
+    jBtn.textContent=show?'✕ Close':'🗺️ Mission Map';
   }
 }
 

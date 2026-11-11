@@ -149,6 +149,55 @@ body.kid-home #campaign-bar button {
   background: var(--kid-panel-2) !important; border: 2px solid #5a4cc0 !important; border-radius: 14px !important;
   font-size: 15px; font-weight: 600; padding: 6px 16px; color: var(--kid-ink) !important;
 }
+body.kid-home .header-content-group {
+  display: flex; align-items: center; gap: 16px;
+}
+body.kid-home .header-content-group[hidden] {
+  display: none !important;
+}
+
+/* Header Map View (Title + Mars/Moon Buttons + Progress) */
+body.kid-home .header-map-group {
+  display: flex; align-items: center; gap: 14px; flex: 1;
+}
+body.kid-home .header-map-title {
+  margin: 0; font-family: var(--kid-display); font-size: 18px; font-weight: 800;
+  color: var(--kid-ink); white-space: nowrap; letter-spacing: -0.2px;
+}
+body.kid-home .header-campaign-selector {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: rgb(10 8 30 / 60%); padding: 3px 4px;
+  border-radius: 999px; border: 2px solid #4a3e9c;
+}
+body.kid-home .header-campaign-selector button {
+  min-height: 34px !important; padding: 0 14px !important; font-size: 13px !important;
+  font-weight: 700 !important; border-radius: 999px !important; border: none !important;
+  background: transparent !important; color: var(--kid-soft) !important;
+  box-shadow: none !important; cursor: pointer; transition: background .15s, color .15s;
+}
+body.kid-home .header-campaign-selector button:hover {
+  color: #fff !important;
+}
+body.kid-home .header-campaign-selector button[aria-pressed="true"] {
+  background: linear-gradient(180deg, #6c5ce7, #5344c9) !important;
+  color: #fff !important; box-shadow: 0 2px 4px rgb(0 0 0 / 40%) !important;
+}
+body.kid-home .header-progress {
+  min-width: 120px; max-width: 160px; height: 12px; border-radius: 999px;
+  background: #2a2468; border: 2px solid #4b3f9e; overflow: hidden;
+}
+body.kid-home .header-progress i {
+  display: block; height: 100%; width: 0; border-radius: 999px;
+  background: linear-gradient(90deg, var(--kid-mint), var(--kid-yellow));
+  transition: width .6s cubic-bezier(.2, 1.2, .4, 1);
+}
+@media (max-width: 820px) {
+  body.kid-home .header-progress { display: none !important; }
+}
+@media (max-width: 680px) {
+  body.kid-home .header-map-title { display: none !important; }
+}
+
 body.kid-home #header-map-back {
   display: inline-flex; align-items: center; gap: 6px;
   background: var(--kid-panel-2) !important;
@@ -166,14 +215,6 @@ body.kid-home #header-map-back:hover {
 }
 body.kid-home #header-map-back[hidden] {
   display: none !important;
-}
-body.kid-home.map-open #active-chapter {
-  display: none;
-}
-@media (max-width: 680px) {
-  body.kid-home.map-open .wordmark {
-    display: none;
-  }
 }
 
 /* ZERO SCROLLING TITLE SCREEN: 100% viewport fit */
@@ -400,34 +441,13 @@ body.kid-home #mission-map {
 body.kid-home #mission-map[hidden] { display: none !important; }
 body.kid-home .mission-map-deck {
   width: 100%; max-width: 1240px; margin: 0 auto; height: 100%;
-  display: flex; flex-direction: column; padding: 10px clamp(12px, 2.5vw, 24px) 24px;
+  display: flex; flex-direction: column; padding: 0 16px;
   box-sizing: border-box; overflow: hidden;
-}
-body.kid-home .mission-map-header {
-  display: flex; align-items: center; justify-content: space-between;
-  gap: 16px; flex-wrap: wrap; margin-bottom: 8px; flex: none;
-  padding-bottom: 8px; border-bottom: 1px solid rgb(90 76 192 / 30%);
-}
-body.kid-home .map-title-group { display: flex; align-items: center; gap: 12px; }
-body.kid-home .map-close-btn {
-  display: none !important;
-}
-body.kid-home #map-title { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: -0.3px; }
-body.kid-home .map-subtitle { margin: 2px 0 0; font-size: 15px; font-weight: 600; color: var(--kid-soft); }
-body.kid-home .map-dest-and-progress { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-body.kid-home .mission-progress {
-  min-width: 150px; height: 14px; border-radius: 999px; background: #2a2468;
-  border: 2px solid #4b3f9e; overflow: hidden;
-}
-body.kid-home .mission-progress i {
-  display: block; height: 100%; width: 0; border-radius: 999px;
-  background: linear-gradient(90deg, var(--kid-mint), var(--kid-yellow));
-  transition: width .6s cubic-bezier(.2, 1.2, .4, 1);
 }
 
 /* Scrollable Map View for all Mission Cards */
 body.kid-home .mission-map-scroll {
-  flex: 1; overflow-y: auto; overflow-x: hidden; padding: 6px 14px 48px;
+  flex: 1; overflow-y: auto; overflow-x: hidden; padding: 20px 14px 60px;
 }
 body.kid-home #chapters.trail-grid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
@@ -439,7 +459,7 @@ body.kid-home #chapters.trail-grid {
 /* ------------------------------------------------------------------ */
 body.kid-home #chapters.path-graph-nodes {
   display: flex; flex-direction: column; gap: 32px;
-  position: relative; max-width: 880px; margin: 12px auto 40px;
+  position: relative; max-width: 880px; margin: 0 auto 40px;
   padding: 10px 20px 60px; box-sizing: border-box;
 }
 
