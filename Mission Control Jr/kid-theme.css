@@ -667,6 +667,189 @@ body.kid-home #journey-count, body.kid-home .wordmark { white-space: nowrap; }
   box-shadow: 0 0 10px rgba(62, 230, 181, 0.3);
 }
 
+/* Cadet Flight Lesson HUD Card */
+.flight-lesson-card {
+  position: fixed;
+  top: 76px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 500px;
+  max-width: calc(100vw - 32px);
+  background: linear-gradient(180deg, rgba(29, 24, 80, 0.96), rgba(18, 15, 46, 0.96));
+  border: 2px solid var(--kid-sky);
+  border-top: 5px solid var(--kid-yellow);
+  border-radius: 20px;
+  padding: 14px 18px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.65), 0 0 24px rgba(76, 201, 255, 0.2);
+  z-index: 28;
+  color: var(--kid-ink);
+  pointer-events: auto;
+  backdrop-filter: blur(8px);
+  animation: kid-pop-in .3s ease-out;
+}
+.lesson-top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.lesson-badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 210, 63, 0.16);
+  border: 1px solid rgba(255, 210, 63, 0.45);
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  color: var(--kid-yellow);
+}
+.lesson-close-btn {
+  background: none;
+  border: none;
+  color: var(--kid-soft);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 2px 8px;
+  border-radius: 8px;
+  box-shadow: none;
+}
+.lesson-close-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: none;
+  translate: 0;
+}
+.lesson-content h3 {
+  margin: 0 0 4px;
+  font-size: 19px;
+  color: #fff;
+  letter-spacing: 0.02em;
+}
+.lesson-content p {
+  margin: 0 0 10px;
+  font-size: 14px;
+  color: var(--kid-soft);
+  line-height: 1.4;
+}
+.lesson-kbd {
+  display: inline-block;
+  background: #272063;
+  border: 1.5px solid var(--kid-sky);
+  border-radius: 6px;
+  padding: 2px 7px;
+  font-family: inherit;
+  font-weight: 800;
+  color: #fff;
+  box-shadow: 0 2px 0 rgba(0,0,0,0.4);
+}
+.lesson-interactive-area {
+  margin-bottom: 8px;
+}
+.lesson-prompt-action {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+.lesson-test-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(180deg, #373082, #231c5c);
+  border: 2px solid var(--kid-yellow);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 8px 18px;
+  border-radius: 14px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(255, 210, 63, 0.25);
+  animation: lesson-pulse 2s infinite ease-in-out;
+}
+@keyframes lesson-pulse {
+  0%, 100% { box-shadow: 0 4px 12px rgba(255, 210, 63, 0.25); border-color: var(--kid-yellow); }
+  50% { box-shadow: 0 4px 20px rgba(255, 210, 63, 0.6); border-color: #fff; }
+}
+.lesson-subhint {
+  font-size: 12px;
+  color: var(--kid-soft);
+  opacity: 0.85;
+}
+.lesson-ok-box {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  background: rgba(62, 230, 181, 0.16);
+  border: 1.5px solid var(--kid-mint);
+  border-radius: 14px;
+  padding: 8px 14px;
+  animation: kid-pop-in .25s cubic-bezier(.2, 1.4, .4, 1);
+}
+.lesson-ok-msg {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+.ok-badge {
+  background: var(--kid-mint);
+  color: #0b2e20;
+  font-weight: 800;
+  font-size: 13px;
+  padding: 3px 8px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+#lesson-ok-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: #e8fff8;
+  line-height: 1.3;
+}
+.lesson-next-btn {
+  font-size: 13px;
+  padding: 6px 14px;
+  flex-shrink: 0;
+}
+.lesson-dots {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.lesson-dots .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+  transition: all .2s;
+}
+.lesson-dots .dot.active {
+  background: var(--kid-yellow);
+  transform: scale(1.3);
+  box-shadow: 0 0 6px var(--kid-yellow);
+}
+.lesson-dots .dot.done {
+  background: var(--kid-mint);
+}
+@media (max-width: 900px) {
+  .flight-lesson-card {
+    top: auto;
+    bottom: 84px;
+    left: 16px;
+    right: 16px;
+    width: auto;
+    max-width: none;
+    transform: none;
+  }
+}
+
+
 
 
 
