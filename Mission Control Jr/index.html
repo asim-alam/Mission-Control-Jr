@@ -105,6 +105,7 @@
         <div class="menu-sub-row">
           <button type="button" id="sampler-start" class="menu-btn-arcade">🕹️ Mini Games</button>
           <button type="button" id="extended-start" class="menu-btn-extended">👑 Base Boss · 30 Days</button>
+          <button type="button" id="badges-btn" class="menu-btn-badges">🎖️ My Badges</button>
           <button type="button" id="return-active" class="menu-btn-resume" hidden>↩ Back to Mission</button>
         </div>
       </div>
@@ -145,6 +146,21 @@
         <button type="button" data-graphics="low">Low effects</button>
         <span>Used when a mission starts.</span>
       </div>
+    </article>
+  </section>
+
+  <!-- ASTRONAUT PASSPORT & BADGES MODAL -->
+  <section id="badges-dialog" class="ui-scrim ui-scrim--below-header" role="dialog" aria-modal="true" aria-labelledby="badges-dialog-title" hidden>
+    <article class="ui-card badges-card">
+      <div class="badges-card-header">
+        <div>
+          <p class="eyebrow">ASTRONAUT LOGBOOK</p>
+          <h2 id="badges-dialog-title">🎖️ My Space Badges</h2>
+        </div>
+        <button type="button" id="badges-close-btn" class="settings-close-btn">✕</button>
+      </div>
+      <p id="badges-summary">Complete missions on Mars and the Moon to earn official Junior Astronaut Expedition patches!</p>
+      <div id="badges-grid" class="badges-grid"></div>
     </article>
   </section>
 

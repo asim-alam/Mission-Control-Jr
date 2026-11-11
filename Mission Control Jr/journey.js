@@ -387,11 +387,66 @@ $('settings-dialog')?.addEventListener('click',e=>{
   if(e.target===$('settings-dialog')) $('settings-dialog').hidden=true;
 });
 
+const BADGES = [
+  {id: 'orbit', icon: '🛸', title: 'Asteria Docking', desc: 'Docked with the Mars orbital station.'},
+  {id: 'storm', icon: '🌪️', title: 'Storm Survivor', desc: 'Saved Meridian Base and crew from the dust storm.'},
+  {id: 'rover', icon: '🚙', title: 'Rover Navigator', desc: 'Explored Jezero Crater and photographed rock layers.'},
+  {id: 'solar-shelter', icon: '🛡️', title: 'Radiation Shield', desc: 'Built a water-wall refuge for solar storm safety.'},
+  {id: 'greenhouse', icon: '🥗', title: 'Space Botanist', desc: 'Grew and harvested fresh crops on Mars.'},
+  {id: 'earth-delay', icon: '📡', title: 'Deep Space Comms', desc: 'Fixed life support across the light-time delay.'},
+  {id: 'lunar-sunlight', icon: '☀️', title: 'Sun Chaser', desc: 'Raised the high-ridge solar mast on the Moon.'},
+  {id: 'lunar-dust', icon: '🧹', title: 'Dust Buster', desc: 'Protected Horizon Base from abrasive lunar dust.'},
+  {id: 'lunar-relay', icon: '📻', title: 'Crater Relay', desc: 'Overcame terrain blockage with radio relay.'},
+  {id: 'extended', icon: '👑', title: 'Base Commander', desc: 'Commanded Meridian Outpost for a full 30 days.'}
+];
+
+function toggleBadges(open) {
+  const dialog = $('badges-dialog');
+  if (!dialog) return;
+  const show = open ?? dialog.hidden;
+  dialog.hidden = !show;
+  if (show) {
+    renderBadges();
+    $('badges-close-btn')?.focus();
+  }
+}
+
+function renderBadges() {
+  const container = $('badges-grid');
+  if (!container) return;
+  const completed = state.completed || [];
+  const earnedCount = BADGES.filter(b => completed.includes(b.id)).length;
+  $('badges-summary').textContent = `You earned ${earnedCount} of ${BADGES.length} Junior Astronaut Expedition badges!`;
+  container.innerHTML = BADGES.map(b => {
+    const earned = completed.includes(b.id);
+    const record = state.records?.[b.id];
+    return `<div class="badge-item ${earned ? 'earned' : 'locked'}">
+      <div class="badge-icon" aria-hidden="true">${earned ? b.icon : '🔒'}</div>
+      <div class="badge-info">
+        <h4>${b.title}</h4>
+        <p>${earned ? b.desc : 'Complete this mission to unlock!'}</p>
+        <span class="badge-status">${earned ? (record?.mastered ? '🏆 Mastered' : '⭐ Earned') : '🔒 Incomplete'}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+$('badges-btn')?.addEventListener('click', () => toggleBadges(true));
+$('badges-close-btn')?.addEventListener('click', () => toggleBadges(false));
+$('badges-dialog')?.addEventListener('click', e => {
+  if (e.target === $('badges-dialog')) toggleBadges(false);
+});
+if ($('journey-count')) {
+  $('journey-count').addEventListener('click', () => toggleBadges(true));
+  $('journey-count').style.cursor = 'pointer';
+}
+
 window.addEventListener('keydown',e=>{
   if(e.key==='Escape'){
     if($('settings-dialog')&&!$('settings-dialog').hidden)$('settings-dialog').hidden=true;
     if($('mission-map')&&!$('mission-map').hidden)toggleMissionMap(false);
     if($('sampler')&&!$('sampler').hidden)$('sampler').hidden=true;
+    if($('badges-dialog')&&!$('badges-dialog').hidden)toggleBadges(false);
   }
 });
 
