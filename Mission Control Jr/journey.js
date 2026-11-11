@@ -120,7 +120,7 @@ function render(){
   const campaign=state.selectedCampaign,chapters=missionsFor(campaign),complete=storyComplete(state,campaign),next=nextStoryChapter(state,campaign),doneCount=chapters.filter(c=>state.completed.includes(c.id)).length;
   $('journey-count').textContent=`⭐ ${doneCount} / ${chapters.length}`;
   $('journey-count').title=`${doneCount} of ${chapters.length} missions done`;
-  $('mission-progress-bar').style.width=`${chapters.length?Math.round(doneCount/chapters.length*100):0}%`;
+  if($('mission-progress-bar')) $('mission-progress-bar').style.width=`${chapters.length?Math.round(doneCount/chapters.length*100):0}%`;
   
   const nextChapter=chapters.find(c=>c.id===next);
   $('continue').disabled=campaign==='moon'&&complete;
@@ -158,99 +158,102 @@ function render(){
 
   document.querySelectorAll('[data-campaign]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.campaign===campaign)));
   $('return-active').hidden=!active;
+  $('chapters').className='trail-grid';
   $('chapters').replaceChildren();
 
-  let index = 0;
   for(const chapter of chapters){
-    const done=state.completed.includes(chapter.id),record=state.records[chapter.id],node=document.createElement('article');
+    const done=state.completed.includes(chapter.id),record=state.records[chapter.id],card=document.createElement('article');
     const isNext = next === chapter.id;
-    const isEven = index % 2 === 1;
-    node.className=`chapter path-node ${isEven ? 'node-right' : 'node-left'}${done?' done':''}${isNext?' current':''}`;
+    card.className=`chapter${done?' done':''}${isNext?' current':''}`;
     const look=CHAPTER_LOOK[chapter.id]||{icon:'🚀',color:'#ff9a5c'};
-    node.dataset.chapter=chapter.id;
-    node.style.setProperty('--chapter-color',look.color);
+    card.dataset.chapter=chapter.id;
+    card.style.setProperty('--chapter-color',look.color);
 
     const stepLabel=Number(chapter.number)?`Mission ${Number(chapter.number)}`:'Bonus';
     const statusPill=done?'<span class="chapter-star" aria-label="Done">⭐ Finished</span>':(isNext?'<span class="chapter-next-pill">🚀 Up Next</span>':'<span class="chapter-open-pill">🔓 Open</span>');
 
-    node.innerHTML=`
-      <div class="node-waypoint-anchor">
-        <div class="node-waypoint-circle" style="--node-accent: ${look.color}">
-          <span class="node-icon" aria-hidden="true">${look.icon}</span>
-          ${isNext ? '<div class="node-rover-pin" aria-label="You are here"><span class="rover-token">🚙</span><span class="rover-speech">YOU ARE HERE!</span></div>' : ''}
-          ${done ? '<span class="node-star-badge" aria-label="Done">⭐</span>' : ''}
+    card.innerHTML=`
+      <div class="chapter-head">
+        <span class="chapter-icon" aria-hidden="true" style="--node-accent: ${look.color}">${look.icon}</span>
+        <div class="chapter-meta">
+          <span class="chapter-step-badge">${stepLabel}</span>
+          <span class="chapter-sol-text">${kidDay(chapter.sol)}</span>
         </div>
-        <div class="node-step-number">${Number(chapter.number) ? `Level ${Number(chapter.number)}` : 'Bonus'}</div>
+        ${statusPill}
       </div>
-      <div class="node-content-card">
-        <div class="chapter-head">
-          <div class="chapter-meta">
-            <span class="chapter-step-badge">${stepLabel}</span>
-            <span class="chapter-sol-text">${kidDay(chapter.sol)}</span>
-          </div>
-          ${statusPill}
-        </div>
-        <h2>${chapter.title}</h2>
-        <p>${chapter.description}</p>
-        <div class="node-card-footer"></div>
+      <h2>${chapter.title}</h2>
+      <p>${chapter.description}</p>
+      <button type="button" class="chapter-play-btn ${isNext ? 'primary' : ''}">
+        ${done ? '↻ Replay' : isNext ? '▶ Play Up Next!' : '▶ Practice'}
+      </button>
+      <div class="chapter-status">
+        ${done?`${completionStatus(record)}${record?.assisted?' · with help':''}${record?.score!=null?` · ${record.score}/100`:''}`:isNext?'⭐ Recommended next step':'Play any time'}
       </div>
     `;
 
-    const button=document.createElement('button');
-    button.textContent=done?'↻ Replay':isNext?'▶ Play Up Next!':'▶ Practice';
-    if(isNext)button.className='primary';
     const launchChapter=()=>{
-      if($('mission-map'))$('mission-map').hidden=true;
+      toggleMissionMap(false);
       requestChapter(chapter.id,done);
     };
-    button.onclick=launchChapter;
-    const waypointCircle=node.querySelector('.node-waypoint-circle');
-    if(waypointCircle)waypointCircle.onclick=launchChapter;
+    const playBtn=card.querySelector('.chapter-play-btn');
+    if(playBtn)playBtn.onclick=launchChapter;
+    const iconBtn=card.querySelector('.chapter-icon');
+    if(iconBtn)iconBtn.onclick=launchChapter;
 
-    const status=document.createElement('div');
-    status.className='chapter-status';
-    status.textContent=done?`${completionStatus(record)}${record?.assisted?' · with help':''}${record?.score!=null?` · ${record.score}/100`:''}`:isNext?'⭐ Recommended next step':'Play any time';
-    
-    node.querySelector('.node-card-footer').append(button,status);
-    $('chapters').append(node);
-    index++;
+    $('chapters').append(card);
   }
 
-  // At the end of Mars campaign, add Base Boss as final apex node on the path!
+  // At the end of Mars campaign, add Base Boss as final apex card
   if(campaign==='mars'){
-    const bossNode=document.createElement('article');
-    bossNode.className='chapter path-node path-node-boss node-center';
-    bossNode.innerHTML=`
-      <div class="node-waypoint-anchor">
-        <div class="node-waypoint-circle boss-circle">
-          <span class="node-icon" aria-hidden="true">👑</span>
+    const bossCard=document.createElement('article');
+    bossCard.className='chapter boss-card';
+    bossCard.innerHTML=`
+      <div class="chapter-head">
+        <span class="chapter-icon boss-icon" aria-hidden="true">👑</span>
+        <div class="chapter-meta">
+          <span class="chapter-step-badge" style="color:var(--kid-yellow)">COMMAND SIMULATION</span>
+          <span class="chapter-sol-text">30 MARS DAYS</span>
         </div>
-        <div class="node-step-number">Final Boss</div>
+        <span class="chapter-star" style="background:var(--kid-yellow); color:#2b1d00">👑 Apex</span>
       </div>
-      <div class="node-content-card boss-card">
-        <div class="chapter-head">
-          <div class="chapter-meta">
-            <span class="chapter-step-badge" style="color:var(--kid-yellow)">COMMAND SIMULATION</span>
-            <span class="chapter-sol-text">30 MARS DAYS</span>
-          </div>
-          <span class="chapter-star" style="background:var(--kid-yellow); color:#2b1d00">👑 Apex</span>
-        </div>
-        <h2>Be the Base Boss</h2>
-        <p>Take charge of Meridian Base for a full month! Balance food, solar power, water recycler and jobs.</p>
-        <div class="node-card-footer">
-          <button type="button" class="boss-btn primary">Run the Base ▶</button>
-          <div class="chapter-status" style="color:var(--kid-yellow)">Open for certified Commanders</div>
-        </div>
-      </div>
+      <h2>Be the Base Boss</h2>
+      <p>Take charge of Meridian Base for a full month! Balance food, solar power, water recycler and jobs.</p>
+      <button type="button" class="boss-btn primary">Run the Base ▶</button>
+      <div class="chapter-status" style="color:var(--kid-yellow)">Open for certified Commanders</div>
     `;
     const launchBoss=()=>{
-      if($('mission-map'))$('mission-map').hidden=true;
+      toggleMissionMap(false);
       requestChapter('extended');
     };
-    bossNode.querySelector('.boss-btn').onclick=launchBoss;
-    const bossCircle=bossNode.querySelector('.boss-circle');
-    if(bossCircle)bossCircle.onclick=launchBoss;
-    $('chapters').append(bossNode);
+    bossCard.querySelector('.boss-btn').onclick=launchBoss;
+    bossCard.querySelector('.boss-icon').onclick=launchBoss;
+    $('chapters').append(bossCard);
+  }
+
+  requestAnimationFrame(()=>{
+    if($('mission-map') && !$('mission-map').hidden){
+      scrollToActiveMission();
+    }
+  });
+}
+
+function scrollToActiveMission({ smooth = false } = {}){
+  const scrollEl=document.querySelector('.mission-map-scroll');
+  const container=$('chapters');
+  if(!scrollEl || !container)return;
+
+  const currentTarget=container.querySelector('.chapter.current');
+  if(!currentTarget || currentTarget === container.firstElementChild) {
+    scrollEl.scrollTo({
+      top: 0,
+      behavior: smooth ? 'smooth' : 'instant'
+    });
+  } else {
+    currentTarget.scrollIntoView({
+      block: 'center',
+      inline: 'nearest',
+      behavior: smooth ? 'smooth' : 'instant'
+    });
   }
 }
 
@@ -258,6 +261,30 @@ const CHAPTER_LOOK={orbit:{icon:'🛰️',color:'#4cc9ff'},storm:{icon:'🌪️'
 const kidDay=sol=>/LUNAR/i.test(sol)?'Moon base':sol.replace(/^SOLS?/i,'Day');
 function clearPresentation(){document.body.classList.remove('minimal-hud','photo-mode');}
 const chapterPath=(id,sampler=false)=>journeyUrl(location.href,id,{sampler}).href;
+
+function toggleMissionMap(open){
+  const map=$('mission-map');
+  if(!map)return;
+  const show=open!=null?Boolean(open):map.hidden;
+  map.hidden=!show;
+  document.body.classList.toggle('map-open',show);
+  const mapContent=$('header-map-content');
+  if(mapContent)mapContent.hidden=!show;
+  const defaultContent=$('header-default-content');
+  if(defaultContent)defaultContent.hidden=show;
+  const jBtn=$('journey-button');
+  if(jBtn && $('journey') && !$('journey').hidden){
+    jBtn.textContent=show?'✕ Close':'🗺️ Mission Map';
+  }
+  if(show){
+    requestAnimationFrame(()=>{
+      scrollToActiveMission({ smooth: false });
+    });
+    setTimeout(()=>{
+      scrollToActiveMission({ smooth: false });
+    }, 60);
+  }
+}
 
 function launch(id,{updatePath=true,sampler=false}={}){
   const chapter=chapterById(id);
@@ -272,7 +299,7 @@ function launch(id,{updatePath=true,sampler=false}={}){
     state.campaigns[chapter.campaign].current=id;
   }
   persist();
-  if($('mission-map'))$('mission-map').hidden=true;
+  toggleMissionMap(false);
   if($('settings-dialog'))$('settings-dialog').hidden=true;
   $('transition').hidden=true;$('sampler').hidden=true;$('journey').hidden=true;$('loading-scene').hidden=false;
   frame.hidden=false;frame.inert=false;
@@ -285,7 +312,7 @@ function launch(id,{updatePath=true,sampler=false}={}){
 
 function menu({updatePath=true}={}){
   clearPresentation();hold(true);document.exitPointerLock?.();
-  if($('mission-map'))$('mission-map').hidden=true;
+  toggleMissionMap(false);
   if($('settings-dialog'))$('settings-dialog').hidden=true;
   $('transition').hidden=true;$('journey').hidden=false;$('home-scene').hidden=false;frame.hidden=true;
   if(updatePath)history.pushState(null,'',journeyUrl(location.href).href);
@@ -294,7 +321,7 @@ function menu({updatePath=true}={}){
 
 function resume(){
   if(!active)return;
-  if($('mission-map'))$('mission-map').hidden=true;
+  toggleMissionMap(false);
   if($('settings-dialog'))$('settings-dialog').hidden=true;
   $('journey').hidden=true;$('transition').hidden=true;frame.hidden=false;hold(false);frame.focus();
 }
@@ -316,7 +343,7 @@ function requestChapter(id,replay=false){
   }
   clearPresentation();pending=id;hold(true);
   stopPipTypewriter();
-  if($('mission-map'))$('mission-map').hidden=true;
+  toggleMissionMap(false);
   if($('settings-dialog'))$('settings-dialog').hidden=true;
   $('journey').hidden=true;
   $('transition-tag').textContent=info.tag;
@@ -332,21 +359,15 @@ $('sampler-close').onclick=()=>{ $('sampler').hidden=true; $('sampler-start').fo
 if($('sampler-close-top')) $('sampler-close-top').onclick=()=>{ $('sampler').hidden=true; $('sampler-start').focus(); };
 document.querySelectorAll('[data-sample]').forEach(button=>button.onclick=()=>launch(button.dataset.sample,{sampler:true}));
 
-$('open-map')?.addEventListener('click',()=>{
-  if($('mission-map')) {
-    $('mission-map').hidden=false;
-    $('map-close-btn')?.focus();
-  }
-});
-$('map-close-btn')?.addEventListener('click',()=>{
-  if($('mission-map')) $('mission-map').hidden=true;
-});
+$('open-map')?.addEventListener('click',()=>toggleMissionMap(true));
+$('header-map-back')?.addEventListener('click',()=>toggleMissionMap(false));
+$('map-close-btn')?.addEventListener('click',()=>toggleMissionMap(false));
 
 $('journey-button').onclick=()=>{
   if(!$('journey').hidden && active){
     resume();
   } else if(!$('journey').hidden){
-    if($('mission-map')) $('mission-map').hidden=!$('mission-map').hidden;
+    toggleMissionMap();
   } else {
     menu();
   }
@@ -369,7 +390,7 @@ $('settings-dialog')?.addEventListener('click',e=>{
 window.addEventListener('keydown',e=>{
   if(e.key==='Escape'){
     if($('settings-dialog')&&!$('settings-dialog').hidden)$('settings-dialog').hidden=true;
-    if($('mission-map')&&!$('mission-map').hidden)$('mission-map').hidden=true;
+    if($('mission-map')&&!$('mission-map').hidden)toggleMissionMap(false);
     if($('sampler')&&!$('sampler').hidden)$('sampler').hidden=true;
   }
 });

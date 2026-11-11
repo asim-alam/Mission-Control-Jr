@@ -12,8 +12,22 @@
 <body class="kid-home">
   <!-- Top Mission Control Navigation Bar -->
   <header id="campaign-bar">
-    <span class="wordmark"><span class="logo-rocket" aria-hidden="true">🚀</span>Mission Control Jr.</span>
-    <span id="active-chapter">THE MERIDIAN EXPEDITION</span>
+    <!-- Default Title Header -->
+    <div id="header-default-content" class="header-content-group">
+      <span class="wordmark"><span class="logo-rocket" aria-hidden="true">🚀</span>Mission Control Jr.</span>
+      <span id="active-chapter">THE MERIDIAN EXPEDITION</span>
+    </div>
+
+    <!-- Map Header (replaces game name and shows title + Mars/Moon buttons) -->
+    <div id="header-map-content" class="header-content-group header-map-group" hidden>
+      <button type="button" id="header-map-back" class="header-back-btn">← Back to Title</button>
+      <h2 id="map-title" class="header-map-title">🗺️ Expedition Mission Map</h2>
+      <div class="campaign-selector header-campaign-selector" role="group" aria-label="Pick where to go">
+        <button type="button" data-campaign="mars">🔴 Mars</button>
+        <button type="button" data-campaign="moon">⚪ Moon</button>
+      </div>
+    </div>
+
     <div class="bar-right">
       <span id="journey-count"></span>
       <button id="journey-button">🗺️ Mission Map</button>
@@ -106,24 +120,8 @@
   <!-- DEDICATED FULL-SCREEN EXPEDITION MAP VIEW (SEPARATE PAGE/VIEW) -->
   <section id="mission-map" class="ui-scrim ui-scrim--below-header" role="dialog" aria-modal="true" aria-labelledby="map-title" hidden>
     <div class="mission-map-deck">
-      <div class="mission-map-header">
-        <div class="map-title-group">
-          <button type="button" id="map-close-btn" class="map-close-btn">← Back to Title</button>
-          <div>
-            <h2 id="map-title">🗺️ Expedition Mission Map</h2>
-            <p class="map-subtitle">Choose any mission to explore, practice, or replay anytime!</p>
-          </div>
-        </div>
-        <div class="map-dest-and-progress">
-          <div class="campaign-selector" role="group" aria-label="Pick where to go">
-            <button type="button" data-campaign="mars">🔴 Mars</button>
-            <button type="button" data-campaign="moon">⚪ Moon</button>
-          </div>
-          <div class="mission-progress" aria-hidden="true"><i id="mission-progress-bar"></i></div>
-        </div>
-      </div>
       <div class="mission-map-scroll">
-        <section id="chapters" aria-label="Mission chapters" class="path-graph-nodes"></section>
+        <section id="chapters" aria-label="Mission chapters" class="trail-grid"></section>
       </div>
     </div>
   </section>
