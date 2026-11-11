@@ -223,9 +223,15 @@ body.kid-home #header-map-back[hidden] {
 }
 
 /* ZERO SCROLLING TITLE SCREEN: 100% viewport fit with 3D Meridian Outpost background */
-body.kid-home #home-scene {
+body.kid-home #home-scene,
+body.kid-home.home-scene-fallback #home-scene {
   position: fixed; inset: 60px 0 0 !important;
-  z-index: 0; pointer-events: none;
+  z-index: 0 !important; pointer-events: none !important;
+  opacity: 1 !important; background: none !important;
+}
+body.kid-home #home-scene canvas,
+body.kid-home.home-scene-fallback #home-scene canvas {
+  display: block !important; width: 100% !important; height: 100% !important;
 }
 body.kid-home #journey {
   position: fixed; inset: 60px 0 0 !important;
