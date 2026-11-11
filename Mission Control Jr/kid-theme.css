@@ -222,21 +222,32 @@ body.kid-home #header-map-back[hidden] {
   display: none !important;
 }
 
-/* ZERO SCROLLING TITLE SCREEN: 100% viewport fit */
+/* ZERO SCROLLING TITLE SCREEN: 100% viewport fit with 3D Meridian Outpost background */
+body.kid-home #home-scene,
+body.kid-home.home-scene-fallback #home-scene {
+  position: fixed; inset: 60px 0 0 !important;
+  z-index: 0 !important; pointer-events: none !important;
+  opacity: 1 !important; background: none !important;
+}
+body.kid-home #home-scene canvas,
+body.kid-home.home-scene-fallback #home-scene canvas {
+  display: block !important; width: 100% !important; height: 100% !important;
+}
 body.kid-home #journey {
   position: fixed; inset: 60px 0 0 !important;
   overflow: hidden !important;
   display: flex; align-items: center; justify-content: center;
-  background:
-    radial-gradient(ellipse at 50% 15%, rgb(167 139 250 / 25%), transparent 60%),
-    radial-gradient(ellipse at 85% 85%, rgb(255 138 61 / 15%), transparent 60%),
-    linear-gradient(180deg, rgb(18 15 46 / 78%) 0%, rgb(18 15 46 / 90%) 100%) !important;
+  /* Translucent soft vignette letting the 3D Martian Outpost shine through */
+  background: radial-gradient(ellipse at center, rgba(14, 11, 36, 0.2) 0%, rgba(14, 11, 36, 0.58) 100%) !important;
+}
+body.kid-home #journey:before {
+  display: none !important;
 }
 body.kid-home #transition, body.kid-home #sampler, body.kid-home #mission-map, body.kid-home #settings-dialog {
   inset: 60px 0 0 !important;
 }
 body.kid-home .sky-sparkles {
-  position: fixed; inset: 60px 0 0; pointer-events: none; z-index: 1; opacity: .75;
+  position: fixed; inset: 60px 0 0; pointer-events: none; z-index: 1; opacity: .22;
   background-image:
     radial-gradient(2px 2px at 12% 18%, #fff, transparent), radial-gradient(2px 2px at 32% 8%, #ffd23f, transparent),
     radial-gradient(2.5px 2.5px at 55% 14%, #fff, transparent), radial-gradient(2px 2px at 78% 6%, #4cc9ff, transparent),
