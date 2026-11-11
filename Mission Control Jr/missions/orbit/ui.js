@@ -220,7 +220,7 @@ function clearAutoAdvanceTimer() {
 
 function startAutoAdvanceCountdown() {
   clearAutoAdvanceTimer();
-  autoAdvanceCountdown = 10;
+  autoAdvanceCountdown = 3;
 
   const nextBtn = stationLessonEl?.querySelector('#station-next-step-btn');
   const isLast = currentStationStep >= STATION_PRACTICAL_STEPS.length - 1;
