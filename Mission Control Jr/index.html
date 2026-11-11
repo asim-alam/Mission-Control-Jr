@@ -1,29 +1,190 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#120f2e"><title>Mission Control Jr. — The Meridian Expedition</title><link rel="stylesheet" href="./journey.css"><link rel="stylesheet" href="./hud-redesign.css"><link rel="stylesheet" href="./kid-theme.css"></head>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#120f2e">
+  <title>Mission Control Jr. — Mars &amp; Moon Expedition</title>
+  <link rel="stylesheet" href="./journey.css">
+  <link rel="stylesheet" href="./hud-redesign.css">
+  <link rel="stylesheet" href="./kid-theme.css">
+</head>
 <body class="kid-home">
-<header id="campaign-bar"><span class="wordmark"><span class="logo-rocket" aria-hidden="true">🚀</span>Mission Control Jr.</span><span id="active-chapter">THE MERIDIAN EXPEDITION</span><div class="bar-right"><span id="journey-count"></span><button id="journey-button">🗺️ Map</button></div></header>
-<div id="home-scene" aria-hidden="true"></div>
-<div class="sky-sparkles" aria-hidden="true"></div>
-<iframe id="scene" title="Mission Control Jr. active mission" allow="autoplay; fullscreen" hidden></iframe><div id="loading-scene" role="status" hidden><span class="loading-rocket" aria-hidden="true">🚀</span> Getting your mission ready…</div>
-<main id="journey"><div class="journey-content">
-<section class="hero">
-<div class="pip-hello" aria-hidden="true"><span class="pip-hello-face"><svg viewBox="0 0 40 40" width="46" height="46"><line x1="20" y1="3" x2="20" y2="9" stroke="#6fe3c8" stroke-width="2"/><circle cx="20" cy="3" r="2.5" fill="#ff9a5c"/><rect x="6" y="9" width="28" height="24" rx="9" fill="#eef2f5"/><circle cx="14.5" cy="20" r="3.4" fill="#0f1923"/><circle cx="25.5" cy="20" r="3.4" fill="#0f1923"/><circle cx="15.5" cy="19" r="1.1" fill="#fff"/><circle cx="26.5" cy="19" r="1.1" fill="#fff"/><path d="M15 26.5q5 4 10 0" stroke="#0f1923" stroke-width="2" fill="none" stroke-linecap="round"/></svg></span><span class="pip-hello-bubble">Hi, I'm <b>Pip</b>! Ready to explore space?</span></div>
-<p class="eyebrow">JUNIOR ASTRONAUT TRAINING</p>
-<h1 id="journey-title">MISSION CONTROL<br><span>JUNIOR.</span></h1>
-<p class="intro" id="journey-intro">Train as a junior astronaut on Mars and the Moon.</p>
-<div class="campaign-selector" role="group" aria-label="Pick where to go"><button type="button" data-campaign="mars"><span class="planet planet-mars" aria-hidden="true"></span><span><b>Mars</b><small>6 missions</small></span></button><button type="button" data-campaign="moon"><span class="planet planet-moon" aria-hidden="true"></span><span><b>Moon</b><small>3 bonus missions</small></span></button></div>
-<div class="journey-actions"><button id="continue" class="primary">Begin expedition</button><button id="quick-mission">⚡ Quick try · 5–7 min</button><button id="sampler-start">🎲 Mini games</button><button id="return-active" hidden>↩ Back to my mission</button></div>
-<div class="learning-mode age-picker" role="group" aria-label="How old are you?"><span class="picker-label">How old are you?</span><button type="button" data-difficulty="cadet">🧒 7–9 · Cadet</button><button type="button" data-difficulty="explorer">🧑‍🚀 10–12 · Explorer</button><span class="picker-hint">Cadet gives you more time and more power.</span></div>
-</section>
-<div class="section-head"><h2 class="section-title">Your missions</h2><div class="mission-progress" aria-hidden="true"><i id="mission-progress-bar"></i></div></div>
-<section id="chapters" aria-label="Mission chapters"></section>
-<section id="extended"><span class="extended-icon" aria-hidden="true">👑</span><div><p class="eyebrow">BONUS GAME · 30 DAYS</p><h2>Be the Base Boss</h2><p>Be the boss of the base for 30 Mars days. Plan jobs, food, water and power.</p></div><button id="extended-start">Run the base ▶</button></section>
-<details class="grown-up-settings"><summary>⚙️ Settings for grown-ups</summary>
-<div class="learning-mode" role="group" aria-label="How much to explain"><span>EXPLANATIONS</span><button type="button" data-learning-mode="simple">Simple</button><button type="button" data-learning-mode="details">Details</button><a href="./sources.html">Sources &amp; credits</a></div>
-<div class="learning-mode" role="group" aria-label="Picture quality"><span>GRAPHICS</span><button type="button" data-graphics="standard">Standard</button><button type="button" data-graphics="low">Low effects</button><span>Used when a mission starts.</span></div>
-</details>
-<p class="save-note" id="save-status">💾 Your progress is saved on this computer. You can play any mission again.</p>
-</div></main>
-<section id="sampler" class="ui-scrim ui-scrim--below-header" role="dialog" aria-modal="true" aria-labelledby="sampler-title" hidden><article class="ui-card"><p class="eyebrow">MINI GAMES · PRACTICE</p><h2 id="sampler-title">Try a quick game!</h2><p>Short practice bits from the missions. They do not count as finishing a mission.</p><div class="transition-actions ui-actions sampler-grid"><button data-sample="storm">🌪️ Storm power</button><button data-sample="solar-shelter">☀️ Safe room</button><button data-sample="greenhouse">🌱 Greenhouse</button><button data-sample="earth-delay">📡 Waiting for Earth</button><button data-sample="lunar-sunlight">🔆 Moon power</button><button id="sampler-close">← Back to the map</button></div></article></section>
-<section id="transition" class="ui-scrim ui-scrim--below-header" role="dialog" aria-modal="true" aria-labelledby="transition-title" hidden><article class="ui-card"><p class="eyebrow" id="transition-tag"></p><h2 id="transition-title"></h2><p id="transition-copy"></p><div class="transition-actions ui-actions"><button id="transition-begin" class="primary"></button><button id="transition-back">Back to my mission</button></div></article></section>
-<script type="module" src="./journey.js"></script></body></html>
+  <!-- Top Mission Control Navigation Bar -->
+  <header id="campaign-bar">
+    <span class="wordmark"><span class="logo-rocket" aria-hidden="true">🚀</span>Mission Control Jr.</span>
+    <span id="active-chapter">THE MERIDIAN EXPEDITION</span>
+    <div class="bar-right">
+      <span id="journey-count"></span>
+      <button id="journey-button">🗺️ Mission Map</button>
+    </div>
+  </header>
+
+  <!-- 3D Mars Scene & Starfield Background -->
+  <div id="home-scene" aria-hidden="true"></div>
+  <div class="sky-sparkles" aria-hidden="true"></div>
+
+  <!-- In-Game Frame & Loader -->
+  <iframe id="scene" title="Mission Control Jr. active mission" allow="autoplay; fullscreen" hidden></iframe>
+  <div id="loading-scene" role="status" hidden><span class="loading-rocket" aria-hidden="true">🚀</span> Getting your mission ready…</div>
+
+  <!-- ARCADE TITLE SCREEN (SINGLE SCREEN, ZERO SCROLLING) -->
+  <main id="journey">
+    <div class="title-screen-container">
+      
+      <!-- Top Deck: Destination Selector & Astronaut Rank Pill -->
+      <div class="title-screen-top">
+        <div class="campaign-selector title-dest-picker" role="group" aria-label="Pick expedition destination">
+          <button type="button" data-campaign="mars" class="dest-toggle-btn">
+            <span class="planet planet-mars" aria-hidden="true"></span>
+            <span class="dest-label"><b>Mars</b><small>6 Missions</small></span>
+          </button>
+          <button type="button" data-campaign="moon" class="dest-toggle-btn">
+            <span class="planet planet-moon" aria-hidden="true"></span>
+            <span class="dest-label"><b>Moon</b><small>3 Missions</small></span>
+          </button>
+        </div>
+
+        <div class="learning-mode age-picker title-rank-picker" role="group" aria-label="Astronaut Rank">
+          <span class="rank-title-label">RANK:</span>
+          <button type="button" data-difficulty="cadet" class="rank-pill-btn">🧒 Cadet (7–9)</button>
+          <button type="button" data-difficulty="explorer" class="rank-pill-btn">🧑‍🚀 Explorer (10–12)</button>
+        </div>
+      </div>
+
+      <!-- Center Stage: Pip Character + Game Title -->
+      <div class="title-center-stage">
+        <!-- Floating Pip Robot Companion -->
+        <div class="pip-hero-stage">
+          <span class="pip-hello-face" aria-hidden="true">
+            <svg viewBox="0 0 40 40" width="56" height="56">
+              <line x1="20" y1="3" x2="20" y2="9" stroke="#6fe3c8" stroke-width="2.5"/>
+              <circle cx="20" cy="3" r="3" fill="#ff9a5c"/>
+              <rect x="5" y="9" width="30" height="25" rx="10" fill="#eef2f5"/>
+              <circle cx="14" cy="20" r="3.6" fill="#0f1923"/>
+              <circle cx="26" cy="20" r="3.6" fill="#0f1923"/>
+              <circle cx="15.2" cy="18.8" r="1.3" fill="#fff"/>
+              <circle cx="27.2" cy="18.8" r="1.3" fill="#fff"/>
+              <path d="M14 26.5q6 4.5 12 0" stroke="#0f1923" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+            </svg>
+          </span>
+          <div class="pip-speech-bubble">
+            <span id="pip-home-bubble">Hi, I'm <b>Pip</b>! Ready to explore space?</span>
+            <button type="button" id="pip-speak" class="pip-speak-mini" title="Read message aloud">🔊</button>
+          </div>
+        </div>
+
+        <!-- Big Cinematic Game Title -->
+        <div class="game-title-block">
+          <p class="eyebrow">NASA JUNIOR ASTRONAUT TRAINING</p>
+          <h1 id="journey-title">MISSION CONTROL<br><span>JUNIOR.</span></h1>
+          <p class="intro" id="journey-intro">Train as a junior astronaut on Mars and the Moon.</p>
+        </div>
+      </div>
+
+      <!-- Video Game Main Menu (Chunky Arcade Action Buttons) -->
+      <div class="arcade-menu">
+        <div class="menu-primary-row">
+          <button id="continue" class="primary menu-btn-play">🚀 Start Adventure</button>
+          <button type="button" id="open-map" class="menu-btn-map-primary">🗺️ Open Mission Map</button>
+        </div>
+        <div class="menu-sub-row">
+          <button type="button" id="sampler-start" class="menu-btn-arcade">🕹️ Mini Games</button>
+          <button type="button" id="extended-start" class="menu-btn-extended">👑 Base Boss · 30 Days</button>
+          <button type="button" id="return-active" class="menu-btn-resume" hidden>↩ Back to Mission</button>
+        </div>
+      </div>
+
+      <!-- Bottom Bar: Auto-save status & Grown-up Settings -->
+      <div class="title-screen-footer">
+        <span class="save-note" id="save-status">💾 Progress saved on this computer</span>
+        <button type="button" id="settings-toggle" class="settings-gear-btn" title="Settings for grown-ups & teachers">⚙️ Settings</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- DEDICATED FULL-SCREEN EXPEDITION MAP VIEW (SEPARATE PAGE/VIEW) -->
+  <section id="mission-map" class="ui-scrim ui-scrim--below-header" role="dialog" aria-modal="true" aria-labelledby="map-title" hidden>
+    <div class="mission-map-deck">
+      <div class="mission-map-header">
+        <div class="map-title-group">
+          <button type="button" id="map-close-btn" class="map-close-btn">← Back to Title</button>
+          <div>
+            <h2 id="map-title">🗺️ Expedition Mission Map</h2>
+            <p class="map-subtitle">Choose any mission to explore, practice, or replay anytime!</p>
+          </div>
+        </div>
+        <div class="map-dest-and-progress">
+          <div class="campaign-selector" role="group" aria-label="Pick where to go">
+            <button type="button" data-campaign="mars">🔴 Mars</button>
+            <button type="button" data-campaign="moon">⚪ Moon</button>
+          </div>
+          <div class="mission-progress" aria-hidden="true"><i id="mission-progress-bar"></i></div>
+        </div>
+      </div>
+      <div class="mission-map-scroll">
+        <section id="chapters" aria-label="Mission chapters" class="path-graph-nodes"></section>
+      </div>
+    </div>
+  </section>
+
+  <!-- GROWN-UP & TEACHER SETTINGS MODAL -->
+  <section id="settings-dialog" class="ui-scrim ui-scrim--below-header" role="dialog" aria-modal="true" aria-labelledby="settings-dialog-title" hidden>
+    <article class="ui-card settings-card">
+      <div class="settings-card-header">
+        <h2 id="settings-dialog-title">⚙️ Settings for Grown-ups &amp; Teachers</h2>
+        <button type="button" id="settings-close-btn" class="settings-close-btn">✕</button>
+      </div>
+      <div class="learning-mode" role="group" aria-label="How much to explain">
+        <span>EXPLANATIONS</span>
+        <button type="button" data-learning-mode="simple">Simple words</button>
+        <button type="button" data-learning-mode="details">Technical details</button>
+        <a href="./sources.html" target="_blank">Sources &amp; credits ↗</a>
+      </div>
+      <div class="learning-mode" role="group" aria-label="Picture quality">
+        <span>GRAPHICS</span>
+        <button type="button" data-graphics="standard">Standard effects</button>
+        <button type="button" data-graphics="low">Low effects</button>
+        <span>Used when a mission starts.</span>
+      </div>
+    </article>
+  </section>
+
+  <!-- MINI GAMES SAMPLER MODAL -->
+  <section id="sampler" class="ui-scrim ui-scrim--below-header" role="dialog" aria-modal="true" aria-labelledby="sampler-title" hidden>
+    <article class="ui-card sampler-card">
+      <div class="sampler-card-header">
+        <div>
+          <p class="eyebrow">PRACTICE SIMULATORS · 2–3 MIN</p>
+          <h2 id="sampler-title">🕹️ Space Practice Arcade</h2>
+        </div>
+        <button type="button" id="sampler-close-top" class="settings-close-btn">✕</button>
+      </div>
+      <p>Jump right into exciting key moments from our Mars and Moon missions. Perfect for quick turns or classroom practice!</p>
+      <div class="transition-actions ui-actions sampler-grid">
+        <button data-sample="storm">🌪️ Dust Storm Power</button>
+        <button data-sample="solar-shelter">☀️ Solar Storm Safe Room</button>
+        <button data-sample="greenhouse">🌱 Mars Greenhouse</button>
+        <button data-sample="earth-delay">📡 Earth Message Delay</button>
+        <button data-sample="lunar-sunlight">🔆 Moon Sun Mast</button>
+        <button id="sampler-close">← Back to Title</button>
+      </div>
+    </article>
+  </section>
+
+  <!-- CHAPTER TRANSITION STORY MODAL -->
+  <section id="transition" class="ui-scrim ui-scrim--below-header" role="dialog" aria-modal="true" aria-labelledby="transition-title" hidden>
+    <article class="ui-card">
+      <p class="eyebrow" id="transition-tag"></p>
+      <h2 id="transition-title"></h2>
+      <p id="transition-copy"></p>
+      <div class="transition-actions ui-actions">
+        <button id="transition-begin" class="primary"></button>
+        <button id="transition-back">Back to my mission</button>
+      </div>
+    </article>
+  </section>
+
+  <script type="module" src="./journey.js"></script>
+</body>
+</html>
