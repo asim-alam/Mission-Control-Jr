@@ -182,7 +182,18 @@ function render(){
         </div>
         <div class="node-step-number">${Number(chapter.number) ? `Level ${Number(chapter.number)}` : 'Bonus'}</div>
       </div>
-      <div class="node-content-card">
+
+      <div class="node-point-bar">
+        <div class="point-info">
+          <span class="point-step">${stepLabel}</span>
+          <h3 class="point-title">${chapter.title}</h3>
+        </div>
+        <button type="button" class="point-play-btn ${isNext ? 'primary' : ''}">
+          ${done ? '↻ Replay' : isNext ? '▶ Play' : '▶ Play'}
+        </button>
+      </div>
+
+      <div class="node-content-card" role="tooltip">
         <div class="chapter-head">
           <div class="chapter-meta">
             <span class="chapter-step-badge">${stepLabel}</span>
@@ -196,16 +207,19 @@ function render(){
       </div>
     `;
 
-    const button=document.createElement('button');
-    button.textContent=done?'↻ Replay':isNext?'▶ Play Up Next!':'▶ Practice';
-    if(isNext)button.className='primary';
     const launchChapter=()=>{
       toggleMissionMap(false);
       requestChapter(chapter.id,done);
     };
-    button.onclick=launchChapter;
+    const playBtn=node.querySelector('.point-play-btn');
+    if(playBtn)playBtn.onclick=launchChapter;
     const waypointCircle=node.querySelector('.node-waypoint-circle');
     if(waypointCircle)waypointCircle.onclick=launchChapter;
+
+    const button=document.createElement('button');
+    button.textContent=done?'↻ Replay':isNext?'▶ Play Up Next!':'▶ Practice';
+    if(isNext)button.className='primary';
+    button.onclick=launchChapter;
 
     const status=document.createElement('div');
     status.className='chapter-status';
@@ -227,7 +241,16 @@ function render(){
         </div>
         <div class="node-step-number">Final Boss</div>
       </div>
-      <div class="node-content-card boss-card">
+
+      <div class="node-point-bar boss-point-bar">
+        <div class="point-info">
+          <span class="point-step" style="color:var(--kid-yellow)">Command Simulation</span>
+          <h3 class="point-title">Be the Base Boss</h3>
+        </div>
+        <button type="button" class="point-play-btn boss-play-btn primary">▶ Run Base</button>
+      </div>
+
+      <div class="node-content-card boss-card" role="tooltip">
         <div class="chapter-head">
           <div class="chapter-meta">
             <span class="chapter-step-badge" style="color:var(--kid-yellow)">COMMAND SIMULATION</span>
@@ -247,6 +270,7 @@ function render(){
       toggleMissionMap(false);
       requestChapter('extended');
     };
+    bossNode.querySelector('.boss-play-btn').onclick=launchBoss;
     bossNode.querySelector('.boss-btn').onclick=launchBoss;
     const bossCircle=bossNode.querySelector('.boss-circle');
     if(bossCircle)bossCircle.onclick=launchBoss;

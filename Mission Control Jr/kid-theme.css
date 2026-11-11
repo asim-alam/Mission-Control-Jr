@@ -585,50 +585,135 @@ body.kid-home .node-star-badge {
   animation: kid-pop-in .3s ease;
 }
 
-/* Node Content Card (Left / Right Alternating) */
-body.kid-home .node-content-card {
-  position: relative; flex: 1; max-width: 460px;
-  background: linear-gradient(160deg, color-mix(in srgb, var(--chapter-color) 20%, #1b1744) 0%, #1b1744 60%) !important;
-  border: 3px solid color-mix(in srgb, var(--chapter-color) 40%, #2a2468) !important;
-  border-radius: 24px !important; padding: 18px 22px;
-  box-shadow: 0 6px 0 rgb(0 0 0 / 30%);
-  transition: translate .18s ease, box-shadow .18s ease, border-color .18s;
-  display: flex; flex-direction: column;
+/* Compact Point Bar (Always Visible: Title + Play Button) */
+body.kid-home .node-point-bar {
+  display: flex; align-items: center; justify-content: space-between; gap: 14px;
+  background: linear-gradient(160deg, color-mix(in srgb, var(--chapter-color) 25%, #18133b) 0%, #151136 100%) !important;
+  border: 2.5px solid color-mix(in srgb, var(--chapter-color) 45%, #3a3285) !important;
+  border-radius: 999px !important;
+  padding: 6px 8px 6px 18px;
+  box-shadow: 0 4px 0 rgb(0 0 0 / 35%), 0 0 16px color-mix(in srgb, var(--chapter-color) 25%, transparent);
+  transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+  cursor: pointer;
+  z-index: 4;
 }
+body.kid-home .chapter.path-node.node-left .node-point-bar {
+  margin-left: 20px;
+}
+body.kid-home .chapter.path-node.node-right .node-point-bar {
+  margin-right: 20px;
+}
+body.kid-home .chapter.path-node.path-node-boss .node-point-bar {
+  margin-top: 14px;
+}
+body.kid-home .chapter.path-node.current .node-point-bar {
+  border-color: var(--kid-yellow) !important;
+  box-shadow: 0 4px 0 rgb(0 0 0 / 40%), 0 0 20px rgb(255 210 63 / 35%);
+}
+body.kid-home .chapter.path-node:hover .node-point-bar {
+  transform: translateY(-2px);
+  border-color: var(--chapter-color) !important;
+  box-shadow: 0 6px 0 rgb(0 0 0 / 35%), 0 0 24px color-mix(in srgb, var(--chapter-color) 40%, transparent);
+}
+
+body.kid-home .point-info {
+  display: flex; flex-direction: column; gap: 1px; min-width: 0;
+}
+body.kid-home .point-step {
+  font-family: var(--kid-display); font-size: 11px; font-weight: 800;
+  text-transform: uppercase; color: var(--chapter-color); letter-spacing: 0.5px;
+}
+body.kid-home .point-title {
+  margin: 0; font-family: var(--kid-display); font-size: 16px; font-weight: 800;
+  color: var(--kid-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  max-width: 220px;
+}
+
+body.kid-home .point-play-btn {
+  flex: none; min-height: 38px; padding: 0 16px; font-family: var(--kid-display);
+  font-size: 14px; font-weight: 800; border-radius: 999px !important;
+  background: var(--kid-panel-2) !important; border: 2px solid #5a4cc0 !important;
+  color: var(--kid-ink) !important; box-shadow: 0 2px 0 #1b154c; cursor: pointer;
+  transition: transform .15s ease, background .15s ease, border-color .15s ease;
+}
+body.kid-home .point-play-btn.primary {
+  background: linear-gradient(180deg, #ffb057, var(--kid-orange)) !important;
+  border-color: #ffc27a !important; color: #2b1300 !important;
+  box-shadow: 0 3px 0 #a34208 !important;
+}
+body.kid-home .point-play-btn:hover {
+  transform: scale(1.06);
+}
+
+/* Floating Info Card Popover (Revealed on Hover) */
+body.kid-home .node-content-card {
+  position: absolute; z-index: 100; width: 340px; max-width: 90vw;
+  background: linear-gradient(160deg, color-mix(in srgb, var(--chapter-color) 30%, #151136) 0%, #151136 75%) !important;
+  border: 3px solid var(--chapter-color) !important;
+  border-radius: 22px !important; padding: 18px 20px;
+  box-shadow: 0 14px 34px rgb(0 0 0 / 70%), 0 0 28px color-mix(in srgb, var(--chapter-color) 40%, transparent);
+  display: flex; flex-direction: column;
+  opacity: 0; visibility: hidden; pointer-events: none;
+  transition: opacity .22s cubic-bezier(.2, 1.2, .4, 1), transform .22s cubic-bezier(.2, 1.2, .4, 1), visibility .22s;
+}
+
+/* Position floating card */
 body.kid-home .chapter.path-node.node-left .node-content-card {
-  margin-left: 28px;
+  left: calc(clamp(16px, 8vw, 70px) + 90px);
+  top: 50%;
+  transform: translateY(-50%) translateX(-8px) scale(0.95);
 }
 body.kid-home .chapter.path-node.node-right .node-content-card {
-  margin-right: 28px;
+  right: calc(clamp(16px, 8vw, 70px) + 90px);
+  top: 50%;
+  transform: translateY(-50%) translateX(8px) scale(0.95);
 }
 body.kid-home .chapter.path-node.path-node-boss .node-content-card {
-  margin: 16px 0 0 0; max-width: 520px; width: 100%;
+  left: 50%;
+  top: calc(100% + 12px);
+  transform: translateX(-50%) translateY(-6px) scale(0.95);
 }
 
-/* Connecting Bridge Arms */
+/* Arrow pointers on popover */
 body.kid-home .chapter.path-node.node-left .node-content-card::before {
-  content: ''; position: absolute; left: -28px; top: 50%; transform: translateY(-50%);
-  width: 28px; height: 5px;
-  background: linear-gradient(90deg, var(--chapter-color), color-mix(in srgb, var(--chapter-color) 50%, #6c5ce7));
-  border-radius: 3px; box-shadow: 0 0 10px var(--chapter-color); z-index: 2;
+  content: ''; position: absolute; left: -10px; top: 50%; transform: translateY(-50%);
+  border-top: 9px solid transparent; border-bottom: 9px solid transparent;
+  border-right: 10px solid var(--chapter-color);
 }
 body.kid-home .chapter.path-node.node-right .node-content-card::after {
-  content: ''; position: absolute; right: -28px; top: 50%; transform: translateY(-50%);
-  width: 28px; height: 5px;
-  background: linear-gradient(90deg, color-mix(in srgb, var(--chapter-color) 50%, #6c5ce7), var(--chapter-color));
-  border-radius: 3px; box-shadow: 0 0 10px var(--chapter-color); z-index: 2;
+  content: ''; position: absolute; right: -10px; top: 50%; transform: translateY(-50%);
+  border-top: 9px solid transparent; border-bottom: 9px solid transparent;
+  border-left: 10px solid var(--chapter-color);
+}
+body.kid-home .chapter.path-node.path-node-boss .node-content-card::before,
+body.kid-home .chapter.path-node.path-node-boss .node-content-card::after {
+  display: none !important;
 }
 
-body.kid-home .node-content-card:hover {
-  translate: 0 -3px;
-  box-shadow: 0 10px 0 rgb(0 0 0 / 30%), 0 0 28px color-mix(in srgb, var(--chapter-color) 35%, transparent);
+/* Reveal on Hover or Focus */
+body.kid-home .chapter.path-node:hover .node-content-card,
+body.kid-home .chapter.path-node:focus-within .node-content-card {
+  opacity: 1; visibility: visible; pointer-events: auto;
 }
+body.kid-home .chapter.path-node.node-left:hover .node-content-card,
+body.kid-home .chapter.path-node.node-left:focus-within .node-content-card {
+  transform: translateY(-50%) translateX(0) scale(1);
+}
+body.kid-home .chapter.path-node.node-right:hover .node-content-card,
+body.kid-home .chapter.path-node.node-right:focus-within .node-content-card {
+  transform: translateY(-50%) translateX(0) scale(1);
+}
+body.kid-home .chapter.path-node.path-node-boss:hover .node-content-card,
+body.kid-home .chapter.path-node.path-node-boss:focus-within .node-content-card {
+  transform: translateX(-50%) translateY(0) scale(1);
+}
+
 body.kid-home .chapter.path-node.current .node-content-card {
   border-color: var(--kid-yellow) !important;
-  box-shadow: 0 8px 0 rgb(0 0 0 / 35%), 0 0 0 4px rgb(255 210 63 / 25%), 0 0 26px rgb(255 210 63 / 20%);
+  box-shadow: 0 14px 34px rgb(0 0 0 / 70%), 0 0 28px rgb(255 210 63 / 35%);
 }
 body.kid-home .chapter.path-node.done .node-content-card {
-  border-color: color-mix(in srgb, var(--kid-mint) 75%, #2a2468) !important;
+  border-color: var(--kid-mint) !important;
 }
 
 body.kid-home .node-content-card h2 {
@@ -687,18 +772,27 @@ body.kid-home .boss-btn {
     padding-left: 8px !important;
     padding-right: 8px !important;
   }
+  body.kid-home .chapter.path-node.node-left .node-point-bar,
+  body.kid-home .chapter.path-node.node-right .node-point-bar {
+    margin-left: 12px !important;
+    margin-right: 0 !important;
+    flex: 1;
+  }
+  body.kid-home .point-title {
+    max-width: 140px; font-size: 14px;
+  }
   body.kid-home .chapter.path-node.node-left .node-content-card,
   body.kid-home .chapter.path-node.node-right .node-content-card {
-    margin-left: 16px !important;
-    margin-right: 0 !important;
-    max-width: none !important;
+    left: 10px !important; right: 10px !important; width: auto !important;
+    top: calc(100% + 10px) !important;
+    transform: translateY(-6px) scale(0.95);
   }
-  body.kid-home .chapter.path-node.node-left .node-content-card::before,
-  body.kid-home .chapter.path-node.node-right .node-content-card::before {
-    content: ''; position: absolute; left: -16px; top: 50%; transform: translateY(-50%);
-    width: 16px; height: 4px; background: var(--chapter-color); border-radius: 2px;
+  body.kid-home .chapter.path-node.node-left:hover .node-content-card,
+  body.kid-home .chapter.path-node.node-right:hover .node-content-card {
+    transform: translateY(0) scale(1);
   }
-  body.kid-home .chapter.path-node.node-right .node-content-card::after {
+  body.kid-home .node-content-card::before,
+  body.kid-home .node-content-card::after {
     display: none !important;
   }
 }
