@@ -59,3 +59,32 @@ test('third-person camera pulls forward before a wall and restores its distance 
     wall.geometry.dispose();wall.material.dispose();
   } finally {globalThis.addEventListener=original;}
 });
+
+test('left and right arrow keys rotate the camera yaw view angle in walking scenes',()=>{
+  const original=globalThis.addEventListener;globalThis.addEventListener=()=>{};
+  try {
+    const camera=new THREE.PerspectiveCamera();
+    const player=new Player(camera,{addEventListener(){}},()=>{},()=>{},()=>{});
+    player.enabled=true;
+    player.yaw=0;
+    // ArrowLeft rotates yaw left (positive delta)
+    player.keys.add('ArrowLeft');
+    player.update(0.1);
+    assert.ok(player.yaw > 0, 'ArrowLeft should increase yaw (turn view left)');
+    player.keys.delete('ArrowLeft');
+
+    const yawAfterLeft = player.yaw;
+    // ArrowRight rotates yaw right (negative delta)
+    player.keys.add('ArrowRight');
+    player.update(0.1);
+    assert.ok(player.yaw < yawAfterLeft, 'ArrowRight should decrease yaw (turn view right)');
+    player.keys.delete('ArrowRight');
+
+    // Arrow keys turning updates camera rotation without position change
+    const initialPos = player.position.clone();
+    player.keys.add('ArrowLeft');
+    player.update(0.1);
+    assert.deepEqual(player.position, initialPos, 'Turning on the spot should preserve player position');
+    assert.equal(camera.rotation.y, player.yaw, 'Camera rotation yaw should match player yaw');
+  } finally {globalThis.addEventListener=original;}
+});

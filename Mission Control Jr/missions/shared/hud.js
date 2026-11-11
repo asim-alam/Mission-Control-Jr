@@ -36,7 +36,7 @@ export function buildHud({title, place, meters}) {
   <div class="mx-crosshair" aria-hidden="true"></div>
   <div class="mx-edge" id="mx-edge" aria-hidden="true">➤</div>
   <div class="mx-prompt" id="mx-prompt" hidden><button type="button" id="mx-use"><kbd>E</kbd><span id="mx-use-label"></span><i class="mx-hold" id="mx-hold"></i></button></div>
-  <section class="mx-walk" aria-label="Walk to a place"><p class="mx-eyebrow">WALK TO</p><div id="locations"></div><p class="mx-keys">WASD / arrows walk · drag to look · <b>E</b> or click to use · hold <b>E</b> for long jobs</p></section>
+  <section class="mx-walk" aria-label="Walk to a place"><p class="mx-eyebrow">WALK TO</p><div id="locations"></div><p class="mx-keys">WASD / arrows walk · ⬅️/➡️ turn · drag to look · <b>E</b> or click to use · hold <b>E</b> for long jobs</p></section>
   <div class="mx-toast" id="mx-toast" role="status" aria-live="polite"></div>
   <div id="dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title" hidden><div class="card"><p class="eyebrow" id="dialog-label"></p><h2 id="dialog-title"></h2><div id="dialog-body"></div><div id="dialog-actions"></div></div></div>`);
   const narrate = $('mx-narrate'), details = $('mx-details');

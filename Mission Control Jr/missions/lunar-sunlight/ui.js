@@ -41,7 +41,7 @@ function brief(ctx) {
     </ol>
     <div class="kid-controls-bar">
       <span>🎮 <b>Controls:</b></span>
-      <span><kbd>WASD</kbd> Walk</span>
+      <span><kbd>WASD</kbd> / <kbd>Arrows</kbd> Walk &amp; Turn</span>
       <span><kbd>E</kbd> Grab cart handle &amp; plug</span>
       <span>Hold <kbd>E</kbd> / <kbd>▲</kbd> to raise the mast stages</span>
     </div>

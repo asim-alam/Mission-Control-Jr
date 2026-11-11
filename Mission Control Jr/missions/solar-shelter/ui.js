@@ -72,7 +72,7 @@ function alertCard(ctx) {
     </ol>
     <div class="kid-controls-bar">
       <span>🎮 <b>Controls:</b></span>
-      <span><kbd>WASD</kbd> Walk</span>
+      <span><kbd>WASD</kbd> / <kbd>Arrows</kbd> Walk &amp; Turn</span>
       <span><kbd>E</kbd> or Click: Pick up / Place</span>
       <span>Hold <kbd>E</kbd> for heavy builds</span>
       <span><kbd>Q</kbd> Drop item</span>

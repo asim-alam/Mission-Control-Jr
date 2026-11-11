@@ -64,6 +64,15 @@ export class Player {
   update(dt,syncCamera=true) {
     if(!this.enabled)return false;
     const p=this.position;let dx=0,dz=0;
+
+    // ArrowLeft and ArrowRight smoothly turn the viewing angle left and right (yaw)
+    const turn=Number(this.keys.has('ArrowLeft'))-Number(this.keys.has('ArrowRight'));
+    if(turn!==0){
+      const turnSpeed=this.turnSpeed??2.4;
+      this.yaw+=turn*turnSpeed*dt;
+      if(this.lookTarget)this.lookTarget=null;
+    }
+
     if(this.route.length) {
       const next=this.route[0],distance=Math.hypot(next.x-p.x,next.z-p.z);
       if(distance<.12){this.route.shift();if(!this.route.length&&this.lookTarget)this.facing=Math.atan2(this.lookTarget.x-p.x,this.lookTarget.z-p.z);}
@@ -75,10 +84,12 @@ export class Player {
       }
     } else {
       const forward=Number(this.keys.has('KeyW')||this.keys.has('ArrowUp'))-Number(this.keys.has('KeyS')||this.keys.has('ArrowDown'));
-      const side=Number(this.keys.has('KeyD')||this.keys.has('ArrowRight'))-Number(this.keys.has('KeyA')||this.keys.has('ArrowLeft'));
+      const side=Number(this.keys.has('KeyD'))-Number(this.keys.has('KeyA'));
       const length=Math.hypot(forward,side)||1,yaw=this.yaw;
-      dx=(side*Math.cos(yaw)-forward*Math.sin(yaw))/length*dt*3.8*(this.speedScale??1);
-      dz=(-side*Math.sin(yaw)-forward*Math.cos(yaw))/length*dt*3.8*(this.speedScale??1);
+      if(forward!==0||side!==0){
+        dx=(side*Math.cos(yaw)-forward*Math.sin(yaw))/length*dt*3.8*(this.speedScale??1);
+        dz=(-side*Math.sin(yaw)-forward*Math.cos(yaw))/length*dt*3.8*(this.speedScale??1);
+      }
     }
     const oldX=p.x,oldZ=p.z;
     const x=THREE.MathUtils.clamp(p.x+dx,this.bounds.minX,this.bounds.maxX);
@@ -90,6 +101,7 @@ export class Player {
     if(this.groundAt){const target=this.groundAt(p.x,p.z)+(this.eyeHeight??1.62);p.y+=(target-p.y)*Math.min(1,dt*10);}
     const moved=Math.hypot(p.x-oldX,p.z-oldZ)>.001;
     if(moved)this.facing=Math.atan2(p.x-oldX,p.z-oldZ);
+    else if(turn!==0)this.facing=this.yaw+Math.PI;
     if(moved){this.stepClock+=dt;if(this.stepClock>.43){this.onStep();this.stepClock=0;}}
     if(syncCamera)this.syncCamera();
     return moved;

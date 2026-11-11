@@ -40,7 +40,7 @@ function brief(ctx) {
     </ol>
     <div class="kid-controls-bar">
       <span>🎮 <b>Controls:</b></span>
-      <span><kbd>WASD</kbd> Walk</span>
+      <span><kbd>WASD</kbd> / <kbd>Arrows</kbd> Walk &amp; Turn</span>
       <span><kbd>Mouse</kbd> Look</span>
       <span><kbd>E</kbd> Pick up &amp; Use cleaning tools</span>
       <span>Monitor power units and filter status!</span>
