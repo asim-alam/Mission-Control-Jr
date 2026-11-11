@@ -42,10 +42,10 @@ const STATION_PRACTICAL_STEPS = [
     title: 'Step 1 of 5: Move in Zero-G & Power Panel',
     badge: 'MISSION STEP 1 OF 5',
     target: STATION_WAYPOINTS.panel,
-    desc: 'In space orbit, you float in microgravity! Press <kbd class="lesson-kbd">W</kbd><kbd class="lesson-kbd">A</kbd><kbd class="lesson-kbd">S</kbd><kbd class="lesson-kbd">D</kbd> or click below to walk to the ⚡ Power Panel.',
+    desc: 'In space orbit, you float in microgravity! Walk to the ⚡ Power Panel and switch ON all 3 radio switches: 📻 Radio, 📶 Amplifier, and 🛰️ Antenna Motor.',
     btnHtml: '<span class="btn-icon">⚡</span> Walk to Power Panel (W)',
-    subhint: 'Tip: Press W/A/S/D on your keyboard, use walk buttons, or click this button!',
-    okText: 'Moving in zero gravity! Asteria glides in orbit with zero air friction. Check power switches before entering shadow!',
+    subhint: 'Tip: Switch ON 📻 Radio, 📶 Amp & 🛰️ Antenna at the power panel!',
+    okText: 'Power connected to 📻 Radio, 📶 Amp, and 🛰️ Antenna! Moving in zero gravity with zero air friction.',
     run(ctx) {
       ctx.view?.walk?.('panel');
     }
@@ -55,9 +55,9 @@ const STATION_PRACTICAL_STEPS = [
     title: 'Step 2 of 5: Find What Is Broken',
     badge: 'MISSION STEP 2 OF 5',
     target: STATION_WAYPOINTS.rack,
-    desc: 'Walk to the 📻 Radio Rack to test the signal, or grab the signal tester from 🧰 Spares.',
+    desc: 'Walk to the 📻 Radio Rack to test the signal (press the green button), or grab the signal tester from 🧰 Spares.',
     btnHtml: '<span class="btn-icon">📻</span> Walk to Radio Rack',
-    subhint: 'Tip: Click this button, or clip the tester to pinpoint the broken part.',
+    subhint: 'Tip: Make sure 📻 Radio, 📶 Amp, and 🛰️ Antenna are ON, then press the green button!',
     okText: 'Broken part pinpointed! Always diagnose first, and switch power OFF before touching hardware so you don\'t trip the breaker!',
     run(ctx) {
       ctx.view?.walk?.('rack');
@@ -68,9 +68,9 @@ const STATION_PRACTICAL_STEPS = [
     title: 'Step 3 of 5: Safely Fix & Test Radio',
     badge: 'MISSION STEP 3 OF 5',
     target: STATION_WAYPOINTS.rack,
-    desc: 'Turn power switch OFF (no zaps!), fix or swap the part, then press the green button to test signal to Meridian Base.',
+    desc: 'Turn power switch OFF (no zaps!), fix the part, switch back ON 📻 Radio, 📶 Amp & 🛰️ Antenna, then press the green button to test signal to Meridian Base.',
     btnHtml: '<span class="btn-icon">🔧</span> Fix Part & Test Radio',
-    subhint: 'Tip: Switch off load, fix the part, and test signal.',
+    subhint: 'Tip: Switch OFF load to fix, switch back ON 📻 📶 🛰️, then press the green button.',
     okText: 'Radio connected! Meridian Base hears Asteria loud and clear! The surface radio beacon is now active.',
     run(ctx) {
       ctx.view?.walk?.('rack');
@@ -401,7 +401,7 @@ const MISSION_STEP_MESSAGES = [
     num: 1,
     title: 'Find What Is Broken',
     icon: '🔍',
-    briefMsg: 'Test the radio on the rack or grab the tester from Spares to find the broken part.',
+    briefMsg: 'Switch ON 📻 Radio, 📶 Amp & 🛰️ Antenna at the panel, then test on rack (or use tester from Spares).',
     doneCheck: s => !!(s.diagnosed || s.fixed),
     completeTitle: 'STEP 1 COMPLETE: Broken Part Found! 🔍',
     completeMsg: 'You pinpointed the broken part! Remember: switch off its power before touching it, then fix or swap it.',
@@ -411,7 +411,7 @@ const MISSION_STEP_MESSAGES = [
     num: 2,
     title: 'Fix & Test the Radio',
     icon: '📻',
-    briefMsg: 'Safely turn power off (no zaps!), fix the part, and test signal to Meridian Base.',
+    briefMsg: 'Safely turn power off (no zaps!), fix the part, turn ON 📻 📶 🛰️, and test signal to Meridian Base.',
     doneCheck: s => !!s.comms,
     completeTitle: 'STEP 2 COMPLETE: Radio Connected! 📻',
     completeMsg: 'Meridian Base hears Asteria loud and clear! The surface radio beacon is now active.',

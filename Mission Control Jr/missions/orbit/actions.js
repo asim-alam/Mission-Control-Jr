@@ -104,7 +104,7 @@ export function applyAction(s, {id, targetId, payload} = {}) {
   if (id === 'testSignal') {
     if (s.tripped) return fail('No power! Reset the breaker first.');
     const off = sc.testNeeds.filter(l => !s.loads[l]);
-    if (off.length) return fail(`To test, switch on: ${off.map(l => loadLabel(s, l)).join(', ')}.`);
+    if (off.length) return fail(`To test, switch on: ${off.map(l => `${sc.loads[l].icon} ${sc.loads[l].label}`).join(', ')}.`);
     spend(s, sc.minutes.test); s.tests += 1;
     if (s.fixed) { s.lastTest = 'ok'; s.comms = true; recordDecision(s, id, {result: 'ok'}); s.events.push({type: 'comms', minute: s.minute}); return ok('📻 “Asteria, this is Meridian Base. We hear you loud and clear!” The base landing beacon is on.'); }
     s.lastTest = s.tester === 'rack' ? 'tester' : 'plain';
@@ -131,7 +131,7 @@ export function applyAction(s, {id, targetId, payload} = {}) {
     if (targetId !== s.fault) { spend(s, sc.minutes.wrongFix); return ok(`The ${part.label} was fine. You put it back. Time used: ${sc.minutes.wrongFix} minutes.`); }
     if (targetId === 'amp') { s.holding = null; s.spareAmp = 'rack'; spend(s, sc.minutes.swapAmp); } else spend(s, sc.minutes.fix);
     s.fixed = true; s.lastTest = null;
-    return ok(`Fixed the ${part.label}! Switch the radio parts back on and test the radio.`);
+    return ok(`Fixed the ${part.label}! Switch on 📻 Radio, 📶 Amp & 🛰️ Antenna, then test the radio.`);
   }
   if (id === 'chooseSite') {
     if (!sc.sites[payload]) return fail('Pick a landing site.');
@@ -165,10 +165,21 @@ export function getObjective(s) {
   if (s.holding === 'tester') return 'Clip the tester onto the radio rack';
   if (s.holding === 'amp' && !s.fixed) return s.loads.amp ? 'Fix the amplifier: switch off the Amplifier first' : 'Put the spare amplifier in the radio rack';
   if (!s.comms) {
-    if (s.fixed) return 'Switch the radio parts on, then test the radio';
+    if (s.fixed) {
+      const off = sc.testNeeds.filter(l => !s.loads[l]);
+      if (off.length) {
+        return `Switch on ${off.map(l => `${sc.loads[l].icon} ${sc.loads[l].label}`).join(', ')}, then test the radio`;
+      }
+      return 'Test the radio: press the green button on the rack';
+    }
     if (s.diagnosed) { const p = sc.parts[s.diagnosed]; return s.loads[p.load] ? `Fix the ${p.label}: switch off the ${loadLabel(s, p.load)} first` : `Fix the ${p.label}`; }
     const off = sc.testNeeds.filter(l => !s.loads[l]);
-    if (off.length && !s.tests) return 'Switch the radio parts on, then test the radio';
+    if (off.length && !s.tests) {
+      if (off.length === sc.testNeeds.length) {
+        return 'Switch on 📻 Radio, 📶 Amp & 🛰️ Antenna, then test the radio';
+      }
+      return `Switch on ${off.map(l => `${sc.loads[l].icon} ${sc.loads[l].label}`).join(', ')}, then test the radio`;
+    }
     if (!s.tests) return 'Test the radio: press the green button on the rack';
     return 'Find what is broken: use the tester, or look closely';
   }
