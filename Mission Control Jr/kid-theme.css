@@ -1936,6 +1936,14 @@ body.kid-home #journey-count, body.kid-home .wordmark { white-space: nowrap; }
   opacity: 0.85;
   line-height: 1.25;
 }
+.station-lesson-card .lesson-prompt-action[hidden],
+.station-lesson-card .lesson-ok-box[hidden],
+.station-lesson-card [hidden],
+.lesson-ok-box[hidden],
+.lesson-prompt-action[hidden] {
+  display: none !important;
+}
+
 .station-lesson-card .lesson-ok-box {
   display: flex;
   justify-content: space-between;

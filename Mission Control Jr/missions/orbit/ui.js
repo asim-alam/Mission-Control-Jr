@@ -42,10 +42,10 @@ const STATION_PRACTICAL_STEPS = [
     title: 'Step 1 of 5: Move in Zero-G & Power Panel',
     badge: 'MISSION STEP 1 OF 5',
     target: STATION_WAYPOINTS.panel,
-    desc: 'In space orbit, you float in microgravity! Walk to the ⚡ Power Panel and switch ON all 3 radio switches: 📻 Radio, 📶 Amplifier, and 🛰️ Antenna Motor.',
+    desc: 'In space orbit, you float in microgravity! Press <kbd class="lesson-kbd">W</kbd><kbd class="lesson-kbd">A</kbd><kbd class="lesson-kbd">S</kbd><kbd class="lesson-kbd">D</kbd> or click below to walk to the ⚡ Power Panel.',
     btnHtml: '<span class="btn-icon">⚡</span> Walk to Power Panel (W)',
-    subhint: 'Tip: Switch ON 📻 Radio, 📶 Amp & 🛰️ Antenna at the power panel!',
-    okText: 'Power connected to 📻 Radio, 📶 Amp, and 🛰️ Antenna! Moving in zero gravity with zero air friction.',
+    subhint: 'Tip: Press W/A/S/D on your keyboard, use walk buttons, or click below!',
+    okText: '<b>Arrived at Panel!</b> 👉 Instruction: Switch ON 📻 Radio, 📶 Amp & 🛰️ Antenna!',
     run(ctx) {
       ctx.view?.walk?.('panel');
     }
@@ -58,7 +58,7 @@ const STATION_PRACTICAL_STEPS = [
     desc: 'Walk to the 📻 Radio Rack to test the signal (press the green button), or grab the signal tester from 🧰 Spares.',
     btnHtml: '<span class="btn-icon">📻</span> Walk to Radio Rack',
     subhint: 'Tip: Make sure 📻 Radio, 📶 Amp, and 🛰️ Antenna are ON, then press the green button!',
-    okText: 'Broken part pinpointed! Always diagnose first, and switch power OFF before touching hardware so you don\'t trip the breaker!',
+    okText: '<b>At Radio Rack!</b> 👉 Instruction: Press green button to test (or clip tester from Spares)!',
     run(ctx) {
       ctx.view?.walk?.('rack');
     }
@@ -71,7 +71,7 @@ const STATION_PRACTICAL_STEPS = [
     desc: 'Turn power switch OFF (no zaps!), fix the part, switch back ON 📻 Radio, 📶 Amp & 🛰️ Antenna, then press the green button to test signal to Meridian Base.',
     btnHtml: '<span class="btn-icon">🔧</span> Fix Part & Test Radio',
     subhint: 'Tip: Switch OFF load to fix, switch back ON 📻 📶 🛰️, then press the green button.',
-    okText: 'Radio connected! Meridian Base hears Asteria loud and clear! The surface radio beacon is now active.',
+    okText: '<b>Radio Fixed!</b> 👉 Instruction: Switch back ON 📻 📶 🛰️ and test to reach Meridian Base!',
     run(ctx) {
       ctx.view?.walk?.('rack');
     }
@@ -84,7 +84,7 @@ const STATION_PRACTICAL_STEPS = [
     desc: 'Charge lander in sunlight for hazard camera, and choose your landing ellipse at 🗺️ Planner table.',
     btnHtml: '<span class="btn-icon">🗺️</span> Walk to Landing Planner',
     subhint: 'Tip: Walk to holographic table to select the safest landing ellipse on Mars.',
-    okText: 'Landing site confirmed on Mars! The descent trajectory and hazard camera are ready.',
+    okText: '<b>At Planner Table!</b> 👉 Instruction: Select the safest landing ellipse on the table!',
     run(ctx) {
       ctx.view?.walk?.('planner');
     }
@@ -97,7 +97,7 @@ const STATION_PRACTICAL_STEPS = [
     desc: 'Walk to the 🚀 Lander Hatch at the front of the station, check hatch seals, and fly down to Meridian Base!',
     btnHtml: '<span class="btn-icon">🚀</span> Walk to Lander Hatch',
     subhint: 'Tip: Head to the hatch, open seals, and start the descent.',
-    okText: 'Hatch sealed tight! Undocking from Asteria Station and descending to Mars surface!',
+    okText: '<b>Hatch Reached!</b> 👉 Instruction: Open hatch, seal up tight, and fly down to Mars!',
     run(ctx) {
       ctx.view?.walk?.('hatch');
     }
@@ -260,8 +260,17 @@ function renderStationStep(index) {
   if (targetNameEl && step.target) targetNameEl.textContent = step.target.label;
   if (actionBtn) actionBtn.innerHTML = step.btnHtml;
   if (subhintEl) subhintEl.textContent = step.subhint;
-  if (promptBox) promptBox.hidden = false;
-  if (okBox) okBox.hidden = true;
+  if (promptBox) {
+    promptBox.hidden = false;
+    promptBox.style.display = 'flex';
+  }
+  if (okBox) {
+    okBox.hidden = true;
+    okBox.style.display = 'none';
+  }
+  if (okTextEl) {
+    okTextEl.innerHTML = '';
+  }
 
   if (dotsBox) {
     dotsBox.innerHTML = STATION_PRACTICAL_STEPS.map((_, i) => `<span class="dot ${i === index ? 'active' : i < index ? 'done' : ''}"></span>`).join('');
@@ -285,11 +294,19 @@ function completeStationStep() {
   const okTextEl = stationLessonEl.querySelector('#station-ok-text');
   const nextBtn = stationLessonEl.querySelector('#station-next-step-btn');
 
-  if (promptBox) promptBox.hidden = true;
-  if (okBox) okBox.hidden = false;
-  if (okTextEl) okTextEl.textContent = step.okText;
+  if (promptBox) {
+    promptBox.hidden = true;
+    promptBox.style.display = 'none';
+  }
+  if (okBox) {
+    okBox.hidden = false;
+    okBox.style.display = 'flex';
+  }
+  if (okTextEl) {
+    okTextEl.innerHTML = step.okText;
+  }
 
-  speakStationText(step.okText);
+  speakStationText(step.okText.replace(/<[^>]*>/g, ''));
 
   if (nextBtn) nextBtn.focus();
 }
