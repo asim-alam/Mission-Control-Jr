@@ -1280,6 +1280,71 @@ body.kid-home #journey-count, body.kid-home .wordmark { white-space: nowrap; }
   line-height: 1.35;
 }
 
+/* Highlighted Slow Down Warning Banner at 5m */
+.dock-speed-alert-card {
+  position: fixed;
+  top: 58%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.96), rgba(185, 28, 28, 0.96));
+  border: 3px solid var(--kid-yellow);
+  border-radius: 20px;
+  padding: 12px 22px;
+  box-shadow: 0 0 35px rgba(239, 68, 68, 0.8), 0 8px 26px rgba(0, 0, 0, 0.65);
+  z-index: 35;
+  color: #fff;
+  pointer-events: none;
+  animation: slow-down-pulse 0.75s infinite alternate ease-in-out;
+}
+@keyframes slow-down-pulse {
+  from {
+    transform: translateX(-50%) scale(1);
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.6), 0 6px 18px rgba(0, 0, 0, 0.5);
+  }
+  to {
+    transform: translateX(-50%) scale(1.06);
+    box-shadow: 0 0 42px rgba(255, 210, 63, 0.9), 0 10px 32px rgba(220, 38, 38, 0.85);
+    border-color: #fff;
+  }
+}
+.dock-speed-alert-card .slow-alert-icon {
+  font-size: 36px;
+  line-height: 1;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5));
+}
+.dock-speed-alert-card .slow-alert-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.dock-speed-alert-card strong {
+  font-family: var(--kid-display);
+  font-size: 20px;
+  letter-spacing: .04em;
+  color: var(--kid-yellow);
+  text-shadow: 0 2px 4px rgba(0,0,0,0.7);
+}
+.dock-speed-alert-card span {
+  font-family: var(--kid-body);
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+}
+.dock-speed-alert-card kbd {
+  background: #120f2e;
+  border: 1.5px solid var(--kid-yellow);
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-family: inherit;
+  font-size: 13px;
+  color: #ffd23f;
+  box-shadow: 0 2px 0 rgba(0,0,0,0.5);
+}
+
 /* Cadet Flight Lesson HUD Card */
 .flight-lesson-card {
   position: fixed;
