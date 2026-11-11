@@ -41,7 +41,7 @@ function brief(ctx) {
     </ol>
     <div class="kid-controls-bar">
       <span>🎮 <b>Controls:</b></span>
-      <span><kbd>WASD</kbd> Walk</span>
+      <span><kbd>WASD</kbd> / <kbd>Arrows</kbd> Walk &amp; Turn</span>
       <span><kbd>Mouse</kbd> Look</span>
       <span><kbd>E</kbd> Turn levers &amp; wheels</span>
       <span>Walk buttons take you right to each bed!</span>

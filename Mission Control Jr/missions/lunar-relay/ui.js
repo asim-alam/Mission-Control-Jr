@@ -40,7 +40,7 @@ function brief(ctx) {
     </ol>
     <div class="kid-controls-bar">
       <span>🎮 <b>Controls:</b></span>
-      <span><kbd>WASD</kbd> Drive &amp; Walk</span>
+      <span><kbd>WASD</kbd> / <kbd>Arrows</kbd> Drive &amp; Walk &amp; Turn</span>
       <span><kbd>E</kbd> Use drill &amp; deploy antenna</span>
       <span>Drive buttons let you travel safely between stops!</span>
     </div>
