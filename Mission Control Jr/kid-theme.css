@@ -635,6 +635,33 @@ body.kid-home #journey-count, body.kid-home .wordmark { white-space: nowrap; }
   text-shadow: 0 0 8px rgba(62, 230, 181, 0.6);
 }
 
+#dock-center-zone .dock-zone-steer {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-family: var(--kid-display, sans-serif);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  color: #ffd23f;
+  background: rgba(18, 15, 46, 0.94);
+  padding: 4px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 210, 63, 0.5);
+  margin-top: 6px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+#dock-center-zone.aligned .dock-zone-steer {
+  color: #3ee6b5;
+  border-color: rgba(62, 230, 181, 0.6);
+  box-shadow: 0 0 10px rgba(62, 230, 181, 0.3);
+}
+
+
 
 
 
