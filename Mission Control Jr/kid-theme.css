@@ -488,3 +488,33 @@ body.kid-home #journey-count, body.kid-home .wordmark { white-space: nowrap; }
   color: var(--kid-mint);
 }
 
+/* Orbit opening roadmap overlay */
+#opening {
+  top: 8% !important;
+  max-height: 86vh !important;
+  overflow-y: auto !important;
+  width: 560px !important;
+  max-width: 90vw !important;
+  padding: 20px 24px !important;
+  background: rgba(18, 15, 46, 0.96) !important;
+  border: 2px solid var(--ui-line) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6) !important;
+  z-index: 10 !important;
+}
+#opening h1 {
+  font-size: clamp(32px, 5vw, 56px) !important;
+  margin: 8px 0 14px 0 !important;
+  letter-spacing: -1px !important;
+}
+#opening .kid-jobs-list {
+  margin: 10px 0 14px 0;
+}
+#opening .kid-controls-bar {
+  margin: 12px 0 16px 0;
+}
+#opening .opening-actions {
+  margin-top: 16px !important;
+}
+
+
