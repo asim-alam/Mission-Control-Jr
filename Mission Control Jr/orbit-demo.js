@@ -54,11 +54,11 @@ function showDockingBriefing(){
     <div class="kid-mission-intro">
       <p>🛰️ <b>Commander Elena:</b> “Jin, welcome to Mars orbit! Before you come inside to repair our antenna, you need to dock your spacecraft with Asteria Station.”</p>
     </div>
-    <div class="kid-section-title">🚦 The 3 Rules for Safe Docking</div>
+    <div class="kid-section-title">🚦 The 2 Core Lessons of Space Docking</div>
     <ol class="kid-jobs-list">
-      <li><span class="step-num">1</span><b>Follow the Corridor &amp; Yellow Line:</b> Look for the <b>Station Docking Port [ 🎯 ]</b>. Follow the <b>yellow line-up line</b> and stay between the two <b>corridor border lines</b>.</li>
-      <li><span class="step-num">2</span><b>Steer with A/D and R/F to Center:</b> Watch the live meter indicator under your crosshair (e.g. <code>⬅️ HOLD A (1.6m)</code>). Hold the key until it says <b>✅ Centered</b>!</li>
-      <li><span class="step-num">3</span><b>Keep Speed Below 0.2 m/s &amp; Press E:</b> Tap <kbd>W</kbd> to fly forward. Tap <kbd>Space</kbd> to brake! When inside 2 meters and the cross turns glowing green, press <kbd>E</kbd> or click <b>Dock</b>!</li>
+      <li><span class="step-num">1</span><b>Adjust Your Alignment (<kbd>A/D</kbd> &amp; <kbd>R/F</kbd>):</b> Line up directly with the <b>Docking Port [ 🎯 ]</b>. Stay inside the corridor border lines and follow the yellow line until it says <b>✅ Centered</b>!</li>
+      <li><span class="step-num">2</span><b>Control Slow Speed (&lt; 0.2 m/s):</b> In outer space there is zero air to slow you down. Tap <kbd>Space</kbd> to brake! Speed must stay under <b>0.2 m/s</b> so the docking clamps seal gently without bouncing.</li>
+      <li><span class="step-num">3</span><b>Seal the Dock (<kbd>E</kbd>):</b> When inside 2 meters with glowing green crosshair, press <kbd>E</kbd> or click <b>Dock</b>!</li>
     </ol>
     <div class="kid-controls-bar">
       <span>🎮 <b>Flight Controls:</b></span>
@@ -77,6 +77,55 @@ function showDockingBriefing(){
       {label:'🔭 Look at Mars from Orbit',run:()=>{closeModal();}}
     ],
     'FLIGHT BRIEFING · DOCKING AT ASTERIA'
+  );
+}
+function showDockingSuccessLesson(){
+  audio.ping();
+  radio.say('docked');
+  showModal(
+    '🎉 Docking Successful: Hatch Sealed!',
+    `<div class="kid-mission-intro" style="background:rgba(62,230,181,0.18);border-color:rgba(62,230,181,0.5);">
+      <p>🛰️ <b>Commander Elena:</b> “Soft capture latches engaged! Outstanding flying, Jin. Your alignment and approach speed were spot-on. Welcome aboard Asteria Station!”</p>
+    </div>
+
+    <div class="kid-lesson-box">
+      <span class="lesson-badge" style="background:var(--kid-orange);color:#120f2e;">🎯 The Core Lesson of Docking</span>
+      <h3 style="margin-top:4px;">Mastered: Adjust Alignment &amp; Slow Speed!</h3>
+      <p>Docking in space comes down to two vital skills you just mastered:</p>
+      <ul style="margin:6px 0 12px 18px;line-height:1.5;color:var(--kid-soft);">
+        <li><b>1. Continuous Adjustment (<kbd>A/D</kbd> &amp; <kbd>R/F</kbd>):</b> You adjusted left/right and up/down to stay dead-center on the target. In space, even a tiny millimeter tilt can bounce the locking latches.</li>
+        <li><b>2. Controlled Slow Speed (<kbd>Space</kbd> Brake):</b> You kept your approach below <b>0.2 m/s</b> (crawling speed!). In space, a fast bump can damage the docking collar or push the entire space station out of its orbit.</li>
+      </ul>
+    </div>
+
+    <div class="kid-lesson-box" style="margin-top:14px;">
+      <span class="lesson-badge">🌌 Scientific Lesson: Physics of Outer Space</span>
+      <h3 style="margin-top:4px;">What Makes Outer Space So Unique?</h3>
+      
+      <p><b>🌠 1. The Vacuum of Space &amp; Inertia (Newton’s First Law):</b><br>
+      On Earth, things slow down because air friction and gravity drag on them. But space is a <b>vacuum</b> (completely empty space with no air). Once a spacecraft starts moving, it will keep coasting forever at that exact speed until an opposite force acts on it! That is why you had to manually fire your thrusters to brake.</p>
+
+      <p><b>⚡ 2. Orbiting at 12,000 km/h, Docking at 0.5 km/h:</b><br>
+      Both you and Asteria Station are zooming around Mars at <b>over 12,000 km/h (3.4 km every single second!)</b>. But because you flew into the exact same orbit, your <i>relative speed</i> between each other was only <b>0.15 m/s</b>. You matched orbital speeds so perfectly that you gently touched like feathers!</p>
+
+      <p><b>🤫 3. The Sound of Silence:</b><br>
+      Notice the calm quiet? Sound needs air molecules to vibrate and travel. In the vacuum of outer space, sound cannot travel at all—space is completely silent outside the hull.</p>
+
+      <div class="lesson-fact" style="margin-top:10px;">
+        <b>🚀 Real NASA Science:</b>
+        Real spacecraft (like Apollo to the Moon, the Space Shuttle, and SpaceX Crew Dragon) use automated soft-capture rings with sensitive laser radar (LIDAR). The capture hooks only engage when relative closure speed is less than 0.2 m/s to prevent bounce-back.
+      </div>
+    </div>`,
+    [
+      {label: '🚀 Open Hatch & Enter Cabin', primary: true, run: () => boardCabin()},
+      {label: '🪐 Look at Mars from Orbit', run: () => {
+        closeModal();
+        $('action').disabled = false;
+        $('action').textContent = 'Open hatch & enter cabin';
+        $('action').onclick = () => boardCabin();
+      }}
+    ],
+    'MARS ORBIT · SCIENTIFIC DEBRIEF'
   );
 }
 function help(){if(m.phase==='overview'||m.phase==='docking'){showDockingBriefing();return;}showModal('How to play',`<p><strong>Your arrival:</strong> Explore Mars from orbit, then dock with Asteria. Once the hatch seals, you will enter the cabin to repair the radio and plan your landing.</p><p><strong>Docking:</strong> W/S go forward and back. A/D go left and right. R/F go up and down. Space slows you down. Line up the cross, get inside 2 m, and keep speed below 0.2 m/s. Then press E. “Help me dock” can fly for you.</p><p><strong>Camera:</strong> drag to look around. Use the wheel or + / − to zoom. F3 hides everything for a photo. Press ? to see this again. Esc pauses the game.</p><p>Asteria is a pretend future space station. In space there is no air, so there is no wind sound!</p><p>The story: land on Mars day 11 → <em>Before the Storm</em> on day 12 → <em>Tracks in the Dust</em> on day 16.</p>`,[{label:'Back to the game',run:closeModal}],'HOW TO PLAY');}
@@ -248,7 +297,7 @@ function closeFlightLesson() {
 
 function start(saved=null){if(!saved)orbitalAge=0;m=saved||createOrbit();started=true;completionShown=false;overview=m.phase==='overview';$('opening').hidden=true;$('opening-stamp').hidden=true;$('hud').hidden=false;$('controls-hint').classList.remove('controls-faded');clearTimeout(controlsFadeTimer);controlsFadeTimer=setTimeout(()=>$('controls-hint').classList.add('controls-faded'),30000);audio.paused=false;audio.start();radio.stop();audio.update('orbit');syncSound();player.position.set(0,1.68,14);player.view='first';view='first';player.yaw=0;player.pitch=-.03;lastPhase='';closeModal();renderHud();if(m.complete)complete();else radio.say('arrival');save();if(!saved&&m.phase==='overview')showDockingBriefing();if(m.phase==='docking'&&!lessonCompletedOnce)startFlightLesson();}
 function restart(){clearInput();paused=false;audio.paused=false;clearApproach();start();save();}
-function run(action,choice){m.position={x:player.position.x,z:player.position.z};const result=actOrbit(m,action,choice);notify(result.message);if(result.ok){if(action==='dock'){boardCabin();return true;}save();audio.ping();const voice={dock:'docked',verify:'relay',board:'lander',descent:'descent'}[action];if(voice)radio.say(voice);if(['station','craft','complete'].includes(m.phase))save();closeModal();if(action==='approach'){overview=false;if(!lessonCompletedOnce)startFlightLesson();}if(action==='dock'){player.position.set(0,1.68,14);overview=false;view='first';player.view='first';}if(action==='verify'){station.dish.rotation.z=0;station.dish.rotation.x=.3;}}renderHud();return result.ok;}
+function run(action,choice){m.position={x:player.position.x,z:player.position.z};const result=actOrbit(m,action,choice);notify(result.message);if(result.ok){if(action==='dock'){showDockingSuccessLesson();return true;}save();audio.ping();const voice={dock:'docked',verify:'relay',board:'lander',descent:'descent'}[action];if(voice)radio.say(voice);if(['station','craft','complete'].includes(m.phase))save();closeModal();if(action==='approach'){overview=false;if(!lessonCompletedOnce)startFlightLesson();}if(action==='dock'){player.position.set(0,1.68,14);overview=false;view='first';player.view='first';}if(action==='verify'){station.dish.rotation.z=0;station.dish.rotation.x=.3;}}renderHud();return result.ok;}
 function interact(){if(!started||paused||!$('modal').hidden)return;const task=orbitalTask(m);if(m.phase==='docking'){if(!dockReady(m.dock)){const d=m.dock,fast=Math.abs(d.speed)>.205,unaligned=Math.abs(d.x)>.35||Math.abs(d.y)>.35,tooFar=d.distance>2;if(fast&&unaligned)notify('Too fast and not lined up! Slow down below 0.2 m/s and center the cross.');else if(fast)notify('Too fast! Slow down below 0.2 m/s (press Space to brake).');else if(unaligned&&tooFar)notify('Line up the cross and fly inside 2 m to dock.');else if(unaligned)notify('Not lined up! Center the cross (A/D and R/F) before docking.');else if(tooFar)notify(`Fly closer! Get inside 2 m to dock (currently ${d.distance.toFixed(1)} m).`);else notify('Line up the cross, get inside 2 m, and keep speed below 0.2 m/s.');return;}run('dock');return;}if(m.phase==='station'&&Math.hypot(player.position.x-task.target.x,player.position.z-task.target.z)>2.5){notify('Follow the orange marker, or press Show me the way.');return;}
   if(task.action==='brief'){radio.say('brief');showModal('Next stop: Meridian base!',`<p><strong>Elena Reyes:</strong> “Jin, I have a job for you. Fix our radio antenna. Pack your kit. Then fly the lander down to the base. Amara will meet you there.”</p><p>The antenna motor is broken. Here is the plan: 1. Find the broken part. 2. Turn off power to just that part. 3. Fix it. 4. Test it. Keep the air machines on the whole time!</p><p>You are <strong>Jin Park, the engineer</strong>. Three more crew are waiting on Mars.</p>`,[{label:'Got it!',primary:true,run:()=>run('brief')}]);return;}
   if(task.action==='diagnose'){showModal('What is broken? Look first.',`<dl><dt>Station power</dt><dd>OK</dd><dt>Antenna motor</dt><dd>Working too hard!</dd><dt>Radio</dt><dd>Keeps cutting out</dd><dt>Air machines</dt><dd>OK</dd></dl><p>Which part needs fixing?</p>`,[{label:'The antenna motor',primary:true,run:()=>run('diagnose','pointing')},{label:'The air machines',run:()=>run('diagnose','habitat')},{label:'Look again later',run:closeModal}]);return;}

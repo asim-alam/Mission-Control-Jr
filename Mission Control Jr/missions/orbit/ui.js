@@ -29,6 +29,14 @@ function brief(ctx) {
     <div class="kid-mission-intro">
       <p>🛰️ <b>Welcome to Mars Orbit!</b> You have docked with the Asteria orbital station. Before descending to Meridian Base on the surface, restore station communications and prepare the lander!</p>
     </div>
+    <div class="kid-lesson-box" style="margin-bottom:14px;">
+      <span class="lesson-badge">🎓 Docking Science Lesson</span>
+      <h3>Why Docking Needs Slow Speed &amp; Precision Adjustment</h3>
+      <p><b>🌌 Physics in Outer Space:</b> In outer space, there is zero air friction! A moving ship floats forever until reverse thrusters brake. That is why you had to keep speed below 0.2 m/s while adjusting your alignment to gently lock onto Asteria Station without bouncing off.</p>
+      <div class="lesson-fact">
+        <b>🚀 Real NASA Science:</b> NASA Apollo capsules and the ISS soft-capture docking rings require relative closure speed under 0.15 m/s to latch safely without damaging the airlock in zero gravity!
+      </div>
+    </div>
     <div class="kid-section-title">🧰 What You Need This Level</div>
     <div class="kid-supplies-grid">
       <div class="kid-supply-pill"><span class="pill-icon">⚡</span><div class="pill-text"><b>Power Switches</b><span>Manage power bus between sunlight and Mars’ shadow</span></div></div>
