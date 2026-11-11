@@ -30,53 +30,62 @@ let stationLessonEl = null;
 const STATION_PRACTICAL_STEPS = [
   {
     step: 1,
-    title: 'Step 1 of 4: Move Around in Zero-G',
-    badge: 'CADET STATION TRAINING · STEP 1 OF 4',
-    desc: 'In space orbit, you float in microgravity! Press <kbd class="lesson-kbd">W</kbd><kbd class="lesson-kbd">A</kbd><kbd class="lesson-kbd">S</kbd><kbd class="lesson-kbd">D</kbd> or click the button below to walk inside Asteria.',
-    btnHtml: '<span class="btn-icon">🚶</span> Walk Forward (W)',
+    title: 'Step 1 of 5: Move in Zero-G & Power Panel',
+    badge: 'MISSION STEP 1 OF 5',
+    desc: 'In space orbit, you float in microgravity! Press <kbd class="lesson-kbd">W</kbd><kbd class="lesson-kbd">A</kbd><kbd class="lesson-kbd">S</kbd><kbd class="lesson-kbd">D</kbd> or click below to walk to the ⚡ Power Panel.',
+    btnHtml: '<span class="btn-icon">⚡</span> Walk to Power Panel (W)',
     subhint: 'Tip: Press W/A/S/D on your keyboard, use walk buttons, or click this button!',
-    okText: 'Floating in free fall! Because Asteria is in orbit, you and the station fall around Mars together—creating weightlessness!',
-    run(ctx) {
-      if (ctx.view?.world?.player) {
-        ctx.view.world.player.position.z -= 1.5;
-        ctx.view.world.player.syncCamera?.();
-      }
-    }
-  },
-  {
-    step: 2,
-    title: 'Step 2 of 4: Window & Space Friction',
-    badge: 'CADET STATION TRAINING · STEP 2 OF 4',
-    desc: 'Head over to the 🪐 Window to look down at Mars (or click "Walk to Window" below). Notice how fast we move!',
-    btnHtml: '<span class="btn-icon">🪐</span> Walk to Panoramic Window',
-    subhint: 'Tip: Click this button, or click "🪐 Window" in the WALK TO menu at bottom left!',
-    okText: 'Zero air friction! In outer space there is NO air resistance. Asteria glides in orbit at 3.5 km/s forever without needing engine fuel!',
-    run(ctx) {
-      ctx.view?.walk?.('window');
-    }
-  },
-  {
-    step: 3,
-    title: 'Step 3 of 4: Power Management & Shadow',
-    badge: 'CADET STATION TRAINING · STEP 3 OF 4',
-    desc: 'Walk to the ⚡ Power Panel. Every orbit, Asteria passes into Mars\' dark shadow where solar wings stop making power!',
-    btnHtml: '<span class="btn-icon">⚡</span> Walk to Power Panel',
-    subhint: 'Tip: Click this button, or walk to the power panel in the hall.',
-    okText: 'Smart power management! In shadow, solar power drops to 6 units. Switch off unneeded gear so you never trip the main breaker!',
+    okText: 'Moving in zero gravity! Asteria glides in orbit with zero air friction. Check power switches before entering shadow!',
     run(ctx) {
       ctx.view?.walk?.('panel');
     }
   },
   {
-    step: 4,
-    title: 'Step 4 of 4: Safe Repair & Spares',
-    badge: 'CADET STATION TRAINING · STEP 4 OF 4',
-    desc: 'Walk to the 📻 Radio Rack to test the signal, or check 🧰 Spares for the signal tester.',
+    step: 2,
+    title: 'Step 2 of 5: Find What Is Broken',
+    badge: 'MISSION STEP 2 OF 5',
+    desc: 'Walk to the 📻 Radio Rack to test the signal, or grab the signal tester from 🧰 Spares.',
     btnHtml: '<span class="btn-icon">📻</span> Walk to Radio Rack',
-    subhint: 'Tip: Click this button, or walk to the radio rack in the main bay.',
-    okText: 'Test first, power off before fixing! Never touch a live circuit—always turn its power switch OFF first to prevent breaker trips!',
+    subhint: 'Tip: Click this button, or clip the tester to pinpoint the broken part.',
+    okText: 'Broken part pinpointed! Always diagnose first, and switch power OFF before touching hardware so you don\'t trip the breaker!',
     run(ctx) {
       ctx.view?.walk?.('rack');
+    }
+  },
+  {
+    step: 3,
+    title: 'Step 3 of 5: Safely Fix & Test Radio',
+    badge: 'MISSION STEP 3 OF 5',
+    desc: 'Turn power switch OFF (no zaps!), fix or swap the part, then press the green button to test signal to Meridian Base.',
+    btnHtml: '<span class="btn-icon">🔧</span> Fix Part & Test Radio',
+    subhint: 'Tip: Switch off load, fix the part, and test signal.',
+    okText: 'Radio connected! Meridian Base hears Asteria loud and clear! The surface radio beacon is now active.',
+    run(ctx) {
+      ctx.view?.walk?.('rack');
+    }
+  },
+  {
+    step: 4,
+    title: 'Step 4 of 5: Charge & Pick Landing Site',
+    badge: 'MISSION STEP 4 OF 5',
+    desc: 'Charge lander in sunlight for hazard camera, and choose your landing ellipse at 🗺️ Planner table.',
+    btnHtml: '<span class="btn-icon">🗺️</span> Walk to Landing Planner',
+    subhint: 'Tip: Walk to holographic table to select the safest landing ellipse on Mars.',
+    okText: 'Landing site confirmed on Mars! The descent trajectory and hazard camera are ready.',
+    run(ctx) {
+      ctx.view?.walk?.('planner');
+    }
+  },
+  {
+    step: 5,
+    title: 'Step 5 of 5: Board the Lander & Land',
+    badge: 'MISSION STEP 5 OF 5',
+    desc: 'Walk to the 🚀 Lander Hatch at the front of the station, check hatch seals, and fly down to Meridian Base!',
+    btnHtml: '<span class="btn-icon">🚀</span> Walk to Lander Hatch',
+    subhint: 'Tip: Head to the hatch, open seals, and start the descent.',
+    okText: 'Hatch sealed tight! Undocking from Asteria Station and descending to Mars surface!',
+    run(ctx) {
+      ctx.view?.walk?.('hatch');
     }
   }
 ];
@@ -86,6 +95,8 @@ function closeStationLesson() {
   if (stationLessonEl) {
     stationLessonEl.hidden = true;
   }
+  const job = document.querySelector('.mx-job');
+  if (job) job.hidden = false;
 }
 
 function speakStationText(text) {
@@ -115,7 +126,7 @@ function renderStationStep(index) {
   const okBox = stationLessonEl.querySelector('#station-ok-feedback');
   const okTextEl = stationLessonEl.querySelector('#station-ok-text');
   const nextBtn = stationLessonEl.querySelector('#station-next-step-btn');
-  const dots = stationLessonEl.querySelectorAll('#station-lesson-dots .dot');
+  const dotsBox = stationLessonEl.querySelector('#station-lesson-dots');
 
   if (badgeEl) badgeEl.textContent = step.badge;
   if (titleEl) titleEl.textContent = step.title;
@@ -125,9 +136,9 @@ function renderStationStep(index) {
   if (promptBox) promptBox.hidden = false;
   if (okBox) okBox.hidden = true;
 
-  dots.forEach((dot, i) => {
-    dot.className = i === index ? 'dot active' : i < index ? 'dot done' : 'dot';
-  });
+  if (dotsBox) {
+    dotsBox.innerHTML = STATION_PRACTICAL_STEPS.map((_, i) => `<span class="dot ${i === index ? 'active' : i < index ? 'done' : ''}"></span>`).join('');
+  }
 
   if (nextBtn) {
     nextBtn.textContent = index >= STATION_PRACTICAL_STEPS.length - 1 ? '🎓 Complete Training ➔' : 'Next ➔';
@@ -176,17 +187,20 @@ function startStationLesson(ctx, stepIndex = 0) {
   stationLessonActive = true;
   currentStationStep = stepIndex;
 
+  const job = document.querySelector('.mx-job');
+  if (job) job.hidden = true;
+
   if (!stationLessonEl) {
     stationLessonEl = document.createElement('section');
     stationLessonEl.id = 'station-lesson';
-    stationLessonEl.className = 'flight-lesson-card';
+    stationLessonEl.className = 'station-lesson-card';
     stationLessonEl.setAttribute('role', 'region');
     stationLessonEl.setAttribute('aria-label', 'Cadet station practical training');
     stationLessonEl.innerHTML = `
       <div class="lesson-top-bar">
         <div class="lesson-badge-pill">
           <span class="lesson-badge-icon">🎓</span>
-          <span id="station-lesson-badge">CADET STATION TRAINING · STEP 1 OF 4</span>
+          <span id="station-lesson-badge">MISSION STEP 1 OF 5</span>
         </div>
         <button id="station-lesson-skip-btn" type="button" class="lesson-close-btn" title="Skip practice and explore station">Skip practice ✕</button>
       </div>
@@ -208,10 +222,6 @@ function startStationLesson(ctx, stepIndex = 0) {
         </div>
       </div>
       <div class="lesson-dots" id="station-lesson-dots" aria-hidden="true">
-        <span class="dot"></span>
-        <span class="dot"></span>
-        <span class="dot"></span>
-        <span class="dot"></span>
       </div>
     `;
     document.body.appendChild(stationLessonEl);
@@ -558,13 +568,15 @@ runMission({
     // Check station practical lesson triggers in real time
     if (stationLessonActive && !stationStepCompleted && ctx.view?.world?.player) {
       const p = ctx.view.world.player.position;
-      if (currentStationStep === 0 && (Math.hypot(p.x, p.z - 14) > 0.8 || p.z < 13.2)) {
+      if (currentStationStep === 0 && (Math.hypot(p.x, p.z - 14) > 0.8 || p.z < 13.2 || Math.hypot(p.x - (-1.5), p.z - (-3.5)) < 3.5)) {
         completeStationStep();
-      } else if (currentStationStep === 1 && Math.hypot(p.x - 9.5, p.z - 2.5) < 3.8) {
+      } else if (currentStationStep === 1 && (s.diagnosed || s.fixed || Math.hypot(p.x - (-1.5), p.z - (-11)) < 3.5 || Math.hypot(p.x - (-8), p.z) < 3.5)) {
         completeStationStep();
-      } else if (currentStationStep === 2 && Math.hypot(p.x - (-1.5), p.z - (-3.5)) < 3.5) {
+      } else if (currentStationStep === 2 && s.comms) {
         completeStationStep();
-      } else if (currentStationStep === 3 && (Math.hypot(p.x - (-1.5), p.z - (-11)) < 3.5 || Math.hypot(p.x - (-8), p.z) < 3.5)) {
+      } else if (currentStationStep === 3 && s.site) {
+        completeStationStep();
+      } else if (currentStationStep === 4 && s.boarded) {
         completeStationStep();
       }
     }
