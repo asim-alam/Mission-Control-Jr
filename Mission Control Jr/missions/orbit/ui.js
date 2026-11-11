@@ -67,13 +67,14 @@ const STATION_PRACTICAL_STEPS = [
     step: 3,
     title: 'Step 3 of 5: Safely Fix & Test Radio',
     badge: 'MISSION STEP 3 OF 5',
-    target: STATION_WAYPOINTS.rack,
-    desc: 'Turn power switch OFF (no zaps!), fix the part, switch back ON 📻 Radio, 📶 Amp & 🛰️ Antenna, then press the green button to test signal to Meridian Base.',
-    btnHtml: '<span class="btn-icon">🔧</span> Fix Part & Test Radio',
-    subhint: 'Tip: Switch OFF load to fix, switch back ON 📻 📶 🛰️, then press the green button.',
-    okText: '<b>Radio Fixed!</b> 👉 Instruction: Switch back ON 📻 📶 🛰️ and test to reach Meridian Base!',
+    target: STATION_WAYPOINTS.panel,
+    desc: 'Turn power OFF (no zaps!), fix the broken part at Radio Rack, switch back ON 📻 Radio, 📶 Amp & 🛰️ Antenna, then press the green button to reach Meridian Base.',
+    btnHtml: '<span class="btn-icon">⚡</span> Walk to Power Panel',
+    subhint: 'Tip: Switch OFF power before touching hardware, fix, switch back ON 📻 📶 🛰️, then test.',
+    okText: '<b>Radio Fixed & Online!</b> 👉 Instruction: Signal connected! Click Next to plan your landing!',
     run(ctx) {
-      ctx.view?.walk?.('rack');
+      const guidance = getRepairGuidance(ctx.mission);
+      ctx.view?.walk?.(guidance.walkTarget);
     }
   },
   {
@@ -225,6 +226,131 @@ function getActiveStationStepIndex(s) {
   return 0;
 }
 
+function getRepairGuidance(s) {
+  const faultKey = s?.diagnosed || s?.fault || 'card';
+  const sc = s?.scenario;
+  const part = sc?.parts?.[faultKey] || { label: 'controller card', load: 'radio', fix: 'Pull the controller card out and push it back in' };
+  const loadInfo = sc?.loads?.[part.load] || { label: 'Radio', icon: '📻' };
+
+  if (s?.tripped) {
+    return {
+      substep: 'reset',
+      target: STATION_WAYPOINTS.panel,
+      title: '⚠️ Breaker Tripped! Reset at Power Panel',
+      desc: `<b>Power Tripped!</b> The main breaker tripped to protect the ship. Walk to the <b>⚡ Power Panel</b> and pull down the <b>Yellow Breaker Handle</b> to restore power.`,
+      btnHtml: '<span class="btn-icon">⚡</span> Walk to Power Panel (Reset Breaker)',
+      subhint: 'Tip: Aim at the yellow breaker handle at the power panel and press (E) to reset.',
+      walkTarget: 'panel',
+      partName: part.label,
+      loadName: `${loadInfo.icon} ${loadInfo.label}`,
+      activeVisStep: 1,
+      fixActionDesc: part.fix
+    };
+  }
+
+  if (s?.loads?.[part.load] && !s?.fixed) {
+    return {
+      substep: 'power_off',
+      target: STATION_WAYPOINTS.panel,
+      title: `⚡ Switch OFF ${loadInfo.icon} ${loadInfo.label} First!`,
+      desc: `<b>Broken Part: ${part.label}</b>.<br>⚠️ <b>CRITICAL SAFETY RULE:</b> Always switch OFF <b>${loadInfo.icon} ${loadInfo.label}</b> at the Power Panel before touching hardware to prevent electric shocks!`,
+      btnHtml: `<span class="btn-icon">⚡</span> Walk to Power Panel (Switch OFF ${loadInfo.icon})`,
+      subhint: `Tip: Aim at switch for ${loadInfo.icon} ${loadInfo.label} and press (E) to flip DOWN into OFF.`,
+      walkTarget: 'panel',
+      partName: part.label,
+      loadName: `${loadInfo.icon} ${loadInfo.label}`,
+      activeVisStep: 1,
+      fixActionDesc: part.fix
+    };
+  }
+
+  if (faultKey === 'amp' && s?.holding !== 'amp' && !s?.fixed) {
+    return {
+      substep: 'grab_spare',
+      target: STATION_WAYPOINTS.locker,
+      title: '🧰 Grab Spare Amplifier from Locker',
+      desc: `The amplifier burnt out! Walk to the <b>🧰 Spares Locker</b> on the left wall and press <b>(E)</b> to take the spare amplifier.`,
+      btnHtml: '<span class="btn-icon">🧰</span> Walk to Spares Locker (Take Spare)',
+      subhint: 'Tip: Open the locker and press (E) to take the spare amplifier.',
+      walkTarget: 'locker',
+      partName: part.label,
+      loadName: `${loadInfo.icon} ${loadInfo.label}`,
+      activeVisStep: 2,
+      fixActionDesc: part.fix
+    };
+  }
+
+  if (!s?.fixed) {
+    const actionText = faultKey === 'amp' 
+      ? 'Install the spare amplifier into the rack slot' 
+      : faultKey === 'feed'
+      ? 'Push in the antenna cable plug and twist tight'
+      : 'Pull the controller card out and push it back in';
+
+    return {
+      substep: 'fix_part',
+      target: STATION_WAYPOINTS.rack,
+      title: `🔧 Fix the ${part.label} at Radio Rack`,
+      desc: `Power is safely OFF! Walk to the <b>📻 Radio Rack</b>, aim at the <b>${part.label}</b>, and press <b>(E)</b> to ${actionText}.`,
+      btnHtml: `<span class="btn-icon">🔧</span> Walk to Radio Rack (${part.label})`,
+      subhint: `Tip: Aim crosshair at the ${part.label} and press (E) or click to repair.`,
+      walkTarget: 'rack',
+      partName: part.label,
+      loadName: `${loadInfo.icon} ${loadInfo.label}`,
+      activeVisStep: 2,
+      fixActionDesc: part.fix
+    };
+  }
+
+  const offLoads = sc?.testNeeds?.filter(l => !s?.loads?.[l]) || [];
+  if (offLoads.length > 0) {
+    const offLabels = offLoads.map(l => `${sc.loads[l].icon} ${sc.loads[l].label}`).join(', ');
+    return {
+      substep: 'power_on',
+      target: STATION_WAYPOINTS.panel,
+      title: '⚡ Turn ON Radio, Amp & Antenna Switches',
+      desc: `<b>Part repaired successfully!</b> Now walk to the <b>⚡ Power Panel</b> and turn ON <b>${offLabels}</b> (all 3 must be UP/ON to broadcast).`,
+      btnHtml: '<span class="btn-icon">⚡</span> Walk to Power Panel (Turn ON 📻 📶 🛰️)',
+      subhint: 'Tip: Flip switches #3, #4 and #5 UP into ON.',
+      walkTarget: 'panel',
+      partName: part.label,
+      loadName: `${loadInfo.icon} ${loadInfo.label}`,
+      activeVisStep: 3,
+      fixActionDesc: part.fix
+    };
+  }
+
+  if (!s?.comms) {
+    return {
+      substep: 'test_signal',
+      target: STATION_WAYPOINTS.rack,
+      title: '🟢 Press Green Button to Test Signal!',
+      desc: `All 3 radio switches are powered! Walk to the <b>📻 Radio Rack</b>, aim at the <b>Round Green Test Button</b>, and press <b>(E)</b> to link with Meridian Base on Mars.`,
+      btnHtml: '<span class="btn-icon">📻</span> Walk to Radio Rack (Press Green Button)',
+      subhint: 'Tip: Aim at the round green button on the radio rack and press (E) or click.',
+      walkTarget: 'rack',
+      partName: part.label,
+      loadName: `${loadInfo.icon} ${loadInfo.label}`,
+      activeVisStep: 3,
+      fixActionDesc: part.fix
+    };
+  }
+
+  return {
+    substep: 'done',
+    target: STATION_WAYPOINTS.planner,
+    title: '🎉 Radio Connected to Meridian Base!',
+    desc: `Meridian Base hears Asteria loud and clear! The landing beacon is active. Head to the <b>🗺️ Planner Table</b>.`,
+    btnHtml: '<span class="btn-icon">🗺️</span> Walk to Landing Planner',
+    subhint: 'Tip: Click Next or walk to the planner table.',
+    walkTarget: 'planner',
+    partName: part.label,
+    loadName: `${loadInfo.icon} ${loadInfo.label}`,
+    activeVisStep: 3,
+    fixActionDesc: part.fix
+  };
+}
+
 function speakStationText(text) {
   try {
     const s = window.speechSynthesis;
@@ -304,23 +430,24 @@ function renderDeviceVisualizer(stepIndex, ctx) {
     `;
   } else if (stepIndex === 1) {
     // Step 2: Radio Rack & Green Test Button Visualization
-    const isDiagnosed = !!s.diagnosed;
-    const faultPart = s.diagnosed ? s.scenario?.parts[s.diagnosed] : null;
+    const isDiagnosed = !!(s.diagnosed || s.fixed);
+    const faultKey = s.diagnosed || s.fault || 'card';
+    const faultPart = s.scenario?.parts?.[faultKey];
 
     container.innerHTML = `
       <div class="device-vis-panel">
         <div class="vis-header">
           <span class="vis-title">📻 RADIO RACK & TEST BUTTON</span>
-          <span class="vis-badge highlight">DIAGNOSTIC BAY</span>
+          <span class="vis-badge ${isDiagnosed ? 'ready' : 'highlight'}">${isDiagnosed ? 'FAULT PINPOINTED ✅' : 'DIAGNOSTIC BAY'}</span>
         </div>
         <div class="vis-rack-layout">
           <div class="vis-rack-target-btn">
             <div class="vis-big-green-btn"><span class="btn-core"></span></div>
             <div class="vis-btn-desc">
               <strong>🟢 Round Green Test Button</strong>
-              <small>Aim crosshair and press <b>(E)</b> or click to test signal!</small>
+              <small>${isDiagnosed ? `Diagnosis complete: ${faultPart?.label || faultKey} identified!` : 'Aim crosshair and press <b>(E)</b> or click to test signal!'}</small>
             </div>
-            <span class="vis-press-pill">PRESS (E)</span>
+            <span class="vis-press-pill">${isDiagnosed ? 'TESTED ✅' : 'PRESS (E)'}</span>
           </div>
           <div class="vis-rack-components-row">
             <div class="vis-rack-subitem ${s.tester === 'rack' ? 'active' : ''}">
@@ -330,63 +457,63 @@ function renderDeviceVisualizer(stepIndex, ctx) {
                 <small>${s.tester === 'rack' ? 'Tester Clipped ✅' : 'From 🧰 Spares'}</small>
               </div>
             </div>
-            <div class="vis-rack-subitem ${s.diagnosed === 'feed' ? 'fault' : ''}">
+            <div class="vis-rack-subitem ${faultKey === 'feed' && isDiagnosed ? 'fault' : ''}">
               <span class="comp-icon">🔌</span>
               <div class="comp-info">
                 <strong>Cable Plug</strong>
-                <small>Antenna feed</small>
+                <small>${faultKey === 'feed' && isDiagnosed ? '⚠️ BROKEN PART!' : 'Antenna feed'}</small>
               </div>
             </div>
-            <div class="vis-rack-subitem ${s.diagnosed === 'amp' ? 'fault' : ''}">
+            <div class="vis-rack-subitem ${faultKey === 'amp' && isDiagnosed ? 'fault' : ''}">
               <span class="comp-icon">📶</span>
               <div class="comp-info">
                 <strong>Amp Module</strong>
-                <small>Swap from Locker</small>
+                <small>${faultKey === 'amp' && isDiagnosed ? '⚠️ BROKEN PART!' : 'Swap from Locker'}</small>
               </div>
             </div>
-            <div class="vis-rack-subitem ${s.diagnosed === 'card' ? 'fault' : ''}">
+            <div class="vis-rack-subitem ${faultKey === 'card' && isDiagnosed ? 'fault' : ''}">
               <span class="comp-icon">🟩</span>
               <div class="comp-info">
                 <strong>Control Card</strong>
-                <small>Reseat in slot</small>
+                <small>${faultKey === 'card' && isDiagnosed ? '⚠️ BROKEN PART!' : 'Reseat in slot'}</small>
               </div>
             </div>
           </div>
         </div>
         <div class="vis-caption-hint">
           ${isDiagnosed 
-            ? `⚠️ <b>Broken Part Found:</b> ${faultPart?.label || s.diagnosed}! Switch off power before touching!` 
+            ? `⚠️ <b>Broken Part Found: ${faultPart?.label || faultKey}!</b> Switch off its power before touching hardware!` 
             : '👉 <b>Green Button:</b> Press to test. <i>(Tester from 🧰 Spares pinpoints which part broke!)</i>'}
         </div>
       </div>
     `;
   } else if (stepIndex === 2) {
-    // Step 3: 3-Stage Safe Repair Procedure
-    const isFixed = !!s.fixed;
+    // Step 3: Dynamic Safe Repair Pipeline
+    const guidance = getRepairGuidance(s);
     const isComms = !!s.comms;
 
     container.innerHTML = `
       <div class="device-vis-panel">
         <div class="vis-header">
-          <span class="vis-title">🔧 SAFE RADIO REPAIR STEPS</span>
-          <span class="vis-badge ${isComms ? 'ready' : ''}">${isComms ? 'ONLINE ✅' : '3 STEPS'}</span>
+          <span class="vis-title">🔧 SAFE RADIO REPAIR PIPELINE</span>
+          <span class="vis-badge ${isComms ? 'ready' : 'highlight'}">${isComms ? 'ONLINE ✅' : guidance.substep.replace('_', ' ').toUpperCase()}</span>
         </div>
         <div class="vis-repair-steps-row">
-          <div class="vis-repair-step ${isFixed ? 'done' : 'active'}">
+          <div class="vis-repair-step ${guidance.activeVisStep > 1 ? 'done' : 'active'}">
             <span class="step-num">1</span>
             <span class="step-ic">⚡</span>
-            <strong>Turn Power OFF</strong>
+            <strong>${s.tripped ? 'Reset Breaker' : `${guidance.loadName} OFF`}</strong>
             <small>At Power Panel</small>
           </div>
           <div class="vis-repair-step-arrow">➔</div>
-          <div class="vis-repair-step ${isFixed ? 'done' : ''}">
+          <div class="vis-repair-step ${guidance.activeVisStep > 2 ? 'done' : guidance.activeVisStep === 2 ? 'active' : ''}">
             <span class="step-num">2</span>
-            <span class="step-ic">🔧</span>
-            <strong>Fix / Swap Part</strong>
-            <small>At Radio Rack</small>
+            <span class="step-ic">${guidance.substep === 'grab_spare' ? '🧰' : '🔧'}</span>
+            <strong>${guidance.substep === 'grab_spare' ? 'Get Spare Amp' : `Fix ${guidance.partName}`}</strong>
+            <small>${guidance.substep === 'grab_spare' ? 'At Spares Locker' : 'At Radio Rack'}</small>
           </div>
           <div class="vis-repair-step-arrow">➔</div>
-          <div class="vis-repair-step ${isComms ? 'done' : isFixed ? 'active' : ''}">
+          <div class="vis-repair-step ${isComms ? 'done' : guidance.activeVisStep === 3 ? 'active' : ''}">
             <span class="step-num">3</span>
             <span class="step-ic">🟢</span>
             <strong>Turn ON & Test</strong>
@@ -394,9 +521,7 @@ function renderDeviceVisualizer(stepIndex, ctx) {
           </div>
         </div>
         <div class="vis-caption-hint">
-          ${isComms 
-            ? '🎉 <b>Meridian Base Connected!</b> Radio beacon is loud and clear.' 
-            : '👉 <b>Rule:</b> Always switch off power first so you don\'t get zapped!'}
+          ${guidance.desc}
         </div>
       </div>
     `;
@@ -527,6 +652,40 @@ function updateDeviceVisualizer(ctx) {
     if (countOn === 3 && !stationStepCompleted) {
       completeStationStep();
     }
+  } else if (currentStationStep === 1) {
+    if (s.diagnosed || s.fixed) {
+      if (!container.querySelector('.vis-badge.ready')) {
+        renderStationStep(1);
+      }
+    }
+  } else if (currentStationStep === 2) {
+    const guidance = getRepairGuidance(s);
+    const prevKey = container.dataset.substepKey;
+    const currentKey = `${guidance.substep}_${s.tripped}_${s.fixed}_${s.comms}`;
+    if (prevKey !== currentKey) {
+      container.dataset.substepKey = currentKey;
+      renderDeviceVisualizer(2, ctx);
+
+      const titleEl = stationLessonEl.querySelector('#station-step-title');
+      const descEl = stationLessonEl.querySelector('#station-step-desc');
+      const targetIconEl = stationLessonEl.querySelector('#station-dest-icon');
+      const targetNameEl = stationLessonEl.querySelector('#station-dest-name');
+      const actionBtn = stationLessonEl.querySelector('#station-action-btn');
+      const subhintEl = stationLessonEl.querySelector('#station-subhint');
+
+      if (titleEl) titleEl.textContent = guidance.title;
+      if (descEl) descEl.innerHTML = guidance.desc;
+      if (targetIconEl) targetIconEl.textContent = guidance.target.icon;
+      if (targetNameEl) targetNameEl.textContent = guidance.target.label;
+      if (actionBtn) {
+        actionBtn.innerHTML = guidance.btnHtml;
+        actionBtn.onclick = () => {
+          ctx.view?.walk?.(guidance.walkTarget);
+        };
+      }
+      if (subhintEl) subhintEl.textContent = guidance.subhint;
+      STATION_PRACTICAL_STEPS[2].target = guidance.target;
+    }
   }
 }
 
@@ -535,6 +694,7 @@ function renderStationStep(index) {
   if (!step || !stationLessonEl) return;
   stationStepCompleted = false;
 
+  const s = stationLessonContext?.mission;
   const badgeEl = stationLessonEl.querySelector('#station-lesson-badge');
   const titleEl = stationLessonEl.querySelector('#station-step-title');
   const descEl = stationLessonEl.querySelector('#station-step-desc');
@@ -567,6 +727,33 @@ function renderStationStep(index) {
     okTextEl.innerHTML = '';
   }
 
+  // Dynamic overrides for Step 2 and Step 3 based on diagnosis & repair state:
+  if (index === 1 && s && (s.diagnosed || s.fixed)) {
+    const guidance = getRepairGuidance(s);
+    if (badgeEl) badgeEl.textContent = 'MISSION STEP 2 OF 5 · BROKEN PART FOUND ✅';
+    if (titleEl) titleEl.textContent = `Step 2 of 5: Broken Part Found: ${guidance.partName}!`;
+    if (descEl) descEl.innerHTML = `You pinpointed the radio fault: the <b>${guidance.partName}</b> is broken!<br>👉 <b>Next Step:</b> Switch off power safely before touching it. Click below to proceed to Step 3.`;
+    if (actionBtn) {
+      actionBtn.innerHTML = '<span class="btn-icon">➔</span> Proceed to Step 3: Safe Repair';
+      actionBtn.onclick = () => advanceStationLesson();
+    }
+    if (subhintEl) subhintEl.textContent = 'Tip: Click Next or this button to see step-by-step repair instructions!';
+  } else if (index === 2) {
+    const guidance = getRepairGuidance(s);
+    if (titleEl) titleEl.textContent = guidance.title;
+    if (descEl) descEl.innerHTML = guidance.desc;
+    if (targetIconEl) targetIconEl.textContent = guidance.target.icon;
+    if (targetNameEl) targetNameEl.textContent = guidance.target.label;
+    if (actionBtn) {
+      actionBtn.innerHTML = guidance.btnHtml;
+      actionBtn.onclick = () => {
+        stationLessonContext?.view?.walk?.(guidance.walkTarget);
+      };
+    }
+    if (subhintEl) subhintEl.textContent = guidance.subhint;
+    step.target = guidance.target;
+  }
+
   if (dotsBox) {
     dotsBox.innerHTML = STATION_PRACTICAL_STEPS.map((_, i) => `<span class="dot ${i === index ? 'active' : i < index ? 'done' : ''}"></span>`).join('');
   }
@@ -585,6 +772,7 @@ function completeStationStep() {
   const step = STATION_PRACTICAL_STEPS[currentStationStep];
   if (!step || !stationLessonEl) return;
 
+  const s = stationLessonContext?.mission;
   const promptBox = stationLessonEl.querySelector('#station-prompt-action');
   const okBox = stationLessonEl.querySelector('#station-ok-feedback');
   const okTextEl = stationLessonEl.querySelector('#station-ok-text');
@@ -598,11 +786,17 @@ function completeStationStep() {
     okBox.hidden = false;
     okBox.style.display = 'flex';
   }
+
+  let feedbackText = step.okText;
+  if (currentStationStep === 1 && s && (s.diagnosed || s.fixed)) {
+    const guidance = getRepairGuidance(s);
+    feedbackText = `<b>Broken Part Found: ${guidance.partName}!</b> 👉 Click Next to see how to safely cut power and fix it!`;
+  }
   if (okTextEl) {
-    okTextEl.innerHTML = step.okText;
+    okTextEl.innerHTML = feedbackText;
   }
 
-  speakStationText(step.okText.replace(/<[^>]*>/g, ''));
+  speakStationText(feedbackText.replace(/<[^>]*>/g, ''));
 
   if (nextBtn) nextBtn.focus();
 }
@@ -1053,18 +1247,26 @@ runMission({
     hud.meter('charge', {value: s.charge, max: 100, text: `${Math.round(s.charge)}%${hazardCamReady(s) ? ' 📷' : ''}`});
 
     // Check station practical lesson triggers in real time
-    if (stationLessonActive && !stationStepCompleted && ctx.view?.world?.player) {
+    if (stationLessonActive && ctx.view?.world?.player) {
       const p = ctx.view.world.player.position;
-      if (currentStationStep === 0 && (Math.hypot(p.x, p.z - 14) > 0.8 || p.z < 13.2 || Math.hypot(p.x - (-1.5), p.z - (-3.5)) < 3.5)) {
-        completeStationStep();
-      } else if (currentStationStep === 1 && (s.diagnosed || s.fixed || Math.hypot(p.x - (-1.5), p.z - (-11)) < 3.5 || Math.hypot(p.x - (-8), p.z) < 3.5)) {
-        completeStationStep();
-      } else if (currentStationStep === 2 && s.comms) {
-        completeStationStep();
-      } else if (currentStationStep === 3 && s.site) {
-        completeStationStep();
-      } else if (currentStationStep === 4 && s.boarded) {
-        completeStationStep();
+      if (!stationStepCompleted) {
+        if (currentStationStep === 0 && (Math.hypot(p.x, p.z - 14) > 0.8 || p.z < 13.2 || Math.hypot(p.x - (-1.5), p.z - (-3.5)) < 3.5)) {
+          completeStationStep();
+        } else if (currentStationStep === 1 && (s.diagnosed || s.fixed)) {
+          completeStationStep();
+        } else if (currentStationStep === 2 && s.comms) {
+          completeStationStep();
+        } else if (currentStationStep === 3 && s.site) {
+          completeStationStep();
+        } else if (currentStationStep === 4 && s.boarded) {
+          completeStationStep();
+        }
+      }
+
+      // Auto-advance from Step 2 to Step 3 upon diagnosis so the player sees the safe repair instructions immediately
+      if (currentStationStep === 1 && (s.diagnosed || s.fixed)) {
+        currentStationStep = 2;
+        renderStationStep(2);
       }
     }
 
