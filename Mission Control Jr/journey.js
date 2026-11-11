@@ -160,18 +160,27 @@ function render(){
   $('return-active').hidden=!active;
   $('chapters').replaceChildren();
 
+  const wavePositions = [
+    'node-pos-center',
+    'node-pos-right',
+    'node-pos-far-right',
+    'node-pos-center',
+    'node-pos-left',
+    'node-pos-far-left',
+  ];
   let index = 0;
   for(const chapter of chapters){
     const done=state.completed.includes(chapter.id),record=state.records[chapter.id],node=document.createElement('article');
     const isNext = next === chapter.id;
-    const isEven = index % 2 === 1;
-    node.className=`chapter path-node ${isEven ? 'node-right' : 'node-left'}${done?' done':''}${isNext?' current':''}`;
+    const posClass = wavePositions[index % wavePositions.length];
+    node.className=`chapter path-node ${posClass}${done?' done':''}${isNext?' current':''}`;
     const look=CHAPTER_LOOK[chapter.id]||{icon:'🚀',color:'#ff9a5c'};
     node.dataset.chapter=chapter.id;
     node.style.setProperty('--chapter-color',look.color);
 
     const stepLabel=Number(chapter.number)?`Mission ${Number(chapter.number)}`:'Bonus';
     const statusPill=done?'<span class="chapter-star" aria-label="Done">⭐ Finished</span>':(isNext?'<span class="chapter-next-pill">🚀 Up Next</span>':'<span class="chapter-open-pill">🔓 Open</span>');
+    const isStart = index === 0;
 
     node.innerHTML=`
       <div class="node-waypoint-anchor">
@@ -181,6 +190,7 @@ function render(){
           ${done ? '<span class="node-star-badge" aria-label="Done">⭐</span>' : ''}
         </div>
         <div class="node-step-number">${Number(chapter.number) ? `Level ${Number(chapter.number)}` : 'Bonus'}</div>
+        ${isStart ? '<div class="path-start-badge">🚀 MISSION START</div>' : ''}
       </div>
 
       <div class="node-point-bar">
@@ -279,7 +289,18 @@ function render(){
 
   // Append SVG trail and recalculate the curved path
   $('chapters').append(createPathSvg());
-  requestAnimationFrame(updatePathCurve);
+  requestAnimationFrame(()=>{
+    updatePathCurve();
+    if($('mission-map') && !$('mission-map').hidden){
+      scrollToActiveMission();
+    }
+  });
+  setTimeout(()=>{
+    updatePathCurve();
+    if($('mission-map') && !$('mission-map').hidden){
+      scrollToActiveMission();
+    }
+  }, 60);
 }
 
 function createPathSvg(){
@@ -289,18 +310,51 @@ function createPathSvg(){
   svg.setAttribute('aria-hidden','true');
   svg.innerHTML=`
     <defs>
-      <linearGradient id="trail-gradient" x1="0%" y1="100%" x2="0%" y2="0%">
+      <linearGradient id="candy-trail-gradient" x1="0%" y1="100%" x2="0%" y2="0%">
         <stop offset="0%" stop-color="#ff793f" />
-        <stop offset="35%" stop-color="#ff9a5c" />
-        <stop offset="65%" stop-color="#6c5ce7" />
+        <stop offset="25%" stop-color="#ff9a5c" />
+        <stop offset="50%" stop-color="#a78bfa" />
+        <stop offset="75%" stop-color="#4cc9ff" />
         <stop offset="100%" stop-color="#ffd23f" />
       </linearGradient>
     </defs>
-    <path id="path-trail-bg" class="path-trail-bg"></path>
+    <path id="path-trail-shadow" class="path-trail-shadow"></path>
+    <path id="path-trail-bed" class="path-trail-bed"></path>
     <path id="path-trail-line" class="path-trail-line"></path>
     <path id="path-trail-dash" class="path-trail-dash"></path>
   `;
   return svg;
+}
+
+/**
+ * Candy Crush style Catmull-Rom spline converted to cubic Bezier curves.
+ * Guarantees smooth, continuous S-curves through all waypoint circle centers.
+ */
+function catmullRomToBezier(points, tension = 0.75) {
+  if (!points || points.length === 0) return '';
+  if (points.length === 1) return `M ${points[0].x.toFixed(1)} ${points[0].y.toFixed(1)}`;
+  if (points.length === 2) {
+    const p0 = points[0], p1 = points[1];
+    const dy = (p1.y - p0.y) * 0.5;
+    return `M ${p0.x.toFixed(1)} ${p0.y.toFixed(1)} C ${p0.x.toFixed(1)} ${(p0.y + dy).toFixed(1)}, ${p1.x.toFixed(1)} ${(p1.y - dy).toFixed(1)}, ${p1.x.toFixed(1)} ${p1.y.toFixed(1)}`;
+  }
+
+  let d = `M ${points[0].x.toFixed(1)} ${points[0].y.toFixed(1)}`;
+
+  for (let i = 0; i < points.length - 1; i++) {
+    const p0 = i > 0 ? points[i - 1] : { x: 2 * points[0].x - points[1].x, y: 2 * points[0].y - points[1].y };
+    const p1 = points[i];
+    const p2 = points[i + 1];
+    const p3 = i + 2 < points.length ? points[i + 2] : { x: 2 * points[points.length - 1].x - points[points.length - 2].x, y: 2 * points[points.length - 1].y - points[points.length - 2].y };
+
+    const cp1x = p1.x + ((p2.x - p0.x) / 6) * tension;
+    const cp1y = p1.y + ((p2.y - p0.y) / 6) * tension;
+    const cp2x = p2.x - ((p3.x - p1.x) / 6) * tension;
+    const cp2y = p2.y - ((p3.y - p1.y) / 6) * tension;
+
+    d += ` C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
+  }
+  return d;
 }
 
 function updatePathCurve(){
@@ -317,6 +371,7 @@ function updatePathCurve(){
   svg.style.width=`${containerRect.width}px`;
   svg.style.height=`${containerRect.height}px`;
 
+  // Get centers of all waypoint circles in progressive level order (start at bottom -> finish at top)
   const points=nodes.map(node=>{
     const circle=node.querySelector('.node-waypoint-circle');
     if(!circle)return null;
@@ -327,38 +382,48 @@ function updatePathCurve(){
     };
   }).filter(Boolean);
 
-  points.sort((a,b)=>a.y-b.y);
   if(points.length<2)return;
 
-  let d=`M ${points[0].x} ${points[0].y}`;
-  for(let i=0; i<points.length-1; i++){
-    const p0=points[i];
-    const p1=points[i+1];
-    const dy=p1.y - p0.y;
-    const cy1=p0.y + dy * 0.55;
-    const cy2=p1.y - dy * 0.55;
-    d+=` C ${p0.x} ${cy1}, ${p1.x} ${cy2}, ${p1.x} ${p1.y}`;
-  }
+  const d = catmullRomToBezier(points, 0.75);
 
-  const bg=$('path-trail-bg');
+  const shadow=$('path-trail-shadow');
+  const bed=$('path-trail-bed');
   const line=$('path-trail-line');
   const dash=$('path-trail-dash');
-  if(bg)bg.setAttribute('d',d);
+  if(shadow)shadow.setAttribute('d',d);
+  if(bed)bed.setAttribute('d',d);
   if(line)line.setAttribute('d',d);
   if(dash)dash.setAttribute('d',d);
 }
 
-function scrollToActiveMission(){
+function scrollToActiveMission({ smooth = false } = {}){
   const scrollEl=document.querySelector('.mission-map-scroll');
-  const target=document.querySelector('#chapters .path-node.current') ||
-               document.querySelector('#chapters .path-node[data-chapter="orbit"]') ||
-               document.querySelector('#chapters .path-node');
-  if(scrollEl && target){
-    if(target.dataset?.chapter==='orbit' || (target.classList.contains('current') && target.dataset?.chapter==='orbit')){
-      scrollEl.scrollTop=scrollEl.scrollHeight;
-    } else {
-      target.scrollIntoView({block:'center',behavior:'auto'});
-    }
+  const container=$('chapters');
+  if(!scrollEl || !container)return;
+
+  const currentTarget=container.querySelector('.path-node.current');
+  const firstTarget=container.querySelector('.path-node[data-chapter="orbit"]') ||
+                    container.querySelector('.path-node[data-chapter="lunar-sunlight"]') ||
+                    container.firstElementChild;
+  const target=currentTarget || firstTarget;
+  if(!target)return;
+
+  const isAtStart = !currentTarget ||
+                    currentTarget.dataset?.chapter === 'orbit' ||
+                    currentTarget.dataset?.chapter === 'lunar-sunlight' ||
+                    currentTarget === container.firstElementChild;
+
+  if (isAtStart) {
+    scrollEl.scrollTo({
+      top: scrollEl.scrollHeight + 5000,
+      behavior: smooth ? 'smooth' : 'instant'
+    });
+  } else {
+    target.scrollIntoView({
+      block: 'center',
+      inline: 'nearest',
+      behavior: smooth ? 'smooth' : 'instant'
+    });
   }
 }
 
@@ -384,8 +449,15 @@ function toggleMissionMap(open){
   if(show){
     requestAnimationFrame(()=>{
       updatePathCurve();
-      scrollToActiveMission();
+      scrollToActiveMission({ smooth: false });
     });
+    setTimeout(()=>{
+      updatePathCurve();
+      scrollToActiveMission({ smooth: false });
+    }, 60);
+    setTimeout(()=>{
+      updatePathCurve();
+    }, 200);
   }
 }
 

@@ -447,7 +447,13 @@ body.kid-home .mission-map-deck {
 
 /* Scrollable Map View for all Mission Cards */
 body.kid-home .mission-map-scroll {
-  flex: 1; overflow-y: auto; overflow-x: hidden; padding: 20px 14px 60px;
+  flex: 1;
+  overflow-y: scroll !important;
+  overflow-x: hidden !important;
+  scroll-behavior: smooth !important;
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior-y: contain;
+  padding: 30px 14px 80px;
 }
 body.kid-home #chapters.trail-grid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
@@ -455,13 +461,14 @@ body.kid-home #chapters.trail-grid {
 }
 
 /* ------------------------------------------------------------------ */
-/* SEQUENTIAL CURVED ADVENTURE TRAIL                                  */
+/* SEQUENTIAL CURVED CANDY CRUSH ADVENTURE TRAIL                      */
 /* ------------------------------------------------------------------ */
 body.kid-home #chapters.path-graph-nodes {
   display: flex; flex-direction: column-reverse;
-  position: relative; max-width: 900px; margin: 0 auto;
-  padding: 40px 20px 80px; box-sizing: border-box;
-  gap: 36px;
+  position: relative; max-width: 820px; margin: 0 auto;
+  padding: 40px 20px 90px; box-sizing: border-box;
+  gap: 52px;
+  min-height: 100%;
 }
 
 body.kid-home #chapters.path-graph-nodes::before {
@@ -473,26 +480,30 @@ body.kid-home .path-trail-svg {
   position: absolute; inset: 0; width: 100%; height: 100%;
   pointer-events: none; z-index: 1; overflow: visible;
 }
-body.kid-home .path-trail-bg {
-  fill: none; stroke: rgb(108 92 231 / 30%); stroke-width: 28px;
+body.kid-home .path-trail-shadow {
+  fill: none; stroke: rgb(0 0 0 / 45%); stroke-width: 44px;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+body.kid-home .path-trail-bed {
+  fill: none; stroke: #19143d; stroke-width: 34px;
   stroke-linecap: round; stroke-linejoin: round;
 }
 body.kid-home .path-trail-line {
-  fill: none; stroke: url(#trail-gradient); stroke-width: 12px;
+  fill: none; stroke: url(#candy-trail-gradient); stroke-width: 20px;
   stroke-linecap: round; stroke-linejoin: round;
   filter: drop-shadow(0 0 12px rgb(108 92 231 / 75%));
 }
 body.kid-home .path-trail-dash {
-  fill: none; stroke: #ffd23f; stroke-width: 4px;
+  fill: none; stroke: #ffffff; stroke-width: 4px;
   stroke-linecap: round; stroke-linejoin: round;
-  stroke-dasharray: 10 14; opacity: 0.95;
+  stroke-dasharray: 8 16; opacity: 0.9;
 }
 
 /* Individual Node on Path */
 body.kid-home .chapter.path-node {
   --chapter-color: var(--kid-orange);
   position: relative; z-index: 2; width: 100%;
-  display: flex; align-items: center; justify-content: flex-start;
+  display: flex; align-items: center; justify-content: center;
   background: transparent !important; border: none !important;
   box-shadow: none !important; padding: 0 !important; overflow: visible !important;
   animation: kid-pop-in .45s both cubic-bezier(.2, 1.4, .4, 1);
@@ -502,16 +513,24 @@ body.kid-home .chapter.path-node:hover {
   translate: none !important; box-shadow: none !important;
 }
 
-/* Alternating Left / Right offsets along the curve */
-body.kid-home .chapter.path-node.node-left {
-  flex-direction: row;
-  padding-left: clamp(16px, 8vw, 70px);
+/* Candy Crush Serpentine Wave Offsets */
+body.kid-home .chapter.path-node.node-pos-center {
+  transform: translateX(0);
 }
-body.kid-home .chapter.path-node.node-right {
-  flex-direction: row-reverse;
-  padding-right: clamp(16px, 8vw, 70px);
+body.kid-home .chapter.path-node.node-pos-right {
+  transform: translateX(clamp(40px, 14vw, 110px));
+}
+body.kid-home .chapter.path-node.node-pos-far-right {
+  transform: translateX(clamp(70px, 22vw, 180px));
+}
+body.kid-home .chapter.path-node.node-pos-left {
+  transform: translateX(clamp(-110px, -14vw, -40px));
+}
+body.kid-home .chapter.path-node.node-pos-far-left {
+  transform: translateX(clamp(-180px, -22vw, -70px));
 }
 body.kid-home .chapter.path-node.path-node-boss {
+  transform: translateX(0) !important;
   flex-direction: column !important; align-items: center !important;
   margin-bottom: 24px; padding: 0 !important;
 }
@@ -559,6 +578,18 @@ body.kid-home .chapter.path-node.current .node-step-number {
   color: var(--kid-yellow);
 }
 
+/* Mission Start Launchpad Badge */
+body.kid-home .path-start-badge {
+  font-family: var(--kid-display); font-size: 11px; font-weight: 900;
+  letter-spacing: 0.8px; text-transform: uppercase; color: #2b1300;
+  background: linear-gradient(180deg, #ffe066, #ffb703);
+  border: 2px solid #fff; border-radius: 999px;
+  padding: 3px 12px;
+  box-shadow: 0 4px 12px rgb(255 183 3 / 60%), 0 2px 0 #946d03;
+  margin-top: 8px; white-space: nowrap;
+  animation: kid-bounce 1.4s infinite alternate ease-in-out;
+}
+
 /* Rover Pin ("YOU ARE HERE!") */
 body.kid-home .node-rover-pin {
   position: absolute; top: -46px; left: 50%; transform: translateX(-50%);
@@ -587,7 +618,8 @@ body.kid-home .node-star-badge {
 
 /* Compact Point Bar (Always Visible: Title + Play Button) */
 body.kid-home .node-point-bar {
-  display: flex; align-items: center; justify-content: space-between; gap: 14px;
+  position: absolute; top: 50%; transform: translateY(-50%);
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
   background: linear-gradient(160deg, color-mix(in srgb, var(--chapter-color) 25%, #18133b) 0%, #151136 100%) !important;
   border: 2.5px solid color-mix(in srgb, var(--chapter-color) 45%, #3a3285) !important;
   border-radius: 999px !important;
@@ -596,24 +628,37 @@ body.kid-home .node-point-bar {
   transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
   cursor: pointer;
   z-index: 4;
+  white-space: nowrap;
 }
-body.kid-home .chapter.path-node.node-left .node-point-bar {
-  margin-left: 20px;
+
+/* Point bar positioning along wave */
+body.kid-home .chapter.path-node.node-pos-right .node-point-bar,
+body.kid-home .chapter.path-node.node-pos-far-right .node-point-bar {
+  right: calc(50% + 56px); left: auto;
 }
-body.kid-home .chapter.path-node.node-right .node-point-bar {
-  margin-right: 20px;
+body.kid-home .chapter.path-node.node-pos-left .node-point-bar,
+body.kid-home .chapter.path-node.node-pos-far-left .node-point-bar {
+  left: calc(50% + 56px); right: auto;
+}
+body.kid-home .chapter.path-node.node-pos-center .node-point-bar {
+  left: calc(50% + 56px); right: auto;
 }
 body.kid-home .chapter.path-node.path-node-boss .node-point-bar {
+  position: static !important; transform: none !important;
   margin-top: 14px;
 }
+
 body.kid-home .chapter.path-node.current .node-point-bar {
   border-color: var(--kid-yellow) !important;
   box-shadow: 0 4px 0 rgb(0 0 0 / 40%), 0 0 20px rgb(255 210 63 / 35%);
 }
 body.kid-home .chapter.path-node:hover .node-point-bar {
-  transform: translateY(-2px);
+  transform: translateY(-52%);
   border-color: var(--chapter-color) !important;
   box-shadow: 0 6px 0 rgb(0 0 0 / 35%), 0 0 24px color-mix(in srgb, var(--chapter-color) 40%, transparent);
+}
+body.kid-home .chapter.path-node.path-node-boss:hover .node-point-bar {
+  transform: translateY(-2px) !important;
 }
 
 body.kid-home .point-info {
@@ -624,9 +669,9 @@ body.kid-home .point-step {
   text-transform: uppercase; color: var(--chapter-color); letter-spacing: 0.5px;
 }
 body.kid-home .point-title {
-  margin: 0; font-family: var(--kid-display); font-size: 16px; font-weight: 800;
+  margin: 0; font-family: var(--kid-display); font-size: 15px; font-weight: 800;
   color: var(--kid-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  max-width: 220px;
+  max-width: 200px;
 }
 
 body.kid-home .point-play-btn {
@@ -647,60 +692,50 @@ body.kid-home .point-play-btn:hover {
 
 /* Floating Info Card Popover (Revealed on Hover) */
 body.kid-home .node-content-card {
-  position: absolute; z-index: 100; width: 340px; max-width: 90vw;
-  background: linear-gradient(160deg, color-mix(in srgb, var(--chapter-color) 30%, #151136) 0%, #151136 75%) !important;
+  position: absolute; z-index: 100; width: 330px; max-width: min(340px, 86vw);
+  background: linear-gradient(160deg, color-mix(in srgb, var(--chapter-color) 32%, #151136) 0%, #151136 75%) !important;
   border: 3px solid var(--chapter-color) !important;
-  border-radius: 22px !important; padding: 18px 20px;
-  box-shadow: 0 14px 34px rgb(0 0 0 / 70%), 0 0 28px color-mix(in srgb, var(--chapter-color) 40%, transparent);
+  border-radius: 20px !important; padding: 16px 18px;
+  box-shadow: 0 16px 36px rgb(0 0 0 / 75%), 0 0 30px color-mix(in srgb, var(--chapter-color) 45%, transparent);
   display: flex; flex-direction: column;
   opacity: 0; visibility: hidden; pointer-events: none;
-  transition: opacity .22s cubic-bezier(.2, 1.2, .4, 1), transform .22s cubic-bezier(.2, 1.2, .4, 1), visibility .22s;
+  transition: opacity .2s ease, transform .2s cubic-bezier(.2, 1.2, .4, 1), visibility .2s;
 }
 
-/* Position floating card */
-body.kid-home .chapter.path-node.node-left .node-content-card {
-  left: calc(clamp(16px, 8vw, 70px) + 90px);
-  top: 50%;
-  transform: translateY(-50%) translateX(-8px) scale(0.95);
+/* Positions matching the point bars */
+body.kid-home .chapter.path-node.node-pos-right .node-content-card,
+body.kid-home .chapter.path-node.node-pos-far-right .node-content-card {
+  right: calc(50% + 56px); left: auto; top: 50%;
+  transform: translateY(-50%) translateX(12px) scale(0.95);
 }
-body.kid-home .chapter.path-node.node-right .node-content-card {
-  right: calc(clamp(16px, 8vw, 70px) + 90px);
-  top: 50%;
-  transform: translateY(-50%) translateX(8px) scale(0.95);
+body.kid-home .chapter.path-node.node-pos-left .node-content-card,
+body.kid-home .chapter.path-node.node-pos-far-left .node-content-card,
+body.kid-home .chapter.path-node.node-pos-center .node-content-card {
+  left: calc(50% + 56px); right: auto; top: 50%;
+  transform: translateY(-50%) translateX(-12px) scale(0.95);
 }
 body.kid-home .chapter.path-node.path-node-boss .node-content-card {
-  left: 50%;
-  top: calc(100% + 12px);
-  transform: translateX(-50%) translateY(-6px) scale(0.95);
+  left: 50%; top: calc(100% + 14px);
+  transform: translateX(-50%) translateY(-10px) scale(0.95);
 }
 
-/* Arrow pointers on popover */
-body.kid-home .chapter.path-node.node-left .node-content-card::before {
-  content: ''; position: absolute; left: -10px; top: 50%; transform: translateY(-50%);
-  border-top: 9px solid transparent; border-bottom: 9px solid transparent;
-  border-right: 10px solid var(--chapter-color);
-}
-body.kid-home .chapter.path-node.node-right .node-content-card::after {
-  content: ''; position: absolute; right: -10px; top: 50%; transform: translateY(-50%);
-  border-top: 9px solid transparent; border-bottom: 9px solid transparent;
-  border-left: 10px solid var(--chapter-color);
-}
-body.kid-home .chapter.path-node.path-node-boss .node-content-card::before,
-body.kid-home .chapter.path-node.path-node-boss .node-content-card::after {
-  display: none !important;
-}
-
-/* Reveal on Hover or Focus */
+/* Reveal when hovering anywhere on the node or focusing inside */
 body.kid-home .chapter.path-node:hover .node-content-card,
 body.kid-home .chapter.path-node:focus-within .node-content-card {
   opacity: 1; visibility: visible; pointer-events: auto;
 }
-body.kid-home .chapter.path-node.node-left:hover .node-content-card,
-body.kid-home .chapter.path-node.node-left:focus-within .node-content-card {
+body.kid-home .chapter.path-node.node-pos-right:hover .node-content-card,
+body.kid-home .chapter.path-node.node-pos-right:focus-within .node-content-card,
+body.kid-home .chapter.path-node.node-pos-far-right:hover .node-content-card,
+body.kid-home .chapter.path-node.node-pos-far-right:focus-within .node-content-card {
   transform: translateY(-50%) translateX(0) scale(1);
 }
-body.kid-home .chapter.path-node.node-right:hover .node-content-card,
-body.kid-home .chapter.path-node.node-right:focus-within .node-content-card {
+body.kid-home .chapter.path-node.node-pos-left:hover .node-content-card,
+body.kid-home .chapter.path-node.node-pos-left:focus-within .node-content-card,
+body.kid-home .chapter.path-node.node-pos-far-left:hover .node-content-card,
+body.kid-home .chapter.path-node.node-pos-far-left:focus-within .node-content-card,
+body.kid-home .chapter.path-node.node-pos-center:hover .node-content-card,
+body.kid-home .chapter.path-node.node-pos-center:focus-within .node-content-card {
   transform: translateY(-50%) translateX(0) scale(1);
 }
 body.kid-home .chapter.path-node.path-node-boss:hover .node-content-card,
@@ -760,36 +795,41 @@ body.kid-home .boss-btn {
   color: #241400 !important; border-color: #ffe885 !important;
 }
 
-/* Responsive adjustments */
+/* Responsive adjustments for Candy Crush Trail */
 @media (max-width: 680px) {
   body.kid-home #chapters.path-graph-nodes {
-    padding: 24px 12px 60px;
-    gap: 24px;
+    padding: 24px 10px 70px;
+    gap: 40px;
   }
-  body.kid-home .chapter.path-node.node-left,
-  body.kid-home .chapter.path-node.node-right {
-    flex-direction: row !important;
-    padding-left: 8px !important;
-    padding-right: 8px !important;
+  body.kid-home .chapter.path-node.node-pos-right {
+    transform: translateX(clamp(24px, 9vw, 55px));
   }
-  body.kid-home .chapter.path-node.node-left .node-point-bar,
-  body.kid-home .chapter.path-node.node-right .node-point-bar {
-    margin-left: 12px !important;
-    margin-right: 0 !important;
-    flex: 1;
+  body.kid-home .chapter.path-node.node-pos-far-right {
+    transform: translateX(clamp(44px, 16vw, 95px));
+  }
+  body.kid-home .chapter.path-node.node-pos-left {
+    transform: translateX(clamp(-55px, -9vw, -24px));
+  }
+  body.kid-home .chapter.path-node.node-pos-far-left {
+    transform: translateX(clamp(-95px, -16vw, -44px));
   }
   body.kid-home .point-title {
-    max-width: 140px; font-size: 14px;
+    max-width: 125px; font-size: 13px;
   }
-  body.kid-home .chapter.path-node.node-left .node-content-card,
-  body.kid-home .chapter.path-node.node-right .node-content-card {
-    left: 10px !important; right: 10px !important; width: auto !important;
+  body.kid-home .point-play-btn {
+    min-height: 34px; padding: 0 12px; font-size: 13px;
+  }
+  body.kid-home .node-content-card {
+    width: min(300px, 90vw) !important; padding: 14px 16px;
+  }
+  body.kid-home .chapter.path-node .node-content-card {
+    left: 50% !important; right: auto !important;
     top: calc(100% + 10px) !important;
-    transform: translateY(-6px) scale(0.95);
+    transform: translateX(-50%) translateY(-6px) scale(0.95);
   }
-  body.kid-home .chapter.path-node.node-left:hover .node-content-card,
-  body.kid-home .chapter.path-node.node-right:hover .node-content-card {
-    transform: translateY(0) scale(1);
+  body.kid-home .chapter.path-node:hover .node-content-card,
+  body.kid-home .chapter.path-node:focus-within .node-content-card {
+    transform: translateX(-50%) translateY(0) scale(1);
   }
   body.kid-home .node-content-card::before,
   body.kid-home .node-content-card::after {
