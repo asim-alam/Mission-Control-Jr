@@ -149,6 +149,32 @@ body.kid-home #campaign-bar button {
   background: var(--kid-panel-2) !important; border: 2px solid #5a4cc0 !important; border-radius: 14px !important;
   font-size: 15px; font-weight: 600; padding: 6px 16px; color: var(--kid-ink) !important;
 }
+body.kid-home #header-map-back {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--kid-panel-2) !important;
+  border: 2px solid #5a4cc0 !important;
+  border-radius: 12px !important;
+  font-family: var(--kid-display); font-size: 14px; font-weight: 700;
+  padding: 6px 14px; color: var(--kid-ink) !important;
+  box-shadow: 0 2px 0 #1b154c; cursor: pointer;
+  transition: transform .15s ease, background-color .15s ease, border-color .15s ease;
+}
+body.kid-home #header-map-back:hover {
+  transform: translateY(-2px);
+  background: #34287d !important;
+  border-color: var(--kid-yellow) !important;
+}
+body.kid-home #header-map-back[hidden] {
+  display: none !important;
+}
+body.kid-home.map-open #active-chapter {
+  display: none;
+}
+@media (max-width: 680px) {
+  body.kid-home.map-open .wordmark {
+    display: none;
+  }
+}
 
 /* ZERO SCROLLING TITLE SCREEN: 100% viewport fit */
 body.kid-home #journey {
@@ -374,24 +400,23 @@ body.kid-home #mission-map {
 body.kid-home #mission-map[hidden] { display: none !important; }
 body.kid-home .mission-map-deck {
   width: 100%; max-width: 1240px; margin: 0 auto; height: 100%;
-  display: flex; flex-direction: column; padding: clamp(16px, 3vw, 32px);
+  display: flex; flex-direction: column; padding: 10px clamp(12px, 2.5vw, 24px) 24px;
   box-sizing: border-box; overflow: hidden;
 }
 body.kid-home .mission-map-header {
   display: flex; align-items: center; justify-content: space-between;
-  gap: 20px; flex-wrap: wrap; margin-bottom: 20px; flex: none;
+  gap: 16px; flex-wrap: wrap; margin-bottom: 8px; flex: none;
+  padding-bottom: 8px; border-bottom: 1px solid rgb(90 76 192 / 30%);
 }
-body.kid-home .map-title-group { display: flex; align-items: center; gap: 16px; }
+body.kid-home .map-title-group { display: flex; align-items: center; gap: 12px; }
 body.kid-home .map-close-btn {
-  min-height: 46px; padding: 0 18px; font-size: 15px; font-weight: 700;
-  background: var(--kid-panel-2) !important; border: 2px solid #5a4cc0 !important;
-  border-radius: 14px !important; color: var(--kid-ink) !important; box-shadow: 0 3px 0 #1b154c;
+  display: none !important;
 }
-body.kid-home #map-title { margin: 0; font-size: 28px; font-weight: 700; }
+body.kid-home #map-title { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: -0.3px; }
 body.kid-home .map-subtitle { margin: 2px 0 0; font-size: 15px; font-weight: 600; color: var(--kid-soft); }
-body.kid-home .map-dest-and-progress { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+body.kid-home .map-dest-and-progress { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 body.kid-home .mission-progress {
-  min-width: 160px; height: 16px; border-radius: 999px; background: #2a2468;
+  min-width: 150px; height: 14px; border-radius: 999px; background: #2a2468;
   border: 2px solid #4b3f9e; overflow: hidden;
 }
 body.kid-home .mission-progress i {
@@ -402,7 +427,7 @@ body.kid-home .mission-progress i {
 
 /* Scrollable Map View for all Mission Cards */
 body.kid-home .mission-map-scroll {
-  flex: 1; overflow-y: auto; overflow-x: hidden; padding: 10px 14px 48px;
+  flex: 1; overflow-y: auto; overflow-x: hidden; padding: 6px 14px 48px;
 }
 body.kid-home #chapters.trail-grid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
@@ -413,15 +438,15 @@ body.kid-home #chapters.trail-grid {
 /* SEQUENTIAL PATH GRAPH STYLING                                      */
 /* ------------------------------------------------------------------ */
 body.kid-home #chapters.path-graph-nodes {
-  display: flex; flex-direction: column; gap: 36px;
-  position: relative; max-width: 880px; margin: 30px auto 60px;
-  padding: 20px 20px 80px; box-sizing: border-box;
+  display: flex; flex-direction: column; gap: 32px;
+  position: relative; max-width: 880px; margin: 12px auto 40px;
+  padding: 10px 20px 60px; box-sizing: border-box;
 }
 
 /* Central glowing dotted/dashed journey trail spine */
 body.kid-home #chapters.path-graph-nodes::before {
   content: ''; position: absolute;
-  top: 50px; bottom: 80px; left: 50%; width: 8px;
+  top: 36px; bottom: 60px; left: 50%; width: 8px;
   transform: translateX(-50%);
   background: repeating-linear-gradient(180deg, #6c5ce7 0, #6c5ce7 14px, transparent 14px, transparent 26px);
   border-radius: 999px; z-index: 1;

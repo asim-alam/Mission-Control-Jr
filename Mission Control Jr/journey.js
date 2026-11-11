@@ -200,7 +200,7 @@ function render(){
     button.textContent=done?'↻ Replay':isNext?'▶ Play Up Next!':'▶ Practice';
     if(isNext)button.className='primary';
     const launchChapter=()=>{
-      if($('mission-map'))$('mission-map').hidden=true;
+      toggleMissionMap(false);
       requestChapter(chapter.id,done);
     };
     button.onclick=launchChapter;
@@ -244,7 +244,7 @@ function render(){
       </div>
     `;
     const launchBoss=()=>{
-      if($('mission-map'))$('mission-map').hidden=true;
+      toggleMissionMap(false);
       requestChapter('extended');
     };
     bossNode.querySelector('.boss-btn').onclick=launchBoss;
@@ -259,6 +259,20 @@ const kidDay=sol=>/LUNAR/i.test(sol)?'Moon base':sol.replace(/^SOLS?/i,'Day');
 function clearPresentation(){document.body.classList.remove('minimal-hud','photo-mode');}
 const chapterPath=(id,sampler=false)=>journeyUrl(location.href,id,{sampler}).href;
 
+function toggleMissionMap(open){
+  const map=$('mission-map');
+  if(!map)return;
+  const show=open!=null?Boolean(open):map.hidden;
+  map.hidden=!show;
+  document.body.classList.toggle('map-open',show);
+  const backBtn=$('header-map-back');
+  if(backBtn)backBtn.hidden=!show;
+  const jBtn=$('journey-button');
+  if(jBtn && $('journey') && !$('journey').hidden){
+    jBtn.textContent=show?'← Back to Title':'🗺️ Mission Map';
+  }
+}
+
 function launch(id,{updatePath=true,sampler=false}={}){
   const chapter=chapterById(id);
   if(!chapter?.available)return;
@@ -272,7 +286,7 @@ function launch(id,{updatePath=true,sampler=false}={}){
     state.campaigns[chapter.campaign].current=id;
   }
   persist();
-  if($('mission-map'))$('mission-map').hidden=true;
+  toggleMissionMap(false);
   if($('settings-dialog'))$('settings-dialog').hidden=true;
   $('transition').hidden=true;$('sampler').hidden=true;$('journey').hidden=true;$('loading-scene').hidden=false;
   frame.hidden=false;frame.inert=false;
@@ -285,7 +299,7 @@ function launch(id,{updatePath=true,sampler=false}={}){
 
 function menu({updatePath=true}={}){
   clearPresentation();hold(true);document.exitPointerLock?.();
-  if($('mission-map'))$('mission-map').hidden=true;
+  toggleMissionMap(false);
   if($('settings-dialog'))$('settings-dialog').hidden=true;
   $('transition').hidden=true;$('journey').hidden=false;$('home-scene').hidden=false;frame.hidden=true;
   if(updatePath)history.pushState(null,'',journeyUrl(location.href).href);
@@ -294,7 +308,7 @@ function menu({updatePath=true}={}){
 
 function resume(){
   if(!active)return;
-  if($('mission-map'))$('mission-map').hidden=true;
+  toggleMissionMap(false);
   if($('settings-dialog'))$('settings-dialog').hidden=true;
   $('journey').hidden=true;$('transition').hidden=true;frame.hidden=false;hold(false);frame.focus();
 }
@@ -316,7 +330,7 @@ function requestChapter(id,replay=false){
   }
   clearPresentation();pending=id;hold(true);
   stopPipTypewriter();
-  if($('mission-map'))$('mission-map').hidden=true;
+  toggleMissionMap(false);
   if($('settings-dialog'))$('settings-dialog').hidden=true;
   $('journey').hidden=true;
   $('transition-tag').textContent=info.tag;
@@ -332,21 +346,15 @@ $('sampler-close').onclick=()=>{ $('sampler').hidden=true; $('sampler-start').fo
 if($('sampler-close-top')) $('sampler-close-top').onclick=()=>{ $('sampler').hidden=true; $('sampler-start').focus(); };
 document.querySelectorAll('[data-sample]').forEach(button=>button.onclick=()=>launch(button.dataset.sample,{sampler:true}));
 
-$('open-map')?.addEventListener('click',()=>{
-  if($('mission-map')) {
-    $('mission-map').hidden=false;
-    $('map-close-btn')?.focus();
-  }
-});
-$('map-close-btn')?.addEventListener('click',()=>{
-  if($('mission-map')) $('mission-map').hidden=true;
-});
+$('open-map')?.addEventListener('click',()=>toggleMissionMap(true));
+$('header-map-back')?.addEventListener('click',()=>toggleMissionMap(false));
+$('map-close-btn')?.addEventListener('click',()=>toggleMissionMap(false));
 
 $('journey-button').onclick=()=>{
   if(!$('journey').hidden && active){
     resume();
   } else if(!$('journey').hidden){
-    if($('mission-map')) $('mission-map').hidden=!$('mission-map').hidden;
+    toggleMissionMap();
   } else {
     menu();
   }
@@ -369,7 +377,7 @@ $('settings-dialog')?.addEventListener('click',e=>{
 window.addEventListener('keydown',e=>{
   if(e.key==='Escape'){
     if($('settings-dialog')&&!$('settings-dialog').hidden)$('settings-dialog').hidden=true;
-    if($('mission-map')&&!$('mission-map').hidden)$('mission-map').hidden=true;
+    if($('mission-map')&&!$('mission-map').hidden)toggleMissionMap(false);
     if($('sampler')&&!$('sampler').hidden)$('sampler').hidden=true;
   }
 });
