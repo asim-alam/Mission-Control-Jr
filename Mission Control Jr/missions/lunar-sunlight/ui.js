@@ -21,9 +21,32 @@ function sources(ctx) {
 function brief(ctx) {
   const sc = ctx.mission.scenario;
   ctx.dialog({label: 'MOON · SOUTH POLE · HORIZON BASE', title: 'Chasing the Sun', body: `
+    <div class="kid-mission-intro">
+      <p>☀️🔆 <b>Capture the Low Polar Sun!</b> Near the Moon’s South Pole, the Sun never climbs high—it skims right along the horizon, casting colossal shadows. Build a tall solar tower to capture sunlight for Horizon Base!</p>
+    </div>
+    <div class="kid-section-title">🧰 What You Need This Level</div>
+    <div class="kid-supplies-grid">
+      <div class="kid-supply-pill"><span class="pill-icon">🛒</span><div class="pill-text"><b>Mobile Tower Cart</b><span>Tows the telescoping solar mast to high elevation pads</span></div></div>
+      <div class="kid-supply-pill"><span class="pill-icon">▲</span><div class="pill-text"><b>Telescoping Mast</b><span>Lifts solar panels high above crater shadows</span></div></div>
+      <div class="kid-supply-pill"><span class="pill-icon">🔌</span><div class="pill-text"><b>High-Voltage Cable</b><span>Carries solar electric power back to base sockets</span></div></div>
+      <div class="kid-supply-pill"><span class="pill-icon">☀️</span><div class="pill-text"><b>Sun Tracker Sensor</b><span>Rotates panels to track the low circling Sun</span></div></div>
+    </div>
+    <div class="kid-section-title">📋 Your Jobs (Do in order)</div>
+    <ol class="kid-jobs-list">
+      <li><span class="step-num">1</span><b>Tow Cart to Pad:</b> Grab the cart handle and position it on the Near Pad or Ridge Pad.</li>
+      <li><span class="step-num">2</span><b>Deploy Legs &amp; Raise Mast:</b> Put stabilizer legs down, then hold ▲ to elevate the mast.</li>
+      <li><span class="step-num">3</span><b>Open Solar Wings:</b> Unfold photovoltaic wings and turn on automatic sun tracking.</li>
+      <li><span class="step-num">4</span><b>Plug Cable into Base:</b> Carry the heavy cable plug back to the base power socket.</li>
+      <li><span class="step-num">5</span><b>Set Power Plan &amp; Watch:</b> Choose a power strategy and watch 18 days of sunlight at the console!</li>
+    </ol>
+    <div class="kid-controls-bar">
+      <span>🎮 <b>Controls:</b></span>
+      <span><kbd>WASD</kbd> Walk</span>
+      <span><kbd>E</kbd> Grab cart handle &amp; plug</span>
+      <span>Hold <kbd>E</kbd> / <kbd>▲</kbd> to raise the mast stages</span>
+    </div>
     <p><b>Jin:</b> “Welcome to Horizon Base! Down here the Sun stays low, right on the horizon. Hills make <b>giant shadows</b>.”</p>
     <p><b>Elena:</b> “Our new solar mast is on that cart. Tow it to a pad, raise it up, and run the cable back to the base. Then the battery stays full and our science keeps running!”</p>
-    <ul class="mx-howto"><li>🛒 Grab the cart’s <b>handle</b> and walk. It follows you.</li><li>🦵 Put the <b>legs</b> down, then hold the green <b>▲</b> button to raise the mast.</li><li>🔌 Carry the <b>plug</b> back to the base power port.</li><li>🧑‍🚀 Your suit has <b>${sc.suitMinutes} minutes</b> of air. Every job uses some.</li></ul>
     <aside class="mx-detail"><b>More details</b><br>The panel makes ${sc.panelKW} kW in sunlight. The base needs ${sc.essentialKW} kW to stay warm, and science uses ${sc.scienceKW} kW more. The battery holds ${sc.batteryKWh} kWh.</aside>`,
     actions: [{label: '▶ Let’s go!', primary: true, run: () => { ctx.act({id: 'begin'}, {quiet: true}); planBoard(ctx); }}, {label: 'Is this real?', run: () => ctx.sourcesDialog(() => brief(ctx))}]});
 }
@@ -84,6 +107,15 @@ function debrief(ctx) {
   ctx.dialog({label: 'MISSION REPORT · CHASING THE SUN', title, body: `
     ${r.completed ? `<p>${PLANS[r.pad].icon} <b>${PLANS[r.pad].title}</b> · mast <b>${r.height} m</b> · ☀️ sunny <b>${r.sunShare}%</b> of ${days} days · 🔌 ${r.cableM} m of cable</p>
       <p>🔬 Science ran <b>${r.scienceHours}</b> hours · 🥶 Cold hours: <b>${r.coldHours}</b> · 🔋 Lowest battery: <b>${r.minBattery} kWh</b> · 🧑‍🚀 Suit air left: <b>${r.suitLeft} min</b></p>` : ''}
+    <div class="kid-lesson-box">
+      <span class="lesson-badge">🎓 Space Science Lesson</span>
+      <h3>What We Learned About Lunar Sunlight</h3>
+      <p><b>🌟 The Big Space Idea:</b> Because the Moon's axis is barely tilted (only 1.5°), the Sun always circles close to the horizon at the lunar poles. Deep craters remain pitch black, while tall peaks stay in almost eternal sunlight!</p>
+      <div class="lesson-fact">
+        <b>🚀 Real NASA Science:</b> NASA’s Lunar Reconnaissance Orbiter (LOLA) measured sunlight across the Moon's South Pole for over 18 years. High ridges around craters like Shackleton receive up to 86% annual sunlight, which is why NASA plans to install tall solar towers there for Artemis bases! <a href="https://pgda.gsfc.nasa.gov/products/69" target="_blank" rel="noopener">See LOLA maps</a>
+      </div>
+      <p><b>💡 Your Astronaut Skill:</b> Elevated ground provides continuous energy in space—mastering terrain is the key to surviving long nights.</p>
+    </div>
     <p class="mx-tip">💡 ${tip}</p>${compare}
     <aside class="mx-detail"><b>More details</b><br>NASA’s Artemis plans look for “peaks of near-eternal light”: high rims near the pole that are sunny most of the time. Real spots still have some shadow, so a base needs batteries too.</aside>`,
     actions: [

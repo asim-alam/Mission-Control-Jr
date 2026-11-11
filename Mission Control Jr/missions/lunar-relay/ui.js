@@ -20,9 +20,32 @@ function sources(ctx) {
 function brief(ctx) {
   const sc = ctx.mission.scenario;
   ctx.dialog({label: 'MOON · SOUTH POLE · HORIZON BASE', title: 'Over the Hill', body: `
+    <div class="kid-mission-intro">
+      <p>⛰️ <b>Shadow Hollow Expedition!</b> Scientists on Earth want soil samples from the sunless crater floor. But driving behind the massive crater ridge blocks all direct radio contact with Horizon Base!</p>
+    </div>
+    <div class="kid-section-title">🧰 What You Need This Level</div>
+    <div class="kid-supplies-grid">
+      <div class="kid-supply-pill"><span class="pill-icon">🚙</span><div class="pill-text"><b>Polar Rover</b><span>Heavy-duty electric rover for climbing crater ridges</span></div></div>
+      <div class="kid-supply-pill"><span class="pill-icon">📡</span><div class="pill-text"><b>Relay Antenna Station</b><span>Deploy on the ridge top to bounce radio signals over the hill</span></div></div>
+      <div class="kid-supply-pill"><span class="pill-icon">🔩</span><div class="pill-text"><b>Regolith Core Drill</b><span>Extracts frozen soil samples from permanently shadowed ground</span></div></div>
+      <div class="kid-supply-pill"><span class="pill-icon">🔋</span><div class="pill-text"><b>Battery Return Margin</b><span>Keep enough battery power to climb back over the steep ridge!</span></div></div>
+    </div>
+    <div class="kid-section-title">📋 Your Jobs (Do in order)</div>
+    <ol class="kid-jobs-list">
+      <li><span class="step-num">1</span><b>Drive to Ridge Top:</b> Steer the rover up the saddle between the craters.</li>
+      <li><span class="step-num">2</span><b>Deploy the Radio Relay:</b> Lower the legs, raise the mast, and aim the antenna dish.</li>
+      <li><span class="step-num">3</span><b>Drive Down into Shadow:</b> Head into the hollow while keeping the radio link alive.</li>
+      <li><span class="step-num">4</span><b>Drill Rock Cores:</b> Take soil cores and secure them in the rover sample box.</li>
+      <li><span class="step-num">5</span><b>Drive Home to Horizon Base:</b> Climb back over the hill and park before suit air runs low!</li>
+    </ol>
+    <div class="kid-controls-bar">
+      <span>🎮 <b>Controls:</b></span>
+      <span><kbd>WASD</kbd> Drive &amp; Walk</span>
+      <span><kbd>E</kbd> Use drill &amp; deploy antenna</span>
+      <span>Drive buttons let you travel safely between stops!</span>
+    </div>
     <p><b>Jin:</b> “Scientists on Earth want a core of soil from <b>Shadow Hollow</b>. It is on the other side of the big ridge.”</p>
     <p><b>Luca (on the radio):</b> “Radio goes in straight lines. Once you drive behind the hill, we can’t hear you. A <b>radio relay</b> on the ridge top could pass messages over it.”</p>
-    <ul class="mx-howto"><li>🚙 Hop in the rover and drive. Every drive uses battery.</li><li>📡 Set up the relay: legs out, raise the mast, aim the dish.</li><li>🔩 Drill a core, put it in the sample box, send the data.</li><li>🏠 Drive home and go inside. Keep enough battery to get back!</li></ul>
     <aside class="mx-detail"><b>More details</b><br>The rover starts at ${sc.batteryStart}% battery and you have ${sc.suitMinutes} minutes of suit air. A message from the Moon reaches Earth in about ${sc.oneWaySeconds} seconds.</aside>`,
     actions: [{label: '▶ Let’s go!', primary: true, run: () => { ctx.act({id: 'begin'}, {quiet: true}); planBoard(ctx); }}, {label: 'Is this real?', run: () => ctx.sourcesDialog(() => brief(ctx))}]});
 }
@@ -79,6 +102,15 @@ function debrief(ctx) {
   ctx.dialog({label: 'MISSION REPORT · OVER THE HILL', title, body: `
     ${r.completed ? `<p>🧪 Cores: <b>${r.cores}</b> · 📶 Sent live: <b>${r.live}</b> · 📵 Out of touch: <b>${r.quietMinutes} min</b></p>
       <p>🔋 Battery left: <b>${r.battery}%</b> · 🧑‍🚀 Suit air left: <b>${r.suitLeft} min</b> · ⏱ ${r.minutes} min${r.relayUsed ? ` · 📡 relay mast ${(s.scenario.relay.baseM + r.stages * s.scenario.relay.stageM).toFixed(1)} m` : ''}</p>` : ''}
+    <div class="kid-lesson-box">
+      <span class="lesson-badge">🎓 Space Science Lesson</span>
+      <h3>What We Learned About Lunar Radio</h3>
+      <p><b>🌟 The Big Space Idea:</b> High-frequency radio signals travel in straight lines ("line of sight"). On the Moon, without an air layer to bounce waves, crater walls create dead zones!</p>
+      <div class="lesson-fact">
+        <b>🚀 Real NASA Science:</b> NASA’s Artemis program and Glenn Research Center study surface radio propagation for polar lunar missions. Future astronauts exploring shadowed lunar craters will deploy hilltop relay stations and communicate through orbiting lunar Gateway relays. <a href="https://www.nasa.gov/glenn/glenn-expertise-space-exploration/scan/lunar-surface-propagation/" target="_blank" rel="noopener">Learn more at NASA Glenn</a>
+      </div>
+      <p><b>💡 Your Astronaut Skill:</b> Always establish a communications link before venturing into hazardous, unmapped territory.</p>
+    </div>
     <p class="mx-tip">💡 ${tip}</p>${compare}
     <aside class="mx-detail"><b>More details</b><br>The Moon is so close that Earth hears you about ${s.scenario.oneWaySeconds} seconds later, if your radio can reach. Future Artemis crews will use relays and satellites so they can talk from behind hills and craters.</aside>`,
     actions: [

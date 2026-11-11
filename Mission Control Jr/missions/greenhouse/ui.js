@@ -21,9 +21,33 @@ function sources(ctx) {
 function brief(ctx) {
   const rested = ctx.mission.crewRested ? '<p>After the Sun storm, the crew is rested and ready to farm.</p>' : '';
   ctx.dialog({label: 'MARS DAYS 32–34 · THE GREENHOUSE', title: 'A birthday promise', body: `${rested}
+    <div class="kid-mission-intro">
+      <p>🎂 <b>Elena’s Birthday is in 3 Days!</b> Amara promised her a crisp, fresh salad on Mars. Cultivate the three crop beds, manage light and water budgets, and prepare a fresh harvest celebration!</p>
+    </div>
+    <div class="kid-section-title">🧰 What You Need This Level</div>
+    <div class="kid-supplies-grid">
+      <div class="kid-supply-pill"><span class="pill-icon">🥬</span><div class="pill-text"><b>3 Plant Beds</b><span>Red lettuce, mizuna greens &amp; spicy chile peppers</span></div></div>
+      <div class="kid-supply-pill"><span class="pill-icon">💡</span><div class="pill-text"><b>Light Levers</b><span>Off → Half → Full light (uses daily solar kWh)</span></div></div>
+      <div class="kid-supply-pill"><span class="pill-icon">💧</span><div class="pill-text"><b>Water Wheel</b><span>Turn to water soil; keep needle in the green zone</span></div></div>
+      <div class="kid-supply-pill"><span class="pill-icon">🌀</span><div class="pill-text"><b>Air Vent Fan</b><span>Check vent airflow to keep leaf surfaces dry</span></div></div>
+    </div>
+    <div class="kid-section-title">📋 Your Jobs (Do in order)</div>
+    <ol class="kid-jobs-list">
+      <li><span class="step-num">1</span><b>Pick a Lighting Plan:</b> Balance battery savings vs. bonus pepper growth.</li>
+      <li><span class="step-num">2</span><b>Water the Soil:</b> Turn blue valve wheels until the moisture dial turns green.</li>
+      <li><span class="step-num">3</span><b>Check Airflow at Vent:</b> Confirm fan is really spinning (readout can say LOW when stopped!).</li>
+      <li><span class="step-num">4</span><b>End Day at Console:</b> Check power reserves and advance to the next day.</li>
+      <li><span class="step-num">5</span><b>Harvest with Clean Tools:</b> Pick the ripe crops and serve Elena’s birthday feast!</li>
+    </ol>
+    <div class="kid-controls-bar">
+      <span>🎮 <b>Controls:</b></span>
+      <span><kbd>WASD</kbd> Walk</span>
+      <span><kbd>Mouse</kbd> Look</span>
+      <span><kbd>E</kbd> Turn levers &amp; wheels</span>
+      <span>Walk buttons take you right to each bed!</span>
+    </div>
     <p><b>Amara:</b> “Shh! It’s Elena’s birthday in three days. I promised her a <b>fresh salad</b>. Can you help me grow it?”</p>
     <p>You have three beds of already-established plants: 🥬 <b>red lettuce</b>, 🌿 <b>mizuna</b> and 🌶️ <b>chile peppers</b>. They were growing before this story began. Plants need <b>light</b>, the right amount of <b>water</b> and moving air. Light uses power, and we only have so much each day.</p><p>We will skip through two short practice growing periods. A fresh harvest is a <b>food supplement</b>, not the crew's whole diet.</p>
-    <ul class="mx-howto"><li>💡 Flip a bed’s <b>light lever</b>: off → half → full.</li><li>💧 Turn the blue <b>valve wheel</b> to water. Watch the dial: green is just right.</li><li>🌀 Check the fan at the vent. Its panel can say <b>LOW</b> even when no air is moving.</li><li>📺 At the console, check the power and <b>end the day</b>.</li></ul>
     <aside class="mx-detail"><b>NASA study details</b><br>OSD-269 used a 16-hour light / 8-hour dark schedule. The VEG-03A lettuce pillows received about 200 µmol/m²/s of photosynthetically active radiation at the centre of the unit, with a 12:3:1 red:blue:green LED ratio. NASA's VEG-01A and VEG-01B lettuce crops were first harvested after 33 days. This game starts with established plants and skips time; its two practice growing periods are not real seed-to-harvest times. These are measured ISS study conditions; the game's light settings are simplified power choices.</aside>`,
     actions: [{label: '▶ Let’s grow!', primary: true, run: () => { ctx.act({id: 'begin'}, {quiet: true}); planBoard(ctx); }}, {label: 'Is this real?', run: () => ctx.sourcesDialog(() => brief(ctx))}]});
 }
@@ -73,6 +97,15 @@ function debrief(ctx) {
     {label: 'Harvest check', values: history.map(h => h.harvestChecked ? 'yes' : 'no')}]) : '<p class="mx-last">Play again with a different plan to compare results here.</p>';
   ctx.dialog({label: 'MISSION REPORT · THE GREENHOUSE PROMISE', title, body: `${story}
     ${r.completed ? `<p>🥗 Salad: <b>${r.saladPortions}</b> of ${sc.saladGoal} portions · 🌶️ Peppers: <b>${r.peppers ? 'yes' : 'no'}</b> · 🔋 Battery left: <b>${r.batteryLeftKWh} kWh</b> · 💧 Water left: <b>${r.tankL} L</b>${r.leakedL ? ` (${r.leakedL} L leaked)` : ''} · 🌱 Plant health: <b>${r.health}%</b></p>` : ''}
+    <div class="kid-lesson-box">
+      <span class="lesson-badge">🎓 Space Science Lesson</span>
+      <h3>What We Learned in the Space Greenhouse</h3>
+      <p><b>🌟 The Big Space Idea:</b> Space crops need moving air as well as water and light—stagnant air traps moisture on leaf surfaces, encouraging bacteria!</p>
+      <div class="lesson-fact">
+        <b>🚀 Real NASA Science:</b> In NASA’s OSD-269 plant experiment on the International Space Station, researchers found a fan anomaly where a controller displayed "LOW" even when the fan was off. Checking real air movement and optimizing a 16:8 light schedule (like you used today) is crucial for real space agriculture! <a href="https://doi.org/10.3389/fpls.2020.00199" target="_blank" rel="noopener">Read the study</a>
+      </div>
+      <p><b>💡 Your Astronaut Skill:</b> Fresh green food is a huge psychological and nutritional boost for astronauts on long-duration planetary missions.</p>
+    </div>
     <p class="mx-tip">💡 ${tip}</p>${compare}
     <aside class="mx-detail"><b>More details</b><br>The fan clue is inspired by the OSD-269 research paper. Its LOW/off anomaly is documented; the reset action, moisture index and stress values in this game are authored. The clean-basket step is a handling reminder, not a test for microbes. A visual check cannot certify food safety. The salad is a fresh-food supplement, not the crew's full diet. Water left in the tank carries on to the next mission, when a pump breaks.</aside>`,
     actions: [

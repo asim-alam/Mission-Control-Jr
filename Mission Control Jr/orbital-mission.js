@@ -2,14 +2,20 @@
 export const ORBIT_SAVE='mission-control-jr.orbit.v1';
 export const STATIONS={brief:{x:8,z:0},relay:{x:-2,z:-12},power:{x:-2,z:-4},kit:{x:-9,z:0},airlock:{x:0,z:-16},craft:{x:0,z:15}};
 export function createOrbit(){return {phase:'overview',stage:0,checks:{brief:false,diagnose:false,isolate:false,repair:false,verify:false,kit:false,airlock:false,guidance:false,propulsion:false},dock:{x:1.6,y:.65,distance:34,speed:0,bumps:0},position:{x:0,z:14},guided:false,elapsed:0,descent:0,complete:false,log:[]};}
-export function dockReady(d){return d.distance<=2&&Math.abs(d.x)<=.35&&Math.abs(d.y)<=.35&&Math.abs(d.speed)<=.15;}
+export function dockReady(d){return d.distance<=2&&Math.abs(d.x)<=.35&&Math.abs(d.y)<=.35&&Math.abs(d.speed)<=.205;}
 export function stepDock(d,input,dt){
   dt=Math.min(.05,Math.max(0,dt));
   d.speed=Math.max(-.8,Math.min(2,d.speed+(input.thrust||0)*.7*dt));
   if(input.brake)d.speed=Math.sign(d.speed)*Math.max(0,Math.abs(d.speed)-1.5*dt);
   d.x=Math.max(-6,Math.min(6,d.x+(input.side||0)*.75*dt));d.y=Math.max(-4,Math.min(4,d.y+(input.lift||0)*.6*dt));
   d.distance=Math.max(1.4,Math.min(65,d.distance-d.speed*dt));
-  if(d.distance<=1.4&&(Math.abs(d.speed)>.2||Math.abs(d.x)>.4||Math.abs(d.y)>.4)){d.distance=5;d.speed=-.2;d.bumps++;return 'Too fast or not lined up! Slow down and line up first.';}
+  if(d.distance<=1.4&&(Math.abs(d.speed)>.205||Math.abs(d.x)>.4||Math.abs(d.y)>.4)){
+    const fast=Math.abs(d.speed)>.205,unaligned=Math.abs(d.x)>.4||Math.abs(d.y)>.4;
+    d.distance=5;d.speed=-.2;d.bumps++;
+    if(fast&&unaligned)return 'Too fast and not lined up! Slow down below 0.2 m/s and line up first.';
+    if(fast)return 'Too fast! Brake with Space to keep speed below 0.2 m/s.';
+    return 'Spaceship not lined up! Center the cross (A/D and R/F) before contact.';
+  }
   return '';
 }
 export function guidedDock(d){if(dockReady(d))return {brake:true};const target=Math.min(1.7,Math.max(0,(d.distance-1.6)*.5));return {thrust:d.speed<target-.035?1:0,brake:d.speed>target+.02,side:Math.abs(d.x)>.025?-Math.sign(d.x):0,lift:Math.abs(d.y)>.025?-Math.sign(d.y):0};}
@@ -24,7 +30,7 @@ const sequence=[
 ];
 export function orbitalTask(m){
   if(m.phase==='overview')return {title:'Arrival at Mars',instruction:'Look at Mars and the space station. Then fly the spaceship!',label:'Start flying',action:'approach',stage:1};
-  if(m.phase==='docking')return {title:dockReady(m.dock)?'Soft capture is ready':'Dock with the space station',instruction:'W/S forward and back · A/D left and right · R/F up and down · Space slows down. Line up the cross, get very close, and go slow. Then press E.',label:'Dock · E',action:'dock',stage:1};
+  if(m.phase==='docking')return {title:dockReady(m.dock)?'Soft capture is ready':'Dock with the space station',instruction:'W/S forward and back · A/D left and right · R/F up and down · Space slows down. Line up the cross, get very close, and keep speed below 0.2 m/s. Then press E.',label:'Dock · E',action:'dock',stage:1};
   if(m.phase==='station'){
     const row=sequence.find(([id])=>!m.checks[id]);
     if(row){const [id,title,place,instruction,label]=row;return {id,title,place,instruction,label,action:id,stage:id==='kit'||id==='airlock'?3:2,target:STATIONS[{diagnose:'relay',repair:'relay',isolate:'power',verify:'power'}[id]||id]};}
@@ -38,7 +44,18 @@ export function actOrbit(m,action,choice){
   const no=message=>({ok:false,message});
   if(m.complete)return no('You landed! Go on to the base, or play again.');
   if(action==='approach'&&m.phase==='overview'){m.phase='docking';return {ok:true,message:'Approach clearance received. Keep closure speed low.'};}
-  if(action==='dock'){if(m.phase!=='docking'||!dockReady(m.dock))return no('Dock not ready: check range, both offsets and closure speed.');m.phase='station';m.position={x:0,z:14};m.log.push('Dock sealed; pressure equalized.');return {ok:true,message:'Dock secure. Transfer complete. Follow the marker to Elena’s briefing.'};}
+  if(action==='dock'){
+    if(m.phase!=='docking'||!dockReady(m.dock)){
+      if(m.phase!=='docking')return no('Dock not ready: you are not in docking phase.');
+      const d=m.dock,fast=Math.abs(d.speed)>.205,unaligned=Math.abs(d.x)>.35||Math.abs(d.y)>.35,tooFar=d.distance>2;
+      if(fast&&unaligned)return no('Dock not ready: too fast and not lined up! Slow down below 0.2 m/s.');
+      if(fast)return no('Dock not ready: too fast! Keep speed below 0.2 m/s.');
+      if(unaligned)return no('Dock not ready: not lined up! Center the cross before docking.');
+      if(tooFar)return no(`Dock not ready: too far away (${d.distance.toFixed(1)} m). Fly inside 2.0 m.`);
+      return no('Dock not ready: check range, alignment and closure speed.');
+    }
+    m.phase='station';m.position={x:0,z:14};m.log.push('Dock sealed; pressure equalized.');return {ok:true,message:'Dock secure. Transfer complete. Follow the marker to Elena’s briefing.'};
+  }
   const task=orbitalTask(m);if(action!==task.action)return no('Finish the job you are on first.');
   if(m.phase==='station'){
     if(Math.hypot(m.position.x-task.target.x,m.position.z-task.target.z)>2.5)return no('Walk to the glowing machine.');

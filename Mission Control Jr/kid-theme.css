@@ -64,7 +64,13 @@ button.primary:active:not(:disabled) { box-shadow: 0 1px 0 #b84f12; }
   box-shadow: 0 18px 50px rgb(0 0 0 / 50%), inset 0 1px 0 rgb(255 255 255 / 8%) !important;
   animation: kid-pop-in .35s cubic-bezier(.2, 1.4, .4, 1);
 }
-#dialog.ui-scrim, #modal.ui-scrim, #transition.ui-scrim { background: rgb(14 10 40 / 86%) !important; }
+#modal.ui-scrim, #dialog.ui-scrim, #transition.ui-scrim { background: rgb(14 10 40 / 86%) !important; }
+#modal .ui-card {
+  max-height: 88vh !important;
+  overflow-y: auto !important;
+  width: 580px !important;
+  max-width: 92vw !important;
+}
 .ui-card .eyebrow { font-family: var(--kid-display) !important; font-weight: 600; letter-spacing: .08em; color: var(--kid-yellow) !important; }
 .ui-card h2 { font-family: var(--kid-display); font-weight: 600; font-size: 32px; }
 .ui-card p { color: var(--kid-soft) !important; font-size: 17px; }
@@ -314,3 +320,537 @@ body.kid-home .sampler-grid button { min-height: 64px !important; font-size: 18p
 }
 body.kid-home #journey-count, body.kid-home .wordmark { white-space: nowrap; }
 @media (max-width: 480px) { body.kid-home .wordmark { font-size: 15px; } body.kid-home .logo-rocket { font-size: 20px; } }
+
+/* Kid-Friendly Mission Briefing & Debrief Components */
+.kid-mission-intro {
+  background: rgba(42, 36, 104, 0.7);
+  border: 2px solid #5a4cc0;
+  border-left: 6px solid var(--kid-yellow);
+  border-radius: 18px;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+}
+.kid-mission-intro p {
+  margin: 0 !important;
+  font-size: 16px !important;
+  line-height: 1.45;
+  color: #fff8ee !important;
+}
+
+.kid-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--kid-display);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: var(--kid-yellow) !important;
+  margin: 12px 0 6px 0;
+}
+
+.kid-supplies-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.kid-supply-pill {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: rgba(27, 23, 68, 0.75);
+  border: 1.5px solid #4b3f9e;
+  border-radius: 14px;
+  padding: 8px 10px;
+}
+.kid-supply-pill .pill-icon {
+  font-size: 22px;
+  line-height: 1;
+  flex: none;
+}
+.kid-supply-pill .pill-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.kid-supply-pill .pill-text b {
+  font-family: var(--kid-display);
+  font-size: 13.5px;
+  color: var(--kid-mint);
+}
+.kid-supply-pill .pill-text span {
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--kid-soft);
+}
+
+.kid-jobs-list {
+  list-style: none !important;
+  padding: 0 !important;
+  margin: 0 0 12px 0 !important;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.kid-jobs-list li {
+  display: flex !important;
+  align-items: flex-start;
+  gap: 10px;
+  background: rgba(39, 32, 99, 0.6);
+  border: 1.5px solid #4b3f9e;
+  border-radius: 14px;
+  padding: 8px 12px !important;
+  font-size: 14.5px !important;
+  color: #f1edff !important;
+  line-height: 1.4;
+}
+.kid-jobs-list .step-num {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  background: var(--kid-orange);
+  color: #2b1300;
+  font-family: var(--kid-display);
+  font-weight: 700;
+  font-size: 12px;
+  border-radius: 50%;
+  box-shadow: 0 2px 0 #b84f12;
+}
+
+.kid-controls-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  background: rgba(18, 15, 46, 0.85);
+  border: 1px dashed #5a4cc0;
+  border-radius: 14px;
+  padding: 8px 12px;
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--kid-soft);
+}
+.kid-controls-bar kbd {
+  background: var(--kid-panel-2);
+  border: 1px solid var(--kid-violet);
+  border-radius: 6px;
+  padding: 2px 6px;
+  font-family: var(--kid-display);
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--kid-yellow);
+}
+
+/* Kid Educational Lesson Callout Box for Debrief */
+.kid-lesson-box {
+  background: linear-gradient(135deg, rgba(39, 32, 99, 0.95), rgba(27, 23, 68, 0.95));
+  border: 2px solid var(--kid-mint);
+  border-radius: 20px;
+  padding: 16px;
+  margin: 14px 0;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  text-align: left;
+}
+.kid-lesson-box .lesson-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--kid-mint);
+  color: #0f3a30;
+  font-family: var(--kid-display);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 999px;
+  margin-bottom: 8px;
+}
+.kid-lesson-box h3 {
+  font-family: var(--kid-display);
+  font-size: 20px;
+  color: #fff8ee;
+  margin: 0 0 8px 0;
+}
+.kid-lesson-box p {
+  font-size: 15px !important;
+  color: #e5e0ff !important;
+  line-height: 1.45;
+  margin: 6px 0 !important;
+}
+.kid-lesson-box .lesson-fact {
+  background: rgba(23, 89, 79, 0.35);
+  border-left: 4px solid var(--kid-mint);
+  border-radius: 10px;
+  padding: 8px 12px;
+  margin-top: 8px;
+}
+.kid-lesson-box .lesson-fact b {
+  color: var(--kid-mint);
+}
+
+/* Orbit opening roadmap overlay */
+#opening {
+  top: 8% !important;
+  max-height: 86vh !important;
+  overflow-y: auto !important;
+  width: 560px !important;
+  max-width: 90vw !important;
+  padding: 20px 24px !important;
+  background: rgba(18, 15, 46, 0.96) !important;
+  border: 2px solid var(--ui-line) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6) !important;
+  z-index: 10 !important;
+}
+#opening h1 {
+  font-size: clamp(32px, 5vw, 56px) !important;
+  margin: 8px 0 14px 0 !important;
+  letter-spacing: -1px !important;
+}
+#opening .kid-jobs-list {
+  margin: 10px 0 14px 0;
+}
+#opening .kid-controls-bar {
+  margin: 12px 0 16px 0;
+}
+#opening .opening-actions {
+  margin-top: 16px !important;
+}
+
+/* Docking alignment line and visual target */
+.dock-hud-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+}
+
+#dock-target-box {
+  position: absolute;
+  width: 68px;
+  height: 68px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 3;
+}
+
+#dock-target-box .dock-bracket {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border: 3px solid #4cc9ff;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+#dock-target-box .dock-bracket.tl { top: 0; left: 0; border-right: none; border-bottom: none; border-top-left-radius: 4px; }
+#dock-target-box .dock-bracket.tr { top: 0; right: 0; border-left: none; border-bottom: none; border-top-right-radius: 4px; }
+#dock-target-box .dock-bracket.bl { bottom: 0; left: 0; border-right: none; border-top: none; border-bottom-left-radius: 4px; }
+#dock-target-box .dock-bracket.br { bottom: 0; right: 0; border-left: none; border-top: none; border-bottom-right-radius: 4px; }
+
+#dock-target-box .dock-center-dot {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  background: #ffd23f;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 8px #ffd23f;
+  transition: background-color 0.15s, box-shadow 0.15s;
+}
+
+#dock-target-box #dock-target-text {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-family: var(--kid-display, sans-serif);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  color: #4cc9ff;
+  background: rgba(18, 15, 46, 0.9);
+  padding: 4px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(76, 201, 255, 0.4);
+  margin-top: 6px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+/* When aligned within tolerance */
+#dock-target-box.aligned .dock-bracket {
+  border-color: #3ee6b5;
+  box-shadow: 0 0 12px #3ee6b5;
+}
+#dock-target-box.aligned .dock-center-dot {
+  background: #3ee6b5;
+  box-shadow: 0 0 14px #3ee6b5;
+}
+#dock-target-box.aligned #dock-target-text {
+  color: #3ee6b5;
+  border-color: #3ee6b5;
+  box-shadow: 0 0 10px rgba(62, 230, 181, 0.3);
+}
+
+/* Center Docking Alignment Zone Border */
+#dock-center-zone {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 90px;
+  height: 90px;
+  transform: translate(-50%, -50%);
+  border: 2px dashed rgba(76, 201, 255, 0.55);
+  border-radius: 14px;
+  pointer-events: none;
+  z-index: 2;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+#dock-center-zone .dock-zone-label {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-family: var(--kid-display, sans-serif);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  color: rgba(76, 201, 255, 0.8);
+  margin-bottom: 4px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+#dock-center-zone.aligned {
+  border: 2px solid #3ee6b5;
+  box-shadow: 0 0 16px rgba(62, 230, 181, 0.4), inset 0 0 12px rgba(62, 230, 181, 0.2);
+}
+
+#dock-center-zone.aligned .dock-zone-label {
+  color: #3ee6b5;
+  text-shadow: 0 0 8px rgba(62, 230, 181, 0.6);
+}
+
+#dock-center-zone .dock-zone-steer {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-family: var(--kid-display, sans-serif);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  color: #ffd23f;
+  background: rgba(18, 15, 46, 0.94);
+  padding: 4px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 210, 63, 0.5);
+  margin-top: 6px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+#dock-center-zone.aligned .dock-zone-steer {
+  color: #3ee6b5;
+  border-color: rgba(62, 230, 181, 0.6);
+  box-shadow: 0 0 10px rgba(62, 230, 181, 0.3);
+}
+
+/* Cadet Flight Lesson HUD Card */
+.flight-lesson-card {
+  position: fixed;
+  top: 76px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 500px;
+  max-width: calc(100vw - 32px);
+  background: linear-gradient(180deg, rgba(29, 24, 80, 0.96), rgba(18, 15, 46, 0.96));
+  border: 2px solid var(--kid-sky);
+  border-top: 5px solid var(--kid-yellow);
+  border-radius: 20px;
+  padding: 14px 18px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.65), 0 0 24px rgba(76, 201, 255, 0.2);
+  z-index: 28;
+  color: var(--kid-ink);
+  pointer-events: auto;
+  backdrop-filter: blur(8px);
+  animation: kid-pop-in .3s ease-out;
+}
+.lesson-top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.lesson-badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 210, 63, 0.16);
+  border: 1px solid rgba(255, 210, 63, 0.45);
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  color: var(--kid-yellow);
+}
+.lesson-close-btn {
+  background: none;
+  border: none;
+  color: var(--kid-soft);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 2px 8px;
+  border-radius: 8px;
+  box-shadow: none;
+}
+.lesson-close-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: none;
+  translate: 0;
+}
+.lesson-content h3 {
+  margin: 0 0 4px;
+  font-size: 19px;
+  color: #fff;
+  letter-spacing: 0.02em;
+}
+.lesson-content p {
+  margin: 0 0 10px;
+  font-size: 14px;
+  color: var(--kid-soft);
+  line-height: 1.4;
+}
+.lesson-kbd {
+  display: inline-block;
+  background: #272063;
+  border: 1.5px solid var(--kid-sky);
+  border-radius: 6px;
+  padding: 2px 7px;
+  font-family: inherit;
+  font-weight: 800;
+  color: #fff;
+  box-shadow: 0 2px 0 rgba(0,0,0,0.4);
+}
+.lesson-interactive-area {
+  margin-bottom: 8px;
+}
+.lesson-prompt-action {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+.lesson-test-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(180deg, #373082, #231c5c);
+  border: 2px solid var(--kid-yellow);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 8px 18px;
+  border-radius: 14px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(255, 210, 63, 0.25);
+  animation: lesson-pulse 2s infinite ease-in-out;
+}
+@keyframes lesson-pulse {
+  0%, 100% { box-shadow: 0 4px 12px rgba(255, 210, 63, 0.25); border-color: var(--kid-yellow); }
+  50% { box-shadow: 0 4px 20px rgba(255, 210, 63, 0.6); border-color: #fff; }
+}
+.lesson-subhint {
+  font-size: 12px;
+  color: var(--kid-soft);
+  opacity: 0.85;
+}
+.lesson-ok-box {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  background: rgba(62, 230, 181, 0.16);
+  border: 1.5px solid var(--kid-mint);
+  border-radius: 14px;
+  padding: 8px 14px;
+  animation: kid-pop-in .25s cubic-bezier(.2, 1.4, .4, 1);
+}
+.lesson-ok-msg {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+.ok-badge {
+  background: var(--kid-mint);
+  color: #0b2e20;
+  font-weight: 800;
+  font-size: 13px;
+  padding: 3px 8px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+#lesson-ok-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: #e8fff8;
+  line-height: 1.3;
+}
+.lesson-next-btn {
+  font-size: 13px;
+  padding: 6px 14px;
+  flex-shrink: 0;
+}
+.lesson-dots {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.lesson-dots .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+  transition: all .2s;
+}
+.lesson-dots .dot.active {
+  background: var(--kid-yellow);
+  transform: scale(1.3);
+  box-shadow: 0 0 6px var(--kid-yellow);
+}
+.lesson-dots .dot.done {
+  background: var(--kid-mint);
+}
+@media (max-width: 900px) {
+  .flight-lesson-card {
+    top: auto;
+    bottom: 84px;
+    left: 16px;
+    right: 16px;
+    width: auto;
+    max-width: none;
+    transform: none;
+  }
+}
+
+
+
+
+
+

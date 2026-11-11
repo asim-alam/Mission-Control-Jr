@@ -26,10 +26,34 @@ function brief(ctx) {
   const note = legacy && !legacy.complete ? '<p class="mx-last">We found a game from the old version of this mission. Your journey map is kept, but this new mission starts from the beginning.</p>' : '';
   const sc = ctx.mission.scenario;
   ctx.dialog({label: 'MARS DAY 11 · ASTERIA ORBITER', title: 'Arrival at Mars', body: `${note}
+    <div class="kid-mission-intro">
+      <p>🛰️ <b>Welcome to Mars Orbit!</b> You have docked with the Asteria orbital station. Before descending to Meridian Base on the surface, restore station communications and prepare the lander!</p>
+    </div>
+    <div class="kid-section-title">🧰 What You Need This Level</div>
+    <div class="kid-supplies-grid">
+      <div class="kid-supply-pill"><span class="pill-icon">⚡</span><div class="pill-text"><b>Power Switches</b><span>Manage power bus between sunlight and Mars’ shadow</span></div></div>
+      <div class="kid-supply-pill"><span class="pill-icon">🟨</span><div class="pill-text"><b>Signal Tester</b><span>Pinpoints which radio component is broken</span></div></div>
+      <div class="kid-supply-pill"><span class="pill-icon">📶</span><div class="pill-text"><b>Spare Amplifier</b><span>Replaces burnt-out radio parts in the locker</span></div></div>
+      <div class="kid-supply-pill"><span class="pill-icon">🗺️</span><div class="pill-text"><b>Landing Planner</b><span>Selects the safest landing ellipse on Mars</span></div></div>
+    </div>
+    <div class="kid-section-title">📋 Your Jobs (Do in order)</div>
+    <ol class="kid-jobs-list">
+      <li><span class="step-num">1</span><b>Manage Power:</b> Switch off unneeded circuits before orbital shadow cut-off.</li>
+      <li><span class="step-num">2</span><b>Diagnose Radio:</b> Grab the tester or look closely to find the broken component.</li>
+      <li><span class="step-num">3</span><b>Safely Repair:</b> Switch off power first (no zaps!), then fix or swap the part.</li>
+      <li><span class="step-num">4</span><b>Pick Landing Site:</b> Check the surface beacon and lander hazard camera.</li>
+      <li><span class="step-num">5</span><b>Board the Lander:</b> Pack gear, check hatch seals, and fly down to Meridian Base!</li>
+    </ol>
+    <div class="kid-controls-bar">
+      <span>🎮 <b>Controls:</b></span>
+      <span><kbd>WASD</kbd> Walk</span>
+      <span><kbd>Mouse</kbd> Look</span>
+      <span><kbd>E</kbd> Interact with racks &amp; consoles</span>
+      <span>Walk buttons guide you directly to each station!</span>
+    </div>
     <p><b>Elena:</b> “Welcome to Mars! Look out of the window. Before we fly down to Meridian Base, we have two problems.”</p>
     <p>📻 <b>The radio is quiet.</b> The base cannot hear us. Its radio beacon helps the lander find the right spot, so we want it working.</p>
     <p>⚡ <b>Power is tight.</b> The solar wings make <b>${sc.power.sun} power units</b> in sunlight. When we fly through <b>Mars’ shadow</b>, there are only <b>${sc.power.shadow}</b>.</p>
-    <ul class="mx-howto"><li>⚡ Use the <b>power panel</b> switches. Go over the limit and the breaker trips.</li><li>🔍 Find the broken radio part: <b>test</b>, use the <b>tester</b>, or <b>look closely</b>.</li><li>🗺️ Pick a landing site at the <b>planner table</b>, then get in at the <b>hatch</b>.</li></ul>
     <aside class="mx-detail"><b>More details</b><br>Always switch off the power to a part before you touch it. If you forget, the breaker trips to keep you safe, and you can reset it.</aside>`,
     actions: [{label: '▶ Let’s go!', primary: true, run: () => { ctx.act({id: 'begin'}, {quiet: true}); ctx.saveCheckpoint(); ctx.close(); }}, {label: 'Is this real?', run: () => ctx.sourcesDialog(() => brief(ctx))}]});
 }
@@ -143,6 +167,15 @@ function debrief(ctx) {
     {label: 'Pass', values: history.map(h => h.pass), better: 'low'}]) : '<p class="mx-last">Play again with a different plan to compare results here.</p>';
   ctx.dialog({label: 'MISSION REPORT · ARRIVAL AT MARS', title, body: `${story}
     ${r.completed ? `<p>${site.icon} <b>${site.label}</b> · 🚙 <b>${L.distanceKm} km</b> from the base · 📻 Radio: <b>${r.comms ? 'fixed' : 'broken'}</b> · 🔋 Lander: <b>${r.charge}%</b> · 🕐 Pass <b>${r.passIndex + 1}</b>${r.trips ? ` · ⚡ Breaker trips: <b>${r.trips}</b>` : ''}${r.coldMinutes ? ` · 🥶 Cold: <b>${r.coldMinutes} min</b>` : ''}</p>` : ''}
+    <div class="kid-lesson-box">
+      <span class="lesson-badge">🎓 Space Science Lesson</span>
+      <h3>What We Learned in Mars Orbit</h3>
+      <p><b>🌟 The Big Space Idea:</b> Every spacecraft orbiting a planet passes through darkness on every lap. When solar panels enter the planet's shadow, battery power and heat become critical!</p>
+      <div class="lesson-fact">
+        <b>🚀 Real NASA Science:</b> NASA orbiters like the Mars Reconnaissance Orbiter (MRO) use solar arrays in sunlight and switch seamlessly to rechargeable nickel-hydrogen batteries while passing behind Mars. They also relay radio communications between surface rovers and Earth!
+      </div>
+      <p><b>💡 Your Astronaut Skill:</b> Always isolate electrical circuits before touching hardware to prevent accidental shorts and breaker trips.</p>
+    </div>
     <p class="mx-tip">💡 ${tip}</p>${compare}
     <aside class="mx-detail"><b>More details</b><br>The broken part was the <b>${partLabel(ctx.mission, r.fault)}</b>. ${r.usedTester ? 'You found it with the tester.' : r.inspected ? 'You found it by looking closely.' : 'You found it by trying fixes.'} Next, the base gets ready for a dust storm. ${r.comms ? 'Because the radio works, the base heard about the storm early.' : ''}</aside>`,
     actions: [

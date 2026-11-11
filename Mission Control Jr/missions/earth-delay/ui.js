@@ -20,9 +20,33 @@ function sources(ctx) {
 function brief(ctx) {
   const sc = ctx.mission.scenario, carry = ctx.mission.carryL;
   ctx.dialog({label: `MARS DAY ${sc.sol} · ALARM!`, title: 'The water machine broke!', body: `
+    <div class="kid-mission-intro">
+      <p>🚨 <b>Water Recycler Offline!</b> The habitat water machine stopped working. You have <b>${ctx.mission.waterL.toFixed(0)} litres</b> of reserve water left${carry ? ` (plus ${carry.toFixed(0)} L saved in the greenhouse)` : ''}. Earth is far away—radio signals take <b>${(sc.oneWaySeconds / 60).toFixed(0)} minutes</b> each way!</p>
+    </div>
+    <div class="kid-section-title">🧰 What You Need This Level</div>
+    <div class="kid-supplies-grid">
+      <div class="kid-supply-pill"><span class="pill-icon">📡</span><div class="pill-text"><b>Earth Link Console</b><span>Transmit diagnostic readings across deep space</span></div></div>
+      <div class="kid-supply-pill"><span class="pill-icon">🧪</span><div class="pill-text"><b>Multimeter Tester</b><span>Test pump, valve &amp; filter voltages to isolate faults</span></div></div>
+      <div class="kid-supply-pill"><span class="pill-icon">🔧</span><div class="pill-text"><b>Spare Parts Locker</b><span>1 spare pump, 1 spare valve, and replacement filters</span></div></div>
+      <div class="kid-supply-pill"><span class="pill-icon">🚿</span><div class="pill-text"><b>Save-Water Lever</b><span>Cut daily water usage in half while troubleshooting</span></div></div>
+    </div>
+    <div class="kid-section-title">📋 Your Jobs (Do in order)</div>
+    <ol class="kid-jobs-list">
+      <li><span class="step-num">1</span><b>Turn on Save-Water Mode:</b> Flip the water conservation lever so supplies last longer.</li>
+      <li><span class="step-num">2</span><b>Choose Strategy:</b> Decide whether to ask Earth, test yourself, or do both together.</li>
+      <li><span class="step-num">3</span><b>Power OFF Before Repair:</b> Always switch off the electrical breaker before opening the panel!</li>
+      <li><span class="step-num">4</span><b>Test &amp; Replace:</b> Use the multimeter to find the broken component, then swap in the spare.</li>
+      <li><span class="step-num">5</span><b>Restore Flow &amp; Report:</b> Turn power on, verify clean water flow, and notify Earth!</li>
+    </ol>
+    <div class="kid-controls-bar">
+      <span>🎮 <b>Controls:</b></span>
+      <span><kbd>WASD</kbd> Walk</span>
+      <span><kbd>Mouse</kbd> Look</span>
+      <span><kbd>E</kbd> Test &amp; Swap parts</span>
+      <span>Walk buttons guide you directly to each machine!</span>
+    </div>
     <p><b>Luca:</b> “Our water recycler just stopped! It cleans all our water. We have <b>${ctx.mission.waterL.toFixed(0)} litres</b> left${carry ? `, including ${carry.toFixed(0)} L saved in the greenhouse tank` : ''}.”</p>
     <p><b>Elena:</b> “We can ask the experts on Earth. But Earth is far away. A message takes <b>${(sc.oneWaySeconds / 60).toFixed(0)} minutes</b> to get there, even at the speed of light, and the answer takes just as long to come back.”</p>
-    <ul class="mx-howto"><li>📡 Send a message at the <b>Earth link</b>.</li><li>🔌 Turn the power <b>off</b> before you open the machine.</li><li>🧪 Test parts with the <b>multimeter</b>. Swap broken ones for spares.</li><li>🚿 Flip <b>save-water mode</b> to make the water last.</li></ul>
     <aside class="mx-detail"><b>More details</b><br>Time runs ${sc.timeScale}× faster here: one real second is ${sc.timeScale} mission seconds. The crew uses ${sc.waterUseLPerMin} L of water a minute, or ${sc.saveUseLPerMin} L in save mode.</aside>`,
     actions: [{label: '▶ Let’s fix it!', primary: true, run: () => { ctx.act({id: 'begin'}, {quiet: true}); planBoard(ctx); }}, {label: 'Is this real?', run: () => ctx.sourcesDialog(() => brief(ctx))}]});
 }
@@ -72,6 +96,15 @@ function debrief(ctx) {
     {label: 'Spares wasted', values: history.map(h => h.wasted), better: 'low'}]) : '<p class="mx-last">Play again with a different plan to compare results here.</p>';
   ctx.dialog({label: 'MISSION REPORT · MESSAGE TO EARTH', title, body: `
     ${r.completed ? `<p>${broke}</p><p>💧 Water left: <b>${r.waterLeftL} L</b> · ⏱ <b>${r.minutes}</b> mission minutes · 🔧 Spares used: <b>${r.sparesUsed}</b>${r.sparesWasted ? ` (${r.sparesWasted} not needed)` : ''} · 📡 Asked Earth: <b>${r.askedEarth ? 'yes' : 'no'}</b></p>` : ''}
+    <div class="kid-lesson-box">
+      <span class="lesson-badge">🎓 Space Science Lesson</span>
+      <h3>What We Learned About Deep Space Communication</h3>
+      <p><b>🌟 The Big Space Idea:</b> Even radio waves traveling at light speed (~300,000 km/s) take many minutes to cross interplanetary space!</p>
+      <div class="lesson-fact">
+        <b>🚀 Real NASA Science:</b> Today's light-travel time was calculated directly from NASA JPL's Horizons ephemeris system. Depending on planetary positions, one-way delays between Earth and Mars range between 4 and 24 minutes. That is why Mars astronauts must be trained to diagnose and fix mechanical problems independently!
+      </div>
+      <p><b>💡 Your Astronaut Skill:</b> When communication with Earth is delayed, careful multimeter testing and conservation buy you the precious time needed to succeed.</p>
+    </div>
     <p class="mx-tip">💡 ${tip}</p>${compare}
     <aside class="mx-detail"><b>More details</b><br>On the Moon, a message to Earth takes about one second. On Mars it takes many minutes, so Mars crews must be ready to solve problems on their own.</aside>`,
     actions: [
