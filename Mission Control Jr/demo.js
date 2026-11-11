@@ -266,7 +266,33 @@ function startMission() {
   renderView();renderNavigation();renderMission();renderInteraction(true);updateVisuals();
   if(sampleMode){showDialog('Practice: the big choice',`<p>The panels and battery are already fixed here. Walk to the computer. Choose: extra air or the experiment? Then bring the crew inside.</p><p>WASD or arrows to walk. Drag to look. E to use things. Practice does not change your journey.</p>`,[{label:'Start practice',run:closeDialog}],'PRACTICE');return;}
   audio.say('intro');
-  showDialog('A dust storm is coming!',`<p>You are <strong>Jin</strong>, the base fixer. Four friends live here at Meridian on Mars. A giant dust storm is on its way. Help keep everyone safe!</p><p><strong>Your jobs:</strong> check the computer, clean the solar panels, get the spare battery, and fix the power.</p><p><strong>WASD or arrows:</strong> walk. <strong>Drag:</strong> look around. <strong>E:</strong> use things. <strong>V:</strong> change the camera. The buttons can walk you to each place.</p><p>The storm clock starts after you check the computer. It stops while you read menus. Pip the robot will help you.</p>`,[{label:'Let’s go!',run:closeDialog}], 'MARS DAY 12');
+  showDialog('A dust storm is coming!',`
+    <div class="kid-mission-intro">
+      <p>🚨 <b>Emergency at Meridian Base!</b> You are <b>Jin</b>, the base engineer. A giant Mars dust storm is blowing in fast. Four crewmates live here. Get all systems ready, allocate reserves, and bring everyone safely inside before the storm hits!</p>
+    </div>
+    <div class="kid-section-title">🧰 What You Need This Level</div>
+    <div class="kid-supplies-grid">
+      <div class="kid-supply-pill"><span class="pill-icon">🧹</span><div class="pill-text"><b>Dust Brush</b><span>Cleans 3 solar collectors so panels catch sunlight</span></div></div>
+      <div class="kid-supply-pill"><span class="pill-icon">🔋</span><div class="pill-text"><b>Rover Battery</b><span>Pull the spare battery from the rover bay</span></div></div>
+      <div class="kid-supply-pill"><span class="pill-icon">🔌</span><div class="pill-text"><b>Power Hub</b><span>Turn connectors to line up the circuits</span></div></div>
+      <div class="kid-supply-pill"><span class="pill-icon">🏠</span><div class="pill-text"><b>Habitat Airlock</b><span>Seal the door and send your status report</span></div></div>
+    </div>
+    <div class="kid-section-title">📋 Your Jobs (Do in order)</div>
+    <ol class="kid-jobs-list">
+      <li><span class="step-num">1</span><b>Check Diagnostics:</b> Walk to the base computer to inspect what's broken and start the countdown.</li>
+      <li><span class="step-num">2</span><b>Clean 3 Solar Panels:</b> Stand near each panel and brush away Martian dust.</li>
+      <li><span class="step-num">3</span><b>Install Spare Battery:</b> Open the rover bay, take the battery, and slot it into the junction.</li>
+      <li><span class="step-num">4</span><b>Connect Power:</b> Rotate the junction connectors (1 / 2 / 3) to link the power grid.</li>
+      <li><span class="step-num">5</span><b>Choose Reserves &amp; Shelter:</b> Pick Extra Air or Science, then get inside and seal the airlock!</li>
+    </ol>
+    <div class="kid-controls-bar">
+      <span>🎮 <b>Controls:</b></span>
+      <span><kbd>WASD</kbd> or Arrows to walk</span>
+      <span><kbd>Drag</kbd> to look around</span>
+      <span><kbd>E</kbd> or Click to use</span>
+      <span><kbd>V</kbd> change camera</span>
+      <span>Location buttons walk you automatically!</span>
+    </div>`,[{label:'Let’s go!',run:closeDialog}], 'MARS DAY 12');
 }
 function showEnding() {
   if(endingShown)return;endingShown=true;job=null;toolObject.visible=false;player.release();audio.say(mission.outcome,true);
@@ -281,7 +307,16 @@ function showEnding() {
     <div class="report-row"><span>Battery and power</span><b>${mission.repaired?'Working':'Not finished'}</b></div>
     <div class="report-row"><span>Your choice</span><b>${mission.allocation==='life'?'Extra air':mission.allocation==='research'?'Science':'Not chosen'}</b></div>
     <div class="report-row"><span>Door</span><b>${mission.sealed?'Closed tight':'Not closed'}</b></div>
-    <section class="learning-summary"><h3>What you chose → what happened</h3><p><b>You chose:</b> ${mission.allocation==='life'?'extra air.':mission.allocation==='research'?`science. The experiment wrote ${Math.round(mission.experimentData)} new notes.`:'nothing yet.'}</p><p><b>The machines:</b> you cleaned ${mission.cleaned.filter(Boolean).length} of 3 panels. ${detailsMode?`Power ${Math.round(mission.resources.power)}%. Air ${Math.round(mission.resources.oxygen)}%.`:'Less sunlight means less power to share.'}</p><p><b>The crew:</b> ${prepared?'everyone has lots of spare air.':evacuated?'everyone left to stay safe.':'everyone is safe, but spare air is low.'}</p><p><b>Next mission:</b> ${prepared?'the rover starts fully charged.':'the rover starts with less charge.'}</p></section><p><strong>Try it again?</strong> Extra air keeps people safer. Science saves the experiment. What would you pick next time?</p><p><strong>This really happened!</strong> In June 2018, a huge dust storm covered all of Mars. NASA’s rover Opportunity used sunlight for power. In one week its power fell from 645 to just 22 watt-hours. That is like going from a bright day to a dark night. The storm in this game follows Opportunity’s real power drop. <a href="https://www.jpl.nasa.gov/news/nasa-mars-rovers-braving-severe-dust-storms/" target="_blank" rel="noopener">Read about it at NASA/JPL</a></p>`,[
+    <section class="learning-summary"><h3>What you chose → what happened</h3><p><b>You chose:</b> ${mission.allocation==='life'?'extra air.':mission.allocation==='research'?`science. The experiment wrote ${Math.round(mission.experimentData)} new notes.`:'nothing yet.'}</p><p><b>The machines:</b> you cleaned ${mission.cleaned.filter(Boolean).length} of 3 panels. ${detailsMode?`Power ${Math.round(mission.resources.power)}%. Air ${Math.round(mission.resources.oxygen)}%.`:'Less sunlight means less power to share.'}</p><p><b>The crew:</b> ${prepared?'everyone has lots of spare air.':evacuated?'everyone left to stay safe.':'everyone is safe, but spare air is low.'}</p><p><b>Next mission:</b> ${prepared?'the rover starts fully charged.':'the rover starts with less charge.'}</p></section>
+    <div class="kid-lesson-box">
+      <span class="lesson-badge">🎓 Space Science Lesson</span>
+      <h3>What We Learned on Mars</h3>
+      <p><b>🌟 The Big Space Idea:</b> Martian dust storms can grow to encircle the entire planet, blocking out over 95% of sunlight! When solar power drops, life support needs strong battery backups.</p>
+      <div class="lesson-fact">
+        <b>🚀 Real NASA Science:</b> In June 2018, NASA’s Opportunity rover was caught in a global Martian dust storm. Its solar panel power dropped from 645 watt-hours to only 22 watt-hours in just one week—just like the power drop you managed today! NASA engineers study this data to design reliable nuclear and battery reserves for future human missions. <a href="https://www.jpl.nasa.gov/news/nasa-mars-rovers-braving-severe-dust-storms/" target="_blank" rel="noopener">Read at NASA/JPL</a>
+      </div>
+      <p><b>💡 Your Astronaut Skill:</b> When unexpected storms strike in space, teamwork and prioritizing life support first is what keeps everyone alive!</p>
+    </div>`,[
     {label:`Next mission · ${evacuated?'Rover rescue drive':'Tracks in the Dust'}`,run:()=>goToChapter('rover')},
     {label:'Play again',run:startMission},{label:'30-day Mars base game',run:()=>goToChapter('extended')},
     {label:'Back to the mission map',run:openJourney}

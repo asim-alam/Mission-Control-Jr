@@ -52,10 +52,34 @@ function brief(ctx) {
 }
 function alertCard(ctx) {
   ctx.dialog({label: 'SPACE WEATHER ALERT · TO ALL CREW', title: 'Particle warning', body: `
+    <div class="kid-mission-intro">
+      <p>☀️⚡ <b>Solar Radiation Alert!</b> High-energy particles from a Sun eruption are headed toward Mars. Protect all 5 crew members in the habitat refuge before the storm arrives!</p>
+    </div>
+    <div class="kid-section-title">🧰 What You Need This Level</div>
+    <div class="kid-supplies-grid">
+      <div class="kid-supply-pill"><span class="pill-icon">💧</span><div class="pill-text"><b>Water Bag Modules</b><span>Water is rich in hydrogen, the best shield against radiation</span></div></div>
+      <div class="kid-supply-pill"><span class="pill-icon">🛡️</span><div class="pill-text"><b>Poly Shield Panels</b><span>Dense plastic panels absorb fast-moving cosmic rays</span></div></div>
+      <div class="kid-supply-pill"><span class="pill-icon">🧳</span><div class="pill-text"><b>Supply Bags</b><span>Stacked cargo blocks secondary particle scatter</span></div></div>
+      <div class="kid-supply-pill"><span class="pill-icon">📊</span><div class="pill-text"><b>Exposure Dosimeter</b><span>Monitors radiation doses for all crew members</span></div></div>
+    </div>
+    <div class="kid-section-title">📋 Your Jobs (Do in order)</div>
+    <ol class="kid-jobs-list">
+      <li><span class="step-num">1</span><b>Open Refuge Tablet:</b> Check your blueprint and available work minutes.</li>
+      <li><span class="step-num">2</span><b>Reinforce Outer Walls:</b> Mount water modules and poly panels where exposure is highest.</li>
+      <li><span class="step-num">3</span><b>Keep Clearances Open:</b> Never block the refuge entrance door, air vent, or drinking water tap!</li>
+      <li><span class="step-num">4</span><b>Seat the Crew:</b> Place astronauts in the deepest, most protected center seats.</li>
+      <li><span class="step-num">5</span><b>Wait Out the Event:</b> Monitor dose rates until particle radiation returns to safe baseline.</li>
+    </ol>
+    <div class="kid-controls-bar">
+      <span>🎮 <b>Controls:</b></span>
+      <span><kbd>WASD</kbd> Walk</span>
+      <span><kbd>E</kbd> or Click: Pick up / Place</span>
+      <span>Hold <kbd>E</kbd> for heavy builds</span>
+      <span><kbd>Q</kbd> Drop item</span>
+    </div>
     <p><b>Elena (to everyone):</b> “Listen up, all four of you. Earth’s forecasters saw a big eruption on the Sun. It <i>might</i> send a burst of energetic particles our way.”</p>
     <p><b>Elena:</b> “${ctx.mission.scenario.forecastText} Our refuge is only half ready. Let’s make it stronger.”</p>
-    <p class="sx-goal">🎯 <b>Your goal:</b> protect all five of us with the supplies and time we have.</p>
-    <ul class="mx-howto"><li>📋 Start with the refuge map on the console.</li><li>👀 Look at a thing and press <b>E</b> (or click it). Hold <b>E</b> for longer jobs.</li><li>↩️ <b>Q</b> puts down what you carry.</li><li>⏱ Every job takes work minutes. Walking is free.</li></ul>`,
+    <p class="sx-goal">🎯 <b>Your goal:</b> protect all five of us with the supplies and time we have.</p>`,
     actions: [{label: '▶ Let’s get to work', primary: true, run: () => { ctx.act({id: 'begin'}, {quiet: true}); ctx.saveCheckpoint(); ctx.close(); }}, {label: '☀️ Replay the explainer', run: () => explainer(ctx)}]});
 }
 
@@ -166,6 +190,15 @@ function debrief(ctx) {
     {label: 'Work minutes', values: history.map(h => h.minutes ?? 0), better: 'low'}]) : '<p class="mx-last">Try changing one thing to compare layouts here.</p>';
   ctx.dialog({label: 'MISSION REPORT · A PLACE TO HIDE', title, body: `${bars(m)}
     <p>Together you avoided about <b>${Math.round(r.reduction * 100)}%</b> of the exposure you would have had in the plain habitat.</p>
+    <div class="kid-lesson-box">
+      <span class="lesson-badge">🎓 Space Science Lesson</span>
+      <h3>What We Learned About Space Radiation</h3>
+      <p><b>🌟 The Big Space Idea:</b> High-energy solar particles are invisible and zip right through thin metal, but materials packed with light hydrogen atoms (like water, food, and polyethylene plastic) slow them down!</p>
+      <div class="lesson-fact">
+        <b>🚀 Real NASA Science:</b> In real space missions to the Moon and Mars, NASA designs "storm shelters" surrounded by the crew's drinking water tanks and pantry bags. Water and plastic absorb particle radiation without needing thousands of pounds of heavy lead shielding!
+      </div>
+      <p><b>💡 Your Astronaut Skill:</b> A good shelter protects everyone while keeping emergency doors, vents, and water taps completely accessible.</p>
+    </div>
     <p>✅ <b>What helped most:</b> ${helped}.</p>
     <p>🔎 <b>What stayed weaker:</b> ${NAMES[ex.worst]} collected the most. In ${m.scenario.seats[ex.seat].label} the most still came through the <b>${ex.weakest.label.toLowerCase()}</b>.</p>
     ${notes.map(n => `<p class="mx-tip">💡 ${n}</p>`).join('')}${compare}

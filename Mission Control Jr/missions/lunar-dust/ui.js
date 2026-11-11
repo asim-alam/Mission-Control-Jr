@@ -20,9 +20,33 @@ function sources(ctx) {
 function brief(ctx) {
   const sc = ctx.mission.scenario;
   ctx.dialog({label: 'MOON · HORIZON BASE AIRLOCK', title: 'Dust Busters', body: `
+    <div class="kid-mission-intro">
+      <p>🪖 <b>Moonwalk Complete!</b> But look at your suits—they are covered in abrasive lunar dust! Moon dust is sharp like shattered glass. Clean all equipment in the airlock before opening the habitat door!</p>
+    </div>
+    <div class="kid-section-title">🧰 What You Need This Level</div>
+    <div class="kid-supplies-grid">
+      <div class="kid-supply-pill"><span class="pill-icon">🧹</span><div class="pill-text"><b>Suit Brush</b><span>Removes thick dust from boots and suits (zero power, creates airborne dust)</span></div></div>
+      <div class="kid-supply-pill"><span class="pill-icon">🌀</span><div class="pill-text"><b>Airlock Vacuum</b><span>Suction cleaning for suit folds and supply bags (uses moderate power)</span></div></div>
+      <div class="kid-supply-pill"><span class="pill-icon">⚡</span><div class="pill-text"><b>EDS Shield Plate</b><span>Electrodynamic shield cleans smooth helmet visors without scratching</span></div></div>
+      <div class="kid-supply-pill"><span class="pill-icon">🌬️</span><div class="pill-text"><b>Air Scrubber &amp; Filters</b><span>Pumps airborne dust through replaceable filter cartridges</span></div></div>
+    </div>
+    <div class="kid-section-title">📋 Your Jobs (Do in order)</div>
+    <ol class="kid-jobs-list">
+      <li><span class="step-num">1</span><b>Seal Outer Hatch:</b> Close the airlock door and pressurize with cabin air.</li>
+      <li><span class="step-num">2</span><b>Clean Visors with EDS:</b> Use the electrodynamic plate so the helmet visor doesn't scratch.</li>
+      <li><span class="step-num">3</span><b>Clean Suit, Boots &amp; Bag:</b> Brush or vacuum all clinging dust off external gear.</li>
+      <li><span class="step-num">4</span><b>Run the Air Scrubber:</b> Filter dusty air; swap the filter cartridge if it fills up.</li>
+      <li><span class="step-num">5</span><b>Enter Habitat When Safe:</b> Open the inner hatch only after the airlock screen shows GREEN!</li>
+    </ol>
+    <div class="kid-controls-bar">
+      <span>🎮 <b>Controls:</b></span>
+      <span><kbd>WASD</kbd> Walk</span>
+      <span><kbd>Mouse</kbd> Look</span>
+      <span><kbd>E</kbd> Pick up &amp; Use cleaning tools</span>
+      <span>Monitor power units and filter status!</span>
+    </div>
     <p><b>Amara:</b> “What a moonwalk! But look at us. We are covered in Moon dust.”</p>
     <p><b>Luca (on the radio):</b> “Don’t bring that dust inside! It is sharp like tiny bits of glass. It scratches things and makes people cough. Clean everything in the airlock first.”</p>
-    <ul class="mx-howto"><li>🚪 Shut the <b>outside hatch</b> and fill the airlock with air.</li><li>🧹 Clean the <b>suit, helmet, bag and boots</b>: brush, vacuum or the EDS plate.</li><li>🌬️ Press the green button to <b>clean the air</b>. Swap the filter when it is full.</li><li>✅ Open the <b>inside hatch</b> only when the screen says it is safe.</li></ul>
     <aside class="mx-detail"><b>More details</b><br>You have ${sc.powerUnits} power units and ${sc.spareFilters} spare filter${sc.spareFilters === 1 ? '' : 's'}. The vacuum uses ${sc.tools.vacuum.power} power each time, the EDS ${sc.tools.eds.power}, the air fan ${sc.scrub.power}.</aside>`,
     actions: [{label: '▶ Let’s bust some dust!', primary: true, run: () => { ctx.act({id: 'begin'}, {quiet: true}); planBoard(ctx); }}, {label: 'Is this real?', run: () => ctx.sourcesDialog(() => brief(ctx))}]});
 }
@@ -58,6 +82,15 @@ function debrief(ctx) {
   ctx.dialog({label: 'MISSION REPORT · DUST BUSTERS', title, body: `
     ${r.completed ? `<p>⏱ <b>${r.minutes}</b> min · ⚡ Power left: <b>${r.powerLeft}</b> · 🌬️ Filters swapped: <b>${r.filters}</b> · 🧹 ${r.uses.brush} brush · 🌀 ${r.uses.vacuum} vacuum · ⚡ ${r.uses.eds} EDS</p>
       <p>🏠 Dust that got into the base: <b>${r.baseDust}</b>${r.leaks ? ` (the inside hatch opened too early ${r.leaks} time${r.leaks > 1 ? 's' : ''})` : ''} · 🪖 Visor: <b>${r.scratched ? 'scratched' : 'shiny'}</b></p>` : ''}
+    <div class="kid-lesson-box">
+      <span class="lesson-badge">🎓 Space Science Lesson</span>
+      <h3>What We Learned About Moon Dust</h3>
+      <p><b>🌟 The Big Space Idea:</b> Because there is no wind or water erosion on the Moon, lunar dust particles are razor-sharp rock shards that cling to everything with static electricity!</p>
+      <div class="lesson-fact">
+        <b>🚀 Real NASA Science:</b> In 2025, NASA flew the Electrodynamic Dust Shield (EDS) to the Moon aboard the Blue Ghost lander. EDS uses invisible electric fields across glass surfaces to push dust particles off camera lenses and solar panels without touching or scratching them!
+      </div>
+      <p><b>💡 Your Astronaut Skill:</b> Brushing a visor scratches the glass; high-tech electric fields and suction keep delicate astronaut optics pristine.</p>
+    </div>
     <p class="mx-tip">💡 ${tip}</p>${compare}
     <aside class="mx-detail"><b>More details</b><br>Apollo astronauts found Moon dust on everything after their moonwalks. Future Artemis bases will need airlocks, filters and new tools like the EDS to keep it out.</aside>`,
     actions: [
