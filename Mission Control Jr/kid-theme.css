@@ -64,7 +64,13 @@ button.primary:active:not(:disabled) { box-shadow: 0 1px 0 #b84f12; }
   box-shadow: 0 18px 50px rgb(0 0 0 / 50%), inset 0 1px 0 rgb(255 255 255 / 8%) !important;
   animation: kid-pop-in .35s cubic-bezier(.2, 1.4, .4, 1);
 }
-#dialog.ui-scrim, #modal.ui-scrim, #transition.ui-scrim { background: rgb(14 10 40 / 86%) !important; }
+#modal.ui-scrim, #dialog.ui-scrim, #transition.ui-scrim { background: rgb(14 10 40 / 86%) !important; }
+#modal .ui-card {
+  max-height: 88vh !important;
+  overflow-y: auto !important;
+  width: 580px !important;
+  max-width: 92vw !important;
+}
 .ui-card .eyebrow { font-family: var(--kid-display) !important; font-weight: 600; letter-spacing: .08em; color: var(--kid-yellow) !important; }
 .ui-card h2 { font-family: var(--kid-display); font-weight: 600; font-size: 32px; }
 .ui-card p { color: var(--kid-soft) !important; font-size: 17px; }
