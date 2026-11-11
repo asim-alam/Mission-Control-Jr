@@ -79,72 +79,260 @@ function showDockingBriefing(){
     'FLIGHT BRIEFING · DOCKING AT ASTERIA'
   );
 }
+
+const DOCKING_TEACHER_SLIDES = [
+  {
+    topic: 'LESSON 1: ADJUST & AIM',
+    icon: '🎯',
+    title: 'Rule 1: Bullseye Aiming!',
+    summary: 'In zero gravity, even a millimeter bump pushes the station away. Docking clamps ONLY seal when aimed dead-center!',
+    quote: '“If you are off by even a tiny millimeter, the clamps won’t catch! You aimed dead-center like a true astronaut!”',
+    fact: '🚀 <b>Real NASA Fact:</b> Real Apollo and ISS spacecraft use optical crosshairs just like you did!',
+    speech: 'Rule number one: Adjust your aim! In space, if you are off by even a tiny millimeter, the docking clamps will miss and push Asteria away! That is why you aimed dead center like a real astronaut!'
+  },
+  {
+    topic: 'LESSON 2: SLOW SPEED (< 0.2 m/s)',
+    icon: '🛑',
+    title: 'Rule 2: Space Has Zero Air!',
+    summary: 'On Earth, air stops a rolling ball. In outer space, there is NO air—you float forever until you hit the brake!',
+    quote: '“Zero air friction means no natural brakes! You must tap Space to slow down below 0.2 meters per second.”',
+    fact: '🚀 <b>Real NASA Fact:</b> Real astronauts dock at only 0.15 m/s so the clamps latch without bouncing!',
+    speech: 'Rule number two: Slow speed! On Earth, air stops a rolling ball. But in outer space, there is zero air! You float forever until you tap the brake to slow under zero point two meters per second!'
+  },
+  {
+    topic: 'LESSON 3: SOUND IN SPACE',
+    icon: '🤫',
+    title: 'Secret: Outer Space is Silent!',
+    summary: 'Sound waves need air molecules to travel into your ears. In the vacuum of outer space, it is totally silent!',
+    quote: '“Movies show loud space explosions, but real outer space is totally quiet because sound needs air to travel!”',
+    fact: '🚀 <b>Real NASA Fact:</b> Astronauts talk through radio headsets because radio waves travel through vacuum, but sound cannot!',
+    speech: 'Here is a secret: outer space is totally silent! Sound waves need air to travel to your ears. Outside our spaceship hull, there is no air, so there is zero sound!'
+  },
+  {
+    topic: 'GRADUATION: YOU DID IT!',
+    icon: '🏆',
+    title: 'Certified Space Cadet!',
+    summary: 'You flew at 12,000 km/h around Mars and touched down as gently as a butterfly. Ready to enter Asteria!',
+    quote: '“Hatch clamps are locked and pressure is equalized. Open the hatch and let’s repair the station!”',
+    fact: '🚀 <b>Mission Status:</b> Docking clamps sealed tight! Atmosphere equalized.',
+    speech: 'Congratulations, Cadet! You flew at twelve thousand kilometers per hour around Mars and touched down as gently as a feather. The hatch is locked and pressurized. Open the hatch and enter Asteria Station!'
+  }
+];
+
+const TEACHER_SVG = `
+<svg class="teacher-svg" viewBox="0 0 160 190" aria-label="Cartoon Teacher Professor Pip">
+  <defs>
+    <radialGradient id="teacherHelmetGrad" cx="40%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#7bf5d0"/>
+      <stop offset="40%" stop-color="#2ba882"/>
+      <stop offset="90%" stop-color="#144d3b"/>
+      <stop offset="100%" stop-color="#0a2a20"/>
+    </radialGradient>
+    <linearGradient id="teacherVisorShine" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.6"/>
+      <stop offset="60%" stop-color="#ffffff" stop-opacity="0.05"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <text x="18" y="32" font-size="12" fill="#ffd23f" opacity="0.8">✦</text>
+  <text x="136" y="110" font-size="10" fill="#3ee6b5" opacity="0.7">★</text>
+  <text x="24" y="155" font-size="8" fill="#ffd23f" opacity="0.6">✦</text>
+
+  <path d="M 42 126 C 42 115 118 115 118 126 L 130 186 C 130 192 30 192 30 186 Z" fill="#241d5b" stroke="#3ee6b5" stroke-width="2.5"/>
+  <rect x="60" y="132" width="40" height="42" rx="8" fill="#141038" stroke="#ffd23f" stroke-width="1.5"/>
+  <circle cx="80" cy="144" r="7" fill="#3ee6b5"/>
+  <polygon points="80,139 82,143 86,143 83,146 84,150 80,147 76,150 77,146 74,143 78,143" fill="#ffd23f"/>
+
+  <g class="teacher-wave-hand">
+    <path d="M 40 138 C 26 130 12 118 16 108 C 20 98 32 108 36 120 Z" fill="#2a2468" stroke="#3ee6b5" stroke-width="2"/>
+    <circle cx="16" cy="106" r="10" fill="#ffffff" stroke="#241d5b" stroke-width="2"/>
+    <ellipse cx="14" cy="98" rx="3.5" ry="5" fill="#ffffff" stroke="#241d5b" stroke-width="1.5" transform="rotate(-15 14 98)"/>
+    <ellipse cx="20" cy="100" rx="3.5" ry="5" fill="#ffffff" stroke="#241d5b" stroke-width="1.5" transform="rotate(10 20 100)"/>
+  </g>
+
+  <line x1="114" y1="140" x2="152" y2="68" stroke="#d49445" stroke-width="4" stroke-linecap="round"/>
+  <polygon class="pointer-star" points="152,60 155,66 161,67 156,71 158,77 152,73 146,77 148,71 143,67 149,66" fill="#ffd23f" stroke="#fff" stroke-width="1"/>
+  <circle cx="114" cy="140" r="9" fill="#ffffff" stroke="#241d5b" stroke-width="2"/>
+
+  <circle cx="80" cy="80" r="46" fill="url(#teacherHelmetGrad)" stroke="#3ee6b5" stroke-width="3.5"/>
+  <ellipse cx="60" cy="62" rx="16" ry="9" fill="url(#teacherVisorShine)" transform="rotate(-30 60 62)"/>
+
+  <circle cx="80" cy="82" r="35" fill="#ffe2c4"/>
+  <circle cx="56" cy="90" r="6" fill="#ff708d" opacity="0.6"/>
+  <circle cx="104" cy="90" r="6" fill="#ff708d" opacity="0.6"/>
+
+  <ellipse class="teacher-eye" cx="64" cy="78" rx="7" ry="9" fill="#1b1744"/>
+  <circle cx="62" cy="75" r="3" fill="#ffffff"/>
+  <circle cx="66" cy="81" r="1.5" fill="#ffffff"/>
+
+  <ellipse class="teacher-eye" cx="96" cy="78" rx="7" ry="9" fill="#1b1744"/>
+  <circle cx="94" cy="75" r="3" fill="#ffffff"/>
+  <circle cx="98" cy="81" r="1.5" fill="#ffffff"/>
+
+  <circle cx="64" cy="78" r="13" fill="none" stroke="#ffd23f" stroke-width="2.5"/>
+  <circle cx="96" cy="78" r="13" fill="none" stroke="#ffd23f" stroke-width="2.5"/>
+  <path d="M 77 78 Q 80 75 83 78" fill="none" stroke="#ffd23f" stroke-width="2.5"/>
+
+  <path class="teacher-mouth" id="teacher-mouth" d="M 72 96 Q 80 104 88 96" fill="none" stroke="#8b263e" stroke-width="3" stroke-linecap="round"/>
+
+  <polygon points="80,14 135,28 80,42 25,28" fill="#16123d" stroke="#ffd23f" stroke-width="2.5"/>
+  <path d="M 50 32 Q 80 44 110 32 L 110 42 Q 80 54 50 42 Z" fill="#272063" stroke="#ffd23f" stroke-width="1"/>
+  <circle cx="80" cy="28" r="4.5" fill="#ffd23f"/>
+  <g class="teacher-tassel">
+    <path d="M 80 28 Q 112 34 122 56 Q 124 72 121 82" stroke="#ffd23f" stroke-width="2.5" fill="none"/>
+    <circle cx="121" cy="84" r="3.5" fill="#ffd23f"/>
+  </g>
+</svg>
+`;
+
 function showDockingSuccessLesson(){
   audio.ping();
   radio.say('docked');
+  let currentSlide = 0;
+
+  function renderTeacherSlide(index) {
+    const slide = DOCKING_TEACHER_SLIDES[index];
+    if (!slide) return;
+    currentSlide = index;
+
+    const topicEl = $('teacher-slide-topic');
+    if (topicEl) topicEl.textContent = slide.topic;
+    const numEl = $('lesson-slide-num');
+    if (numEl) numEl.textContent = String(index + 1);
+    const iconEl = $('bb-icon');
+    if (iconEl) iconEl.textContent = slide.icon;
+    const titleEl = $('bb-title');
+    if (titleEl) titleEl.textContent = slide.title;
+    const summaryEl = $('bb-summary');
+    if (summaryEl) summaryEl.textContent = slide.summary;
+    const quoteEl = $('bb-quote');
+    if (quoteEl) quoteEl.textContent = slide.quote;
+    const factEl = $('bb-fact');
+    if (factEl) factEl.innerHTML = slide.fact;
+
+    // Update Dots
+    const dots = document.querySelectorAll('#bb-dots button');
+    dots.forEach((dot, i) => {
+      dot.classList.toggle('active', i === index);
+      dot.classList.toggle('done', i < index);
+    });
+
+    // Update buttons
+    const prevBtn = $('bb-prev-btn');
+    if (prevBtn) prevBtn.disabled = index === 0;
+
+    const nextBtn = $('bb-next-btn');
+    if (nextBtn) {
+      if (index === DOCKING_TEACHER_SLIDES.length - 1) {
+        nextBtn.textContent = '🚀 Enter Asteria!';
+        nextBtn.classList.add('bb-finish');
+      } else {
+        nextBtn.textContent = 'Next ➔';
+        nextBtn.classList.remove('bb-finish');
+      }
+    }
+
+    // Speak this slide
+    speakTeacher(slide.speech);
+  }
+
+  function speakTeacher(text) {
+    try {
+      const s = speechSynthesis;
+      s.cancel();
+      const stage = $('teacher-stage');
+      const voiceBtn = $('teacher-voice-btn');
+      const soundStatus = $('sound-status-label');
+
+      const u = new SpeechSynthesisUtterance(text);
+      u.rate = 0.95;
+      u.pitch = 1.22;
+      u.onstart = () => {
+        if (stage) stage.classList.add('is-talking');
+        if (voiceBtn) {
+          voiceBtn.classList.add('speaking');
+          voiceBtn.textContent = '⏹️ Pause Voice';
+        }
+        if (soundStatus) soundStatus.textContent = '🔊 Professor Pip is speaking...';
+      };
+      u.onend = () => {
+        if (stage) stage.classList.remove('is-talking');
+        if (voiceBtn) {
+          voiceBtn.classList.remove('speaking');
+          voiceBtn.textContent = '🔊 Replay Voice';
+        }
+        if (soundStatus) soundStatus.textContent = '✅ Lesson ready';
+      };
+      u.onerror = () => {
+        if (stage) stage.classList.remove('is-talking');
+        if (voiceBtn) {
+          voiceBtn.classList.remove('speaking');
+          voiceBtn.textContent = '🔊 Replay Voice';
+        }
+      };
+      s.speak(u);
+    } catch {}
+  }
+
+  const modalHtml = `
+    <div class="cartoon-teacher-stage" id="teacher-stage">
+      <div class="teacher-column">
+        <div class="teacher-avatar-wrap">
+          ${TEACHER_SVG}
+        </div>
+        <div class="teacher-sound-waves" id="teacher-sound-waves">
+          <span></span><span></span><span></span><span></span>
+        </div>
+        <div class="teacher-nameplate">
+          <span class="teacher-badge">👨‍🏫 PROFESSOR PIP</span>
+          <small>Asteria Flight Academy</small>
+        </div>
+        <button id="teacher-voice-btn" class="teacher-voice-btn" type="button" aria-label="Replay or pause teacher voice">
+          🔊 Hear Teacher
+        </button>
+      </div>
+
+      <div class="lesson-board-column">
+        <div class="blackboard-header">
+          <span class="blackboard-tag" id="teacher-slide-topic">LESSON 1: ADJUST & AIM</span>
+          <div class="lesson-slide-counter">Step <b id="lesson-slide-num">1</b> of 4</div>
+        </div>
+
+        <div class="blackboard-card">
+          <div class="blackboard-icon-title">
+            <span class="blackboard-icon" id="bb-icon">🎯</span>
+            <h3 id="bb-title">Rule 1: Bullseye Aiming!</h3>
+          </div>
+          <p class="blackboard-summary" id="bb-summary">In zero gravity, even a millimeter bump pushes the station away. Clamps only latch when aimed dead-center!</p>
+          <div class="blackboard-quote-box">
+            <span class="quote-icon">💬</span>
+            <p id="bb-quote">“If you are off by even a tiny millimeter, the clamps won’t catch! You aimed dead-center like a true astronaut!”</p>
+          </div>
+          <div class="blackboard-fact-pill" id="bb-fact">
+            🚀 <b>Real NASA Fact:</b> Apollo and ISS spacecraft use optical crosshairs just like you did!
+          </div>
+        </div>
+
+        <div class="blackboard-footer">
+          <div class="slide-dots" id="bb-dots">
+            <button type="button" class="bb-dot active" title="Lesson 1">1</button>
+            <button type="button" class="bb-dot" title="Lesson 2">2</button>
+            <button type="button" class="bb-dot" title="Lesson 3">3</button>
+            <button type="button" class="bb-dot" title="Lesson 4">4</button>
+          </div>
+          <div class="blackboard-btns">
+            <button type="button" id="bb-prev-btn" class="bb-btn" disabled>◀ Back</button>
+            <button type="button" id="bb-next-btn" class="bb-btn primary">Next ➔</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
   showModal(
-    '🎉 Soft Capture Confirmed!',
-    `<div class="kid-dock-celebration">
-      <div class="celebration-badge-row">
-        <span class="kid-trophy">🏆</span>
-        <div class="celebration-header">
-          <span class="celebration-tag">CADET FLIGHT DEBRIEF</span>
-          <h2 class="celebration-title">Hatch Sealed! You Did It! 🎉</h2>
-        </div>
-        <button id="read-lesson-btn" class="kid-read-btn" type="button" aria-label="Read lesson out loud">🔊 Read to me</button>
-      </div>
-
-      <div class="kid-golden-rules-banner">
-        <div class="rule-chip">
-          <span class="chip-icon">🎯</span>
-          <div><b>Rule 1: Adjust Aim</b><span>Centered the port [ 🎯 ]</span></div>
-        </div>
-        <div class="rule-chip">
-          <span class="chip-icon">🛑</span>
-          <div><b>Rule 2: Slow Speed</b><span>Kept speed &lt; 0.2 m/s</span></div>
-        </div>
-      </div>
-
-      <div class="kid-section-title" style="margin: 8px 0 6px;">🌌 4 Mind-Blowing Outer Space Facts</div>
-
-      <div class="kid-fact-grid">
-        <div class="kid-fact-card">
-          <span class="fact-icon">🛑</span>
-          <div class="fact-text">
-            <h4>Space Has ZERO Air!</h4>
-            <p>On Earth, air stops a rolling ball. In space, there is NO air—you float forever until you hit the brake!</p>
-          </div>
-        </div>
-
-        <div class="kid-fact-card">
-          <span class="fact-icon">🎯</span>
-          <div class="fact-text">
-            <h4>Bullseye or Bounce!</h4>
-            <p>In zero gravity, even a tiny millimeter bump can push the station away. That's why you aimed dead-center!</p>
-          </div>
-        </div>
-
-        <div class="kid-fact-card">
-          <span class="fact-icon">🏎️</span>
-          <div class="fact-text">
-            <h4>12,000 km/h High-Five!</h4>
-            <p>You and Asteria zoom around Mars at rocket speed, but touched as gently as a butterfly!</p>
-          </div>
-        </div>
-
-        <div class="kid-fact-card">
-          <span class="fact-icon">🤫</span>
-          <div class="fact-text">
-            <h4>Total Silence Outside!</h4>
-            <p>Sound cannot travel without air. Outside your spaceship hull, outer space is completely silent!</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="kid-nasa-fact-pill">
-        🚀 <b>Real NASA Fact:</b> Real astronauts on the Space Station dock at only <b>0.15 m/s</b> so soft-capture hooks latch safely!
-      </div>
-    </div>`,
+    '🎉 Soft Capture Confirmed · Space Science Class',
+    modalHtml,
     [
       {label: '🚀 Open Hatch & Enter Cabin', primary: true, run: () => {
         try{speechSynthesis.cancel();}catch{}
@@ -158,39 +346,62 @@ function showDockingSuccessLesson(){
         $('action').onclick = () => boardCabin();
       }}
     ],
-    'MARS ORBIT · SCIENTIFIC DEBRIEF'
+    'ASTERIA ACADEMY · PROFESSOR PIP'
   );
 
-  const readBtn = $('read-lesson-btn');
-  if (readBtn) {
-    readBtn.onclick = () => {
+  // Wire up event listeners
+  const nextBtn = $('bb-next-btn');
+  const prevBtn = $('bb-prev-btn');
+  const voiceBtn = $('teacher-voice-btn');
+  const dots = document.querySelectorAll('#bb-dots button');
+
+  if (nextBtn) {
+    nextBtn.onclick = () => {
+      if (currentSlide >= DOCKING_TEACHER_SLIDES.length - 1) {
+        try{speechSynthesis.cancel();}catch{}
+        boardCabin();
+      } else {
+        audio.ping();
+        renderTeacherSlide(currentSlide + 1);
+      }
+    };
+  }
+
+  if (prevBtn) {
+    prevBtn.onclick = () => {
+      if (currentSlide > 0) {
+        audio.ping();
+        renderTeacherSlide(currentSlide - 1);
+      }
+    };
+  }
+
+  dots.forEach((dot, i) => {
+    dot.onclick = () => {
+      audio.ping();
+      renderTeacherSlide(i);
+    };
+  });
+
+  if (voiceBtn) {
+    voiceBtn.onclick = () => {
       try {
         const s = speechSynthesis;
         if (s.speaking) {
           s.cancel();
-          readBtn.classList.remove('speaking');
-          readBtn.textContent = '🔊 Read to me';
-          return;
+          const stage = $('teacher-stage');
+          if (stage) stage.classList.remove('is-talking');
+          voiceBtn.classList.remove('speaking');
+          voiceBtn.textContent = '🔊 Hear Teacher';
+        } else {
+          speakTeacher(DOCKING_TEACHER_SLIDES[currentSlide].speech);
         }
-        s.cancel();
-        const textToRead = "Mission accomplished, Cadet! You docked with Asteria Station! Remember the two space rules: Rule one, adjust your aim to hit the target. Rule two, keep slow speed. In space, there is zero air, so you float forever unless you tap the brake! Outer space is completely silent, and you were orbiting at twelve thousand kilometers per hour while touching gently like a butterfly. Outstanding flying!";
-        const u = new SpeechSynthesisUtterance(textToRead);
-        u.rate = 0.95;
-        u.pitch = 1.25;
-        u.onend = () => {
-          readBtn.classList.remove('speaking');
-          readBtn.textContent = '🔊 Read to me';
-        };
-        u.onerror = () => {
-          readBtn.classList.remove('speaking');
-          readBtn.textContent = '🔊 Read to me';
-        };
-        readBtn.classList.add('speaking');
-        readBtn.textContent = '⏹️ Stop voice';
-        s.speak(u);
       } catch {}
     };
   }
+
+  // Initial render & auto-speak
+  renderTeacherSlide(0);
 }
 function help(){if(m.phase==='overview'||m.phase==='docking'){showDockingBriefing();return;}showModal('How to play',`<p><strong>Your arrival:</strong> Explore Mars from orbit, then dock with Asteria. Once the hatch seals, you will enter the cabin to repair the radio and plan your landing.</p><p><strong>Docking:</strong> W/S go forward and back. A/D go left and right. R/F go up and down. Space slows you down. Line up the cross, get inside 2 m, and keep speed below 0.2 m/s. Then press E. “Help me dock” can fly for you.</p><p><strong>Camera:</strong> drag to look around. Use the wheel or + / − to zoom. F3 hides everything for a photo. Press ? to see this again. Esc pauses the game.</p><p>Asteria is a pretend future space station. In space there is no air, so there is no wind sound!</p><p>The story: land on Mars day 11 → <em>Before the Storm</em> on day 12 → <em>Tracks in the Dust</em> on day 16.</p>`,[{label:'Back to the game',run:closeModal}],'HOW TO PLAY');}
 function atlas(){showModal('Mars / the world below',`<p>This is Mars, spinning below you. One side is in sunlight, one side is in night.</p><p class="planet-note"><strong>Olympus Mons</strong> is the biggest volcano in the solar system. It is about three times taller than Mount Everest! <strong>Valles Marineris</strong> is a giant canyon. It is long enough to stretch across the United States. This picture is art, not a real map.</p><p>Learn more: <a href="https://science.nasa.gov/mars/facts/" target="_blank" rel="noopener">NASA Mars facts</a> · <a href="https://science.nasa.gov/resource/planet-mars-3d-model/" target="_blank" rel="noopener">NASA 3D Mars</a></p><p><strong>Planet model:</strong> Mars by Akshat, supplied by you; <a href="https://sketchfab.com/3d-models/mars-9c7bbc64d8c74acfa9ec344c0fc10e1a" target="_blank" rel="noopener">source</a> · <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>. Optimized from the original; diffuse map preserved and material converted to core PBR. Station and spacecraft are original procedural models.</p>`,[{label:'Back',run:closeModal}],'MARS FACTS');}
