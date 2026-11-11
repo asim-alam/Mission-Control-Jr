@@ -2040,11 +2040,28 @@ body.kid-home #journey-count, body.kid-home .wordmark { white-space: nowrap; }
   color: var(--kid-yellow) !important;
   font-weight: 700 !important;
   box-shadow: 0 2px 8px rgba(0,0,0,0.4) !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  transition: all 0.2s ease !important;
 }
 #station-practice-btn:hover {
   background: #463d9a !important;
   color: #fff !important;
   border-color: #fff !important;
+  transform: translateY(-1px);
+}
+#station-practice-btn[aria-pressed="true"],
+#station-practice-btn.is-active {
+  background: linear-gradient(180deg, #059669, #047857) !important;
+  border-color: #34d399 !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 10px rgba(52, 211, 153, 0.45) !important;
+}
+#mx-details.orbit-hidden,
+#mx-details[hidden] {
+  display: none !important;
 }
 .lesson-top-bar {
   display: flex;

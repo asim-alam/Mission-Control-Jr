@@ -223,6 +223,21 @@ function closeStationLesson() {
   }
   const job = document.querySelector('.mx-job');
   if (job) job.hidden = false;
+  const topBtn = document.getElementById('station-practice-btn');
+  if (topBtn) {
+    topBtn.setAttribute('aria-pressed', 'false');
+    topBtn.classList.remove('is-active');
+  }
+}
+
+function getActiveStationStepIndex(s) {
+  if (!s) return 0;
+  if (s.site) return 4;
+  if (s.comms) return 3;
+  if (s.diagnosed || s.fixed) return 2;
+  const countSwitches = (s.loads?.radio ? 1 : 0) + (s.loads?.amp ? 1 : 0) + (s.loads?.motor ? 1 : 0);
+  if (countSwitches === 3) return 1;
+  return 0;
 }
 
 function speakStationText(text) {
@@ -618,6 +633,11 @@ function advanceStationLesson() {
 
 function finishStationLesson() {
   closeStationLesson();
+  const topBtn = document.getElementById('station-practice-btn');
+  if (topBtn) {
+    topBtn.setAttribute('aria-pressed', 'false');
+    topBtn.classList.remove('is-active');
+  }
   if (stationLessonContext?.hud?.toast) {
     stationLessonContext.hud.toast('🎉 Cadet Training Complete! All practical lessons learned! Fix the radio, charge the lander, and pick your landing site!', 'info');
   }
@@ -628,6 +648,12 @@ function startStationLesson(ctx, stepIndex = 0) {
   stationLessonContext = ctx;
   stationLessonActive = true;
   currentStationStep = stepIndex;
+
+  const topBtn = document.getElementById('station-practice-btn');
+  if (topBtn) {
+    topBtn.setAttribute('aria-pressed', 'true');
+    topBtn.classList.add('is-active');
+  }
 
   const job = document.querySelector('.mx-job');
   if (job) job.hidden = true;
@@ -641,10 +667,10 @@ function startStationLesson(ctx, stepIndex = 0) {
     stationLessonEl.innerHTML = `
       <div class="lesson-top-bar">
         <div class="lesson-badge-pill">
-          <span class="lesson-badge-icon">🎓</span>
+          <span class="lesson-badge-icon">🔬</span>
           <span id="station-lesson-badge">MISSION STEP 1 OF 5</span>
         </div>
-        <button id="station-lesson-skip-btn" type="button" class="lesson-close-btn" title="Skip practice and explore station">Skip practice ✕</button>
+        <button id="station-lesson-skip-btn" type="button" class="lesson-close-btn" title="Close details">Close ✕</button>
       </div>
       <div class="lesson-content">
         <h3 id="station-step-title"></h3>
@@ -1008,15 +1034,29 @@ runMission({
       }
     }
 
-    // Header shortcut button for station practical lesson
+    // Unify "Practical Lesson" into the main "🔬 Details" button and remove redundant default details button
     const actionsBar = document.querySelector('.mx-actions');
+    const oldDetails = document.getElementById('mx-details');
+    if (oldDetails) {
+      oldDetails.hidden = true;
+      oldDetails.style.display = 'none';
+      oldDetails.classList.add('orbit-hidden');
+      oldDetails.remove();
+    }
     if (actionsBar && !document.getElementById('station-practice-btn')) {
       const btn = document.createElement('button');
       btn.id = 'station-practice-btn';
       btn.type = 'button';
-      btn.textContent = '🎓 Practical Lesson';
-      btn.title = 'Practice zero-g movement, orbit science and power management';
-      btn.onclick = () => startStationLesson(ctx, 0);
+      btn.textContent = '🔬 Details';
+      btn.title = 'Station procedures, visual hardware guides & mission details';
+      btn.setAttribute('aria-pressed', 'false');
+      btn.onclick = () => {
+        if (stationLessonActive && stationLessonEl && !stationLessonEl.hidden) {
+          closeStationLesson();
+        } else {
+          startStationLesson(ctx, getActiveStationStepIndex(ctx.mission));
+        }
+      };
       actionsBar.insertBefore(btn, actionsBar.firstChild);
     }
   },
