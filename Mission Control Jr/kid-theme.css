@@ -2259,6 +2259,120 @@ body.kid-home #journey-count, body.kid-home .wordmark { white-space: nowrap; }
   }
 }
 
+/* ==========================================================================
+   Station Live 3D Navigation Telemetry (Dynamic Distance, Forward/Back, Left/Right)
+   ========================================================================== */
+.station-nav-telemetry {
+  background: linear-gradient(135deg, rgba(23, 19, 58, 0.95), rgba(15, 12, 42, 0.95));
+  border: 1.5px solid rgba(62, 230, 181, 0.5);
+  border-radius: 14px;
+  padding: 8px 12px;
+  margin: 8px 0 10px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.telemetry-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.telemetry-header .nav-target-label {
+  font-family: var(--kid-display);
+  font-size: 13px;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.telemetry-header .nav-target-label b {
+  color: var(--kid-yellow);
+}
+
+.nav-distance-badge {
+  background: rgba(62, 230, 181, 0.2);
+  border: 1px solid var(--kid-mint);
+  color: var(--kid-mint);
+  font-family: var(--kid-display);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+.nav-distance-badge.arrived {
+  background: rgba(62, 230, 181, 0.35);
+  color: #ffffff;
+  border-color: #ffd23f;
+  animation: pulse-glow 1s infinite alternate;
+}
+
+.nav-coords-row {
+  display: flex;
+  gap: 8px;
+}
+.nav-coord-chip {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  padding: 4px 8px;
+  font-family: var(--kid-body);
+  font-size: 12px;
+  font-weight: 700;
+  color: #dcd6fd;
+}
+.nav-coord-chip span:first-child {
+  font-size: 14px;
+}
+
+/* Job card waypoint distance & direction badge */
+.mx-job-waypoint {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.mx-job-waypoint .waypoint-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.job-dist-pill {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+  background: rgba(62, 230, 181, 0.16);
+  border: 1px solid rgba(62, 230, 181, 0.45);
+  border-radius: 8px;
+  padding: 3px 8px;
+  font-family: var(--kid-display);
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--kid-mint);
+}
+.job-dist-pill .job-dirs {
+  color: #fff;
+  font-family: var(--kid-body);
+  font-size: 11px;
+  font-weight: 700;
+}
+.job-dist-pill.arrived {
+  background: rgba(255, 210, 63, 0.25);
+  border-color: var(--kid-yellow);
+  color: var(--kid-yellow);
+}
+
+
 
 
 

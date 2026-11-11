@@ -27,11 +27,21 @@ let stationStepCompleted = false;
 let stationLessonContext = null;
 let stationLessonEl = null;
 
+const STATION_WAYPOINTS = {
+  panel: { id: 'panel', label: 'Power Panel', icon: '⚡', x: -1.5, z: -3.5 },
+  rack: { id: 'rack', label: 'Radio Rack', icon: '📻', x: -1.5, z: -11 },
+  locker: { id: 'locker', label: 'Spares Locker', icon: '🧰', x: -8, z: 0 },
+  planner: { id: 'planner', label: 'Planner Table', icon: '🗺️', x: 5.5, z: 0 },
+  hatch: { id: 'hatch', label: 'Lander Hatch', icon: '🚀', x: 0, z: 16.5 },
+  window: { id: 'window', label: 'Mars Window', icon: '🪐', x: 9.5, z: 2.5 }
+};
+
 const STATION_PRACTICAL_STEPS = [
   {
     step: 1,
     title: 'Step 1 of 5: Move in Zero-G & Power Panel',
     badge: 'MISSION STEP 1 OF 5',
+    target: STATION_WAYPOINTS.panel,
     desc: 'In space orbit, you float in microgravity! Press <kbd class="lesson-kbd">W</kbd><kbd class="lesson-kbd">A</kbd><kbd class="lesson-kbd">S</kbd><kbd class="lesson-kbd">D</kbd> or click below to walk to the ⚡ Power Panel.',
     btnHtml: '<span class="btn-icon">⚡</span> Walk to Power Panel (W)',
     subhint: 'Tip: Press W/A/S/D on your keyboard, use walk buttons, or click this button!',
@@ -44,6 +54,7 @@ const STATION_PRACTICAL_STEPS = [
     step: 2,
     title: 'Step 2 of 5: Find What Is Broken',
     badge: 'MISSION STEP 2 OF 5',
+    target: STATION_WAYPOINTS.rack,
     desc: 'Walk to the 📻 Radio Rack to test the signal, or grab the signal tester from 🧰 Spares.',
     btnHtml: '<span class="btn-icon">📻</span> Walk to Radio Rack',
     subhint: 'Tip: Click this button, or clip the tester to pinpoint the broken part.',
@@ -56,6 +67,7 @@ const STATION_PRACTICAL_STEPS = [
     step: 3,
     title: 'Step 3 of 5: Safely Fix & Test Radio',
     badge: 'MISSION STEP 3 OF 5',
+    target: STATION_WAYPOINTS.rack,
     desc: 'Turn power switch OFF (no zaps!), fix or swap the part, then press the green button to test signal to Meridian Base.',
     btnHtml: '<span class="btn-icon">🔧</span> Fix Part & Test Radio',
     subhint: 'Tip: Switch off load, fix the part, and test signal.',
@@ -68,6 +80,7 @@ const STATION_PRACTICAL_STEPS = [
     step: 4,
     title: 'Step 4 of 5: Charge & Pick Landing Site',
     badge: 'MISSION STEP 4 OF 5',
+    target: STATION_WAYPOINTS.planner,
     desc: 'Charge lander in sunlight for hazard camera, and choose your landing ellipse at 🗺️ Planner table.',
     btnHtml: '<span class="btn-icon">🗺️</span> Walk to Landing Planner',
     subhint: 'Tip: Walk to holographic table to select the safest landing ellipse on Mars.',
@@ -80,6 +93,7 @@ const STATION_PRACTICAL_STEPS = [
     step: 5,
     title: 'Step 5 of 5: Board the Lander & Land',
     badge: 'MISSION STEP 5 OF 5',
+    target: STATION_WAYPOINTS.hatch,
     desc: 'Walk to the 🚀 Lander Hatch at the front of the station, check hatch seals, and fly down to Meridian Base!',
     btnHtml: '<span class="btn-icon">🚀</span> Walk to Lander Hatch',
     subhint: 'Tip: Head to the hatch, open seals, and start the descent.',
@@ -89,6 +103,115 @@ const STATION_PRACTICAL_STEPS = [
     }
   }
 ];
+
+function calculateRelativeTelemetry(player, target) {
+  if (!player || !target) return null;
+  const px = player.position?.x ?? 0;
+  const pz = player.position?.z ?? 0;
+  const yaw = player.yaw ?? 0;
+
+  const dx = target.x - px;
+  const dz = target.z - pz;
+  const totalDist = Math.hypot(dx, dz);
+
+  // In Three.js / Asteria coordinate system:
+  // Forward unit vector for yaw: (-sin(yaw), -cos(yaw))
+  // Right unit vector for yaw: (cos(yaw), -sin(yaw))
+  const forwardDist = -dx * Math.sin(yaw) - dz * Math.cos(yaw);
+  const rightDist = dx * Math.cos(yaw) - dz * Math.sin(yaw);
+
+  const isArrived = totalDist <= 2.2;
+
+  let fbText = '';
+  let fbArrow = '⬆️';
+  if (Math.abs(forwardDist) < 0.4) {
+    fbArrow = '🎯';
+    fbText = 'Aligned Center';
+  } else if (forwardDist > 0) {
+    fbArrow = '⬆️';
+    fbText = `${forwardDist.toFixed(1)} m Ahead`;
+  } else {
+    fbArrow = '⬇️';
+    fbText = `${Math.abs(forwardDist).toFixed(1)} m Back`;
+  }
+
+  let lrText = '';
+  let lrArrow = '➡️';
+  if (Math.abs(rightDist) < 0.4) {
+    lrArrow = '🎯';
+    lrText = 'Aligned Center';
+  } else if (rightDist > 0) {
+    lrArrow = '➡️';
+    lrText = `${rightDist.toFixed(1)} m Right`;
+  } else {
+    lrArrow = '⬅️';
+    lrText = `${Math.abs(rightDist).toFixed(1)} m Left`;
+  }
+
+  const distText = isArrived ? `✅ In Reach (${totalDist.toFixed(1)}m)` : `${totalDist.toFixed(1)} m away`;
+
+  return {
+    totalDist,
+    forwardDist,
+    rightDist,
+    isArrived,
+    distText,
+    fbArrow,
+    fbText,
+    lrArrow,
+    lrText
+  };
+}
+
+function updateStationTelemetry(ctx) {
+  if (!ctx) return;
+  const player = ctx.view?.world?.player;
+
+  // 1. Update station practical lesson card telemetry if active
+  if (stationLessonActive && stationLessonEl && !stationLessonEl.hidden) {
+    const step = STATION_PRACTICAL_STEPS[currentStationStep];
+    const target = step?.target;
+    if (target) {
+      const telem = calculateRelativeTelemetry(player, target);
+      const iconEl = stationLessonEl.querySelector('#station-dest-icon');
+      const nameEl = stationLessonEl.querySelector('#station-dest-name');
+      const distEl = stationLessonEl.querySelector('#station-dist-total');
+      const arrowFbEl = stationLessonEl.querySelector('#station-arrow-fb');
+      const valFbEl = stationLessonEl.querySelector('#station-val-fb');
+      const arrowLrEl = stationLessonEl.querySelector('#station-arrow-lr');
+      const valLrEl = stationLessonEl.querySelector('#station-val-lr');
+
+      if (iconEl && iconEl.textContent !== target.icon) iconEl.textContent = target.icon;
+      if (nameEl && nameEl.textContent !== target.label) nameEl.textContent = target.label;
+
+      if (telem) {
+        if (distEl) {
+          distEl.textContent = telem.distText;
+          distEl.classList.toggle('arrived', telem.isArrived);
+        }
+        if (arrowFbEl) arrowFbEl.textContent = telem.fbArrow;
+        if (valFbEl) valFbEl.textContent = telem.fbText;
+        if (arrowLrEl) arrowLrEl.textContent = telem.lrArrow;
+        if (valLrEl) valLrEl.textContent = telem.lrText;
+      }
+    }
+  }
+
+  // 2. Update waypoint telemetry in Job card if visible
+  const waypointEl = document.getElementById('mx-job-waypoint');
+  if (waypointEl && !waypointEl.hidden && ctx.mission) {
+    const stationTarget = getStationTarget(ctx.mission);
+    const targetCoord = stationTarget ? STATION_WAYPOINTS[stationTarget.id] : null;
+    if (targetCoord) {
+      const telem = calculateRelativeTelemetry(player, targetCoord);
+      const pill = waypointEl.querySelector('#job-dist-pill');
+      if (pill && telem) {
+        pill.innerHTML = `<span>${telem.distText}</span> <span class="job-dirs">${telem.fbArrow} ${telem.fbText} · ${telem.lrArrow} ${telem.lrText}</span>`;
+        pill.classList.toggle('arrived', telem.isArrived);
+      }
+    }
+  }
+}
 
 function closeStationLesson() {
   stationLessonActive = false;
@@ -120,6 +243,8 @@ function renderStationStep(index) {
   const badgeEl = stationLessonEl.querySelector('#station-lesson-badge');
   const titleEl = stationLessonEl.querySelector('#station-step-title');
   const descEl = stationLessonEl.querySelector('#station-step-desc');
+  const targetIconEl = stationLessonEl.querySelector('#station-dest-icon');
+  const targetNameEl = stationLessonEl.querySelector('#station-dest-name');
   const promptBox = stationLessonEl.querySelector('#station-prompt-action');
   const actionBtn = stationLessonEl.querySelector('#station-action-btn');
   const subhintEl = stationLessonEl.querySelector('#station-subhint');
@@ -131,6 +256,8 @@ function renderStationStep(index) {
   if (badgeEl) badgeEl.textContent = step.badge;
   if (titleEl) titleEl.textContent = step.title;
   if (descEl) descEl.innerHTML = step.desc;
+  if (targetIconEl && step.target) targetIconEl.textContent = step.target.icon;
+  if (targetNameEl && step.target) targetNameEl.textContent = step.target.label;
   if (actionBtn) actionBtn.innerHTML = step.btnHtml;
   if (subhintEl) subhintEl.textContent = step.subhint;
   if (promptBox) promptBox.hidden = false;
@@ -143,6 +270,8 @@ function renderStationStep(index) {
   if (nextBtn) {
     nextBtn.textContent = index >= STATION_PRACTICAL_STEPS.length - 1 ? '🎓 Complete Training ➔' : 'Next ➔';
   }
+
+  updateStationTelemetry(stationLessonContext);
 }
 
 function completeStationStep() {
@@ -207,6 +336,22 @@ function startStationLesson(ctx, stepIndex = 0) {
       <div class="lesson-content">
         <h3 id="station-step-title"></h3>
         <p id="station-step-desc"></p>
+        <div id="station-nav-telemetry" class="station-nav-telemetry" aria-live="polite">
+          <div class="telemetry-header">
+            <span class="nav-target-label"><span id="station-dest-icon">⚡</span> <b id="station-dest-name">Power Panel</b></span>
+            <span id="station-dist-total" class="nav-distance-badge">-- m</span>
+          </div>
+          <div class="nav-coords-row">
+            <div class="nav-coord-chip" id="station-chip-fb">
+              <span id="station-arrow-fb">⬆️</span>
+              <span id="station-val-fb">-- Ahead</span>
+            </div>
+            <div class="nav-coord-chip" id="station-chip-lr">
+              <span id="station-arrow-lr">↔️</span>
+              <span id="station-val-lr">-- Aligned</span>
+            </div>
+          </div>
+        </div>
         <div class="lesson-interactive-area">
           <div id="station-prompt-action" class="lesson-prompt-action">
             <button id="station-action-btn" type="button" class="lesson-test-btn"></button>
@@ -529,9 +674,12 @@ runMission({
   create: () => createMission({scenario: tuneScenario(ID, arrivalScenario)}),
   rules: {applyAction, getObjective, getSteps},
   scene: async ctx => {
+    stationLessonContext = ctx;
     const view = await createArrivalScene({container: document.getElementById('world'), getState: () => ctx.mission, act: a => ctx.act(a), onPause: () => ctx.pause(),
       openPart: pid => partDialog(ctx, pid), openCase: () => lockerDialog(ctx), openPlanner: () => planner(ctx), openHatch: () => hatch(ctx), talk: who => talk(ctx, who)});
-    view.world.onInspect = text => ctx.hud.toast(text, 'quiet'); return view;
+    view.world.onInspect = text => ctx.hud.toast(text, 'quiet');
+    view.world.onFrame(() => updateStationTelemetry(ctx));
+    return view;
   },
   brief, sources, debrief,
   ready(ctx) {
@@ -593,6 +741,7 @@ runMission({
       }
       updateStationGuidance(s);
     }
+    updateStationTelemetry(ctx);
   },
 });
 
@@ -667,8 +816,20 @@ function updateStationGuidance(s) {
 
   if (target) {
     waypointEl.hidden = false;
-    waypointEl.innerHTML = `📍 <b>Next stop:</b> <span>${target.icon} ${target.name}</span> <small>(click button below to walk)</small>`;
+    const currentId = waypointEl.dataset.targetId;
+    if (currentId !== target.id) {
+      waypointEl.dataset.targetId = target.id;
+      waypointEl.innerHTML = `
+        <div class="waypoint-header">
+          <span>📍 <b>Next stop:</b> <span>${target.icon} ${target.name}</span></span>
+          <small>(click button below to walk)</small>
+        </div>
+        <div class="job-dist-pill" id="job-dist-pill"><span>Calculating distance...</span></div>
+      `;
+    }
+    updateStationTelemetry(stationLessonContext);
   } else if (waypointEl) {
     waypointEl.hidden = true;
+    delete waypointEl.dataset.targetId;
   }
 }
