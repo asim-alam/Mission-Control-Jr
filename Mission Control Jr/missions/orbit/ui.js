@@ -202,7 +202,55 @@ function updateStationTelemetry(ctx) {
   updateDeviceVisualizer(ctx);
 }
 
+let autoAdvanceTimer = null;
+let autoAdvanceCountdown = 0;
+
+function clearAutoAdvanceTimer() {
+  if (autoAdvanceTimer) {
+    clearInterval(autoAdvanceTimer);
+    autoAdvanceTimer = null;
+  }
+  autoAdvanceCountdown = 0;
+  const nextBtn = stationLessonEl?.querySelector('#station-next-step-btn');
+  if (nextBtn) {
+    const isLast = currentStationStep >= STATION_PRACTICAL_STEPS.length - 1;
+    nextBtn.textContent = isLast ? '🎓 Complete Training ➔' : 'Next ➔';
+  }
+}
+
+function startAutoAdvanceCountdown() {
+  clearAutoAdvanceTimer();
+  autoAdvanceCountdown = 10;
+
+  const nextBtn = stationLessonEl?.querySelector('#station-next-step-btn');
+  const isLast = currentStationStep >= STATION_PRACTICAL_STEPS.length - 1;
+  const baseLabel = isLast ? '🎓 Complete Training ➔' : 'Next ➔';
+
+  if (nextBtn) {
+    nextBtn.textContent = `${baseLabel} (${autoAdvanceCountdown}s)`;
+  }
+
+  autoAdvanceTimer = setInterval(() => {
+    if (!stationLessonActive || !stationLessonEl || stationLessonEl.hidden) {
+      clearAutoAdvanceTimer();
+      return;
+    }
+
+    autoAdvanceCountdown--;
+
+    if (autoAdvanceCountdown > 0) {
+      if (nextBtn) {
+        nextBtn.textContent = `${baseLabel} (${autoAdvanceCountdown}s)`;
+      }
+    } else {
+      clearAutoAdvanceTimer();
+      advanceStationLesson();
+    }
+  }, 1000);
+}
+
 function closeStationLesson() {
+  clearAutoAdvanceTimer();
   stationLessonActive = false;
   if (stationLessonEl) {
     stationLessonEl.hidden = true;
@@ -649,8 +697,19 @@ function updateDeviceVisualizer(ctx) {
         : '👉 <b>Aim at switches #3, #4 & #5</b> and press <b>(E)</b> to flip UP into ON.';
     }
 
-    if (countOn === 3 && !stationStepCompleted) {
-      completeStationStep();
+    if (countOn === 3) {
+      if (!stationStepCompleted) {
+        completeStationStep();
+      } else if (!container.dataset.switchesFinished) {
+        container.dataset.switchesFinished = 'true';
+        const okTextEl = stationLessonEl?.querySelector('#station-ok-text');
+        if (okTextEl) {
+          const msg = '<b>🎉 All 3 switches powered ON!</b> 👉 Ready to test signal at the Radio Rack!';
+          okTextEl.innerHTML = msg;
+          speakStationText(msg.replace(/<[^>]*>/g, ''));
+        }
+        startAutoAdvanceCountdown();
+      }
     }
   } else if (currentStationStep === 1) {
     if (s.diagnosed || s.fixed) {
@@ -690,6 +749,7 @@ function updateDeviceVisualizer(ctx) {
 }
 
 function renderStationStep(index) {
+  clearAutoAdvanceTimer();
   const step = STATION_PRACTICAL_STEPS[index];
   if (!step || !stationLessonEl) return;
   stationStepCompleted = false;
@@ -788,9 +848,21 @@ function completeStationStep() {
   }
 
   let feedbackText = step.okText;
-  if (currentStationStep === 1 && s && (s.diagnosed || s.fixed)) {
+  if (currentStationStep === 0) {
+    const loads = s?.loads || {};
+    const countOn = (loads.radio ? 1 : 0) + (loads.amp ? 1 : 0) + (loads.motor ? 1 : 0);
+    if (countOn === 3) {
+      feedbackText = '<b>🎉 All 3 switches powered ON!</b> 👉 Ready to test signal at the Radio Rack!';
+    }
+  } else if (currentStationStep === 1 && s && (s.diagnosed || s.fixed)) {
     const guidance = getRepairGuidance(s);
-    feedbackText = `<b>Broken Part Found: ${guidance.partName}!</b> 👉 Click Next to see how to safely cut power and fix it!`;
+    feedbackText = `<b>Broken Part Found: ${guidance.partName}!</b> 👉 Switch off power safely before touching!`;
+  } else if (currentStationStep === 2 && s?.comms) {
+    feedbackText = '<b>🎉 Radio Connected to Meridian Base!</b> 👉 Next stop: 🗺️ Landing Planner Table!';
+  } else if (currentStationStep === 3 && s?.site) {
+    feedbackText = '<b>🗺️ Landing Site Confirmed!</b> 👉 Next stop: 🚀 Lander Hatch!';
+  } else if (currentStationStep === 4 && s?.boarded) {
+    feedbackText = '<b>🚀 Cadet Boarded!</b> 👉 Hatch sealed and ready to land on Mars!';
   }
   if (okTextEl) {
     okTextEl.innerHTML = feedbackText;
@@ -798,10 +870,14 @@ function completeStationStep() {
 
   speakStationText(feedbackText.replace(/<[^>]*>/g, ''));
 
+  // Automatically start 10-second countdown to show next job
+  startAutoAdvanceCountdown();
+
   if (nextBtn) nextBtn.focus();
 }
 
 function advanceStationLesson() {
+  clearAutoAdvanceTimer();
   if (currentStationStep < STATION_PRACTICAL_STEPS.length - 1) {
     currentStationStep++;
     renderStationStep(currentStationStep);
@@ -811,6 +887,7 @@ function advanceStationLesson() {
 }
 
 function finishStationLesson() {
+  clearAutoAdvanceTimer();
   closeStationLesson();
   const topBtn = document.getElementById('station-practice-btn');
   if (topBtn) {
@@ -1250,8 +1327,12 @@ runMission({
     if (stationLessonActive && ctx.view?.world?.player) {
       const p = ctx.view.world.player.position;
       if (!stationStepCompleted) {
-        if (currentStationStep === 0 && (Math.hypot(p.x, p.z - 14) > 0.8 || p.z < 13.2 || Math.hypot(p.x - (-1.5), p.z - (-3.5)) < 3.5)) {
-          completeStationStep();
+        if (currentStationStep === 0) {
+          const loads = s.loads || {};
+          const countOn = (loads.radio ? 1 : 0) + (loads.amp ? 1 : 0) + (loads.motor ? 1 : 0);
+          if (countOn === 3) {
+            completeStationStep();
+          }
         } else if (currentStationStep === 1 && (s.diagnosed || s.fixed)) {
           completeStationStep();
         } else if (currentStationStep === 2 && s.comms) {
@@ -1261,12 +1342,6 @@ runMission({
         } else if (currentStationStep === 4 && s.boarded) {
           completeStationStep();
         }
-      }
-
-      // Auto-advance from Step 2 to Step 3 upon diagnosis so the player sees the safe repair instructions immediately
-      if (currentStationStep === 1 && (s.diagnosed || s.fixed)) {
-        currentStationStep = 2;
-        renderStationStep(2);
       }
     }
 
