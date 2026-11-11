@@ -1325,7 +1325,140 @@ body.kid-home #journey-count, body.kid-home .wordmark { white-space: nowrap; }
   line-height: 1.35;
 }
 
-/* Cadet Flight Lesson HUD Card */
+/* Highlighted Slow Down Warning Banner at 5m */
+.dock-speed-alert-card {
+  position: fixed;
+  top: 58%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.96), rgba(185, 28, 28, 0.96));
+  border: 3px solid var(--kid-yellow);
+  border-radius: 20px;
+  padding: 12px 22px;
+  box-shadow: 0 0 35px rgba(239, 68, 68, 0.8), 0 8px 26px rgba(0, 0, 0, 0.65);
+  z-index: 35;
+  color: #fff;
+  pointer-events: none;
+  animation: slow-down-pulse 0.75s infinite alternate ease-in-out;
+}
+@keyframes slow-down-pulse {
+  from {
+    transform: translateX(-50%) scale(1);
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.6), 0 6px 18px rgba(0, 0, 0, 0.5);
+  }
+  to {
+    transform: translateX(-50%) scale(1.06);
+    box-shadow: 0 0 42px rgba(255, 210, 63, 0.9), 0 10px 32px rgba(220, 38, 38, 0.85);
+    border-color: #fff;
+  }
+}
+.dock-speed-alert-card .slow-alert-icon {
+  font-size: 36px;
+  line-height: 1;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5));
+}
+.dock-speed-alert-card .slow-alert-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.dock-speed-alert-card strong {
+  font-family: var(--kid-display);
+  font-size: 20px;
+  letter-spacing: .04em;
+  color: var(--kid-yellow);
+  text-shadow: 0 2px 4px rgba(0,0,0,0.7);
+}
+.dock-speed-alert-card span {
+  font-family: var(--kid-body);
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+}
+.dock-speed-alert-card kbd {
+  background: #120f2e;
+  border: 1.5px solid var(--kid-yellow);
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-family: inherit;
+  font-size: 13px;
+  color: #ffd23f;
+  box-shadow: 0 2px 0 rgba(0,0,0,0.5);
+}
+
+/* Mission Step Completion Alert Banner */
+.mission-step-alert-card {
+  position: fixed;
+  top: 76px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: linear-gradient(135deg, rgba(29, 24, 80, 0.98), rgba(46, 36, 120, 0.98));
+  border: 3px solid var(--kid-mint);
+  border-radius: 20px;
+  padding: 14px 22px;
+  box-shadow: 0 0 35px rgba(62, 230, 181, 0.5), 0 10px 30px rgba(0, 0, 0, 0.7);
+  z-index: 45;
+  color: #fff;
+  pointer-events: auto;
+  max-width: min(580px, calc(100vw - 32px));
+  animation: kid-pop-in 0.35s cubic-bezier(0.2, 1.3, 0.3, 1);
+}
+.mission-step-alert-card .step-alert-icon {
+  font-size: 36px;
+  line-height: 1;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5));
+}
+.mission-step-alert-card .step-alert-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+}
+.mission-step-alert-card strong {
+  font-family: var(--kid-display);
+  font-size: 18px;
+  letter-spacing: .03em;
+  color: var(--kid-mint);
+  text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+}
+.mission-step-alert-card p {
+  margin: 0;
+  font-family: var(--kid-body);
+  font-size: 14px;
+  color: #fff;
+  line-height: 1.35;
+}
+.mission-step-alert-card .step-alert-next {
+  font-size: 12px;
+  color: var(--kid-yellow);
+  font-weight: 700;
+  margin-top: 2px;
+}
+.mission-step-alert-card .step-alert-dismiss {
+  background: rgba(255, 255, 255, 0.12);
+  border: none;
+  color: #fff;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.mission-step-alert-card .step-alert-dismiss:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* Cadet Flight Lesson HUD Card (Docking) */
 .flight-lesson-card {
   position: fixed;
   top: 76px;
@@ -1339,11 +1472,229 @@ body.kid-home #journey-count, body.kid-home .wordmark { white-space: nowrap; }
   border-radius: 20px;
   padding: 14px 18px;
   box-shadow: 0 12px 36px rgba(0, 0, 0, 0.65), 0 0 24px rgba(76, 201, 255, 0.2);
-  z-index: 28;
+  z-index: 35;
   color: var(--kid-ink);
   pointer-events: auto;
   backdrop-filter: blur(8px);
   animation: kid-pop-in .3s ease-out;
+}
+
+/* Compact Station Step Card on the Right Side */
+.station-lesson-card {
+  position: fixed;
+  top: 84px;
+  right: 16px;
+  left: auto;
+  transform: none;
+  width: 310px;
+  max-width: calc(100vw - 32px);
+  background: linear-gradient(180deg, rgba(27, 23, 68, 0.98), rgba(16, 13, 42, 0.98));
+  border: 2px solid var(--kid-sky);
+  border-top: 4px solid var(--kid-yellow);
+  border-radius: 18px;
+  padding: 10px 14px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.65), 0 0 16px rgba(76, 201, 255, 0.2);
+  z-index: 35;
+  color: #fff;
+  pointer-events: auto;
+  backdrop-filter: blur(8px);
+  animation: kid-pop-in 0.25s ease-out;
+}
+.station-lesson-card .lesson-top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.station-lesson-card .lesson-badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255, 210, 63, 0.16);
+  border: 1px solid rgba(255, 210, 63, 0.45);
+  border-radius: 16px;
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  color: var(--kid-yellow);
+}
+.station-lesson-card .lesson-close-btn {
+  background: none;
+  border: none;
+  color: var(--kid-soft);
+  font-size: 11px;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 6px;
+  box-shadow: none;
+}
+.station-lesson-card .lesson-close-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: none;
+  translate: 0;
+}
+.station-lesson-card .lesson-content h3 {
+  margin: 0 0 4px;
+  font-family: var(--kid-display);
+  font-size: 14.5px;
+  color: #fff;
+  letter-spacing: 0.02em;
+  line-height: 1.25;
+}
+.station-lesson-card .lesson-content p {
+  margin: 0 0 8px;
+  font-family: var(--kid-body);
+  font-size: 12px;
+  color: var(--kid-soft);
+  line-height: 1.35;
+}
+.station-lesson-card .lesson-kbd {
+  display: inline-block;
+  background: #272063;
+  border: 1px solid var(--kid-sky);
+  border-radius: 5px;
+  padding: 1px 5px;
+  font-family: inherit;
+  font-weight: 800;
+  font-size: 11px;
+  color: #fff;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.4);
+}
+.station-lesson-card .lesson-interactive-area {
+  margin-bottom: 6px;
+}
+.station-lesson-card .lesson-prompt-action {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+.station-lesson-card .lesson-test-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(180deg, #373082, #231c5c);
+  border: 1.5px solid var(--kid-yellow);
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 0 3px 8px rgba(255, 210, 63, 0.2);
+  min-height: 32px;
+}
+.station-lesson-card .lesson-test-btn:hover {
+  border-color: #fff;
+  background: #3e3794;
+}
+.station-lesson-card .lesson-subhint {
+  font-size: 10.5px;
+  color: var(--kid-soft);
+  opacity: 0.85;
+  line-height: 1.25;
+}
+.station-lesson-card .lesson-ok-box {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  background: rgba(62, 230, 181, 0.16);
+  border: 1.5px solid var(--kid-mint);
+  border-radius: 12px;
+  padding: 6px 10px;
+  animation: kid-pop-in .2s cubic-bezier(.2, 1.4, .4, 1);
+}
+.station-lesson-card .lesson-ok-msg {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+.station-lesson-card .ok-badge {
+  background: var(--kid-mint);
+  color: #0b2e20;
+  font-weight: 800;
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+.station-lesson-card #station-ok-text {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #fff;
+  line-height: 1.25;
+}
+.station-lesson-card .lesson-next-btn {
+  background: var(--kid-yellow) !important;
+  color: #120f2e !important;
+  font-family: var(--kid-display) !important;
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  padding: 4px 10px !important;
+  min-height: 30px !important;
+  border: none !important;
+  border-radius: 8px !important;
+  cursor: pointer !important;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3) !important;
+  flex-shrink: 0 !important;
+}
+.station-lesson-card .lesson-next-btn:hover {
+  background: #ffe169 !important;
+  transform: translateY(-1px) !important;
+}
+.station-lesson-card .lesson-dots {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+.station-lesson-card .lesson-dots .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+  transition: all .2s;
+}
+.station-lesson-card .lesson-dots .dot.active {
+  background: var(--kid-yellow);
+  width: 16px;
+  border-radius: 4px;
+}
+.station-lesson-card .lesson-dots .dot.done {
+  background: var(--kid-mint);
+}
+@media (max-width: 860px) {
+  .station-lesson-card {
+    width: min(310px, 60vw);
+    top: auto;
+    bottom: 150px;
+    right: 8px;
+  }
+}
+@media (max-width: 520px) {
+  .station-lesson-card {
+    width: auto;
+    left: 8px;
+    right: 8px;
+    bottom: 64px;
+  }
+}
+#station-practice-btn {
+  background: linear-gradient(180deg, #373082, #231c5c) !important;
+  border: 1.5px solid var(--kid-yellow) !important;
+  color: var(--kid-yellow) !important;
+  font-weight: 700 !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4) !important;
+}
+#station-practice-btn:hover {
+  background: #463d9a !important;
+  color: #fff !important;
+  border-color: #fff !important;
 }
 .lesson-top-bar {
   display: flex;
@@ -1506,6 +1857,68 @@ body.kid-home #journey-count, body.kid-home .wordmark { white-space: nowrap; }
     transform: none;
   }
 }
+
+/* ==========================================================================
+   Station Next-Step Guidance: Waypoint badge & Highlighted Walk Buttons
+   ========================================================================== */
+.mx-job-waypoint {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 6px 0 6px 0;
+  padding: 4px 10px;
+  background: rgba(43, 212, 160, 0.16);
+  border: 1.5px solid #3ee6b5;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  color: #c9ffea;
+  box-shadow: 0 0 10px rgba(62, 230, 181, 0.25);
+}
+.mx-job-waypoint b {
+  color: #ffffff;
+}
+.mx-job-waypoint small {
+  color: #ffd23f;
+  font-weight: 700;
+  margin-left: 2px;
+}
+
+#locations button.is-next-target {
+  background: linear-gradient(135deg, #205c42 0%, #163d2e 100%) !important;
+  border: 2px solid #3ee6b5 !important;
+  box-shadow: 0 0 14px rgba(62, 230, 181, 0.65), 0 4px 8px rgba(0, 0, 0, 0.4) !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  animation: walk-target-glow 1.6s ease-in-out infinite alternate !important;
+  position: relative;
+}
+
+#locations button.is-next-target::after {
+  content: "NEXT";
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  background: #ffd23f;
+  color: #171126;
+  font-size: 0.65rem;
+  font-weight: 900;
+  border-radius: 6px;
+  vertical-align: middle;
+  letter-spacing: 0.04em;
+}
+
+@keyframes walk-target-glow {
+  0% {
+    border-color: #3ee6b5;
+    box-shadow: 0 0 8px rgba(62, 230, 181, 0.45);
+  }
+  100% {
+    border-color: #ffd23f;
+    box-shadow: 0 0 18px rgba(255, 210, 63, 0.85), 0 0 25px rgba(62, 230, 181, 0.5);
+    transform: translateY(-1px);
+  }
+}
+
 
 
 

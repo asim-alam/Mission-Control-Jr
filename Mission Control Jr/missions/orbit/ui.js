@@ -21,53 +21,381 @@ function sources(ctx) {
   <p class="mx-made-up"><b>Made up for the game:</b> ${sc.limitation}</p>`;
 }
 
+let currentStationStep = 0;
+let stationLessonActive = false;
+let stationStepCompleted = false;
+let stationLessonContext = null;
+let stationLessonEl = null;
+
+const STATION_PRACTICAL_STEPS = [
+  {
+    step: 1,
+    title: 'Step 1 of 5: Move in Zero-G & Power Panel',
+    badge: 'MISSION STEP 1 OF 5',
+    desc: 'In space orbit, you float in microgravity! Press <kbd class="lesson-kbd">W</kbd><kbd class="lesson-kbd">A</kbd><kbd class="lesson-kbd">S</kbd><kbd class="lesson-kbd">D</kbd> or click below to walk to the ⚡ Power Panel.',
+    btnHtml: '<span class="btn-icon">⚡</span> Walk to Power Panel (W)',
+    subhint: 'Tip: Press W/A/S/D on your keyboard, use walk buttons, or click this button!',
+    okText: 'Moving in zero gravity! Asteria glides in orbit with zero air friction. Check power switches before entering shadow!',
+    run(ctx) {
+      ctx.view?.walk?.('panel');
+    }
+  },
+  {
+    step: 2,
+    title: 'Step 2 of 5: Find What Is Broken',
+    badge: 'MISSION STEP 2 OF 5',
+    desc: 'Walk to the 📻 Radio Rack to test the signal, or grab the signal tester from 🧰 Spares.',
+    btnHtml: '<span class="btn-icon">📻</span> Walk to Radio Rack',
+    subhint: 'Tip: Click this button, or clip the tester to pinpoint the broken part.',
+    okText: 'Broken part pinpointed! Always diagnose first, and switch power OFF before touching hardware so you don\'t trip the breaker!',
+    run(ctx) {
+      ctx.view?.walk?.('rack');
+    }
+  },
+  {
+    step: 3,
+    title: 'Step 3 of 5: Safely Fix & Test Radio',
+    badge: 'MISSION STEP 3 OF 5',
+    desc: 'Turn power switch OFF (no zaps!), fix or swap the part, then press the green button to test signal to Meridian Base.',
+    btnHtml: '<span class="btn-icon">🔧</span> Fix Part & Test Radio',
+    subhint: 'Tip: Switch off load, fix the part, and test signal.',
+    okText: 'Radio connected! Meridian Base hears Asteria loud and clear! The surface radio beacon is now active.',
+    run(ctx) {
+      ctx.view?.walk?.('rack');
+    }
+  },
+  {
+    step: 4,
+    title: 'Step 4 of 5: Charge & Pick Landing Site',
+    badge: 'MISSION STEP 4 OF 5',
+    desc: 'Charge lander in sunlight for hazard camera, and choose your landing ellipse at 🗺️ Planner table.',
+    btnHtml: '<span class="btn-icon">🗺️</span> Walk to Landing Planner',
+    subhint: 'Tip: Walk to holographic table to select the safest landing ellipse on Mars.',
+    okText: 'Landing site confirmed on Mars! The descent trajectory and hazard camera are ready.',
+    run(ctx) {
+      ctx.view?.walk?.('planner');
+    }
+  },
+  {
+    step: 5,
+    title: 'Step 5 of 5: Board the Lander & Land',
+    badge: 'MISSION STEP 5 OF 5',
+    desc: 'Walk to the 🚀 Lander Hatch at the front of the station, check hatch seals, and fly down to Meridian Base!',
+    btnHtml: '<span class="btn-icon">🚀</span> Walk to Lander Hatch',
+    subhint: 'Tip: Head to the hatch, open seals, and start the descent.',
+    okText: 'Hatch sealed tight! Undocking from Asteria Station and descending to Mars surface!',
+    run(ctx) {
+      ctx.view?.walk?.('hatch');
+    }
+  }
+];
+
+function closeStationLesson() {
+  stationLessonActive = false;
+  if (stationLessonEl) {
+    stationLessonEl.hidden = true;
+  }
+  const job = document.querySelector('.mx-job');
+  if (job) job.hidden = false;
+}
+
+function speakStationText(text) {
+  try {
+    const s = window.speechSynthesis;
+    if (s) {
+      s.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.rate = 0.95;
+      u.pitch = 1.2;
+      s.speak(u);
+    }
+  } catch {}
+}
+
+function renderStationStep(index) {
+  const step = STATION_PRACTICAL_STEPS[index];
+  if (!step || !stationLessonEl) return;
+  stationStepCompleted = false;
+
+  const badgeEl = stationLessonEl.querySelector('#station-lesson-badge');
+  const titleEl = stationLessonEl.querySelector('#station-step-title');
+  const descEl = stationLessonEl.querySelector('#station-step-desc');
+  const promptBox = stationLessonEl.querySelector('#station-prompt-action');
+  const actionBtn = stationLessonEl.querySelector('#station-action-btn');
+  const subhintEl = stationLessonEl.querySelector('#station-subhint');
+  const okBox = stationLessonEl.querySelector('#station-ok-feedback');
+  const okTextEl = stationLessonEl.querySelector('#station-ok-text');
+  const nextBtn = stationLessonEl.querySelector('#station-next-step-btn');
+  const dotsBox = stationLessonEl.querySelector('#station-lesson-dots');
+
+  if (badgeEl) badgeEl.textContent = step.badge;
+  if (titleEl) titleEl.textContent = step.title;
+  if (descEl) descEl.innerHTML = step.desc;
+  if (actionBtn) actionBtn.innerHTML = step.btnHtml;
+  if (subhintEl) subhintEl.textContent = step.subhint;
+  if (promptBox) promptBox.hidden = false;
+  if (okBox) okBox.hidden = true;
+
+  if (dotsBox) {
+    dotsBox.innerHTML = STATION_PRACTICAL_STEPS.map((_, i) => `<span class="dot ${i === index ? 'active' : i < index ? 'done' : ''}"></span>`).join('');
+  }
+
+  if (nextBtn) {
+    nextBtn.textContent = index >= STATION_PRACTICAL_STEPS.length - 1 ? '🎓 Complete Training ➔' : 'Next ➔';
+  }
+}
+
+function completeStationStep() {
+  if (stationStepCompleted || !stationLessonActive) return;
+  stationStepCompleted = true;
+  const step = STATION_PRACTICAL_STEPS[currentStationStep];
+  if (!step || !stationLessonEl) return;
+
+  const promptBox = stationLessonEl.querySelector('#station-prompt-action');
+  const okBox = stationLessonEl.querySelector('#station-ok-feedback');
+  const okTextEl = stationLessonEl.querySelector('#station-ok-text');
+  const nextBtn = stationLessonEl.querySelector('#station-next-step-btn');
+
+  if (promptBox) promptBox.hidden = true;
+  if (okBox) okBox.hidden = false;
+  if (okTextEl) okTextEl.textContent = step.okText;
+
+  speakStationText(step.okText);
+
+  if (nextBtn) nextBtn.focus();
+}
+
+function advanceStationLesson() {
+  if (currentStationStep < STATION_PRACTICAL_STEPS.length - 1) {
+    currentStationStep++;
+    renderStationStep(currentStationStep);
+  } else {
+    finishStationLesson();
+  }
+}
+
+function finishStationLesson() {
+  closeStationLesson();
+  if (stationLessonContext?.hud?.toast) {
+    stationLessonContext.hud.toast('🎉 Cadet Training Complete! All practical lessons learned! Fix the radio, charge the lander, and pick your landing site!', 'info');
+  }
+  speakStationText('Outstanding work, Cadet! All practical station lessons complete! Now restore the radio, charge the lander, and pick your landing zone on Mars.');
+}
+
+function startStationLesson(ctx, stepIndex = 0) {
+  stationLessonContext = ctx;
+  stationLessonActive = true;
+  currentStationStep = stepIndex;
+
+  const job = document.querySelector('.mx-job');
+  if (job) job.hidden = true;
+
+  if (!stationLessonEl) {
+    stationLessonEl = document.createElement('section');
+    stationLessonEl.id = 'station-lesson';
+    stationLessonEl.className = 'station-lesson-card';
+    stationLessonEl.setAttribute('role', 'region');
+    stationLessonEl.setAttribute('aria-label', 'Cadet station practical training');
+    stationLessonEl.innerHTML = `
+      <div class="lesson-top-bar">
+        <div class="lesson-badge-pill">
+          <span class="lesson-badge-icon">🎓</span>
+          <span id="station-lesson-badge">MISSION STEP 1 OF 5</span>
+        </div>
+        <button id="station-lesson-skip-btn" type="button" class="lesson-close-btn" title="Skip practice and explore station">Skip practice ✕</button>
+      </div>
+      <div class="lesson-content">
+        <h3 id="station-step-title"></h3>
+        <p id="station-step-desc"></p>
+        <div class="lesson-interactive-area">
+          <div id="station-prompt-action" class="lesson-prompt-action">
+            <button id="station-action-btn" type="button" class="lesson-test-btn"></button>
+            <small class="lesson-subhint" id="station-subhint"></small>
+          </div>
+          <div id="station-ok-feedback" class="lesson-ok-box" hidden>
+            <div class="lesson-ok-msg">
+              <span class="ok-badge">✅ OK!</span>
+              <span id="station-ok-text"></span>
+            </div>
+            <button id="station-next-step-btn" type="button" class="primary lesson-next-btn">Next ➔</button>
+          </div>
+        </div>
+      </div>
+      <div class="lesson-dots" id="station-lesson-dots" aria-hidden="true">
+      </div>
+    `;
+    document.body.appendChild(stationLessonEl);
+
+    stationLessonEl.querySelector('#station-lesson-skip-btn').onclick = () => closeStationLesson();
+    stationLessonEl.querySelector('#station-action-btn').onclick = () => {
+      const step = STATION_PRACTICAL_STEPS[currentStationStep];
+      step?.run(stationLessonContext);
+      completeStationStep();
+    };
+    stationLessonEl.querySelector('#station-next-step-btn').onclick = () => advanceStationLesson();
+
+    window.addEventListener('keydown', e => {
+      if (!stationLessonActive) return;
+      if (!stationStepCompleted) {
+        if (currentStationStep === 0 && ['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) {
+          completeStationStep();
+        }
+      } else if (e.code === 'Enter' || e.code === 'Space') {
+        e.preventDefault();
+        advanceStationLesson();
+      }
+    });
+  }
+
+  stationLessonEl.hidden = false;
+  renderStationStep(currentStationStep);
+}
+
+const MISSION_STEP_MESSAGES = [
+  {
+    num: 1,
+    title: 'Find What Is Broken',
+    icon: '🔍',
+    briefMsg: 'Test the radio on the rack or grab the tester from Spares to find the broken part.',
+    doneCheck: s => !!(s.diagnosed || s.fixed),
+    completeTitle: 'STEP 1 COMPLETE: Broken Part Found! 🔍',
+    completeMsg: 'You pinpointed the broken part! Remember: switch off its power before touching it, then fix or swap it.',
+    nextTip: 'Next: Switch off power safely and fix the part.'
+  },
+  {
+    num: 2,
+    title: 'Fix & Test the Radio',
+    icon: '📻',
+    briefMsg: 'Safely turn power off (no zaps!), fix the part, and test signal to Meridian Base.',
+    doneCheck: s => !!s.comms,
+    completeTitle: 'STEP 2 COMPLETE: Radio Connected! 📻',
+    completeMsg: 'Meridian Base hears Asteria loud and clear! The surface radio beacon is now active.',
+    nextTip: 'Next: Charge the lander while in sunlight.'
+  },
+  {
+    num: 3,
+    title: 'Charge the Lander',
+    icon: '🔋',
+    briefMsg: 'Charge to 50% in sunlight so the hazard camera can steer away from rocks.',
+    doneCheck: s => hazardCamReady(s),
+    completeTitle: 'STEP 3 COMPLETE: Lander Charged! 🔋',
+    completeMsg: 'Lander charge is high enough! The terrain hazard camera is ready to steer around rocks.',
+    nextTip: 'Next: Pick a landing site at the planner table.'
+  },
+  {
+    num: 4,
+    title: 'Pick a Landing Site',
+    icon: '🗺️',
+    briefMsg: 'Choose the safest landing ellipse at the holographic planner table.',
+    doneCheck: s => !!s.site,
+    completeTitle: 'STEP 4 COMPLETE: Landing Site Chosen! 🗺️',
+    completeMsg: 'Landing site confirmed on Mars! The descent trajectory is calculated.',
+    nextTip: 'Next: Head to the lander hatch to board!'
+  },
+  {
+    num: 5,
+    title: 'Board the Lander & Land',
+    icon: '🚀',
+    briefMsg: 'Open the hatch, check seals, and fly down through Mars’ thin atmosphere.',
+    doneCheck: s => !!s.boarded,
+    completeTitle: 'STEP 5 COMPLETE: Lander Sealed & Descending! 🚀',
+    completeMsg: 'Hatch locked tight! Undocking from Asteria Station and descending to Mars surface!',
+    nextTip: 'Touchdown on Mars!'
+  }
+];
+
+let completedMissionSteps = new Set();
+let stepAlertEl = null;
+let stepAlertTimer = null;
+
+function showStepCompletionAlert(step) {
+  if (!stepAlertEl) {
+    stepAlertEl = document.createElement('div');
+    stepAlertEl.id = 'mission-step-alert';
+    stepAlertEl.className = 'mission-step-alert-card';
+    stepAlertEl.setAttribute('role', 'alert');
+    stepAlertEl.setAttribute('aria-live', 'assertive');
+    stepAlertEl.innerHTML = `
+      <span class="step-alert-icon" id="step-alert-icon">🎉</span>
+      <div class="step-alert-body">
+        <strong id="step-alert-title"></strong>
+        <p id="step-alert-msg"></p>
+        <span class="step-alert-next" id="step-alert-next"></span>
+      </div>
+      <button type="button" class="step-alert-dismiss" aria-label="Dismiss alert">✕</button>
+    `;
+    document.body.appendChild(stepAlertEl);
+    stepAlertEl.querySelector('.step-alert-dismiss').onclick = () => {
+      stepAlertEl.hidden = true;
+    };
+  }
+
+  const iconEl = stepAlertEl.querySelector('#step-alert-icon');
+  const titleEl = stepAlertEl.querySelector('#step-alert-title');
+  const msgEl = stepAlertEl.querySelector('#step-alert-msg');
+  const nextEl = stepAlertEl.querySelector('#step-alert-next');
+
+  if (iconEl) iconEl.textContent = `${step.icon}`;
+  if (titleEl) titleEl.textContent = step.completeTitle;
+  if (msgEl) msgEl.textContent = step.completeMsg;
+  if (nextEl) nextEl.textContent = `👉 ${step.nextTip}`;
+
+  stepAlertEl.hidden = false;
+  clearTimeout(stepAlertTimer);
+  stepAlertTimer = setTimeout(() => {
+    if (stepAlertEl) stepAlertEl.hidden = true;
+  }, 7500);
+
+  speakStationText(`${step.completeTitle}. ${step.completeMsg}`);
+}
+
 function brief(ctx) {
   const legacy = readLegacyOrbit();
   const note = legacy && !legacy.complete ? '<p class="mx-last">We found a game from the old version of this mission. Your journey map is kept, but this new mission starts from the beginning.</p>' : '';
-  const sc = ctx.mission.scenario;
-  ctx.dialog({label: 'MARS DAY 11 · ASTERIA ORBITER', title: 'Arrival at Mars', body: `${note}
-    <div class="kid-mission-intro">
-      <p>🛰️ <b>Welcome to Mars Orbit!</b> You have docked with the Asteria orbital station. Before descending to Meridian Base on the surface, restore station communications and prepare the lander!</p>
+  ctx.dialog({
+    label: 'MARS DAY 11 · ASTERIA ORBITER',
+    title: 'Arrival at Mars',
+    body: `${note}
+    <div class="kid-mission-intro" style="text-align:center;padding:10px 14px 4px;">
+      <div style="font-size:42px;margin-bottom:4px;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.4));">🏆</div>
+      <div class="celebration-tag" style="display:inline-block;margin-bottom:6px;background:rgba(255,210,63,0.18);color:var(--kid-yellow);border:1.5px solid rgba(255,210,63,0.5);border-radius:14px;padding:3px 12px;font-weight:800;font-size:12px;letter-spacing:.08em;">DOCKING COMPLETE · HATCH SEALED</div>
+      <h3 style="font-family:var(--kid-display);font-size:22px;color:#fff;margin:4px 0 8px;">Arrival at Asteria Station!</h3>
+      <p style="font-size:14px;color:var(--kid-soft);margin:0 0 10px;line-height:1.4;">
+        <b>Commander Elena:</b> “Welcome aboard, Cadet Jin! Follow these 5 steps to complete the orbital mission and land safely on Mars.”
+      </p>
     </div>
-    <div class="kid-dock-celebration" style="margin-bottom:12px;">
-      <div class="celebration-badge-row" style="padding:8px 12px;">
-        <span class="kid-trophy" style="font-size:28px;">🏆</span>
-        <div class="celebration-header">
-          <span class="celebration-tag">DOCKING LESSON LEARNED</span>
-          <h4 style="margin:0;font-family:var(--kid-display);font-size:16px;color:#fff;">Adjust Alignment &amp; Slow Speed (&lt; 0.2 m/s)</h4>
+    <div class="kid-section-title" style="margin-top:6px;">📋 5 Steps to Complete the Mission</div>
+    <div class="kid-steps-preview-grid" style="display:grid;grid-template-columns:1fr;gap:6px;margin:6px 0 12px;">
+      ${MISSION_STEP_MESSAGES.map(s => `
+        <div class="kid-step-preview-row" style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.06);border:1px solid rgba(76,201,255,0.3);border-radius:12px;padding:8px 12px;text-align:left;">
+          <span style="font-size:22px;flex-shrink:0;">${s.icon}</span>
+          <div style="flex:1;">
+            <strong style="display:block;font-size:13px;color:#ffd23f;">Step ${s.num}: ${s.title}</strong>
+            <span style="display:block;font-size:12px;color:#fff;opacity:0.9;">${s.briefMsg}</span>
+          </div>
         </div>
-      </div>
-      <div class="kid-nasa-fact-pill">
-        🌌 <b>Space Science:</b> In outer space, zero air friction means a ship never stops moving on its own. Slow speed and bullseye aim are the keys to safe space docking!
-      </div>
+      `).join('')}
     </div>
-    <div class="kid-section-title">🧰 What You Need This Level</div>
-    <div class="kid-supplies-grid">
-      <div class="kid-supply-pill"><span class="pill-icon">⚡</span><div class="pill-text"><b>Power Switches</b><span>Manage power bus between sunlight and Mars’ shadow</span></div></div>
-      <div class="kid-supply-pill"><span class="pill-icon">🟨</span><div class="pill-text"><b>Signal Tester</b><span>Pinpoints which radio component is broken</span></div></div>
-      <div class="kid-supply-pill"><span class="pill-icon">📶</span><div class="pill-text"><b>Spare Amplifier</b><span>Replaces burnt-out radio parts in the locker</span></div></div>
-      <div class="kid-supply-pill"><span class="pill-icon">🗺️</span><div class="pill-text"><b>Landing Planner</b><span>Selects the safest landing ellipse on Mars</span></div></div>
-    </div>
-    <div class="kid-section-title">📋 Your Jobs (Do in order)</div>
-    <ol class="kid-jobs-list">
-      <li><span class="step-num">1</span><b>Manage Power:</b> Switch off unneeded circuits before orbital shadow cut-off.</li>
-      <li><span class="step-num">2</span><b>Diagnose Radio:</b> Grab the tester or look closely to find the broken component.</li>
-      <li><span class="step-num">3</span><b>Safely Repair:</b> Switch off power first (no zaps!), then fix or swap the part.</li>
-      <li><span class="step-num">4</span><b>Pick Landing Site:</b> Check the surface beacon and lander hazard camera.</li>
-      <li><span class="step-num">5</span><b>Board the Lander:</b> Pack gear, check hatch seals, and fly down to Meridian Base!</li>
-    </ol>
-    <div class="kid-controls-bar">
-      <span>🎮 <b>Controls:</b></span>
-      <span><kbd>WASD</kbd> Walk</span>
-      <span><kbd>Mouse</kbd> Look</span>
-      <span><kbd>E</kbd> Interact with racks &amp; consoles</span>
-      <span>Walk buttons guide you directly to each station!</span>
-    </div>
-    <p><b>Elena:</b> “Welcome to Mars! Look out of the window. Before we fly down to Meridian Base, we have two problems.”</p>
-    <p>📻 <b>The radio is quiet.</b> The base cannot hear us. Its radio beacon helps the lander find the right spot, so we want it working.</p>
-    <p>⚡ <b>Power is tight.</b> The solar wings make <b>${sc.power.sun} power units</b> in sunlight. When we fly through <b>Mars’ shadow</b>, there are only <b>${sc.power.shadow}</b>.</p>
-    <aside class="mx-detail"><b>More details</b><br>Always switch off the power to a part before you touch it. If you forget, the breaker trips to keep you safe, and you can reset it.</aside>`,
-    actions: [{label: '▶ Let’s go!', primary: true, run: () => { ctx.act({id: 'begin'}, {quiet: true}); ctx.saveCheckpoint(); ctx.close(); }}, {label: 'Is this real?', run: () => ctx.sourcesDialog(() => brief(ctx))}]});
+    <div class="kid-nasa-fact-pill" style="text-align:left;display:inline-block;padding:8px 14px;background:rgba(76,201,255,0.12);border:1.5px solid var(--kid-sky);border-radius:14px;color:#eef2f5;font-size:13px;line-height:1.4;">
+      🚀 <b>Practical Station Training:</b> As you complete each step, you will see a highlighted achievement message and next-step guide!
+    </div>`,
+    actions: [
+      {
+        label: '▶ Start Station Practice ➔',
+        primary: true,
+        run: () => {
+          ctx.act({id: 'begin'}, {quiet: true});
+          ctx.saveCheckpoint();
+          ctx.close();
+          startStationLesson(ctx);
+        }
+      },
+      {
+        label: 'Is this real?',
+        run: () => ctx.sourcesDialog(() => brief(ctx))
+      }
+    ]
+  });
 }
 
 function partDialog(ctx, pid) {
@@ -209,6 +537,26 @@ runMission({
   ready(ctx) {
     // Replay includes the Mars opening and docking; landing-only retry stays in the cabin.
     ctx.restart = () => { clearSaved(ID); clearApproach(); location.reload(); };
+
+    // Initialize already completed steps so alerts only fire on newly achieved steps
+    completedMissionSteps = new Set();
+    for (const step of MISSION_STEP_MESSAGES) {
+      if (step.doneCheck(ctx.mission)) {
+        completedMissionSteps.add(step.num);
+      }
+    }
+
+    // Header shortcut button for station practical lesson
+    const actionsBar = document.querySelector('.mx-actions');
+    if (actionsBar && !document.getElementById('station-practice-btn')) {
+      const btn = document.createElement('button');
+      btn.id = 'station-practice-btn';
+      btn.type = 'button';
+      btn.textContent = '🎓 Practical Lesson';
+      btn.title = 'Practice zero-g movement, orbit science and power management';
+      btn.onclick = () => startStationLesson(ctx, 0);
+      actionsBar.insertBefore(btn, actionsBar.firstChild);
+    }
   },
   sampler(ctx) { ctx.act({id: 'begin'}, {quiet: true}); ctx.saveCheckpoint(); },
   hud(ctx) {
@@ -216,5 +564,111 @@ runMission({
     hud.timer(s.phase === 'active' ? (s.stage === 'descent' ? '🚀 Landing' : `${inShadow(s) ? '🌑' : '☀️'} Pass in ${nextPass(s) - s.minute} min`) : '');
     hud.meter('power', {value: Math.max(0, avail - used), max: avail, text: s.tripped ? 'TRIPPED' : `${used} / ${avail}`, warn: s.tripped || used > avail ? 2 : !inShadow(s) && minutesToShadow(s) <= 10 && used > s.scenario.power.shadow ? 1 : 0});
     hud.meter('charge', {value: s.charge, max: 100, text: `${Math.round(s.charge)}%${hazardCamReady(s) ? ' 📷' : ''}`});
+
+    // Check station practical lesson triggers in real time
+    if (stationLessonActive && !stationStepCompleted && ctx.view?.world?.player) {
+      const p = ctx.view.world.player.position;
+      if (currentStationStep === 0 && (Math.hypot(p.x, p.z - 14) > 0.8 || p.z < 13.2 || Math.hypot(p.x - (-1.5), p.z - (-3.5)) < 3.5)) {
+        completeStationStep();
+      } else if (currentStationStep === 1 && (s.diagnosed || s.fixed || Math.hypot(p.x - (-1.5), p.z - (-11)) < 3.5 || Math.hypot(p.x - (-8), p.z) < 3.5)) {
+        completeStationStep();
+      } else if (currentStationStep === 2 && s.comms) {
+        completeStationStep();
+      } else if (currentStationStep === 3 && s.site) {
+        completeStationStep();
+      } else if (currentStationStep === 4 && s.boarded) {
+        completeStationStep();
+      }
+    }
+
+    // Monitor and celebrate every step of completing the mission!
+    if (s.phase === 'active') {
+      for (const step of MISSION_STEP_MESSAGES) {
+        if (!completedMissionSteps.has(step.num) && step.doneCheck(s)) {
+          completedMissionSteps.add(step.num);
+          showStepCompletionAlert(step);
+          hud.toast(`🎉 ${step.completeTitle} · ${step.nextTip}`, 'info');
+          break;
+        }
+      }
+      updateStationGuidance(s);
+    }
   },
 });
+
+function getStationTarget(s) {
+  if (s.stage === 'descent' || s.phase !== 'active') return null;
+  if (s.tripped) return {id: 'panel', name: 'Power panel', icon: '⚡'};
+  if (!inShadow(s) && minutesToShadow(s) <= 10 && powerUsed(s) > s.scenario.power.shadow) {
+    return {id: 'panel', name: 'Power panel', icon: '⚡'};
+  }
+  if (s.holding === 'tester') return {id: 'rack', name: 'Radio rack', icon: '📻'};
+  if (s.holding === 'amp' && !s.fixed) {
+    return s.loads.amp ? {id: 'panel', name: 'Power panel', icon: '⚡'} : {id: 'rack', name: 'Radio rack', icon: '📻'};
+  }
+  if (!s.comms) {
+    if (s.fixed) {
+      const off = s.scenario.testNeeds.find(l => !s.loads[l]);
+      return off ? {id: 'panel', name: 'Power panel', icon: '⚡'} : {id: 'rack', name: 'Radio rack', icon: '📻'};
+    }
+    if (s.diagnosed) {
+      const p = s.scenario.parts[s.diagnosed];
+      if (s.loads[p.load]) return {id: 'panel', name: 'Power panel', icon: '⚡'};
+      if (s.diagnosed === 'amp') return s.holding === 'amp' ? {id: 'rack', name: 'Radio rack', icon: '📻'} : {id: 'locker', name: 'Spares locker', icon: '🧰'};
+      return {id: 'rack', name: 'Radio rack', icon: '📻'};
+    }
+    const need = s.scenario.testNeeds.find(l => !s.loads[l]);
+    if (need) return {id: 'panel', name: 'Power panel', icon: '⚡'};
+    return {id: 'rack', name: 'Radio rack', icon: '📻'};
+  }
+  if (!s.site) {
+    if (!hazardCamReady(s) && !s.loads.charger) return {id: 'panel', name: 'Power panel', icon: '⚡'};
+    return {id: 'planner', name: 'Landing planner', icon: '🗺️'};
+  }
+  return {id: 'hatch', name: 'Lander hatch', icon: '🚀'};
+}
+
+function updateStationGuidance(s) {
+  const target = getStationTarget(s);
+
+  // Update walk buttons highlight
+  const locButtons = document.querySelectorAll('#locations button');
+  if (locButtons.length) {
+    locButtons.forEach(btn => {
+      const label = btn.textContent || '';
+      const isTarget = target && (
+        (target.id === 'panel' && label.includes('Power panel')) ||
+        (target.id === 'rack' && label.includes('Radio rack')) ||
+        (target.id === 'locker' && label.includes('Spares')) ||
+        (target.id === 'planner' && label.includes('Planner')) ||
+        (target.id === 'hatch' && label.includes('Hatch')) ||
+        (target.id === 'window' && label.includes('Window'))
+      );
+      btn.classList.toggle('is-next-target', !!isTarget);
+    });
+  }
+
+  // Update Waypoint Pill in Job card
+  let waypointEl = document.getElementById('mx-job-waypoint');
+  if (!waypointEl) {
+    waypointEl = document.createElement('div');
+    waypointEl.id = 'mx-job-waypoint';
+    waypointEl.className = 'mx-job-waypoint';
+    const jobSec = document.querySelector('.mx-job');
+    if (jobSec) {
+      const objEl = document.getElementById('objective');
+      if (objEl && objEl.nextSibling) {
+        jobSec.insertBefore(waypointEl, objEl.nextSibling);
+      } else {
+        jobSec.appendChild(waypointEl);
+      }
+    }
+  }
+
+  if (target) {
+    waypointEl.hidden = false;
+    waypointEl.innerHTML = `📍 <b>Next stop:</b> <span>${target.icon} ${target.name}</span> <small>(click button below to walk)</small>`;
+  } else if (waypointEl) {
+    waypointEl.hidden = true;
+  }
+}

@@ -167,6 +167,8 @@ export function getObjective(s) {
   if (!s.comms) {
     if (s.fixed) return 'Switch the radio parts on, then test the radio';
     if (s.diagnosed) { const p = sc.parts[s.diagnosed]; return s.loads[p.load] ? `Fix the ${p.label}: switch off the ${loadLabel(s, p.load)} first` : `Fix the ${p.label}`; }
+    const off = sc.testNeeds.filter(l => !s.loads[l]);
+    if (off.length && !s.tests) return 'Switch the radio parts on, then test the radio';
     if (!s.tests) return 'Test the radio: press the green button on the rack';
     return 'Find what is broken: use the tester, or look closely';
   }
