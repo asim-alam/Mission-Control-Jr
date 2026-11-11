@@ -199,21 +199,6 @@ function updateStationTelemetry(ctx) {
 
   // 2. Update device visualizer
   updateDeviceVisualizer(ctx);
-
-  // 3. Update waypoint telemetry in Job card if visible
-  const waypointEl = document.getElementById('mx-job-waypoint');
-  if (waypointEl && !waypointEl.hidden && ctx.mission) {
-    const stationTarget = getStationTarget(ctx.mission);
-    const targetCoord = stationTarget ? STATION_WAYPOINTS[stationTarget.id] : null;
-    if (targetCoord) {
-      const telem = calculateRelativeTelemetry(player, targetCoord);
-      const pill = waypointEl.querySelector('#job-dist-pill');
-      if (pill && telem) {
-        pill.innerHTML = `<span>${telem.distText}</span> <span class="job-dirs">${telem.fbArrow} ${telem.fbText} · ${telem.lrArrow} ${telem.lrText}</span>`;
-        pill.classList.toggle('arrived', telem.isArrived);
-      }
-    }
-  }
 }
 
 function closeStationLesson() {
@@ -1151,39 +1136,9 @@ function updateStationGuidance(s) {
     });
   }
 
-  // Update Waypoint Pill in Job card
-  let waypointEl = document.getElementById('mx-job-waypoint');
-  if (!waypointEl) {
-    waypointEl = document.createElement('div');
-    waypointEl.id = 'mx-job-waypoint';
-    waypointEl.className = 'mx-job-waypoint';
-    const jobSec = document.querySelector('.mx-job');
-    if (jobSec) {
-      const objEl = document.getElementById('objective');
-      if (objEl && objEl.nextSibling) {
-        jobSec.insertBefore(waypointEl, objEl.nextSibling);
-      } else {
-        jobSec.appendChild(waypointEl);
-      }
-    }
-  }
-
-  if (target) {
-    waypointEl.hidden = false;
-    const currentId = waypointEl.dataset.targetId;
-    if (currentId !== target.id) {
-      waypointEl.dataset.targetId = target.id;
-      waypointEl.innerHTML = `
-        <div class="waypoint-header">
-          <span>📍 <b>Next stop:</b> <span>${target.icon} ${target.name}</span></span>
-          <small>(click button below to walk)</small>
-        </div>
-        <div class="job-dist-pill" id="job-dist-pill"><span>Calculating distance...</span></div>
-      `;
-    }
-    updateStationTelemetry(stationLessonContext);
-  } else if (waypointEl) {
-    waypointEl.hidden = true;
-    delete waypointEl.dataset.targetId;
+  // Remove waypoint pill from job card if present
+  const waypointEl = document.getElementById('mx-job-waypoint');
+  if (waypointEl) {
+    waypointEl.remove();
   }
 }
