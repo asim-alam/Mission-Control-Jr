@@ -455,29 +455,44 @@ body.kid-home #chapters.trail-grid {
 }
 
 /* ------------------------------------------------------------------ */
-/* SEQUENTIAL PATH GRAPH STYLING                                      */
+/* SEQUENTIAL CURVED ADVENTURE TRAIL                                  */
 /* ------------------------------------------------------------------ */
 body.kid-home #chapters.path-graph-nodes {
-  display: flex; flex-direction: column; gap: 32px;
-  position: relative; max-width: 880px; margin: 0 auto 40px;
-  padding: 10px 20px 60px; box-sizing: border-box;
+  display: flex; flex-direction: column-reverse;
+  position: relative; max-width: 900px; margin: 0 auto;
+  padding: 40px 20px 80px; box-sizing: border-box;
+  gap: 36px;
 }
 
-/* Central glowing dotted/dashed journey trail spine */
 body.kid-home #chapters.path-graph-nodes::before {
-  content: ''; position: absolute;
-  top: 36px; bottom: 60px; left: 50%; width: 8px;
-  transform: translateX(-50%);
-  background: repeating-linear-gradient(180deg, #6c5ce7 0, #6c5ce7 14px, transparent 14px, transparent 26px);
-  border-radius: 999px; z-index: 1;
-  box-shadow: 0 0 16px rgb(108 92 231 / 70%), 0 0 4px #a29bfe;
+  display: none !important;
+}
+
+/* SVG Curvy Trail Canvas */
+body.kid-home .path-trail-svg {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  pointer-events: none; z-index: 1; overflow: visible;
+}
+body.kid-home .path-trail-bg {
+  fill: none; stroke: rgb(108 92 231 / 30%); stroke-width: 28px;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+body.kid-home .path-trail-line {
+  fill: none; stroke: url(#trail-gradient); stroke-width: 12px;
+  stroke-linecap: round; stroke-linejoin: round;
+  filter: drop-shadow(0 0 12px rgb(108 92 231 / 75%));
+}
+body.kid-home .path-trail-dash {
+  fill: none; stroke: #ffd23f; stroke-width: 4px;
+  stroke-linecap: round; stroke-linejoin: round;
+  stroke-dasharray: 10 14; opacity: 0.95;
 }
 
 /* Individual Node on Path */
 body.kid-home .chapter.path-node {
   --chapter-color: var(--kid-orange);
   position: relative; z-index: 2; width: 100%;
-  display: grid; grid-template-columns: 1fr 100px 1fr; align-items: center;
+  display: flex; align-items: center; justify-content: flex-start;
   background: transparent !important; border: none !important;
   box-shadow: none !important; padding: 0 !important; overflow: visible !important;
   animation: kid-pop-in .45s both cubic-bezier(.2, 1.4, .4, 1);
@@ -487,29 +502,43 @@ body.kid-home .chapter.path-node:hover {
   translate: none !important; box-shadow: none !important;
 }
 
+/* Alternating Left / Right offsets along the curve */
+body.kid-home .chapter.path-node.node-left {
+  flex-direction: row;
+  padding-left: clamp(16px, 8vw, 70px);
+}
+body.kid-home .chapter.path-node.node-right {
+  flex-direction: row-reverse;
+  padding-right: clamp(16px, 8vw, 70px);
+}
+body.kid-home .chapter.path-node.path-node-boss {
+  flex-direction: column !important; align-items: center !important;
+  margin-bottom: 24px; padding: 0 !important;
+}
+
 /* Center Waypoint Anchor */
 body.kid-home .node-waypoint-anchor {
-  grid-column: 2; display: flex; flex-direction: column;
-  align-items: center; justify-content: center; position: relative; z-index: 4;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  position: relative; z-index: 5; flex: none;
 }
 
 /* Waypoint Circle Dome */
 body.kid-home .node-waypoint-circle {
-  width: 74px; height: 74px; border-radius: 50%;
+  width: 82px; height: 82px; border-radius: 50%;
   border: 4px solid var(--node-accent, #6c5ce7);
   background: radial-gradient(circle at 35% 35%, #2c2463, #130f30 90%);
-  box-shadow: 0 6px 0 rgb(0 0 0 / 45%), 0 0 18px color-mix(in srgb, var(--node-accent, #6c5ce7) 50%, transparent);
+  box-shadow: 0 8px 0 rgb(0 0 0 / 50%), 0 0 22px color-mix(in srgb, var(--node-accent, #6c5ce7) 50%, transparent);
   display: grid; place-items: center; position: relative;
   transition: transform .22s cubic-bezier(.2, 1.4, .4, 1), box-shadow .22s;
   cursor: pointer;
 }
 body.kid-home .chapter.path-node:hover .node-waypoint-circle {
-  transform: scale(1.1);
-  box-shadow: 0 8px 0 rgb(0 0 0 / 50%), 0 0 28px var(--node-accent, #6c5ce7);
+  transform: scale(1.12);
+  box-shadow: 0 10px 0 rgb(0 0 0 / 50%), 0 0 30px var(--node-accent, #6c5ce7);
 }
 body.kid-home .chapter.path-node.current .node-waypoint-circle {
   border-color: var(--kid-yellow) !important;
-  box-shadow: 0 6px 0 rgb(0 0 0 / 45%), 0 0 24px var(--kid-yellow);
+  box-shadow: 0 8px 0 rgb(0 0 0 / 50%), 0 0 28px var(--kid-yellow);
 }
 body.kid-home .chapter.path-node.done .node-waypoint-circle {
   border-color: var(--kid-mint) !important;
@@ -517,7 +546,7 @@ body.kid-home .chapter.path-node.done .node-waypoint-circle {
 
 /* Waypoint Icon */
 body.kid-home .node-icon {
-  font-size: 32px; line-height: 1; user-select: none;
+  font-size: 34px; line-height: 1; user-select: none;
 }
 
 /* Level Step Number */
@@ -558,32 +587,35 @@ body.kid-home .node-star-badge {
 
 /* Node Content Card (Left / Right Alternating) */
 body.kid-home .node-content-card {
-  position: relative;
+  position: relative; flex: 1; max-width: 460px;
   background: linear-gradient(160deg, color-mix(in srgb, var(--chapter-color) 20%, #1b1744) 0%, #1b1744 60%) !important;
   border: 3px solid color-mix(in srgb, var(--chapter-color) 40%, #2a2468) !important;
-  border-radius: 24px !important; padding: 20px 22px;
+  border-radius: 24px !important; padding: 18px 22px;
   box-shadow: 0 6px 0 rgb(0 0 0 / 30%);
   transition: translate .18s ease, box-shadow .18s ease, border-color .18s;
   display: flex; flex-direction: column;
 }
 body.kid-home .chapter.path-node.node-left .node-content-card {
-  grid-column: 1; grid-row: 1;
+  margin-left: 28px;
 }
 body.kid-home .chapter.path-node.node-right .node-content-card {
-  grid-column: 3; grid-row: 1;
+  margin-right: 28px;
+}
+body.kid-home .chapter.path-node.path-node-boss .node-content-card {
+  margin: 16px 0 0 0; max-width: 520px; width: 100%;
 }
 
 /* Connecting Bridge Arms */
-body.kid-home .chapter.path-node.node-left .node-content-card::after {
-  content: ''; position: absolute; right: -26px; top: 50%; transform: translateY(-50%);
-  width: 26px; height: 5px;
-  background: linear-gradient(90deg, color-mix(in srgb, var(--chapter-color) 50%, #6c5ce7), var(--chapter-color));
+body.kid-home .chapter.path-node.node-left .node-content-card::before {
+  content: ''; position: absolute; left: -28px; top: 50%; transform: translateY(-50%);
+  width: 28px; height: 5px;
+  background: linear-gradient(90deg, var(--chapter-color), color-mix(in srgb, var(--chapter-color) 50%, #6c5ce7));
   border-radius: 3px; box-shadow: 0 0 10px var(--chapter-color); z-index: 2;
 }
-body.kid-home .chapter.path-node.node-right .node-content-card::before {
-  content: ''; position: absolute; left: -26px; top: 50%; transform: translateY(-50%);
-  width: 26px; height: 5px;
-  background: linear-gradient(90deg, var(--chapter-color), color-mix(in srgb, var(--chapter-color) 50%, #6c5ce7));
+body.kid-home .chapter.path-node.node-right .node-content-card::after {
+  content: ''; position: absolute; right: -28px; top: 50%; transform: translateY(-50%);
+  width: 28px; height: 5px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--chapter-color) 50%, #6c5ce7), var(--chapter-color));
   border-radius: 3px; box-shadow: 0 0 10px var(--chapter-color); z-index: 2;
 }
 
@@ -623,10 +655,6 @@ body.kid-home .node-content-card button.primary {
 }
 
 /* Apex / Boss Node */
-body.kid-home .chapter.path-node.path-node-boss {
-  display: flex !important; flex-direction: column !important;
-  align-items: center !important; gap: 14px; margin-top: 24px;
-}
 body.kid-home .boss-circle {
   width: 86px !important; height: 86px !important;
   border-color: var(--kid-yellow) !important;
@@ -645,6 +673,34 @@ body.kid-home .boss-card h2 { font-size: 24px; color: var(--kid-yellow); }
 body.kid-home .boss-btn {
   background: linear-gradient(180deg, #ffd74a, var(--kid-yellow)) !important;
   color: #241400 !important; border-color: #ffe885 !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 680px) {
+  body.kid-home #chapters.path-graph-nodes {
+    padding: 24px 12px 60px;
+    gap: 24px;
+  }
+  body.kid-home .chapter.path-node.node-left,
+  body.kid-home .chapter.path-node.node-right {
+    flex-direction: row !important;
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+  }
+  body.kid-home .chapter.path-node.node-left .node-content-card,
+  body.kid-home .chapter.path-node.node-right .node-content-card {
+    margin-left: 16px !important;
+    margin-right: 0 !important;
+    max-width: none !important;
+  }
+  body.kid-home .chapter.path-node.node-left .node-content-card::before,
+  body.kid-home .chapter.path-node.node-right .node-content-card::before {
+    content: ''; position: absolute; left: -16px; top: 50%; transform: translateY(-50%);
+    width: 16px; height: 4px; background: var(--chapter-color); border-radius: 2px;
+  }
+  body.kid-home .chapter.path-node.node-right .node-content-card::after {
+    display: none !important;
+  }
 }
 
 /* Fallback non-path chapters */

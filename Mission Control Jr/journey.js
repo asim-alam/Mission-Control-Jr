@@ -252,6 +252,90 @@ function render(){
     if(bossCircle)bossCircle.onclick=launchBoss;
     $('chapters').append(bossNode);
   }
+
+  // Append SVG trail and recalculate the curved path
+  $('chapters').append(createPathSvg());
+  requestAnimationFrame(updatePathCurve);
+}
+
+function createPathSvg(){
+  const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.id='path-trail-svg';
+  svg.setAttribute('class','path-trail-svg');
+  svg.setAttribute('aria-hidden','true');
+  svg.innerHTML=`
+    <defs>
+      <linearGradient id="trail-gradient" x1="0%" y1="100%" x2="0%" y2="0%">
+        <stop offset="0%" stop-color="#ff793f" />
+        <stop offset="35%" stop-color="#ff9a5c" />
+        <stop offset="65%" stop-color="#6c5ce7" />
+        <stop offset="100%" stop-color="#ffd23f" />
+      </linearGradient>
+    </defs>
+    <path id="path-trail-bg" class="path-trail-bg"></path>
+    <path id="path-trail-line" class="path-trail-line"></path>
+    <path id="path-trail-dash" class="path-trail-dash"></path>
+  `;
+  return svg;
+}
+
+function updatePathCurve(){
+  const svg=$('path-trail-svg');
+  const container=$('chapters');
+  if(!svg || !container)return;
+  const nodes=Array.from(container.querySelectorAll('.path-node'));
+  if(nodes.length<2)return;
+
+  const containerRect=container.getBoundingClientRect();
+  if(!containerRect.width || !containerRect.height)return;
+
+  svg.setAttribute('viewBox',`0 0 ${containerRect.width} ${containerRect.height}`);
+  svg.style.width=`${containerRect.width}px`;
+  svg.style.height=`${containerRect.height}px`;
+
+  const points=nodes.map(node=>{
+    const circle=node.querySelector('.node-waypoint-circle');
+    if(!circle)return null;
+    const r=circle.getBoundingClientRect();
+    return {
+      x: r.left + r.width / 2 - containerRect.left,
+      y: r.top + r.height / 2 - containerRect.top
+    };
+  }).filter(Boolean);
+
+  points.sort((a,b)=>a.y-b.y);
+  if(points.length<2)return;
+
+  let d=`M ${points[0].x} ${points[0].y}`;
+  for(let i=0; i<points.length-1; i++){
+    const p0=points[i];
+    const p1=points[i+1];
+    const dy=p1.y - p0.y;
+    const cy1=p0.y + dy * 0.55;
+    const cy2=p1.y - dy * 0.55;
+    d+=` C ${p0.x} ${cy1}, ${p1.x} ${cy2}, ${p1.x} ${p1.y}`;
+  }
+
+  const bg=$('path-trail-bg');
+  const line=$('path-trail-line');
+  const dash=$('path-trail-dash');
+  if(bg)bg.setAttribute('d',d);
+  if(line)line.setAttribute('d',d);
+  if(dash)dash.setAttribute('d',d);
+}
+
+function scrollToActiveMission(){
+  const scrollEl=document.querySelector('.mission-map-scroll');
+  const target=document.querySelector('#chapters .path-node.current') ||
+               document.querySelector('#chapters .path-node[data-chapter="orbit"]') ||
+               document.querySelector('#chapters .path-node');
+  if(scrollEl && target){
+    if(target.dataset?.chapter==='orbit' || (target.classList.contains('current') && target.dataset?.chapter==='orbit')){
+      scrollEl.scrollTop=scrollEl.scrollHeight;
+    } else {
+      target.scrollIntoView({block:'center',behavior:'auto'});
+    }
+  }
 }
 
 const CHAPTER_LOOK={orbit:{icon:'🛰️',color:'#4cc9ff'},storm:{icon:'🌪️',color:'#ff8a3d'},rover:{icon:'🚙',color:'#ff5d73'},'solar-shelter':{icon:'☀️',color:'#ffd23f'},greenhouse:{icon:'🌱',color:'#3ee6b5'},'earth-delay':{icon:'📡',color:'#a78bfa'},'lunar-sunlight':{icon:'🔆',color:'#ffd23f'},'lunar-dust':{icon:'🧹',color:'#c4b5fd'},'lunar-relay':{icon:'📶',color:'#4cc9ff'}};
@@ -273,6 +357,19 @@ function toggleMissionMap(open){
   if(jBtn && $('journey') && !$('journey').hidden){
     jBtn.textContent=show?'✕ Close':'🗺️ Mission Map';
   }
+  if(show){
+    requestAnimationFrame(()=>{
+      updatePathCurve();
+      scrollToActiveMission();
+    });
+  }
+}
+
+window.addEventListener('resize',()=>requestAnimationFrame(updatePathCurve));
+if(typeof ResizeObserver!=='undefined'){
+  const ro=new ResizeObserver(()=>requestAnimationFrame(updatePathCurve));
+  const ch=$('chapters');
+  if(ch)ro.observe(ch);
 }
 
 function launch(id,{updatePath=true,sampler=false}={}){
