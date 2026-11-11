@@ -156,44 +156,44 @@ body.kid-home .header-content-group[hidden] {
   display: none !important;
 }
 
-/* Header Map View (Title + Mars/Moon Buttons + Progress) */
+/* Header Map View (Title + Mars/Moon Buttons) */
 body.kid-home .header-map-group {
-  display: flex; align-items: center; gap: 14px; flex: 1;
+  display: flex; align-items: center; gap: 14px; flex: 1; min-width: 0;
 }
 body.kid-home .header-map-title {
   margin: 0; font-family: var(--kid-display); font-size: 18px; font-weight: 800;
   color: var(--kid-ink); white-space: nowrap; letter-spacing: -0.2px;
 }
-body.kid-home .header-campaign-selector {
+
+/* Header Campaign Selector (Mars / Moon Pills) */
+body.kid-home #campaign-bar .header-campaign-selector {
   display: inline-flex; align-items: center; gap: 4px;
-  background: rgb(10 8 30 / 60%); padding: 3px 4px;
-  border-radius: 999px; border: 2px solid #4a3e9c;
+  background: rgb(10 8 30 / 75%) !important; padding: 3px 4px !important;
+  border-radius: 999px !important; border: 2px solid #5a4cc0 !important;
+  box-shadow: 0 2px 0 #1b154c !important;
 }
-body.kid-home .header-campaign-selector button {
+body.kid-home #campaign-bar .header-campaign-selector button {
   min-height: 34px !important; padding: 0 14px !important; font-size: 13px !important;
-  font-weight: 700 !important; border-radius: 999px !important; border: none !important;
+  font-family: var(--kid-display) !important; font-weight: 800 !important;
+  border-radius: 999px !important; border: 1.5px solid transparent !important;
   background: transparent !important; color: var(--kid-soft) !important;
-  box-shadow: none !important; cursor: pointer; transition: background .15s, color .15s;
+  box-shadow: none !important; cursor: pointer; transition: all .15s ease !important;
 }
-body.kid-home .header-campaign-selector button:hover {
-  color: #fff !important;
+body.kid-home #campaign-bar .header-campaign-selector button:hover {
+  color: #ffffff !important;
+  background: rgb(255 255 255 / 12%) !important;
 }
-body.kid-home .header-campaign-selector button[aria-pressed="true"] {
-  background: linear-gradient(180deg, #6c5ce7, #5344c9) !important;
-  color: #fff !important; box-shadow: 0 2px 4px rgb(0 0 0 / 40%) !important;
+body.kid-home #campaign-bar .header-campaign-selector button[data-campaign="mars"][aria-pressed="true"] {
+  background: linear-gradient(180deg, #ff793f, #c0392b) !important;
+  color: #ffffff !important; border-color: #ffaa80 !important;
+  box-shadow: 0 2px 8px rgb(192 57 43 / 60%) !important;
 }
-body.kid-home .header-progress {
-  min-width: 120px; max-width: 160px; height: 12px; border-radius: 999px;
-  background: #2a2468; border: 2px solid #4b3f9e; overflow: hidden;
+body.kid-home #campaign-bar .header-campaign-selector button[data-campaign="moon"][aria-pressed="true"] {
+  background: linear-gradient(180deg, #6c5ce7, #4834d4) !important;
+  color: #ffffff !important; border-color: #a29bfe !important;
+  box-shadow: 0 2px 8px rgb(72 52 212 / 60%) !important;
 }
-body.kid-home .header-progress i {
-  display: block; height: 100%; width: 0; border-radius: 999px;
-  background: linear-gradient(90deg, var(--kid-mint), var(--kid-yellow));
-  transition: width .6s cubic-bezier(.2, 1.2, .4, 1);
-}
-@media (max-width: 820px) {
-  body.kid-home .header-progress { display: none !important; }
-}
+
 @media (max-width: 680px) {
   body.kid-home .header-map-title { display: none !important; }
 }
@@ -455,325 +455,224 @@ body.kid-home .mission-map-scroll {
   overscroll-behavior-y: contain;
   padding: 30px 14px 80px;
 }
+/* ------------------------------------------------------------------ */
+/* EXPEDITION MAP: RESPONSIVE MISSION CARDS GRID                     */
+/* ------------------------------------------------------------------ */
 body.kid-home #chapters.trail-grid {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
-  gap: 20px; margin: 0;
-}
-
-/* ------------------------------------------------------------------ */
-/* EXPEDITION MAP: LISTED MISSION CARDS                               */
-/* ------------------------------------------------------------------ */
-body.kid-home #chapters.mission-list-cards {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  max-width: 860px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 22px;
+  max-width: 1160px;
   width: 100%;
   margin: 0 auto;
   padding: 24px 16px 80px;
   box-sizing: border-box;
 }
 
-body.kid-home .chapter.mission-list-card {
+body.kid-home #chapters.trail-grid .chapter {
   --chapter-color: var(--kid-orange);
   display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 20px;
-  padding: 18px 24px;
-  border-radius: 24px !important;
-  background: linear-gradient(160deg, color-mix(in srgb, var(--chapter-color) 18%, #17133b) 0%, #151136 65%) !important;
-  border: 2.5px solid color-mix(in srgb, var(--chapter-color) 40%, #2f2770) !important;
-  box-shadow: 0 6px 0 rgb(0 0 0 / 30%), 0 0 16px color-mix(in srgb, var(--chapter-color) 15%, transparent);
-  transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
-  position: relative;
-  overflow: visible;
-  animation: kid-pop-in .4s both cubic-bezier(.2, 1.4, .4, 1);
-}
-
-body.kid-home .chapter.mission-list-card:hover {
-  transform: translateY(-3px);
-  border-color: var(--chapter-color) !important;
-  box-shadow: 0 9px 0 rgb(0 0 0 / 30%), 0 0 24px color-mix(in srgb, var(--chapter-color) 35%, transparent);
-}
-
-/* Up Next / Current Active Mission Highlight */
-body.kid-home .chapter.mission-list-card.current {
-  border-color: var(--kid-yellow) !important;
-  box-shadow: 0 6px 0 rgb(0 0 0 / 35%), 0 0 0 4px rgb(255 210 63 / 25%), 0 0 28px rgb(255 210 63 / 25%);
-  background: linear-gradient(160deg, color-mix(in srgb, var(--kid-yellow) 16%, #1c1544) 0%, #151136 75%) !important;
-}
-
-/* Completed Mission Style */
-body.kid-home .chapter.mission-list-card.done {
-  border-color: color-mix(in srgb, var(--kid-mint) 60%, #2f2770) !important;
-}
-
-/* Left Media Column: Icon Dome + Level Pill */
-body.kid-home .list-card-media {
-  flex: none;
-  display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 6px;
+  padding: 22px;
+  overflow: hidden;
+  background: linear-gradient(160deg, color-mix(in srgb, var(--chapter-color) 20%, #1b1744) 0%, #17133b 70%) !important;
+  border: 3px solid color-mix(in srgb, var(--chapter-color) 40%, #2f2770) !important;
+  border-radius: 26px !important;
+  box-shadow: 0 6px 0 rgb(0 0 0 / 30%), 0 0 16px color-mix(in srgb, var(--chapter-color) 15%, transparent);
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s;
+  animation: kid-pop-in .45s both cubic-bezier(.2, 1.4, .4, 1);
+  box-sizing: border-box;
 }
 
-body.kid-home .list-card-icon {
-  width: 70px;
-  height: 70px;
-  border-radius: 20px;
-  border: 3px solid var(--node-accent, #6c5ce7);
-  background: radial-gradient(circle at 35% 35%, color-mix(in srgb, var(--node-accent, #6c5ce7) 35%, #241c56), #130f30 90%);
-  box-shadow: 0 6px 0 rgb(0 0 0 / 40%), 0 0 16px color-mix(in srgb, var(--node-accent, #6c5ce7) 40%, transparent);
+body.kid-home #chapters.trail-grid .chapter:hover {
+  transform: translateY(-4px);
+  border-color: var(--chapter-color) !important;
+  box-shadow: 0 10px 0 rgb(0 0 0 / 30%), 0 0 28px color-mix(in srgb, var(--chapter-color) 35%, transparent);
+}
+
+body.kid-home #chapters.trail-grid .chapter.current {
+  border-color: var(--kid-yellow) !important;
+  box-shadow: 0 8px 0 rgb(0 0 0 / 35%), 0 0 0 4px rgb(255 210 63 / 25%), 0 0 24px rgb(255 210 63 / 25%);
+  background: linear-gradient(160deg, color-mix(in srgb, var(--kid-yellow) 18%, #1c1544) 0%, #17133b 70%) !important;
+}
+
+body.kid-home #chapters.trail-grid .chapter.done {
+  border-color: color-mix(in srgb, var(--kid-mint) 75%, #2a2468) !important;
+}
+
+body.kid-home #chapters.trail-grid .chapter .chapter-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+body.kid-home #chapters.trail-grid .chapter .chapter-icon {
+  flex: none;
   display: grid;
   place-items: center;
+  width: 62px;
+  height: 62px;
+  font-size: 32px;
+  background: color-mix(in srgb, var(--chapter-color) 28%, #120f2e);
+  border: 3px solid var(--chapter-color);
+  border-radius: 18px;
+  box-shadow: 0 4px 0 rgb(0 0 0 / 30%);
   cursor: pointer;
-  transition: transform .2s cubic-bezier(.2, 1.4, .4, 1);
+  transition: transform .2s ease;
 }
 
-body.kid-home .chapter.mission-list-card:hover .list-card-icon {
-  transform: scale(1.08) rotate(-3deg);
+body.kid-home #chapters.trail-grid .chapter:hover .chapter-icon {
+  transform: scale(1.08) rotate(-4deg);
 }
 
-body.kid-home .list-card-num {
-  font-family: var(--kid-display);
-  font-size: 11px;
-  font-weight: 800;
-  text-transform: uppercase;
-  color: var(--kid-soft);
-  letter-spacing: 0.6px;
-}
-
-body.kid-home .chapter.mission-list-card.current .list-card-num {
-  color: var(--kid-yellow);
-}
-
-/* Main Content Column: Head + Title + Desc */
-body.kid-home .list-card-main {
-  flex: 1;
-  min-width: 0;
+body.kid-home #chapters.trail-grid .chapter .chapter-meta {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
+  flex: 1;
 }
 
-body.kid-home .list-card-main .chapter-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 2px;
-}
-
-body.kid-home .list-card-main h2 {
+body.kid-home #chapters.trail-grid .chapter .chapter-step-badge {
   font-family: var(--kid-display);
-  font-size: 20px;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--chapter-color);
+}
+
+body.kid-home #chapters.trail-grid .chapter .chapter-sol-text {
+  font-family: var(--kid-display);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--kid-soft);
+}
+
+body.kid-home #chapters.trail-grid .chapter .chapter-star {
+  font-family: var(--kid-display);
+  font-size: 12px;
+  font-weight: 800;
+  color: #173d1f;
+  background: var(--kid-mint);
+  padding: 4px 12px;
+  border-radius: 999px;
+  box-shadow: 0 2px 0 #0d6e49;
+  white-space: nowrap;
+}
+
+body.kid-home #chapters.trail-grid .chapter .chapter-next-pill {
+  font-family: var(--kid-display);
+  font-size: 12px;
+  font-weight: 800;
+  color: #2b1d00;
+  background: var(--kid-yellow);
+  padding: 4px 12px;
+  border-radius: 999px;
+  box-shadow: 0 2px 0 #a67f08;
+  white-space: nowrap;
+  animation: kid-breathe 2s infinite ease-in-out;
+}
+
+body.kid-home #chapters.trail-grid .chapter .chapter-open-pill {
+  font-family: var(--kid-display);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--kid-soft);
+  background: rgb(0 0 0 / 30%);
+  padding: 4px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+body.kid-home #chapters.trail-grid .chapter h2 {
+  font-family: var(--kid-display);
+  font-size: 22px;
   font-weight: 800;
   line-height: 1.25;
-  margin: 0;
+  margin: 0 0 8px;
   color: var(--kid-ink);
 }
 
-body.kid-home .list-card-main p {
-  font-size: 14px;
-  line-height: 1.45;
-  margin: 2px 0 0;
+body.kid-home #chapters.trail-grid .chapter p {
+  font-size: 15px;
+  line-height: 1.5;
+  min-height: 50px;
+  flex: 1;
+  margin: 0 0 18px;
   color: #dfd8ff !important;
   font-weight: 600;
 }
 
-/* Right Action Column: Play Button + Status */
-body.kid-home .list-card-action {
-  flex: none;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 6px;
-  min-width: 145px;
-}
-
-body.kid-home .list-card-play-btn {
-  min-height: 44px;
-  padding: 0 22px;
+body.kid-home #chapters.trail-grid .chapter button,
+body.kid-home #chapters.trail-grid .chapter .chapter-play-btn {
+  width: 100%;
+  min-height: 50px;
+  padding: 0 20px;
   font-family: var(--kid-display);
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 800;
-  border-radius: 999px !important;
   background: var(--kid-panel-2) !important;
   border: 2px solid #5a4cc0 !important;
+  border-radius: 16px !important;
   color: var(--kid-ink) !important;
-  box-shadow: 0 3px 0 #1b154c;
+  box-shadow: 0 4px 0 #1b154c;
   cursor: pointer;
-  white-space: nowrap;
   transition: transform .15s ease, background .15s ease, border-color .15s ease, box-shadow .15s ease;
 }
 
-body.kid-home .list-card-play-btn.primary {
+body.kid-home #chapters.trail-grid .chapter button.primary,
+body.kid-home #chapters.trail-grid .chapter .chapter-play-btn.primary {
   background: linear-gradient(180deg, #ffb057, var(--kid-orange)) !important;
   border-color: #ffc27a !important;
   color: #2b1300 !important;
-  box-shadow: 0 4px 0 #a34208 !important;
+  box-shadow: 0 5px 0 #a34208 !important;
 }
 
-body.kid-home .list-card-play-btn:hover {
-  transform: scale(1.05);
+body.kid-home #chapters.trail-grid .chapter button:hover,
+body.kid-home #chapters.trail-grid .chapter .chapter-play-btn:hover {
+  transform: scale(1.03);
 }
 
-body.kid-home .list-card-action .chapter-status {
-  margin: 0;
+body.kid-home #chapters.trail-grid .chapter .chapter-status {
+  margin: 12px 0 0;
   font-family: var(--kid-display);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   color: var(--kid-soft) !important;
-  text-align: right;
-  white-space: nowrap;
+  text-align: center;
 }
 
-body.kid-home .chapter.mission-list-card.current .list-card-action .chapter-status {
+body.kid-home #chapters.trail-grid .chapter.current .chapter-status {
   color: var(--kid-yellow) !important;
 }
 
-body.kid-home .chapter.mission-list-card.done .list-card-action .chapter-status {
+body.kid-home #chapters.trail-grid .chapter.done .chapter-status {
   color: var(--kid-mint) !important;
 }
 
-/* Boss Apex Listed Card */
-body.kid-home .chapter.mission-list-card.boss-card {
+/* Base Boss Card in Grid */
+body.kid-home #chapters.trail-grid .chapter.boss-card {
   --chapter-color: var(--kid-yellow);
-  background: linear-gradient(160deg, #322305 0%, #1a1329 70%) !important;
+  background: linear-gradient(160deg, #322305 0%, #17133b 70%) !important;
   border-color: var(--kid-yellow) !important;
   box-shadow: 0 6px 0 rgb(0 0 0 / 40%), 0 0 24px rgb(255 210 63 / 25%);
 }
 
-body.kid-home .boss-icon {
-  border-color: var(--kid-yellow) !important;
-  background: radial-gradient(circle at 35% 35%, #4a3809, #1a1300 90%) !important;
-  box-shadow: 0 6px 0 rgb(0 0 0 / 50%), 0 0 20px rgb(255 210 63 / 40%) !important;
-}
-
-body.kid-home .chapter.mission-list-card.boss-card h2 {
+body.kid-home #chapters.trail-grid .chapter.boss-card h2 {
   color: var(--kid-yellow);
 }
 
-body.kid-home .boss-btn {
+body.kid-home #chapters.trail-grid .boss-icon {
+  border-color: var(--kid-yellow) !important;
+  background: radial-gradient(circle at 35% 35%, #4a3809, #1a1300 90%) !important;
+  box-shadow: 0 4px 0 rgb(0 0 0 / 50%), 0 0 20px rgb(255 210 63 / 40%) !important;
+}
+
+body.kid-home #chapters.trail-grid .boss-btn {
   background: linear-gradient(180deg, #ffd74a, var(--kid-yellow)) !important;
   color: #241400 !important;
   border-color: #ffe885 !important;
-  box-shadow: 0 4px 0 #8a6400 !important;
+  box-shadow: 0 5px 0 #8a6400 !important;
 }
-
-/* Responsive Stacking on Mobile (< 640px) */
-@media (max-width: 640px) {
-  body.kid-home .chapter.mission-list-card {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 14px;
-    padding: 16px;
-  }
-  body.kid-home .list-card-media {
-    flex-direction: row;
-    justify-content: flex-start;
-    gap: 12px;
-  }
-  body.kid-home .list-card-icon {
-    width: 52px;
-    height: 52px;
-    border-radius: 16px;
-  }
-  body.kid-home .list-card-icon .node-icon {
-    font-size: 26px;
-  }
-  body.kid-home .list-card-action {
-    align-items: stretch;
-    min-width: 0;
-  }
-  body.kid-home .list-card-play-btn {
-    width: 100%;
-    min-height: 46px;
-  }
-  body.kid-home .list-card-action .chapter-status {
-    text-align: center;
-  }
-}
-
-/* Fallback grid chapters (if trail-grid used) */
-body.kid-home #chapters.trail-grid .chapter {
-  --chapter-color: var(--kid-orange);
-  display: flex; flex-direction: column; padding: 22px; overflow: hidden;
-  background: linear-gradient(160deg, color-mix(in srgb, var(--chapter-color) 20%, #1b1744) 0%, #1b1744 60%) !important;
-  border: 3px solid color-mix(in srgb, var(--chapter-color) 40%, #2a2468) !important;
-  border-radius: 26px !important; box-shadow: 0 6px 0 rgb(0 0 0 / 30%);
-  transition: translate .18s ease, box-shadow .18s ease, border-color .18s;
-  animation: kid-pop-in .45s both cubic-bezier(.2, 1.4, .4, 1);
-}
-body.kid-home #chapters.trail-grid .chapter:hover {
-  translate: 0 -4px;
-  box-shadow: 0 10px 0 rgb(0 0 0 / 30%), 0 0 28px color-mix(in srgb, var(--chapter-color) 35%, transparent);
-}
-body.kid-home #chapters.trail-grid .chapter.current {
-  border-color: var(--kid-yellow) !important;
-  box-shadow: 0 8px 0 rgb(0 0 0 / 35%), 0 0 0 5px rgb(255 210 63 / 25%);
-}
-body.kid-home #chapters.trail-grid .chapter.done {
-  border-color: color-mix(in srgb, var(--kid-mint) 75%, #2a2468) !important;
-}
-body.kid-home .chapter-head {
-  display: flex; align-items: center; gap: 14px; margin-bottom: 14px;
-}
-body.kid-home .chapter-icon {
-  flex: none; display: grid; place-items: center; width: 64px; height: 64px; font-size: 34px;
-  background: color-mix(in srgb, var(--chapter-color) 30%, #120f2e);
-  border: 3px solid var(--chapter-color);
-  border-radius: 20px; box-shadow: 0 4px 0 rgb(0 0 0 / 30%);
-}
-body.kid-home .chapter:hover .chapter-icon { animation: kid-wiggle .5s ease; }
-
-body.kid-home .chapter-meta { display: flex; flex-direction: column; gap: 3px; flex: 1; }
-body.kid-home .chapter-step-badge {
-  font-family: var(--kid-display); font-size: 16px; font-weight: 700; color: var(--chapter-color);
-}
-body.kid-home .chapter-sol-text {
-  font-family: var(--kid-display); font-size: 13px; font-weight: 600; color: var(--kid-soft);
-}
-body.kid-home .chapter-star {
-  font-family: var(--kid-display); font-size: 13px; font-weight: 700;
-  color: #173d1f; background: var(--kid-mint); padding: 5px 12px; border-radius: 999px;
-  box-shadow: 0 2px 0 #0d6e49;
-}
-body.kid-home .chapter-next-pill {
-  font-family: var(--kid-display); font-size: 13px; font-weight: 700;
-  color: #2b1d00; background: var(--kid-yellow); padding: 5px 12px; border-radius: 999px;
-  box-shadow: 0 2px 0 #a67f08; animation: kid-breathe 2s infinite ease-in-out;
-}
-body.kid-home .chapter-open-pill {
-  font-family: var(--kid-display); font-size: 12px; font-weight: 700;
-  color: var(--kid-soft); background: rgb(0 0 0 / 30%); padding: 5px 10px; border-radius: 999px;
-}
-body.kid-home #chapters.trail-grid .chapter h2 {
-  font-family: var(--kid-display); font-size: 24px; font-weight: 700; line-height: 1.2;
-  margin: 0 0 8px; color: var(--kid-ink);
-}
-body.kid-home #chapters.trail-grid .chapter p {
-  font-size: 16px; line-height: 1.5; min-height: 52px; flex: 1; margin: 0 0 18px;
-  color: #e3ddff !important; font-weight: 600;
-}
-body.kid-home #chapters.trail-grid .chapter button {
-  width: 100%; min-height: 52px; padding: 0 20px; font-size: 18px; font-weight: 700;
-  background: var(--kid-panel-2) !important; border: 2px solid #5a4cc0 !important;
-  border-radius: 16px !important; color: var(--kid-ink) !important;
-  box-shadow: 0 4px 0 #1b154c;
-}
-body.kid-home #chapters.trail-grid .chapter button.primary {
-  background: linear-gradient(180deg, #ffb057, var(--kid-orange)) !important;
-  border-color: #ffc27a !important; color: #2b1300 !important;
-  box-shadow: 0 5px 0 #a34208 !important;
-}
-body.kid-home .chapter-status {
-  margin: 12px 0 0; font-family: var(--kid-display); font-size: 14px; font-weight: 600;
-  letter-spacing: 0; color: var(--kid-soft) !important; text-align: center;
-}
-body.kid-home .chapter.current .chapter-status { color: var(--kid-yellow) !important; }
-body.kid-home .chapter.done .chapter-status { color: var(--kid-mint) !important; }
 
 /* ------------------------------------------------------------------ */
 /* SETTINGS DIALOG MODAL                                              */

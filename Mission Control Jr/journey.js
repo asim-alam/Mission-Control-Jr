@@ -120,7 +120,7 @@ function render(){
   const campaign=state.selectedCampaign,chapters=missionsFor(campaign),complete=storyComplete(state,campaign),next=nextStoryChapter(state,campaign),doneCount=chapters.filter(c=>state.completed.includes(c.id)).length;
   $('journey-count').textContent=`⭐ ${doneCount} / ${chapters.length}`;
   $('journey-count').title=`${doneCount} of ${chapters.length} missions done`;
-  $('mission-progress-bar').style.width=`${chapters.length?Math.round(doneCount/chapters.length*100):0}%`;
+  if($('mission-progress-bar')) $('mission-progress-bar').style.width=`${chapters.length?Math.round(doneCount/chapters.length*100):0}%`;
   
   const nextChapter=chapters.find(c=>c.id===next);
   $('continue').disabled=campaign==='moon'&&complete;
@@ -158,14 +158,13 @@ function render(){
 
   document.querySelectorAll('[data-campaign]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.campaign===campaign)));
   $('return-active').hidden=!active;
-  $('chapters').className='mission-list-cards';
+  $('chapters').className='trail-grid';
   $('chapters').replaceChildren();
 
-  let index = 0;
   for(const chapter of chapters){
     const done=state.completed.includes(chapter.id),record=state.records[chapter.id],card=document.createElement('article');
     const isNext = next === chapter.id;
-    card.className=`chapter mission-list-card${done?' done':''}${isNext?' current':''}`;
+    card.className=`chapter${done?' done':''}${isNext?' current':''}`;
     const look=CHAPTER_LOOK[chapter.id]||{icon:'🚀',color:'#ff9a5c'};
     card.dataset.chapter=chapter.id;
     card.style.setProperty('--chapter-color',look.color);
@@ -174,32 +173,21 @@ function render(){
     const statusPill=done?'<span class="chapter-star" aria-label="Done">⭐ Finished</span>':(isNext?'<span class="chapter-next-pill">🚀 Up Next</span>':'<span class="chapter-open-pill">🔓 Open</span>');
 
     card.innerHTML=`
-      <div class="list-card-media">
-        <div class="list-card-icon" style="--node-accent: ${look.color}">
-          <span class="node-icon" aria-hidden="true">${look.icon}</span>
+      <div class="chapter-head">
+        <span class="chapter-icon" aria-hidden="true" style="--node-accent: ${look.color}">${look.icon}</span>
+        <div class="chapter-meta">
+          <span class="chapter-step-badge">${stepLabel}</span>
+          <span class="chapter-sol-text">${kidDay(chapter.sol)}</span>
         </div>
-        <span class="list-card-num">${Number(chapter.number) ? `Level ${Number(chapter.number)}` : 'Bonus'}</span>
+        ${statusPill}
       </div>
-
-      <div class="list-card-main">
-        <div class="chapter-head">
-          <div class="chapter-meta">
-            <span class="chapter-step-badge">${stepLabel}</span>
-            <span class="chapter-sol-text">${kidDay(chapter.sol)}</span>
-          </div>
-          ${statusPill}
-        </div>
-        <h2>${chapter.title}</h2>
-        <p>${chapter.description}</p>
-      </div>
-
-      <div class="list-card-action">
-        <button type="button" class="list-card-play-btn ${isNext ? 'primary' : ''}">
-          ${done ? '↻ Replay' : isNext ? '▶ Play Now' : '▶ Play'}
-        </button>
-        <div class="chapter-status">
-          ${done?`${completionStatus(record)}${record?.assisted?' · with help':''}${record?.score!=null?` · ${record.score}/100`:''}`:isNext?'⭐ Recommended next step':'Play any time'}
-        </div>
+      <h2>${chapter.title}</h2>
+      <p>${chapter.description}</p>
+      <button type="button" class="chapter-play-btn ${isNext ? 'primary' : ''}">
+        ${done ? '↻ Replay' : isNext ? '▶ Play Up Next!' : '▶ Practice'}
+      </button>
+      <div class="chapter-status">
+        ${done?`${completionStatus(record)}${record?.assisted?' · with help':''}${record?.score!=null?` · ${record.score}/100`:''}`:isNext?'⭐ Recommended next step':'Play any time'}
       </div>
     `;
 
@@ -207,43 +195,31 @@ function render(){
       toggleMissionMap(false);
       requestChapter(chapter.id,done);
     };
-    const playBtn=card.querySelector('.list-card-play-btn');
+    const playBtn=card.querySelector('.chapter-play-btn');
     if(playBtn)playBtn.onclick=launchChapter;
-    const iconBtn=card.querySelector('.list-card-icon');
+    const iconBtn=card.querySelector('.chapter-icon');
     if(iconBtn)iconBtn.onclick=launchChapter;
 
     $('chapters').append(card);
-    index++;
   }
 
   // At the end of Mars campaign, add Base Boss as final apex card
   if(campaign==='mars'){
     const bossCard=document.createElement('article');
-    bossCard.className='chapter mission-list-card boss-card';
+    bossCard.className='chapter boss-card';
     bossCard.innerHTML=`
-      <div class="list-card-media">
-        <div class="list-card-icon boss-icon">
-          <span class="node-icon" aria-hidden="true">👑</span>
+      <div class="chapter-head">
+        <span class="chapter-icon boss-icon" aria-hidden="true">👑</span>
+        <div class="chapter-meta">
+          <span class="chapter-step-badge" style="color:var(--kid-yellow)">COMMAND SIMULATION</span>
+          <span class="chapter-sol-text">30 MARS DAYS</span>
         </div>
-        <span class="list-card-num" style="color:var(--kid-yellow)">Apex</span>
+        <span class="chapter-star" style="background:var(--kid-yellow); color:#2b1d00">👑 Apex</span>
       </div>
-
-      <div class="list-card-main">
-        <div class="chapter-head">
-          <div class="chapter-meta">
-            <span class="chapter-step-badge" style="color:var(--kid-yellow)">COMMAND SIMULATION</span>
-            <span class="chapter-sol-text">30 MARS DAYS</span>
-          </div>
-          <span class="chapter-star" style="background:var(--kid-yellow); color:#2b1d00">👑 Apex Mission</span>
-        </div>
-        <h2>Be the Base Boss</h2>
-        <p>Take charge of Meridian Base for a full month! Balance food, solar power, water recycler and jobs.</p>
-      </div>
-
-      <div class="list-card-action">
-        <button type="button" class="list-card-play-btn boss-btn primary">Run the Base ▶</button>
-        <div class="chapter-status" style="color:var(--kid-yellow)">Open for certified Commanders</div>
-      </div>
+      <h2>Be the Base Boss</h2>
+      <p>Take charge of Meridian Base for a full month! Balance food, solar power, water recycler and jobs.</p>
+      <button type="button" class="boss-btn primary">Run the Base ▶</button>
+      <div class="chapter-status" style="color:var(--kid-yellow)">Open for certified Commanders</div>
     `;
     const launchBoss=()=>{
       toggleMissionMap(false);
@@ -266,7 +242,7 @@ function scrollToActiveMission({ smooth = false } = {}){
   const container=$('chapters');
   if(!scrollEl || !container)return;
 
-  const currentTarget=container.querySelector('.mission-list-card.current');
+  const currentTarget=container.querySelector('.chapter.current');
   if(!currentTarget || currentTarget === container.firstElementChild) {
     scrollEl.scrollTo({
       top: 0,
