@@ -402,13 +402,208 @@ body.kid-home .mission-progress i {
 
 /* Scrollable Map View for all Mission Cards */
 body.kid-home .mission-map-scroll {
-  flex: 1; overflow-y: auto; overflow-x: hidden; padding: 4px 6px 36px;
+  flex: 1; overflow-y: auto; overflow-x: hidden; padding: 10px 14px 48px;
 }
-body.kid-home #chapters, body.kid-home .trail-grid {
+body.kid-home #chapters.trail-grid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
   gap: 20px; margin: 0;
 }
-body.kid-home .chapter {
+
+/* ------------------------------------------------------------------ */
+/* SEQUENTIAL PATH GRAPH STYLING                                      */
+/* ------------------------------------------------------------------ */
+body.kid-home #chapters.path-graph-nodes {
+  display: flex; flex-direction: column; gap: 36px;
+  position: relative; max-width: 880px; margin: 30px auto 60px;
+  padding: 20px 20px 80px; box-sizing: border-box;
+}
+
+/* Central glowing dotted/dashed journey trail spine */
+body.kid-home #chapters.path-graph-nodes::before {
+  content: ''; position: absolute;
+  top: 50px; bottom: 80px; left: 50%; width: 8px;
+  transform: translateX(-50%);
+  background: repeating-linear-gradient(180deg, #6c5ce7 0, #6c5ce7 14px, transparent 14px, transparent 26px);
+  border-radius: 999px; z-index: 1;
+  box-shadow: 0 0 16px rgb(108 92 231 / 70%), 0 0 4px #a29bfe;
+}
+
+/* Individual Node on Path */
+body.kid-home .chapter.path-node {
+  --chapter-color: var(--kid-orange);
+  position: relative; z-index: 2; width: 100%;
+  display: grid; grid-template-columns: 1fr 100px 1fr; align-items: center;
+  background: transparent !important; border: none !important;
+  box-shadow: none !important; padding: 0 !important; overflow: visible !important;
+  animation: kid-pop-in .45s both cubic-bezier(.2, 1.4, .4, 1);
+  transition: none !important;
+}
+body.kid-home .chapter.path-node:hover {
+  translate: none !important; box-shadow: none !important;
+}
+
+/* Center Waypoint Anchor */
+body.kid-home .node-waypoint-anchor {
+  grid-column: 2; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; position: relative; z-index: 4;
+}
+
+/* Waypoint Circle Dome */
+body.kid-home .node-waypoint-circle {
+  width: 74px; height: 74px; border-radius: 50%;
+  border: 4px solid var(--node-accent, #6c5ce7);
+  background: radial-gradient(circle at 35% 35%, #2c2463, #130f30 90%);
+  box-shadow: 0 6px 0 rgb(0 0 0 / 45%), 0 0 18px color-mix(in srgb, var(--node-accent, #6c5ce7) 50%, transparent);
+  display: grid; place-items: center; position: relative;
+  transition: transform .22s cubic-bezier(.2, 1.4, .4, 1), box-shadow .22s;
+  cursor: pointer;
+}
+body.kid-home .chapter.path-node:hover .node-waypoint-circle {
+  transform: scale(1.1);
+  box-shadow: 0 8px 0 rgb(0 0 0 / 50%), 0 0 28px var(--node-accent, #6c5ce7);
+}
+body.kid-home .chapter.path-node.current .node-waypoint-circle {
+  border-color: var(--kid-yellow) !important;
+  box-shadow: 0 6px 0 rgb(0 0 0 / 45%), 0 0 24px var(--kid-yellow);
+}
+body.kid-home .chapter.path-node.done .node-waypoint-circle {
+  border-color: var(--kid-mint) !important;
+}
+
+/* Waypoint Icon */
+body.kid-home .node-icon {
+  font-size: 32px; line-height: 1; user-select: none;
+}
+
+/* Level Step Number */
+body.kid-home .node-step-number {
+  font-family: var(--kid-display); font-size: 12px; font-weight: 800;
+  text-transform: uppercase; color: var(--kid-soft); letter-spacing: 0.6px;
+  margin-top: 6px; white-space: nowrap; text-shadow: 0 2px 4px #000;
+}
+body.kid-home .chapter.path-node.current .node-step-number {
+  color: var(--kid-yellow);
+}
+
+/* Rover Pin ("YOU ARE HERE!") */
+body.kid-home .node-rover-pin {
+  position: absolute; top: -46px; left: 50%; transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; z-index: 10;
+  pointer-events: none;
+}
+body.kid-home .rover-token {
+  font-size: 30px; line-height: 1;
+  animation: kid-bounce 1s infinite alternate ease-in-out;
+  filter: drop-shadow(0 4px 6px rgb(0 0 0 / 70%));
+}
+body.kid-home .rover-speech {
+  font-family: var(--kid-display); font-size: 11px; font-weight: 900;
+  background: var(--kid-yellow); color: #201200; padding: 2px 8px;
+  border-radius: 999px; letter-spacing: 0.5px;
+  box-shadow: 0 3px 0 #946d03; white-space: nowrap; margin-top: -2px;
+  border: 1.5px solid #fff;
+}
+
+/* Finished Star Badge */
+body.kid-home .node-star-badge {
+  position: absolute; bottom: -2px; right: -2px; font-size: 20px;
+  line-height: 1; filter: drop-shadow(0 2px 4px rgb(0 0 0 / 80%));
+  animation: kid-pop-in .3s ease;
+}
+
+/* Node Content Card (Left / Right Alternating) */
+body.kid-home .node-content-card {
+  position: relative;
+  background: linear-gradient(160deg, color-mix(in srgb, var(--chapter-color) 20%, #1b1744) 0%, #1b1744 60%) !important;
+  border: 3px solid color-mix(in srgb, var(--chapter-color) 40%, #2a2468) !important;
+  border-radius: 24px !important; padding: 20px 22px;
+  box-shadow: 0 6px 0 rgb(0 0 0 / 30%);
+  transition: translate .18s ease, box-shadow .18s ease, border-color .18s;
+  display: flex; flex-direction: column;
+}
+body.kid-home .chapter.path-node.node-left .node-content-card {
+  grid-column: 1; grid-row: 1;
+}
+body.kid-home .chapter.path-node.node-right .node-content-card {
+  grid-column: 3; grid-row: 1;
+}
+
+/* Connecting Bridge Arms */
+body.kid-home .chapter.path-node.node-left .node-content-card::after {
+  content: ''; position: absolute; right: -26px; top: 50%; transform: translateY(-50%);
+  width: 26px; height: 5px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--chapter-color) 50%, #6c5ce7), var(--chapter-color));
+  border-radius: 3px; box-shadow: 0 0 10px var(--chapter-color); z-index: 2;
+}
+body.kid-home .chapter.path-node.node-right .node-content-card::before {
+  content: ''; position: absolute; left: -26px; top: 50%; transform: translateY(-50%);
+  width: 26px; height: 5px;
+  background: linear-gradient(90deg, var(--chapter-color), color-mix(in srgb, var(--chapter-color) 50%, #6c5ce7));
+  border-radius: 3px; box-shadow: 0 0 10px var(--chapter-color); z-index: 2;
+}
+
+body.kid-home .node-content-card:hover {
+  translate: 0 -3px;
+  box-shadow: 0 10px 0 rgb(0 0 0 / 30%), 0 0 28px color-mix(in srgb, var(--chapter-color) 35%, transparent);
+}
+body.kid-home .chapter.path-node.current .node-content-card {
+  border-color: var(--kid-yellow) !important;
+  box-shadow: 0 8px 0 rgb(0 0 0 / 35%), 0 0 0 4px rgb(255 210 63 / 25%), 0 0 26px rgb(255 210 63 / 20%);
+}
+body.kid-home .chapter.path-node.done .node-content-card {
+  border-color: color-mix(in srgb, var(--kid-mint) 75%, #2a2468) !important;
+}
+
+body.kid-home .node-content-card h2 {
+  font-family: var(--kid-display); font-size: 22px; font-weight: 700; line-height: 1.25;
+  margin: 0 0 8px; color: var(--kid-ink);
+}
+body.kid-home .node-content-card p {
+  font-size: 15px; line-height: 1.5; min-height: 44px; flex: 1; margin: 0 0 16px;
+  color: #e3ddff !important; font-weight: 600;
+}
+body.kid-home .node-card-footer {
+  display: flex; flex-direction: column; gap: 4px; margin-top: auto;
+}
+body.kid-home .node-content-card button {
+  width: 100%; min-height: 50px; padding: 0 20px; font-size: 17px; font-weight: 700;
+  background: var(--kid-panel-2) !important; border: 2px solid #5a4cc0 !important;
+  border-radius: 16px !important; color: var(--kid-ink) !important;
+  box-shadow: 0 4px 0 #1b154c;
+}
+body.kid-home .node-content-card button.primary {
+  background: linear-gradient(180deg, #ffb057, var(--kid-orange)) !important;
+  border-color: #ffc27a !important; color: #2b1300 !important;
+  box-shadow: 0 5px 0 #a34208 !important;
+}
+
+/* Apex / Boss Node */
+body.kid-home .chapter.path-node.path-node-boss {
+  display: flex !important; flex-direction: column !important;
+  align-items: center !important; gap: 14px; margin-top: 24px;
+}
+body.kid-home .boss-circle {
+  width: 86px !important; height: 86px !important;
+  border-color: var(--kid-yellow) !important;
+  background: radial-gradient(circle at 35% 35%, #443206, #1a1300 90%) !important;
+  box-shadow: 0 8px 0 rgb(0 0 0 / 50%), 0 0 32px rgb(255 210 63 / 50%) !important;
+}
+body.kid-home .boss-card {
+  max-width: 520px; width: 100%;
+  border-color: var(--kid-yellow) !important;
+  background: linear-gradient(160deg, #382705 0%, #1a1329 65%) !important;
+  box-shadow: 0 8px 0 rgb(0 0 0 / 40%), 0 0 32px rgb(255 210 63 / 25%) !important;
+  text-align: center;
+}
+body.kid-home .boss-card::before, body.kid-home .boss-card::after { display: none !important; }
+body.kid-home .boss-card h2 { font-size: 24px; color: var(--kid-yellow); }
+body.kid-home .boss-btn {
+  background: linear-gradient(180deg, #ffd74a, var(--kid-yellow)) !important;
+  color: #241400 !important; border-color: #ffe885 !important;
+}
+
+/* Fallback non-path chapters */
+body.kid-home .chapter:not(.path-node) {
   --chapter-color: var(--kid-orange);
   display: flex; flex-direction: column; padding: 22px; overflow: hidden;
   background: linear-gradient(160deg, color-mix(in srgb, var(--chapter-color) 20%, #1b1744) 0%, #1b1744 60%) !important;
@@ -417,15 +612,15 @@ body.kid-home .chapter {
   transition: translate .18s ease, box-shadow .18s ease, border-color .18s;
   animation: kid-pop-in .45s both cubic-bezier(.2, 1.4, .4, 1);
 }
-body.kid-home .chapter:hover {
+body.kid-home .chapter:not(.path-node):hover {
   translate: 0 -4px;
   box-shadow: 0 10px 0 rgb(0 0 0 / 30%), 0 0 28px color-mix(in srgb, var(--chapter-color) 35%, transparent);
 }
-body.kid-home .chapter.current {
+body.kid-home .chapter:not(.path-node).current {
   border-color: var(--kid-yellow) !important;
   box-shadow: 0 8px 0 rgb(0 0 0 / 35%), 0 0 0 5px rgb(255 210 63 / 25%);
 }
-body.kid-home .chapter.done {
+body.kid-home .chapter:not(.path-node).done {
   border-color: color-mix(in srgb, var(--kid-mint) 75%, #2a2468) !important;
 }
 body.kid-home .chapter-head {
@@ -460,21 +655,21 @@ body.kid-home .chapter-open-pill {
   font-family: var(--kid-display); font-size: 12px; font-weight: 700;
   color: var(--kid-soft); background: rgb(0 0 0 / 30%); padding: 5px 10px; border-radius: 999px;
 }
-body.kid-home .chapter h2 {
+body.kid-home .chapter:not(.path-node) h2 {
   font-family: var(--kid-display); font-size: 24px; font-weight: 700; line-height: 1.2;
   margin: 0 0 8px; color: var(--kid-ink);
 }
-body.kid-home .chapter p {
+body.kid-home .chapter:not(.path-node) p {
   font-size: 16px; line-height: 1.5; min-height: 52px; flex: 1; margin: 0 0 18px;
   color: #e3ddff !important; font-weight: 600;
 }
-body.kid-home .chapter button {
+body.kid-home .chapter:not(.path-node) button {
   width: 100%; min-height: 52px; padding: 0 20px; font-size: 18px; font-weight: 700;
   background: var(--kid-panel-2) !important; border: 2px solid #5a4cc0 !important;
   border-radius: 16px !important; color: var(--kid-ink) !important;
   box-shadow: 0 4px 0 #1b154c;
 }
-body.kid-home .chapter button.primary {
+body.kid-home .chapter:not(.path-node) button.primary {
   background: linear-gradient(180deg, #ffb057, var(--kid-orange)) !important;
   border-color: #ffc27a !important; color: #2b1300 !important;
   box-shadow: 0 5px 0 #a34208 !important;
@@ -549,6 +744,7 @@ body.kid-home #sampler-close {
 /* ------------------------------------------------------------------ */
 @keyframes kid-float { 50% { translate: 0 -4px; rotate: -6deg; } }
 @keyframes kid-bob { 50% { translate: 0 -6px; } }
+@keyframes kid-bounce { 0% { transform: translateY(0); } 100% { transform: translateY(-7px); } }
 @keyframes kid-breathe { 50% { scale: 1.03; } }
 @keyframes kid-wiggle { 25% { rotate: -8deg; } 75% { rotate: 8deg; } }
 @keyframes kid-spin-wobble { 50% { rotate: 12deg; } }
@@ -560,7 +756,7 @@ body.kid-home #sampler-close {
   body.kid-home #active-chapter { display: none; }
   body.kid-home .wordmark { font-size: 17px; }
   body.kid-home #journey-count { display: inline-block !important; font-size: 14px; padding: 4px 10px; }
-  body.kid-home #chapters, body.kid-home .trail-grid { grid-template-columns: 1fr; }
+  body.kid-home #chapters.trail-grid { grid-template-columns: 1fr; }
   body.kid-home .intro { font-size: 16px; }
   body.kid-home .section-title { font-size: 28px; }
   body.kid-home .progress-wrap { width: 100%; }

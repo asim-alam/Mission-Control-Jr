@@ -160,43 +160,97 @@ function render(){
   $('return-active').hidden=!active;
   $('chapters').replaceChildren();
 
+  let index = 0;
   for(const chapter of chapters){
-    const done=state.completed.includes(chapter.id),record=state.records[chapter.id],card=document.createElement('article');
-    card.className=`chapter${done?' done':''}${next===chapter.id?' current':''}`;
+    const done=state.completed.includes(chapter.id),record=state.records[chapter.id],node=document.createElement('article');
+    const isNext = next === chapter.id;
+    const isEven = index % 2 === 1;
+    node.className=`chapter path-node ${isEven ? 'node-right' : 'node-left'}${done?' done':''}${isNext?' current':''}`;
     const look=CHAPTER_LOOK[chapter.id]||{icon:'🚀',color:'#ff9a5c'};
-    card.dataset.chapter=chapter.id;
-    card.style.setProperty('--chapter-color',look.color);
+    node.dataset.chapter=chapter.id;
+    node.style.setProperty('--chapter-color',look.color);
 
     const stepLabel=Number(chapter.number)?`Mission ${Number(chapter.number)}`:'Bonus';
-    const statusPill=done?'<span class="chapter-star" aria-label="Done">⭐ Finished</span>':(chapter.id===next?'<span class="chapter-next-pill">🚀 Up Next</span>':'<span class="chapter-open-pill">🔓 Open</span>');
+    const statusPill=done?'<span class="chapter-star" aria-label="Done">⭐ Finished</span>':(isNext?'<span class="chapter-next-pill">🚀 Up Next</span>':'<span class="chapter-open-pill">🔓 Open</span>');
 
-    card.innerHTML=`
-      <div class="chapter-head">
-        <span class="chapter-icon" aria-hidden="true">${look.icon}</span>
-        <div class="chapter-meta">
-          <span class="chapter-step-badge">${stepLabel}</span>
-          <span class="chapter-sol-text">${kidDay(chapter.sol)}</span>
+    node.innerHTML=`
+      <div class="node-waypoint-anchor">
+        <div class="node-waypoint-circle" style="--node-accent: ${look.color}">
+          <span class="node-icon" aria-hidden="true">${look.icon}</span>
+          ${isNext ? '<div class="node-rover-pin" aria-label="You are here"><span class="rover-token">🚙</span><span class="rover-speech">YOU ARE HERE!</span></div>' : ''}
+          ${done ? '<span class="node-star-badge" aria-label="Done">⭐</span>' : ''}
         </div>
-        ${statusPill}
+        <div class="node-step-number">${Number(chapter.number) ? `Level ${Number(chapter.number)}` : 'Bonus'}</div>
       </div>
-      <h2>${chapter.title}</h2>
-      <p>${chapter.description}</p>
+      <div class="node-content-card">
+        <div class="chapter-head">
+          <div class="chapter-meta">
+            <span class="chapter-step-badge">${stepLabel}</span>
+            <span class="chapter-sol-text">${kidDay(chapter.sol)}</span>
+          </div>
+          ${statusPill}
+        </div>
+        <h2>${chapter.title}</h2>
+        <p>${chapter.description}</p>
+        <div class="node-card-footer"></div>
+      </div>
     `;
 
     const button=document.createElement('button');
-    button.textContent=done?'↻ Play again':chapter.id===next?'▶ Play Up Next!':'▶ Practice';
-    if(chapter.id===next)button.className='primary';
-    button.onclick=()=>{
+    button.textContent=done?'↻ Replay':isNext?'▶ Play Up Next!':'▶ Practice';
+    if(isNext)button.className='primary';
+    const launchChapter=()=>{
       if($('mission-map'))$('mission-map').hidden=true;
       requestChapter(chapter.id,done);
     };
+    button.onclick=launchChapter;
+    const waypointCircle=node.querySelector('.node-waypoint-circle');
+    if(waypointCircle)waypointCircle.onclick=launchChapter;
 
     const status=document.createElement('div');
     status.className='chapter-status';
-    status.textContent=done?`${completionStatus(record)}${record?.assisted?' · with help':''}${record?.score!=null?` · ${record.score}/100`:''}`:chapter.id===next?'⭐ Recommended next step':'Play any time';
+    status.textContent=done?`${completionStatus(record)}${record?.assisted?' · with help':''}${record?.score!=null?` · ${record.score}/100`:''}`:isNext?'⭐ Recommended next step':'Play any time';
     
-    card.append(button,status);
-    $('chapters').append(card);
+    node.querySelector('.node-card-footer').append(button,status);
+    $('chapters').append(node);
+    index++;
+  }
+
+  // At the end of Mars campaign, add Base Boss as final apex node on the path!
+  if(campaign==='mars'){
+    const bossNode=document.createElement('article');
+    bossNode.className='chapter path-node path-node-boss node-center';
+    bossNode.innerHTML=`
+      <div class="node-waypoint-anchor">
+        <div class="node-waypoint-circle boss-circle">
+          <span class="node-icon" aria-hidden="true">👑</span>
+        </div>
+        <div class="node-step-number">Final Boss</div>
+      </div>
+      <div class="node-content-card boss-card">
+        <div class="chapter-head">
+          <div class="chapter-meta">
+            <span class="chapter-step-badge" style="color:var(--kid-yellow)">COMMAND SIMULATION</span>
+            <span class="chapter-sol-text">30 MARS DAYS</span>
+          </div>
+          <span class="chapter-star" style="background:var(--kid-yellow); color:#2b1d00">👑 Apex</span>
+        </div>
+        <h2>Be the Base Boss</h2>
+        <p>Take charge of Meridian Base for a full month! Balance food, solar power, water recycler and jobs.</p>
+        <div class="node-card-footer">
+          <button type="button" class="boss-btn primary">Run the Base ▶</button>
+          <div class="chapter-status" style="color:var(--kid-yellow)">Open for certified Commanders</div>
+        </div>
+      </div>
+    `;
+    const launchBoss=()=>{
+      if($('mission-map'))$('mission-map').hidden=true;
+      requestChapter('extended');
+    };
+    bossNode.querySelector('.boss-btn').onclick=launchBoss;
+    const bossCircle=bossNode.querySelector('.boss-circle');
+    if(bossCircle)bossCircle.onclick=launchBoss;
+    $('chapters').append(bossNode);
   }
 }
 
