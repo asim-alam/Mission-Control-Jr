@@ -1345,7 +1345,7 @@ body.kid-home #journey-count, body.kid-home .wordmark { white-space: nowrap; }
   box-shadow: 0 2px 0 rgba(0,0,0,0.5);
 }
 
-/* Cadet Flight Lesson HUD Card */
+/* Cadet Flight & Station Practical Lesson HUD Card */
 .flight-lesson-card {
   position: fixed;
   top: 76px;
@@ -1359,11 +1359,23 @@ body.kid-home #journey-count, body.kid-home .wordmark { white-space: nowrap; }
   border-radius: 20px;
   padding: 14px 18px;
   box-shadow: 0 12px 36px rgba(0, 0, 0, 0.65), 0 0 24px rgba(76, 201, 255, 0.2);
-  z-index: 28;
+  z-index: 35;
   color: var(--kid-ink);
   pointer-events: auto;
   backdrop-filter: blur(8px);
   animation: kid-pop-in .3s ease-out;
+}
+#station-practice-btn {
+  background: linear-gradient(180deg, #373082, #231c5c) !important;
+  border: 1.5px solid var(--kid-yellow) !important;
+  color: var(--kid-yellow) !important;
+  font-weight: 700 !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4) !important;
+}
+#station-practice-btn:hover {
+  background: #463d9a !important;
+  color: #fff !important;
+  border-color: #fff !important;
 }
 .lesson-top-bar {
   display: flex;
