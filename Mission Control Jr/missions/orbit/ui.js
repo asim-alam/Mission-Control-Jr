@@ -197,7 +197,10 @@ function updateStationTelemetry(ctx) {
     }
   }
 
-  // 2. Update waypoint telemetry in Job card if visible
+  // 2. Update device visualizer
+  updateDeviceVisualizer(ctx);
+
+  // 3. Update waypoint telemetry in Job card if visible
   const waypointEl = document.getElementById('mx-job-waypoint');
   if (waypointEl && !waypointEl.hidden && ctx.mission) {
     const stationTarget = getStationTarget(ctx.mission);
@@ -233,6 +236,298 @@ function speakStationText(text) {
       s.speak(u);
     }
   } catch {}
+}
+
+function renderDeviceVisualizer(stepIndex, ctx) {
+  const container = stationLessonEl?.querySelector('#station-device-vis');
+  if (!container) return;
+
+  const s = ctx?.mission || {};
+  const loads = s.loads || {};
+
+  if (stepIndex === 0) {
+    // Step 1: Power Panel Switches Visualization
+    const radioOn = !!loads.radio;
+    const ampOn = !!loads.amp;
+    const motorOn = !!loads.motor;
+    const countOn = (radioOn ? 1 : 0) + (ampOn ? 1 : 0) + (motorOn ? 1 : 0);
+
+    container.innerHTML = `
+      <div class="device-vis-panel">
+        <div class="vis-header">
+          <span class="vis-title">⚡ POWER PANEL SWITCH BOARD</span>
+          <span class="vis-badge ${countOn === 3 ? 'ready' : ''}" id="vis-panel-status">${countOn}/3 SWITCHES ON</span>
+        </div>
+        <div class="vis-switches-grid">
+          <div class="vis-switch-box locked">
+            <div class="vis-switch-slot"><div class="vis-lever up"></div></div>
+            <div class="vis-lamp green"></div>
+            <span class="vis-icon">🫁</span>
+            <span class="vis-name">Life</span>
+            <span class="vis-tag">LOCKED</span>
+          </div>
+          <div class="vis-switch-box ok">
+            <div class="vis-switch-slot"><div class="vis-lever up"></div></div>
+            <div class="vis-lamp green"></div>
+            <span class="vis-icon">🔥</span>
+            <span class="vis-name">Heat</span>
+            <span class="vis-tag">ON</span>
+          </div>
+          <div class="vis-switch-box target ${radioOn ? 'is-on' : 'is-off'}" id="vis-sw-radio">
+            <div class="vis-switch-slot"><div class="vis-lever ${radioOn ? 'up' : 'down'}"></div></div>
+            <div class="vis-lamp ${radioOn ? 'green' : 'amber'}"></div>
+            <span class="vis-icon">📻</span>
+            <span class="vis-name">Radio</span>
+            <span class="vis-state-btn">${radioOn ? '✅ ON' : 'FLIP UP'}</span>
+          </div>
+          <div class="vis-switch-box target ${ampOn ? 'is-on' : 'is-off'}" id="vis-sw-amp">
+            <div class="vis-switch-slot"><div class="vis-lever ${ampOn ? 'up' : 'down'}"></div></div>
+            <div class="vis-lamp ${ampOn ? 'green' : 'amber'}"></div>
+            <span class="vis-icon">📶</span>
+            <span class="vis-name">Amp</span>
+            <span class="vis-state-btn">${ampOn ? '✅ ON' : 'FLIP UP'}</span>
+          </div>
+          <div class="vis-switch-box target ${motorOn ? 'is-on' : 'is-off'}" id="vis-sw-motor">
+            <div class="vis-switch-slot"><div class="vis-lever ${motorOn ? 'up' : 'down'}"></div></div>
+            <div class="vis-lamp ${motorOn ? 'green' : 'amber'}"></div>
+            <span class="vis-icon">🛰️</span>
+            <span class="vis-name">Antenna</span>
+            <span class="vis-state-btn">${motorOn ? '✅ ON' : 'FLIP UP'}</span>
+          </div>
+        </div>
+        <div class="vis-caption-hint" id="vis-panel-hint">
+          ${countOn === 3 
+            ? '🎉 <b>All 3 powered!</b> Ready to test signal at the Radio Rack.' 
+            : '👉 <b>Aim at switches #3, #4 & #5</b> and press <b>(E)</b> to flip UP into ON.'}
+        </div>
+      </div>
+    `;
+  } else if (stepIndex === 1) {
+    // Step 2: Radio Rack & Green Test Button Visualization
+    const isDiagnosed = !!s.diagnosed;
+    const faultPart = s.diagnosed ? s.scenario?.parts[s.diagnosed] : null;
+
+    container.innerHTML = `
+      <div class="device-vis-panel">
+        <div class="vis-header">
+          <span class="vis-title">📻 RADIO RACK & TEST BUTTON</span>
+          <span class="vis-badge highlight">DIAGNOSTIC BAY</span>
+        </div>
+        <div class="vis-rack-layout">
+          <div class="vis-rack-target-btn">
+            <div class="vis-big-green-btn"><span class="btn-core"></span></div>
+            <div class="vis-btn-desc">
+              <strong>🟢 Round Green Test Button</strong>
+              <small>Aim crosshair and press <b>(E)</b> or click to test signal!</small>
+            </div>
+            <span class="vis-press-pill">PRESS (E)</span>
+          </div>
+          <div class="vis-rack-components-row">
+            <div class="vis-rack-subitem ${s.tester === 'rack' ? 'active' : ''}">
+              <span class="comp-icon">🟨</span>
+              <div class="comp-info">
+                <strong>Tester Socket</strong>
+                <small>${s.tester === 'rack' ? 'Tester Clipped ✅' : 'From 🧰 Spares'}</small>
+              </div>
+            </div>
+            <div class="vis-rack-subitem ${s.diagnosed === 'feed' ? 'fault' : ''}">
+              <span class="comp-icon">🔌</span>
+              <div class="comp-info">
+                <strong>Cable Plug</strong>
+                <small>Antenna feed</small>
+              </div>
+            </div>
+            <div class="vis-rack-subitem ${s.diagnosed === 'amp' ? 'fault' : ''}">
+              <span class="comp-icon">📶</span>
+              <div class="comp-info">
+                <strong>Amp Module</strong>
+                <small>Swap from Locker</small>
+              </div>
+            </div>
+            <div class="vis-rack-subitem ${s.diagnosed === 'card' ? 'fault' : ''}">
+              <span class="comp-icon">🟩</span>
+              <div class="comp-info">
+                <strong>Control Card</strong>
+                <small>Reseat in slot</small>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="vis-caption-hint">
+          ${isDiagnosed 
+            ? `⚠️ <b>Broken Part Found:</b> ${faultPart?.label || s.diagnosed}! Switch off power before touching!` 
+            : '👉 <b>Green Button:</b> Press to test. <i>(Tester from 🧰 Spares pinpoints which part broke!)</i>'}
+        </div>
+      </div>
+    `;
+  } else if (stepIndex === 2) {
+    // Step 3: 3-Stage Safe Repair Procedure
+    const isFixed = !!s.fixed;
+    const isComms = !!s.comms;
+
+    container.innerHTML = `
+      <div class="device-vis-panel">
+        <div class="vis-header">
+          <span class="vis-title">🔧 SAFE RADIO REPAIR STEPS</span>
+          <span class="vis-badge ${isComms ? 'ready' : ''}">${isComms ? 'ONLINE ✅' : '3 STEPS'}</span>
+        </div>
+        <div class="vis-repair-steps-row">
+          <div class="vis-repair-step ${isFixed ? 'done' : 'active'}">
+            <span class="step-num">1</span>
+            <span class="step-ic">⚡</span>
+            <strong>Turn Power OFF</strong>
+            <small>At Power Panel</small>
+          </div>
+          <div class="vis-repair-step-arrow">➔</div>
+          <div class="vis-repair-step ${isFixed ? 'done' : ''}">
+            <span class="step-num">2</span>
+            <span class="step-ic">🔧</span>
+            <strong>Fix / Swap Part</strong>
+            <small>At Radio Rack</small>
+          </div>
+          <div class="vis-repair-step-arrow">➔</div>
+          <div class="vis-repair-step ${isComms ? 'done' : isFixed ? 'active' : ''}">
+            <span class="step-num">3</span>
+            <span class="step-ic">🟢</span>
+            <strong>Turn ON & Test</strong>
+            <small>Green Button</small>
+          </div>
+        </div>
+        <div class="vis-caption-hint">
+          ${isComms 
+            ? '🎉 <b>Meridian Base Connected!</b> Radio beacon is loud and clear.' 
+            : '👉 <b>Rule:</b> Always switch off power first so you don\'t get zapped!'}
+        </div>
+      </div>
+    `;
+  } else if (stepIndex === 3) {
+    // Step 4: Holographic Landing Planner Table
+    const chosenSite = s.site;
+    const siteObj = chosenSite ? s.scenario?.sites[chosenSite] : null;
+
+    container.innerHTML = `
+      <div class="device-vis-panel">
+        <div class="vis-header">
+          <span class="vis-title">🗺️ HOLOGRAPHIC PLANNER TABLE</span>
+          <span class="vis-badge ${chosenSite ? 'ready' : ''}">${chosenSite ? `${siteObj?.icon} ${siteObj?.label}` : 'PICK SITE'}</span>
+        </div>
+        <div class="vis-planner-graphic">
+          <div class="vis-hologram-circle">
+            <div class="vis-safe-zone"></div>
+            <div class="vis-ellipse-ring"></div>
+            <div class="vis-base-beacon">🏠 Base</div>
+            <div class="vis-rock-marker r1">🪨</div>
+            <div class="vis-rock-marker r2">🪨</div>
+            <div class="vis-lander-marker">🚀</div>
+          </div>
+          <div class="vis-sites-mini-list">
+            <div class="site-mini-chip ${chosenSite === 'pad' ? 'selected' : ''}">🏠 <b>Pad</b>: 0.3km · Rocks</div>
+            <div class="site-mini-chip ${chosenSite === 'ridge' ? 'selected' : ''}">⛰️ <b>Ridge</b>: 2.5km · Dunes</div>
+            <div class="site-mini-chip ${chosenSite === 'plains' ? 'selected' : ''}">🟫 <b>Plains</b>: 9km · Smooth</div>
+          </div>
+        </div>
+        <div class="vis-caption-hint">
+          ${chosenSite 
+            ? `✅ <b>Selected:</b> ${siteObj?.label}. Descent trajectory locked!` 
+            : '👉 <b>Walk to the holographic table</b> and select the safest landing ellipse on Mars.'}
+        </div>
+      </div>
+    `;
+  } else if (stepIndex === 4) {
+    // Step 5: Lander Hatch & Descent
+    const isBoarded = !!s.boarded;
+
+    container.innerHTML = `
+      <div class="device-vis-panel">
+        <div class="vis-header">
+          <span class="vis-title">🚀 LANDER DOCKING HATCH</span>
+          <span class="vis-badge ${isBoarded ? 'ready' : 'highlight'}">${isBoarded ? 'DESCENDING' : 'FINAL STEP'}</span>
+        </div>
+        <div class="vis-hatch-graphic">
+          <div class="vis-hatch-wheel-box">
+            <div class="vis-hatch-wheel">
+              <div class="vis-spoke h"></div>
+              <div class="vis-spoke v"></div>
+            </div>
+            <div class="vis-wheel-status">HATCH WHEEL</div>
+          </div>
+          <div class="vis-hatch-checks">
+            <div class="check-row"><span>✅</span> <b>Cabin Pressure:</b> Normal</div>
+            <div class="check-row"><span>✅</span> <b>Descent Thrusters:</b> Ready</div>
+            <div class="check-row"><span>🚀</span> <b>Destination:</b> Mars Meridian Base</div>
+          </div>
+        </div>
+        <div class="vis-caption-hint">
+          👉 <b>Turn the hatch wheel:</b> Open hatch, board the lander, and begin your descent to Mars!
+        </div>
+      </div>
+    `;
+  }
+}
+
+function updateDeviceVisualizer(ctx) {
+  const container = stationLessonEl?.querySelector('#station-device-vis');
+  if (!container || !stationLessonActive || stationLessonEl.hidden) return;
+
+  const s = ctx?.mission || {};
+  const loads = s.loads || {};
+
+  if (currentStationStep === 0) {
+    const radioOn = !!loads.radio;
+    const ampOn = !!loads.amp;
+    const motorOn = !!loads.motor;
+    const countOn = (radioOn ? 1 : 0) + (ampOn ? 1 : 0) + (motorOn ? 1 : 0);
+
+    const swRadio = container.querySelector('#vis-sw-radio');
+    const swAmp = container.querySelector('#vis-sw-amp');
+    const swMotor = container.querySelector('#vis-sw-motor');
+    const statusBadge = container.querySelector('#vis-panel-status');
+    const hintEl = container.querySelector('#vis-panel-hint');
+
+    if (swRadio) {
+      swRadio.classList.toggle('is-on', radioOn);
+      swRadio.classList.toggle('is-off', !radioOn);
+      const lever = swRadio.querySelector('.vis-lever');
+      const lamp = swRadio.querySelector('.vis-lamp');
+      const btn = swRadio.querySelector('.vis-state-btn');
+      if (lever) { lever.className = `vis-lever ${radioOn ? 'up' : 'down'}`; }
+      if (lamp) { lamp.className = `vis-lamp ${radioOn ? 'green' : 'amber'}`; }
+      if (btn) { btn.textContent = radioOn ? '✅ ON' : 'FLIP UP'; }
+    }
+    if (swAmp) {
+      swAmp.classList.toggle('is-on', ampOn);
+      swAmp.classList.toggle('is-off', !ampOn);
+      const lever = swAmp.querySelector('.vis-lever');
+      const lamp = swAmp.querySelector('.vis-lamp');
+      const btn = swAmp.querySelector('.vis-state-btn');
+      if (lever) { lever.className = `vis-lever ${ampOn ? 'up' : 'down'}`; }
+      if (lamp) { lamp.className = `vis-lamp ${ampOn ? 'green' : 'amber'}`; }
+      if (btn) { btn.textContent = ampOn ? '✅ ON' : 'FLIP UP'; }
+    }
+    if (swMotor) {
+      swMotor.classList.toggle('is-on', motorOn);
+      swMotor.classList.toggle('is-off', !motorOn);
+      const lever = swMotor.querySelector('.vis-lever');
+      const lamp = swMotor.querySelector('.vis-lamp');
+      const btn = swMotor.querySelector('.vis-state-btn');
+      if (lever) { lever.className = `vis-lever ${motorOn ? 'up' : 'down'}`; }
+      if (lamp) { lamp.className = `vis-lamp ${motorOn ? 'green' : 'amber'}`; }
+      if (btn) { btn.textContent = motorOn ? '✅ ON' : 'FLIP UP'; }
+    }
+    if (statusBadge) {
+      statusBadge.textContent = `${countOn}/3 SWITCHES ON`;
+      statusBadge.classList.toggle('ready', countOn === 3);
+    }
+    if (hintEl) {
+      hintEl.innerHTML = countOn === 3
+        ? '🎉 <b>All 3 powered!</b> Ready to test signal at the Radio Rack.'
+        : '👉 <b>Aim at switches #3, #4 & #5</b> and press <b>(E)</b> to flip UP into ON.';
+    }
+
+    if (countOn === 3 && !stationStepCompleted) {
+      completeStationStep();
+    }
+  }
 }
 
 function renderStationStep(index) {
@@ -280,6 +575,7 @@ function renderStationStep(index) {
     nextBtn.textContent = index >= STATION_PRACTICAL_STEPS.length - 1 ? '🎓 Complete Training ➔' : 'Next ➔';
   }
 
+  renderDeviceVisualizer(index, stationLessonContext);
   updateStationTelemetry(stationLessonContext);
 }
 
@@ -369,6 +665,7 @@ function startStationLesson(ctx, stepIndex = 0) {
             </div>
           </div>
         </div>
+        <div id="station-device-vis" class="station-device-vis" aria-live="polite"></div>
         <div class="lesson-interactive-area">
           <div id="station-prompt-action" class="lesson-prompt-action">
             <button id="station-action-btn" type="button" class="lesson-test-btn"></button>

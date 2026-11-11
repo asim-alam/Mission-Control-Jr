@@ -1826,8 +1826,10 @@ body.kid-home #journey-count, body.kid-home .wordmark { white-space: nowrap; }
   right: 16px;
   left: auto;
   transform: none;
-  width: 310px;
+  width: 340px;
   max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
   background: linear-gradient(180deg, rgba(27, 23, 68, 0.98), rgba(16, 13, 42, 0.98));
   border: 2px solid var(--kid-sky);
   border-top: 4px solid var(--kid-yellow);
@@ -2378,6 +2380,429 @@ body.kid-home #journey-count, body.kid-home .wordmark { white-space: nowrap; }
   background: rgba(255, 210, 63, 0.25);
   border-color: var(--kid-yellow);
   color: var(--kid-yellow);
+}
+
+/* ==========================================================================
+   Station Visual Device Schematics (Power Panel, Radio Rack, Planner, Hatch)
+   ========================================================================== */
+.station-device-vis {
+  margin: 6px 0 8px 0;
+}
+.device-vis-panel {
+  background: linear-gradient(135deg, rgba(20, 16, 52, 0.98), rgba(12, 10, 36, 0.98));
+  border: 1.5px solid rgba(76, 201, 255, 0.45);
+  border-radius: 12px;
+  padding: 8px 10px;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5), 0 3px 10px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.device-vis-panel .vis-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 4px;
+}
+.device-vis-panel .vis-title {
+  font-family: var(--kid-display);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: var(--kid-yellow);
+}
+.device-vis-panel .vis-badge {
+  font-family: var(--kid-display);
+  font-size: 10px;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--kid-soft);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+.device-vis-panel .vis-badge.ready {
+  background: rgba(62, 230, 181, 0.25);
+  border-color: var(--kid-mint);
+  color: var(--kid-mint);
+}
+.device-vis-panel .vis-badge.highlight {
+  background: rgba(255, 210, 63, 0.25);
+  border-color: var(--kid-yellow);
+  color: var(--kid-yellow);
+}
+
+/* Power panel switches diagram */
+.vis-switches-grid {
+  display: flex;
+  gap: 4px;
+  justify-content: space-between;
+}
+.vis-switch-box {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  padding: 5px 2px;
+  gap: 2px;
+  text-align: center;
+}
+.vis-switch-box.target {
+  border-color: rgba(255, 210, 63, 0.4);
+  background: rgba(255, 210, 63, 0.06);
+}
+.vis-switch-box.target.is-on {
+  border-color: var(--kid-mint);
+  background: rgba(62, 230, 181, 0.12);
+}
+.vis-switch-slot {
+  width: 14px;
+  height: 26px;
+  background: #111;
+  border-radius: 3px;
+  position: relative;
+  border: 1px solid #333;
+  margin-bottom: 2px;
+}
+.vis-lever {
+  width: 10px;
+  height: 14px;
+  background: linear-gradient(180deg, #e4e4e4, #999);
+  border-radius: 2px;
+  position: absolute;
+  left: 1px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.6);
+  transition: all 0.2s ease;
+}
+.vis-lever.up {
+  top: 1px;
+  background: linear-gradient(180deg, #fff, #bbb);
+}
+.vis-lever.down {
+  bottom: 1px;
+  background: linear-gradient(180deg, #888, #555);
+}
+.vis-lamp {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #444;
+}
+.vis-lamp.green {
+  background: #3ee6b5;
+  box-shadow: 0 0 6px #3ee6b5;
+}
+.vis-lamp.amber {
+  background: #ffd23f;
+  box-shadow: 0 0 6px #ffd23f;
+}
+.vis-icon {
+  font-size: 13px;
+  line-height: 1;
+}
+.vis-name {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+}
+.vis-tag {
+  font-size: 8px;
+  font-weight: 700;
+  color: var(--kid-soft);
+  opacity: 0.75;
+}
+.vis-state-btn {
+  font-size: 8.5px;
+  font-weight: 800;
+  padding: 1px 3px;
+  border-radius: 4px;
+  background: rgba(255, 210, 63, 0.2);
+  color: var(--kid-yellow);
+}
+.vis-switch-box.is-on .vis-state-btn {
+  background: rgba(62, 230, 181, 0.25);
+  color: var(--kid-mint);
+}
+.vis-caption-hint {
+  font-size: 10.5px;
+  color: #dcd6fd;
+  line-height: 1.3;
+  padding: 4px 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  border-left: 3px solid var(--kid-yellow);
+}
+
+/* Radio Rack diagram */
+.vis-rack-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.vis-rack-target-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(62, 230, 181, 0.15);
+  border: 1.5px solid var(--kid-mint);
+  border-radius: 8px;
+  padding: 6px 8px;
+}
+.vis-big-green-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #5affb5, #1d9d6a);
+  box-shadow: 0 0 10px rgba(62, 230, 181, 0.8), inset 0 1px 2px rgba(255,255,255,0.8);
+  border: 2px solid #fff;
+  flex-shrink: 0;
+  animation: pulse-glow 1.2s infinite alternate;
+}
+.vis-btn-desc {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.vis-btn-desc strong {
+  font-size: 11px;
+  color: #fff;
+}
+.vis-btn-desc small {
+  font-size: 9.5px;
+  color: var(--kid-soft);
+}
+.vis-press-pill {
+  font-family: var(--kid-display);
+  font-size: 10px;
+  font-weight: 800;
+  background: var(--kid-mint);
+  color: #0b2e20;
+  padding: 2px 6px;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+.vis-rack-components-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+}
+.vis-rack-subitem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  padding: 4px 2px;
+  gap: 2px;
+}
+.vis-rack-subitem.active {
+  border-color: var(--kid-mint);
+  background: rgba(62, 230, 181, 0.15);
+}
+.vis-rack-subitem.fault {
+  border-color: #ff4a4a;
+  background: rgba(255, 74, 74, 0.2);
+  animation: pulse-glow 0.8s infinite alternate;
+}
+.vis-rack-subitem .comp-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+.vis-rack-subitem .comp-info strong {
+  display: block;
+  font-size: 9px;
+  color: #fff;
+}
+.vis-rack-subitem .comp-info small {
+  display: block;
+  font-size: 8px;
+  color: var(--kid-soft);
+}
+
+/* Repair Pipeline */
+.vis-repair-steps-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+}
+.vis-repair-step {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  padding: 5px 3px;
+  gap: 2px;
+  position: relative;
+}
+.vis-repair-step.active {
+  border-color: var(--kid-yellow);
+  background: rgba(255, 210, 63, 0.15);
+}
+.vis-repair-step.done {
+  border-color: var(--kid-mint);
+  background: rgba(62, 230, 181, 0.15);
+}
+.vis-repair-step .step-num {
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--kid-sky);
+  color: #120f2e;
+  font-size: 9px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.vis-repair-step .step-ic {
+  font-size: 13px;
+}
+.vis-repair-step strong {
+  font-size: 9.5px;
+  color: #fff;
+  line-height: 1.15;
+}
+.vis-repair-step small {
+  font-size: 8px;
+  color: var(--kid-soft);
+}
+.vis-repair-step-arrow {
+  color: var(--kid-yellow);
+  font-weight: 800;
+  font-size: 12px;
+}
+
+/* Planner & Hatch graphics */
+.vis-planner-graphic, .vis-hatch-graphic {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.vis-hologram-circle {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(62, 224, 138, 0.25) 0%, rgba(197, 106, 60, 0.3) 70%, transparent 100%);
+  border: 1.5px solid var(--kid-mint);
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.vis-ellipse-ring {
+  width: 50px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1.5px solid #ffe14a;
+  position: absolute;
+}
+.vis-safe-zone {
+  width: 36px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(62, 230, 181, 0.3);
+  position: absolute;
+}
+.vis-base-beacon {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  font-size: 8px;
+  font-weight: 800;
+  color: var(--kid-sky);
+}
+.vis-rock-marker {
+  position: absolute;
+  font-size: 10px;
+}
+.vis-rock-marker.r1 { top: 6px; left: 10px; }
+.vis-rock-marker.r2 { bottom: 12px; left: 14px; }
+.vis-lander-marker {
+  position: absolute;
+  font-size: 11px;
+}
+.vis-sites-mini-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.site-mini-chip {
+  font-size: 9.5px;
+  padding: 3px 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  color: #fff;
+}
+.site-mini-chip.selected {
+  border-color: var(--kid-yellow);
+  background: rgba(255, 210, 63, 0.2);
+  color: var(--kid-yellow);
+  font-weight: 700;
+}
+.vis-hatch-wheel-box {
+  width: 60px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.vis-hatch-wheel {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 3.5px solid #ffb02e;
+  position: relative;
+  box-shadow: 0 0 8px rgba(255, 176, 46, 0.5);
+  animation: rotate-wheel 8s linear infinite;
+}
+@keyframes rotate-wheel {
+  100% { transform: rotate(360deg); }
+}
+.vis-spoke {
+  position: absolute;
+  background: #ffb02e;
+}
+.vis-spoke.h { width: 100%; height: 3px; top: calc(50% - 1.5px); left: 0; }
+.vis-spoke.v { height: 100%; width: 3px; left: calc(50% - 1.5px); top: 0; }
+.vis-wheel-status {
+  font-size: 8px;
+  font-weight: 800;
+  color: var(--kid-yellow);
+}
+.vis-hatch-checks {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.vis-hatch-checks .check-row {
+  font-size: 10px;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 2px 6px;
+  border-radius: 5px;
 }
 
 
