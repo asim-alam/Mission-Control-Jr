@@ -241,6 +241,104 @@ function startStationLesson(ctx, stepIndex = 0) {
   renderStationStep(currentStationStep);
 }
 
+const MISSION_STEP_MESSAGES = [
+  {
+    num: 1,
+    title: 'Find What Is Broken',
+    icon: '🔍',
+    briefMsg: 'Test the radio on the rack or grab the tester from Spares to find the broken part.',
+    doneCheck: s => !!(s.diagnosed || s.fixed),
+    completeTitle: 'STEP 1 COMPLETE: Broken Part Found! 🔍',
+    completeMsg: 'You pinpointed the broken part! Remember: switch off its power before touching it, then fix or swap it.',
+    nextTip: 'Next: Switch off power safely and fix the part.'
+  },
+  {
+    num: 2,
+    title: 'Fix & Test the Radio',
+    icon: '📻',
+    briefMsg: 'Safely turn power off (no zaps!), fix the part, and test signal to Meridian Base.',
+    doneCheck: s => !!s.comms,
+    completeTitle: 'STEP 2 COMPLETE: Radio Connected! 📻',
+    completeMsg: 'Meridian Base hears Asteria loud and clear! The surface radio beacon is now active.',
+    nextTip: 'Next: Charge the lander while in sunlight.'
+  },
+  {
+    num: 3,
+    title: 'Charge the Lander',
+    icon: '🔋',
+    briefMsg: 'Charge to 50% in sunlight so the hazard camera can steer away from rocks.',
+    doneCheck: s => hazardCamReady(s),
+    completeTitle: 'STEP 3 COMPLETE: Lander Charged! 🔋',
+    completeMsg: 'Lander charge is high enough! The terrain hazard camera is ready to steer around rocks.',
+    nextTip: 'Next: Pick a landing site at the planner table.'
+  },
+  {
+    num: 4,
+    title: 'Pick a Landing Site',
+    icon: '🗺️',
+    briefMsg: 'Choose the safest landing ellipse at the holographic planner table.',
+    doneCheck: s => !!s.site,
+    completeTitle: 'STEP 4 COMPLETE: Landing Site Chosen! 🗺️',
+    completeMsg: 'Landing site confirmed on Mars! The descent trajectory is calculated.',
+    nextTip: 'Next: Head to the lander hatch to board!'
+  },
+  {
+    num: 5,
+    title: 'Board the Lander & Land',
+    icon: '🚀',
+    briefMsg: 'Open the hatch, check seals, and fly down through Mars’ thin atmosphere.',
+    doneCheck: s => !!s.boarded,
+    completeTitle: 'STEP 5 COMPLETE: Lander Sealed & Descending! 🚀',
+    completeMsg: 'Hatch locked tight! Undocking from Asteria Station and descending to Mars surface!',
+    nextTip: 'Touchdown on Mars!'
+  }
+];
+
+let completedMissionSteps = new Set();
+let stepAlertEl = null;
+let stepAlertTimer = null;
+
+function showStepCompletionAlert(step) {
+  if (!stepAlertEl) {
+    stepAlertEl = document.createElement('div');
+    stepAlertEl.id = 'mission-step-alert';
+    stepAlertEl.className = 'mission-step-alert-card';
+    stepAlertEl.setAttribute('role', 'alert');
+    stepAlertEl.setAttribute('aria-live', 'assertive');
+    stepAlertEl.innerHTML = `
+      <span class="step-alert-icon" id="step-alert-icon">🎉</span>
+      <div class="step-alert-body">
+        <strong id="step-alert-title"></strong>
+        <p id="step-alert-msg"></p>
+        <span class="step-alert-next" id="step-alert-next"></span>
+      </div>
+      <button type="button" class="step-alert-dismiss" aria-label="Dismiss alert">✕</button>
+    `;
+    document.body.appendChild(stepAlertEl);
+    stepAlertEl.querySelector('.step-alert-dismiss').onclick = () => {
+      stepAlertEl.hidden = true;
+    };
+  }
+
+  const iconEl = stepAlertEl.querySelector('#step-alert-icon');
+  const titleEl = stepAlertEl.querySelector('#step-alert-title');
+  const msgEl = stepAlertEl.querySelector('#step-alert-msg');
+  const nextEl = stepAlertEl.querySelector('#step-alert-next');
+
+  if (iconEl) iconEl.textContent = `${step.icon}`;
+  if (titleEl) titleEl.textContent = step.completeTitle;
+  if (msgEl) msgEl.textContent = step.completeMsg;
+  if (nextEl) nextEl.textContent = `👉 ${step.nextTip}`;
+
+  stepAlertEl.hidden = false;
+  clearTimeout(stepAlertTimer);
+  stepAlertTimer = setTimeout(() => {
+    if (stepAlertEl) stepAlertEl.hidden = true;
+  }, 7500);
+
+  speakStationText(`${step.completeTitle}. ${step.completeMsg}`);
+}
+
 function brief(ctx) {
   const legacy = readLegacyOrbit();
   const note = legacy && !legacy.complete ? '<p class="mx-last">We found a game from the old version of this mission. Your journey map is kept, but this new mission starts from the beginning.</p>' : '';
@@ -248,16 +346,28 @@ function brief(ctx) {
     label: 'MARS DAY 11 · ASTERIA ORBITER',
     title: 'Arrival at Mars',
     body: `${note}
-    <div class="kid-mission-intro" style="text-align:center;padding:12px 14px;">
-      <div style="font-size:48px;margin-bottom:6px;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.4));">🏆</div>
-      <div class="celebration-tag" style="display:inline-block;margin-bottom:8px;background:rgba(255,210,63,0.18);color:var(--kid-yellow);border:1.5px solid rgba(255,210,63,0.5);border-radius:14px;padding:4px 14px;font-weight:800;font-size:12px;letter-spacing:.08em;">DOCKING COMPLETE · HATCH SEALED</div>
-      <h3 style="font-family:var(--kid-display);font-size:22px;color:#fff;margin:6px 0 10px;">Welcome aboard Asteria Station!</h3>
-      <p style="font-size:15px;color:var(--kid-soft);margin:0 0 14px;line-height:1.45;">
-        <b>Commander Elena:</b> “Great docking, Cadet Jin! Hatch is sealed and pressurized. Let's step onto the deck and check station systems hands-on!”
+    <div class="kid-mission-intro" style="text-align:center;padding:10px 14px 4px;">
+      <div style="font-size:42px;margin-bottom:4px;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.4));">🏆</div>
+      <div class="celebration-tag" style="display:inline-block;margin-bottom:6px;background:rgba(255,210,63,0.18);color:var(--kid-yellow);border:1.5px solid rgba(255,210,63,0.5);border-radius:14px;padding:3px 12px;font-weight:800;font-size:12px;letter-spacing:.08em;">DOCKING COMPLETE · HATCH SEALED</div>
+      <h3 style="font-family:var(--kid-display);font-size:22px;color:#fff;margin:4px 0 8px;">Arrival at Asteria Station!</h3>
+      <p style="font-size:14px;color:var(--kid-soft);margin:0 0 10px;line-height:1.4;">
+        <b>Commander Elena:</b> “Welcome aboard, Cadet Jin! Follow these 5 steps to complete the orbital mission and land safely on Mars.”
       </p>
-      <div class="kid-nasa-fact-pill" style="text-align:left;display:inline-block;padding:10px 16px;background:rgba(76,201,255,0.12);border:1.5px solid var(--kid-sky);border-radius:14px;color:#eef2f5;font-size:13px;line-height:1.4;">
-        🚀 <b>Practical Station Training:</b> Inside the station, follow the step-by-step practical guide to move in zero-g, check Mars through the window, manage shadow power, and safely fix the radio!
-      </div>
+    </div>
+    <div class="kid-section-title" style="margin-top:6px;">📋 5 Steps to Complete the Mission</div>
+    <div class="kid-steps-preview-grid" style="display:grid;grid-template-columns:1fr;gap:6px;margin:6px 0 12px;">
+      ${MISSION_STEP_MESSAGES.map(s => `
+        <div class="kid-step-preview-row" style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.06);border:1px solid rgba(76,201,255,0.3);border-radius:12px;padding:8px 12px;text-align:left;">
+          <span style="font-size:22px;flex-shrink:0;">${s.icon}</span>
+          <div style="flex:1;">
+            <strong style="display:block;font-size:13px;color:#ffd23f;">Step ${s.num}: ${s.title}</strong>
+            <span style="display:block;font-size:12px;color:#fff;opacity:0.9;">${s.briefMsg}</span>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+    <div class="kid-nasa-fact-pill" style="text-align:left;display:inline-block;padding:8px 14px;background:rgba(76,201,255,0.12);border:1.5px solid var(--kid-sky);border-radius:14px;color:#eef2f5;font-size:13px;line-height:1.4;">
+      🚀 <b>Practical Station Training:</b> As you complete each step, you will see a highlighted achievement message and next-step guide!
     </div>`,
     actions: [
       {
@@ -418,6 +528,14 @@ runMission({
     // Replay includes the Mars opening and docking; landing-only retry stays in the cabin.
     ctx.restart = () => { clearSaved(ID); clearApproach(); location.reload(); };
 
+    // Initialize already completed steps so alerts only fire on newly achieved steps
+    completedMissionSteps = new Set();
+    for (const step of MISSION_STEP_MESSAGES) {
+      if (step.doneCheck(ctx.mission)) {
+        completedMissionSteps.add(step.num);
+      }
+    }
+
     // Header shortcut button for station practical lesson
     const actionsBar = document.querySelector('.mx-actions');
     if (actionsBar && !document.getElementById('station-practice-btn')) {
@@ -448,6 +566,18 @@ runMission({
         completeStationStep();
       } else if (currentStationStep === 3 && (Math.hypot(p.x - (-1.5), p.z - (-11)) < 3.5 || Math.hypot(p.x - (-8), p.z) < 3.5)) {
         completeStationStep();
+      }
+    }
+
+    // Monitor and celebrate every step of completing the mission!
+    if (s.phase === 'active') {
+      for (const step of MISSION_STEP_MESSAGES) {
+        if (!completedMissionSteps.has(step.num) && step.doneCheck(s)) {
+          completedMissionSteps.add(step.num);
+          showStepCompletionAlert(step);
+          hud.toast(`🎉 ${step.completeTitle} · ${step.nextTip}`, 'info');
+          break;
+        }
       }
     }
   },

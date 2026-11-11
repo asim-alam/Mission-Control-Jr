@@ -1345,6 +1345,74 @@ body.kid-home #journey-count, body.kid-home .wordmark { white-space: nowrap; }
   box-shadow: 0 2px 0 rgba(0,0,0,0.5);
 }
 
+/* Mission Step Completion Alert Banner */
+.mission-step-alert-card {
+  position: fixed;
+  top: 76px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: linear-gradient(135deg, rgba(29, 24, 80, 0.98), rgba(46, 36, 120, 0.98));
+  border: 3px solid var(--kid-mint);
+  border-radius: 20px;
+  padding: 14px 22px;
+  box-shadow: 0 0 35px rgba(62, 230, 181, 0.5), 0 10px 30px rgba(0, 0, 0, 0.7);
+  z-index: 45;
+  color: #fff;
+  pointer-events: auto;
+  max-width: min(580px, calc(100vw - 32px));
+  animation: kid-pop-in 0.35s cubic-bezier(0.2, 1.3, 0.3, 1);
+}
+.mission-step-alert-card .step-alert-icon {
+  font-size: 36px;
+  line-height: 1;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5));
+}
+.mission-step-alert-card .step-alert-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+}
+.mission-step-alert-card strong {
+  font-family: var(--kid-display);
+  font-size: 18px;
+  letter-spacing: .03em;
+  color: var(--kid-mint);
+  text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+}
+.mission-step-alert-card p {
+  margin: 0;
+  font-family: var(--kid-body);
+  font-size: 14px;
+  color: #fff;
+  line-height: 1.35;
+}
+.mission-step-alert-card .step-alert-next {
+  font-size: 12px;
+  color: var(--kid-yellow);
+  font-weight: 700;
+  margin-top: 2px;
+}
+.mission-step-alert-card .step-alert-dismiss {
+  background: rgba(255, 255, 255, 0.12);
+  border: none;
+  color: #fff;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.mission-step-alert-card .step-alert-dismiss:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
 /* Cadet Flight & Station Practical Lesson HUD Card */
 .flight-lesson-card {
   position: fixed;
