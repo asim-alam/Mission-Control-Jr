@@ -1,7 +1,17 @@
 // Fictional training procedures. All speeds, margins and telemetry are authored game values.
 export const ORBIT_SAVE='mission-control-jr.orbit.v1';
 export const STATIONS={brief:{x:8,z:0},relay:{x:-2,z:-12},power:{x:-2,z:-4},kit:{x:-9,z:0},airlock:{x:0,z:-16},craft:{x:0,z:15}};
-export function createOrbit(){return {phase:'overview',stage:0,checks:{brief:false,diagnose:false,isolate:false,repair:false,verify:false,kit:false,airlock:false,guidance:false,propulsion:false},dock:{x:1.6,y:.65,distance:34,speed:0,bumps:0},position:{x:0,z:14},guided:false,elapsed:0,descent:0,complete:false,log:[]};}
+export function randomDock(rng=Math.random){
+  const signX=rng()<0.5?-1:1,x=+(signX*(1.2+rng()*2.2)).toFixed(1);
+  const signY=rng()<0.5?-1:1,y=+(signY*(0.6+rng()*1.4)).toFixed(1);
+  const distance=+(30+rng()*15).toFixed(1);
+  return {x,y,distance,speed:0,bumps:0};
+}
+export function createOrbit(options={}){
+  const randomize=typeof options==='boolean'?options:!!options?.randomizeDock;
+  const dock=randomize?randomDock(options?.rng||Math.random):(options?.dock||{x:1.6,y:.65,distance:34,speed:0,bumps:0});
+  return {phase:'overview',stage:0,checks:{brief:false,diagnose:false,isolate:false,repair:false,verify:false,kit:false,airlock:false,guidance:false,propulsion:false},dock:{...dock},position:{x:0,z:14},guided:false,elapsed:0,descent:0,complete:false,log:[]};
+}
 export function dockReady(d){return d.distance<=2&&Math.abs(d.x)<=.35&&Math.abs(d.y)<=.35&&Math.abs(d.speed)<=.205;}
 export function stepDock(d,input,dt){
   dt=Math.min(.05,Math.max(0,dt));

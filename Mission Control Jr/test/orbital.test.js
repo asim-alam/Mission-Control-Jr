@@ -18,3 +18,15 @@ test('complete arrival requires all station checks and lander checks before desc
 test('save and restore preserve verified progress and reject corrupt or out-of-order data',()=>{const data=new Map(),storage={setItem:(k,v)=>data.set(k,v),getItem:k=>data.get(k)};const m=prepared();assert.ok(saveOrbit(m,storage));const resumed=restoreOrbit(storage);assert.deepEqual(resumed.checks,m.checks);assert.equal(resumed.phase,'station');actAt(m,'board');saveOrbit(m,storage);assert.equal(restoreOrbit(storage).phase,'craft');data.set(ORBIT_SAVE,JSON.stringify({version:1,phase:'station',checks:{...m.checks,brief:false}}));assert.equal(restoreOrbit(storage),null);assert.equal(saveOrbit(m,{setItem(){throw Error('full');}}),false);assert.equal(restoreOrbit({getItem(){throw Error('blocked');}}),null);});
 test('every station procedure is reachable using the real player and collision layout',()=>{const previous=globalThis.addEventListener;globalThis.addEventListener=()=>{};try{const station=createStation(),m=docked(),camera=new T.PerspectiveCamera(),player=new Player(camera,{addEventListener(){}},()=>{},()=>{},()=>{});player.enabled=true;player.position.set(0,1.68,14);player.bounds={minX:-10.6,maxX:10.6,minZ:-17.5,maxZ:17.5};player.obstacles=station.colliders;for(const id of ['brief','diagnose','isolate','repair','verify','kit','airlock','board']){const task=orbitalTask(m);assert.ok(player.navigate(task.target,task.target),id);for(let frame=0;frame<3600&&player.route.length;frame++){player.update(1/60,false);assert.equal(isBlocked(player.position.x,player.position.z,station.colliders),false);}assert.equal(player.route.length,0,id);m.position={x:player.position.x,z:player.position.z};assert.ok(actOrbit(m,id,id==='diagnose'?'pointing':id==='isolate'?'antenna':undefined).ok,id);}}finally{globalThis.addEventListener=previous;}});
 test('independent restarts do not share checklist or navigation state',()=>{const a=prepared(),b=createOrbit();assert.equal(b.checks.brief,false);assert.equal(b.phase,'overview');a.dock.x=30;assert.equal(b.dock.x,1.6);});
+test('docking can start from random positions within safe corridor and auto-dock lands safely',()=>{
+  const m1 = createOrbit({randomizeDock: true});
+  assert.ok(Math.abs(m1.dock.x) >= 1.0 && Math.abs(m1.dock.x) <= 4.0, `x=${m1.dock.x}`);
+  assert.ok(Math.abs(m1.dock.y) >= 0.5 && Math.abs(m1.dock.y) <= 2.5, `y=${m1.dock.y}`);
+  assert.ok(m1.dock.distance >= 28 && m1.dock.distance <= 50, `distance=${m1.dock.distance}`);
+  assert.equal(m1.dock.speed, 0);
+  assert.equal(m1.dock.bumps, 0);
+  const d = m1.dock;
+  for (let i = 0; i < 60 * 90 && !dockReady(d); i++) stepDock(d, guidedDock(d), 1/60);
+  assert.ok(dockReady(d));
+  assert.equal(d.bumps, 0);
+});
