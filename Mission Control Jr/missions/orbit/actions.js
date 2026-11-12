@@ -78,7 +78,12 @@ export function applyAction(s, {id, targetId, payload} = {}) {
     if (on && s.tripped) return fail('The main breaker is off. Reset it first: the yellow handle.');
     s.loads[targetId] = on; recordDecision(s, id, {load: targetId, on, minute: s.minute});
     const want = powerUsed(s);
-    if (on && want > powerAvailable(s)) { trip(s, 'overload'); return ok(`Too much! ${want} units is more than the ${powerAvailable(s)} we have. The breaker tripped.`); }
+    if (on && want > powerAvailable(s)) { trip(s, 'overload'); return ok(`Too much! ${want} units is more than the ${powerAvailable(s)} we have. The breaker tripped. Tip: Switch OFF 📻 Radio or 📶 Amp first to make room for the 3-unit charger, then pull the yellow breaker handle.`); }
+    if (targetId === 'charger') {
+      return on
+        ? ok(`🔌 Lander charger on · ${want} of ${powerAvailable(s)} power units · ⚡ Charging lander! Wait 5s in sunlight to reach 80% (activates 📷 Hazard Camera)`)
+        : ok(`🔌 Lander charger off · ${want} of ${powerAvailable(s)} power units`);
+    }
     return ok(`${load.icon} ${load.label} ${on ? 'on' : 'off'} · ${powerUsed(s)} of ${powerAvailable(s)} power units`);
   }
   if (id === 'resetBreaker') {
@@ -183,14 +188,28 @@ export function getObjective(s) {
     if (!s.tests) return 'Test the radio: press the green button on the rack';
     return 'Find what is broken: use the tester, or look closely';
   }
-  if (!s.site) return !hazardCamReady(s) && !s.loads.charger ? 'Charge the lander, then pick a landing site' : 'Pick a landing site at the planner table';
+  if (!s.site) {
+    if (!hazardCamReady(s)) {
+      if (s.tripped) return 'Breaker tripped! Pull yellow handle to reset at power panel';
+      if (!s.loads.charger) {
+        const need = (powerUsed(s) + 3) > powerAvailable(s);
+        return need
+          ? '⚡ Charge lander at Power Panel: switch OFF 📻 Radio or 📶 Amp first, then switch ON 🔌 Charger (#6)'
+          : '⚡ Charge lander at Power Panel: switch ON 🔌 Charger (Switch #6) in sunlight and wait 5s to reach 80%';
+      }
+      const chargeVal = Math.round(s.charge ?? 45);
+      const secondsLeft = Math.max(0, Math.ceil((80 - chargeVal) / 7));
+      return `⚡ Charging lander: ${chargeVal}% / 80% (Wait ${secondsLeft}s in sunlight for 📷 Hazard Camera)`;
+    }
+    return 'Pick a landing site at the planner table (📷 Hazard Camera Armed!)';
+  }
   return 'Get in the lander: open the hatch';
 }
 export function getSteps(s) {
   const list = [
     {text: 'Find what is broken', done: !!(s.diagnosed || s.fixed)},
     {text: 'Fix and test the radio', done: s.comms},
-    {text: 'Charge the lander (helps)', done: hazardCamReady(s)},
+    {text: 'Charge lander to 80% in sunlight (Switch #6)', done: hazardCamReady(s)},
     {text: 'Pick a landing site', done: !!s.site},
     {text: 'Get in and land', done: s.boarded},
   ];

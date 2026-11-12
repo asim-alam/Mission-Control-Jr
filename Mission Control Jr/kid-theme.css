@@ -2549,6 +2549,9 @@ body.kid-home #journey-count, body.kid-home .wordmark { white-space: nowrap; }
 }
 .menu-btn-badges:hover {
   box-shadow: 0 6px 0 #946808 !important;
+}
+
+/* ==========================================================================
    Station Live 3D Navigation Telemetry (Dynamic Distance, Forward/Back, Left/Right)
    ========================================================================== */
 .station-nav-telemetry {
@@ -3234,6 +3237,104 @@ body.kid-home #journey-count, body.kid-home .wordmark { white-space: nowrap; }
 .vis-charger-switch-mini.is-on .vis-state-btn {
   background: var(--kid-mint);
   color: #0c3324;
+}
+.vis-charger-switch-mini {
+  cursor: pointer;
+  transition: transform 0.12s ease, border-color 0.15s ease, background 0.15s ease;
+}
+.vis-charger-switch-mini:hover {
+  transform: translateY(-1px);
+  border-color: #ffd23f;
+}
+.vis-charger-budget-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 9.5px;
+  color: #fff;
+}
+.vis-budget-text {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 6px;
+}
+.vis-budget-pill {
+  font-size: 8.5px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.vis-budget-pill.ok {
+  background: rgba(62, 230, 181, 0.2);
+  color: var(--kid-mint);
+  border: 1px solid rgba(62, 230, 181, 0.4);
+}
+.vis-budget-pill.caution {
+  background: rgba(255, 210, 63, 0.2);
+  color: var(--kid-yellow);
+  border: 1px solid rgba(255, 210, 63, 0.45);
+}
+.vis-budget-pill.warn {
+  background: rgba(255, 77, 109, 0.25);
+  color: #ffb3c1;
+  border: 1px solid rgba(255, 77, 109, 0.6);
+}
+.vis-quick-switches-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 2px;
+  padding-top: 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+.vis-quick-title {
+  font-size: 8.5px;
+  font-weight: 700;
+  color: var(--kid-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.vis-quick-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.vis-quick-chip {
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  color: #fff;
+  font-size: 8.5px;
+  font-family: inherit;
+  padding: 3px 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.12s ease;
+}
+.vis-quick-chip:hover {
+  border-color: #ffd23f;
+  background: rgba(255, 210, 63, 0.15);
+  transform: translateY(-1px);
+}
+.vis-quick-chip.is-on {
+  border-color: var(--kid-mint);
+  background: rgba(62, 230, 181, 0.16);
+  color: #e0fff4;
+}
+.vis-quick-chip.chip-charger.is-on {
+  border-color: #ffd23f;
+  background: rgba(255, 210, 63, 0.22);
+  color: #fff9db;
+  box-shadow: 0 0 8px rgba(255, 210, 63, 0.35);
 }
 
 /* =========================================================

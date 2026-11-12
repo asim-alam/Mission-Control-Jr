@@ -111,7 +111,34 @@ export async function createArrivalScene({container, getState, act, onPause, ope
   const sc = () => s().scenario;
   for (const l of LOADS) {
     world.register({id: `switch:${l}`, object: part(panel, `switch_${l}`), range: 2.1, enabled: playing,
-      label: () => { const L = sc().loads[l]; return L.locked ? `${L.icon} ${L.label}: always on (${L.units} units)` : `${L.icon} ${L.label} (${L.units} units): ${s().loads[l] ? 'ON → switch off' : 'OFF → switch on'}`; },
+      label: () => {
+        const L = sc().loads[l];
+        const on = s().loads[l];
+        if (l === 'charger') {
+          const chargeVal = Math.round(s().charge ?? 45);
+          const camReady = hazardCamReady(s());
+          const avail = powerAvailable(s());
+          const used = powerUsed(s());
+          const wouldOverload = !on && (used + L.units > avail);
+          const isShadow = inShadow(s());
+
+          if (s().tripped) return '🔌 Switch #6: Lander charger (3 units) — ⚠️ Breaker tripped! Pull down yellow handle to reset';
+          if (on) {
+            if (camReady) return `🔌 Switch #6: Lander charger [ON · 80% CHARGED ✅] — 📷 Hazard Camera Active! (Press E to switch off)`;
+            if (isShadow) return `🔌 Switch #6: Lander charger [ON · IN SHADOW 🌑] — Waiting for sunlight to charge battery (${chargeVal}%/80%)`;
+            const secondsLeft = Math.max(0, Math.ceil((80 - chargeVal) / 7));
+            return `🔌 Switch #6: Lander charger [ON · CHARGING ⚡] — Battery ${chargeVal}%/80% (Wait ${secondsLeft}s in sunlight for 📷 Hazard Cam!)`;
+          } else {
+            if (camReady) return `🔌 Switch #6: Lander charger (3 units) — Battery charged to 80% ✅ (OFF)`;
+            if (wouldOverload) return `🔌 Switch #6: Lander charger (3 units) — ⚠️ Need 3 units! Turn OFF 📻 Radio or 📶 Amp first (OFF → switch on)`;
+            return `🔌 Switch #6: Lander charger (3 units) — Turn ON & wait 5s to reach 80% for 📷 Hazard Cam: OFF → switch on`;
+          }
+        }
+        if (s().comms && (l === 'radio' || l === 'amp') && on) {
+          return `${L.icon} Switch #${l === 'radio' ? 3 : 4}: ${L.label} (${L.units} units) — [TEST COMPLETE] Turn OFF to free power for #6 Lander Charger: ON → switch off`;
+        }
+        return L.locked ? `${L.icon} ${L.label}: always on (${L.units} units)` : `${L.icon} ${L.label} (${L.units} units): ${on ? 'ON → switch off' : 'OFF → switch on'}`;
+      },
       onUse: () => act({id: 'toggleLoad', targetId: l})});
   }
   world.register({id: 'breaker', object: breaker, range: 2.1, holdSeconds: 1, enabled: () => playing() && s().tripped, label: () => 'Hold E: reset the main breaker', onUse: () => act({id: 'resetBreaker'})});
