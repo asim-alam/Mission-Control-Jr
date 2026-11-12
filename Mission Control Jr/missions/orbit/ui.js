@@ -45,7 +45,7 @@ const STATION_PRACTICAL_STEPS = [
     desc: 'In space orbit, you float in microgravity! Press <kbd class="lesson-kbd">W</kbd><kbd class="lesson-kbd">A</kbd><kbd class="lesson-kbd">S</kbd><kbd class="lesson-kbd">D</kbd> or click below to walk to the ⚡ Power Panel.',
     btnHtml: '<span class="btn-icon">⚡</span> Walk to Power Panel (W)',
     subhint: 'Tip: Press W/A/S/D on your keyboard, use walk buttons, or click below!',
-    okText: '<b>Arrived at Panel!</b> 👉 Instruction: Switch ON 📻 Radio, 📶 Amp & 🛰️ Antenna! (Switch #6 🔌 charges lander in sunlight)',
+    okText: '<b>🎉 All 3 switches powered ON!</b> 👉 Ready to test signal at the Radio Rack!',
     run(ctx) {
       ctx.view?.walk?.('panel');
     }
@@ -58,7 +58,7 @@ const STATION_PRACTICAL_STEPS = [
     desc: 'Walk to the 📻 Radio Rack to test the signal (press the green button), or grab the signal tester from 🧰 Spares.',
     btnHtml: '<span class="btn-icon">📻</span> Walk to Radio Rack',
     subhint: 'Tip: Make sure 📻 Radio, 📶 Amp, and 🛰️ Antenna are ON, then press the green button!',
-    okText: '<b>At Radio Rack!</b> 👉 Instruction: Press green button to test (or clip tester from Spares)!',
+    okText: '<b>Broken Part Pinpointed!</b> 👉 Switch off power safely before touching!',
     run(ctx) {
       ctx.view?.walk?.('rack');
     }
@@ -71,7 +71,7 @@ const STATION_PRACTICAL_STEPS = [
     desc: 'Turn power OFF (no zaps!), fix the broken part at Radio Rack, switch back ON 📻 Radio, 📶 Amp & 🛰️ Antenna, then press the green button to reach Meridian Base.',
     btnHtml: '<span class="btn-icon">⚡</span> Walk to Power Panel',
     subhint: 'Tip: Switch OFF power before touching hardware, fix, switch back ON 📻 📶 🛰️, then test.',
-    okText: '<b>Radio Fixed & Online!</b> 👉 Instruction: Signal connected! Click Next to charge & plan landing!',
+    okText: '<b>🎉 Radio Connected to Meridian Base!</b> 👉 Next: Charge lander at ⚡ Power Panel!',
     run(ctx) {
       const guidance = getRepairGuidance(ctx.mission);
       ctx.view?.walk?.(guidance.walkTarget);
@@ -85,7 +85,7 @@ const STATION_PRACTICAL_STEPS = [
     desc: 'Turn ON Switch #6 (<b>🔌 Lander charger</b>) at the <b>⚡ Power Panel</b> in sunlight so the <b>📷 Hazard Avoidance Camera</b> turns ON (at 80%), then choose your landing site at the <b>🗺️ Planner Table</b>.',
     btnHtml: '<span class="btn-icon">⚡</span> Walk to Power Panel (Charge Lander)',
     subhint: 'Tip: Switch ON #6 🔌 Lander Charger at the Power Panel in sunlight.',
-    okText: '<b>Lander Charging & Site Ready!</b> 👉 Instruction: Select your landing ellipse on the table!',
+    okText: '<b>🗺️ Landing Site Confirmed!</b> 👉 Next stop: 🚀 Lander Hatch!',
     run(ctx) {
       const s = ctx.mission;
       if (!hazardCamReady(s) && !s?.loads?.charger) {
@@ -103,7 +103,7 @@ const STATION_PRACTICAL_STEPS = [
     desc: 'Walk to the 🚀 Lander Hatch at the front of the station, check hatch seals, and fly down to Meridian Base!',
     btnHtml: '<span class="btn-icon">🚀</span> Walk to Lander Hatch',
     subhint: 'Tip: Head to the hatch, open seals, and start the descent.',
-    okText: '<b>Hatch Reached!</b> 👉 Instruction: Open hatch, seal up tight, and fly down to Mars!',
+    okText: '<b>🚀 Cadet Boarded!</b> 👉 Hatch sealed and ready to land on Mars!',
     run(ctx) {
       ctx.view?.walk?.('hatch');
     }
@@ -526,51 +526,67 @@ function renderDeviceVisualizer(stepIndex, ctx) {
   } else if (stepIndex === 1) {
     // Step 2: Radio Rack & Green Test Button Visualization
     const isDiagnosed = !!(s.diagnosed || s.fixed);
+    const isTestFailed = s.lastTest === 'plain' && !isDiagnosed;
     const faultKey = s.diagnosed || s.fault || 'card';
     const faultPart = s.scenario?.parts?.[faultKey];
+
+    const badgeText = isDiagnosed 
+      ? 'FAULT PINPOINTED ✅' 
+      : isTestFailed 
+        ? 'TEST FAILED 🔴' 
+        : 'DIAGNOSTIC BAY';
+    const badgeClass = isDiagnosed 
+      ? 'ready' 
+      : isTestFailed 
+        ? 'danger' 
+        : 'highlight';
 
     container.innerHTML = `
       <div class="device-vis-panel">
         <div class="vis-header">
           <span class="vis-title">📻 RADIO RACK & TEST BUTTON</span>
-          <span class="vis-badge ${isDiagnosed ? 'ready' : 'highlight'}">${isDiagnosed ? 'FAULT PINPOINTED ✅' : 'DIAGNOSTIC BAY'}</span>
+          <span class="vis-badge ${badgeClass}">${badgeText}</span>
         </div>
         <div class="vis-rack-layout">
-          <div class="vis-rack-target-btn">
-            <div class="vis-big-green-btn"><span class="btn-core"></span></div>
+          <div class="vis-rack-target-btn ${isTestFailed ? 'failed' : ''}">
+            <div class="vis-big-green-btn ${isTestFailed ? 'failed' : ''}"><span class="btn-core"></span></div>
             <div class="vis-btn-desc">
               <strong>🟢 Round Green Test Button</strong>
-              <small>${isDiagnosed ? `Diagnosis complete: ${faultPart?.label || faultKey} identified!` : 'Aim crosshair and press <b>(E)</b> or click to test signal!'}</small>
+              <small>${isDiagnosed 
+                ? `Diagnosis complete: ${faultPart?.label || faultKey} identified!` 
+                : isTestFailed 
+                  ? 'No signal received! Radio test failed.' 
+                  : 'Aim crosshair and press <b>(E)</b> or click to test signal!'}</small>
             </div>
-            <span class="vis-press-pill">${isDiagnosed ? 'TESTED ✅' : 'PRESS (E)'}</span>
+            <span class="vis-press-pill ${isTestFailed ? 'failed' : ''}">${isDiagnosed ? 'TESTED ✅' : isTestFailed ? 'NO SIGNAL ❌' : 'PRESS (E)'}</span>
           </div>
           <div class="vis-rack-components-row">
-            <div class="vis-rack-subitem ${s.tester === 'rack' ? 'active' : ''}">
+            <div class="vis-rack-subitem ${s.tester === 'rack' ? 'active' : isTestFailed ? 'inspect-hint' : ''}">
               <span class="comp-icon">🟨</span>
               <div class="comp-info">
                 <strong>Tester Socket</strong>
-                <small>${s.tester === 'rack' ? 'Tester Clipped ✅' : 'From 🧰 Spares'}</small>
+                <small>${s.tester === 'rack' ? 'Tester Clipped ✅' : isTestFailed ? 'From 🧰 Spares' : 'From 🧰 Spares'}</small>
               </div>
             </div>
-            <div class="vis-rack-subitem ${faultKey === 'feed' && isDiagnosed ? 'fault' : ''}">
+            <div class="vis-rack-subitem ${faultKey === 'feed' && isDiagnosed ? 'fault' : isTestFailed ? 'inspect-hint' : ''}">
               <span class="comp-icon">🔌</span>
               <div class="comp-info">
                 <strong>Cable Plug</strong>
-                <small>${faultKey === 'feed' && isDiagnosed ? '⚠️ BROKEN PART!' : 'Antenna feed'}</small>
+                <small>${faultKey === 'feed' && isDiagnosed ? '⚠️ BROKEN PART!' : isTestFailed ? '🔍 Inspect' : 'Antenna feed'}</small>
               </div>
             </div>
-            <div class="vis-rack-subitem ${faultKey === 'amp' && isDiagnosed ? 'fault' : ''}">
+            <div class="vis-rack-subitem ${faultKey === 'amp' && isDiagnosed ? 'fault' : isTestFailed ? 'inspect-hint' : ''}">
               <span class="comp-icon">📶</span>
               <div class="comp-info">
                 <strong>Amp Module</strong>
-                <small>${faultKey === 'amp' && isDiagnosed ? '⚠️ BROKEN PART!' : 'Swap from Locker'}</small>
+                <small>${faultKey === 'amp' && isDiagnosed ? '⚠️ BROKEN PART!' : isTestFailed ? '🔍 Inspect' : 'Swap from Locker'}</small>
               </div>
             </div>
-            <div class="vis-rack-subitem ${faultKey === 'card' && isDiagnosed ? 'fault' : ''}">
+            <div class="vis-rack-subitem ${faultKey === 'card' && isDiagnosed ? 'fault' : isTestFailed ? 'inspect-hint' : ''}">
               <span class="comp-icon">🟩</span>
               <div class="comp-info">
                 <strong>Control Card</strong>
-                <small>${faultKey === 'card' && isDiagnosed ? '⚠️ BROKEN PART!' : 'Reseat in slot'}</small>
+                <small>${faultKey === 'card' && isDiagnosed ? '⚠️ BROKEN PART!' : isTestFailed ? '🔍 Inspect' : 'Reseat in slot'}</small>
               </div>
             </div>
           </div>
@@ -578,7 +594,9 @@ function renderDeviceVisualizer(stepIndex, ctx) {
         <div class="vis-caption-hint">
           ${isDiagnosed 
             ? `⚠️ <b>Broken Part Found: ${faultPart?.label || faultKey}!</b> Switch off its power before touching hardware!` 
-            : '👉 <b>Green Button:</b> Press to test. <i>(Tester from 🧰 Spares pinpoints which part broke!)</i>'}
+            : isTestFailed 
+              ? '❌ <b>Test Failed: No signal!</b> Check the parts at the Radio Rack (inspect Cable Plug, Amp Module, Control Card) or clip the tester from 🧰 Spares.' 
+              : '👉 <b>Green Button:</b> Press to test. <i>(Tester from 🧰 Spares pinpoints which part broke!)</i>'}
         </div>
       </div>
     `;
@@ -816,50 +834,56 @@ function updateDeviceVisualizer(ctx) {
     if (countOn === 3) {
       if (!stationStepCompleted) {
         completeStationStep();
-      } else if (!container.dataset.switchesFinished) {
-        container.dataset.switchesFinished = 'true';
-        const okTextEl = stationLessonEl?.querySelector('#station-ok-text');
-        if (okTextEl) {
-          const msg = '<b>🎉 All 3 switches powered ON!</b> 👉 Ready to test signal at the Radio Rack!';
-          okTextEl.innerHTML = msg;
-          speakStationText(msg.replace(/<[^>]*>/g, ''));
-        }
-        startAutoAdvanceCountdown();
       }
     }
   } else if (currentStationStep === 1) {
-    if (s.diagnosed || s.fixed) {
-      if (!container.querySelector('.vis-badge.ready')) {
-        renderStationStep(1);
+    const isDiagnosed = !!(s.diagnosed || s.fixed);
+    const isTestFailed = s.lastTest === 'plain' && !isDiagnosed;
+    const currentStepKey = `${s.lastTest}_${isDiagnosed}_${s.tester}_${s.fault}`;
+
+    if (container.dataset.stepKey !== currentStepKey) {
+      container.dataset.stepKey = currentStepKey;
+      renderDeviceVisualizer(1, ctx);
+      renderStationStep(1);
+      if (isTestFailed) {
+        speakStationText('Radio test failed! No signal received. Check the parts on the radio rack or grab the signal tester from spares.');
       }
     }
+
+    if (isDiagnosed && !stationStepCompleted) {
+      completeStationStep();
+    }
   } else if (currentStationStep === 2) {
-    const guidance = getRepairGuidance(s);
-    const prevKey = container.dataset.substepKey;
-    const currentKey = `${guidance.substep}_${s.tripped}_${s.fixed}_${s.comms}`;
-    if (prevKey !== currentKey) {
-      container.dataset.substepKey = currentKey;
-      renderDeviceVisualizer(2, ctx);
+    if (s.comms && !stationStepCompleted) {
+      completeStationStep();
+    } else {
+      const guidance = getRepairGuidance(s);
+      const prevKey = container.dataset.substepKey;
+      const currentKey = `${guidance.substep}_${s.tripped}_${s.fixed}_${s.comms}`;
+      if (prevKey !== currentKey) {
+        container.dataset.substepKey = currentKey;
+        renderDeviceVisualizer(2, ctx);
 
-      const titleEl = stationLessonEl.querySelector('#station-step-title');
-      const descEl = stationLessonEl.querySelector('#station-step-desc');
-      const targetIconEl = stationLessonEl.querySelector('#station-dest-icon');
-      const targetNameEl = stationLessonEl.querySelector('#station-dest-name');
-      const actionBtn = stationLessonEl.querySelector('#station-action-btn');
-      const subhintEl = stationLessonEl.querySelector('#station-subhint');
+        const titleEl = stationLessonEl.querySelector('#station-step-title');
+        const descEl = stationLessonEl.querySelector('#station-step-desc');
+        const targetIconEl = stationLessonEl.querySelector('#station-dest-icon');
+        const targetNameEl = stationLessonEl.querySelector('#station-dest-name');
+        const actionBtn = stationLessonEl.querySelector('#station-action-btn');
+        const subhintEl = stationLessonEl.querySelector('#station-subhint');
 
-      if (titleEl) titleEl.textContent = guidance.title;
-      if (descEl) descEl.innerHTML = guidance.desc;
-      if (targetIconEl) targetIconEl.textContent = guidance.target.icon;
-      if (targetNameEl) targetNameEl.textContent = guidance.target.label;
-      if (actionBtn) {
-        actionBtn.innerHTML = guidance.btnHtml;
-        actionBtn.onclick = () => {
-          ctx.view?.walk?.(guidance.walkTarget);
-        };
+        if (titleEl) titleEl.textContent = guidance.title;
+        if (descEl) descEl.innerHTML = guidance.desc;
+        if (targetIconEl) targetIconEl.textContent = guidance.target.icon;
+        if (targetNameEl) targetNameEl.textContent = guidance.target.label;
+        if (actionBtn) {
+          actionBtn.innerHTML = guidance.btnHtml;
+          actionBtn.onclick = () => {
+            ctx.view?.walk?.(guidance.walkTarget);
+          };
+        }
+        if (subhintEl) subhintEl.textContent = guidance.subhint;
+        STATION_PRACTICAL_STEPS[2].target = guidance.target;
       }
-      if (subhintEl) subhintEl.textContent = guidance.subhint;
-      STATION_PRACTICAL_STEPS[2].target = guidance.target;
     }
   } else if (currentStationStep === 3) {
     const sc = s?.scenario || {};
@@ -913,6 +937,10 @@ function updateDeviceVisualizer(ctx) {
     if (s.site && !stationStepCompleted) {
       completeStationStep();
     }
+  } else if (currentStationStep === 4) {
+    if (s.boarded && !stationStepCompleted) {
+      completeStationStep();
+    }
   }
 }
 
@@ -920,9 +948,9 @@ function renderStationStep(index) {
   clearAutoAdvanceTimer();
   const step = STATION_PRACTICAL_STEPS[index];
   if (!step || !stationLessonEl) return;
-  stationStepCompleted = false;
 
   const s = stationLessonContext?.mission;
+  const loads = s?.loads || {};
   const badgeEl = stationLessonEl.querySelector('#station-lesson-badge');
   const titleEl = stationLessonEl.querySelector('#station-step-title');
   const descEl = stationLessonEl.querySelector('#station-step-desc');
@@ -941,90 +969,164 @@ function renderStationStep(index) {
   if (descEl) descEl.innerHTML = step.desc;
   if (targetIconEl && step.target) targetIconEl.textContent = step.target.icon;
   if (targetNameEl && step.target) targetNameEl.textContent = step.target.label;
-  if (actionBtn) actionBtn.innerHTML = step.btnHtml;
+  if (actionBtn) {
+    actionBtn.innerHTML = step.btnHtml;
+    actionBtn.onclick = () => { step.run(stationLessonContext); };
+  }
   if (subhintEl) subhintEl.textContent = step.subhint;
-  if (promptBox) {
-    promptBox.hidden = false;
-    promptBox.style.display = 'flex';
-  }
-  if (okBox) {
-    okBox.hidden = true;
-    okBox.style.display = 'none';
-  }
-  if (okTextEl) {
-    okTextEl.innerHTML = '';
-  }
 
-  // Dynamic overrides for Step 2 and Step 3 based on diagnosis & repair state:
-  if (index === 1 && s && (s.diagnosed || s.fixed)) {
-    const guidance = getRepairGuidance(s);
-    if (badgeEl) badgeEl.textContent = 'MISSION STEP 2 OF 5 · BROKEN PART FOUND ✅';
-    if (titleEl) titleEl.textContent = `Step 2 of 5: Broken Part Found: ${guidance.partName}!`;
-    if (descEl) descEl.innerHTML = `You pinpointed the radio fault: the <b>${guidance.partName}</b> is broken!<br>👉 <b>Next Step:</b> Switch off power safely before touching it. Click below to proceed to Step 3.`;
-    if (actionBtn) {
-      actionBtn.innerHTML = '<span class="btn-icon">➔</span> Proceed to Step 3: Safe Repair';
-      actionBtn.onclick = () => advanceStationLesson();
-    }
-    if (subhintEl) subhintEl.textContent = 'Tip: Click Next or this button to see step-by-step repair instructions!';
-  } else if (index === 2) {
-    const guidance = getRepairGuidance(s);
-    if (titleEl) titleEl.textContent = guidance.title;
-    if (descEl) descEl.innerHTML = guidance.desc;
-    if (targetIconEl) targetIconEl.textContent = guidance.target.icon;
-    if (targetNameEl) targetNameEl.textContent = guidance.target.label;
-    if (actionBtn) {
-      actionBtn.innerHTML = guidance.btnHtml;
-      actionBtn.onclick = () => {
-        stationLessonContext?.view?.walk?.(guidance.walkTarget);
-      };
-    }
-    if (subhintEl) subhintEl.textContent = guidance.subhint;
-    step.target = guidance.target;
-  } else if (index === 3) {
-    const sc = s?.scenario;
-    const targetCharge = sc?.lander?.hazardCamAt || 80;
-    const isCharged = s ? hazardCamReady(s) : false;
-    const isCharging = !!s?.loads?.charger;
-    const chargeVal = Math.round(s?.charge ?? 45);
-
-    if (!isCharged && !isCharging) {
-      if (titleEl) titleEl.textContent = `Step 4 of 5: Charge Lander to ${targetCharge}% at Power Panel`;
-      if (descEl) descEl.innerHTML = `The lander battery is at <b>${chargeVal}%</b>. Walk to the <b>⚡ Power Panel</b> and turn ON <b>🔌 Lander charger</b> (Switch #6) in sunlight so the <b>📷 Hazard Avoidance Camera</b> turns ON (at ${targetCharge}%) to steer around Mars boulders!`;
-      if (targetIconEl) targetIconEl.textContent = '⚡';
-      if (targetNameEl) targetNameEl.textContent = 'Power panel';
-      if (actionBtn) {
-        actionBtn.innerHTML = '<span class="btn-icon">⚡</span> Walk to Power Panel (Charge Lander)';
-        actionBtn.onclick = () => { stationLessonContext?.view?.walk?.('panel'); };
-      }
-      if (subhintEl) subhintEl.textContent = 'Tip: Switch ON #6 🔌 Lander Charger at the Power Panel while in sunlight.';
-      step.target = STATION_WAYPOINTS.panel;
-    } else if (isCharging && !isCharged) {
-      if (titleEl) titleEl.textContent = `Step 4 of 5: Lander Charging (${chargeVal}% / ${targetCharge}%)`;
-      if (descEl) descEl.innerHTML = `🔌 <b>Lander charger is ON!</b> Battery is charging in sunlight (now <b>${chargeVal}%</b>, target <b>${targetCharge}%</b> for 📷 Hazard Camera). Walk to the <b>🗺️ Planner Table</b> to study landing sites!`;
-      if (targetIconEl) targetIconEl.textContent = '🗺️';
-      if (targetNameEl) targetNameEl.textContent = 'Landing planner';
-      if (actionBtn) {
-        actionBtn.innerHTML = '<span class="btn-icon">🗺️</span> Walk to Landing Planner';
-        actionBtn.onclick = () => { stationLessonContext?.view?.walk?.('planner'); };
-      }
-      if (subhintEl) subhintEl.textContent = `Tip: Charging at ${sc?.lander?.chargePerMinute || 1}%/min in sunlight! Head to planner table.`;
-      step.target = STATION_WAYPOINTS.planner;
+  if (index === 0) {
+    const countOn = (loads.radio ? 1 : 0) + (loads.amp ? 1 : 0) + (loads.motor ? 1 : 0);
+    if (countOn === 3) {
+      stationStepCompleted = true;
+      if (badgeEl) badgeEl.textContent = 'MISSION STEP 1 OF 5 · SWITCHES ON ✅';
+      if (titleEl) titleEl.textContent = 'Step 1 of 5: Radio Switches Powered ON!';
+      if (descEl) descEl.innerHTML = '🎉 All 3 switches (Radio, Amp, Antenna) are flipped UP into ON! The Radio Rack is now powered.<br>👉 <b>Next Step:</b> Test the radio signal at the Radio Rack!';
+      if (promptBox) { promptBox.hidden = true; promptBox.style.display = 'none'; }
+      if (okBox) { okBox.hidden = false; okBox.style.display = 'flex'; }
+      if (okTextEl) okTextEl.innerHTML = '<b>🎉 All 3 switches powered ON!</b> 👉 Ready to test signal at the Radio Rack!';
     } else {
-      if (titleEl) titleEl.textContent = `Step 4 of 5: Lander Charged (${chargeVal}%) · Pick Landing Site`;
-      if (descEl) descEl.innerHTML = `✅ <b>Lander charged to ${chargeVal}%!</b> The <b>📷 Hazard Camera</b> is active to steer away from rocks. Walk to the <b>🗺️ Planner Table</b> to pick your landing ellipse!`;
-      if (targetIconEl) targetIconEl.textContent = '🗺️';
-      if (targetNameEl) targetNameEl.textContent = 'Landing planner';
+      stationStepCompleted = false;
+      if (promptBox) { promptBox.hidden = false; promptBox.style.display = 'flex'; }
+      if (okBox) { okBox.hidden = true; okBox.style.display = 'none'; }
+      if (okTextEl) okTextEl.innerHTML = '';
+    }
+  } else if (index === 1) {
+    const isDiagnosed = !!(s && (s.diagnosed || s.fixed));
+    const isTestFailed = !!(s && s.lastTest === 'plain' && !isDiagnosed);
+
+    if (isDiagnosed) {
+      stationStepCompleted = true;
+      const guidance = getRepairGuidance(s);
+      if (badgeEl) badgeEl.textContent = 'MISSION STEP 2 OF 5 · BROKEN PART FOUND ✅';
+      if (titleEl) titleEl.textContent = `Step 2 of 5: Broken Part Found: ${guidance.partName}!`;
+      if (descEl) descEl.innerHTML = `You pinpointed the radio fault: the <b>${guidance.partName}</b> is broken!<br>👉 <b>Next Step:</b> Switch off power safely before touching it. Click Next or wait to proceed to Step 3.`;
+      if (promptBox) { promptBox.hidden = true; promptBox.style.display = 'none'; }
+      if (okBox) { okBox.hidden = false; okBox.style.display = 'flex'; }
+      if (okTextEl) okTextEl.innerHTML = `<b>Broken Part Found: ${guidance.partName}!</b> 👉 Switch off power safely before touching!`;
+    } else if (isTestFailed) {
+      stationStepCompleted = false;
+      if (badgeEl) badgeEl.textContent = 'MISSION STEP 2 OF 5 · TEST FAILED 🔴';
+      if (titleEl) titleEl.textContent = 'Step 2 of 5: Test Failed · Check the Parts!';
+      if (descEl) descEl.innerHTML = 'Testing signal showed <b>No Signal</b>! Something in the radio is broken.<br>👉 <b>Check the parts:</b> Aim crosshair at the <b>Control Card</b>, <b>Amp Module</b>, or <b>Cable Plug</b> on the rack to inspect, or grab the signal tester from <b>🧰 Spares</b>!';
       if (actionBtn) {
-        actionBtn.innerHTML = '<span class="btn-icon">🗺️</span> Walk to Landing Planner';
-        actionBtn.onclick = () => { stationLessonContext?.view?.walk?.('planner'); };
+        actionBtn.innerHTML = '<span class="btn-icon">🧰</span> Walk to Spares Locker (Get Tester)';
+        actionBtn.onclick = () => { stationLessonContext?.view?.walk?.('locker'); };
       }
-      if (subhintEl) subhintEl.textContent = 'Tip: Aim at the holographic table and pick the safest landing ellipse.';
-      step.target = STATION_WAYPOINTS.planner;
+      if (subhintEl) subhintEl.textContent = 'Tip: Inspect the 3 parts on the rack with crosshair (E) or clip the tester!';
+      if (promptBox) { promptBox.hidden = false; promptBox.style.display = 'flex'; }
+      if (okBox) { okBox.hidden = true; okBox.style.display = 'none'; }
+    } else {
+      stationStepCompleted = false;
+      if (promptBox) { promptBox.hidden = false; promptBox.style.display = 'flex'; }
+      if (okBox) { okBox.hidden = true; okBox.style.display = 'none'; }
+    }
+  } else if (index === 2) {
+    if (s?.comms) {
+      stationStepCompleted = true;
+      if (badgeEl) badgeEl.textContent = 'MISSION STEP 3 OF 5 · RADIO CONNECTED ✅';
+      if (titleEl) titleEl.textContent = 'Step 3 of 5: Radio Connected to Meridian Base!';
+      if (descEl) descEl.innerHTML = '🎉 Meridian Base heard Asteria loud and clear! The radio link is fully restored.<br>👉 <b>Next Step:</b> Charge the lander and pick your landing site on Mars!';
+      if (promptBox) { promptBox.hidden = true; promptBox.style.display = 'none'; }
+      if (okBox) { okBox.hidden = false; okBox.style.display = 'flex'; }
+      if (okTextEl) okTextEl.innerHTML = '<b>🎉 Radio Connected to Meridian Base!</b> 👉 Next: Charge lander at ⚡ Power Panel!';
+    } else {
+      stationStepCompleted = false;
+      const guidance = getRepairGuidance(s);
+      if (titleEl) titleEl.textContent = guidance.title;
+      if (descEl) descEl.innerHTML = guidance.desc;
+      if (targetIconEl) targetIconEl.textContent = guidance.target.icon;
+      if (targetNameEl) targetNameEl.textContent = guidance.target.label;
+      if (actionBtn) {
+        actionBtn.innerHTML = guidance.btnHtml;
+        actionBtn.onclick = () => {
+          stationLessonContext?.view?.walk?.(guidance.walkTarget);
+        };
+      }
+      if (subhintEl) subhintEl.textContent = guidance.subhint;
+      step.target = guidance.target;
+      if (promptBox) { promptBox.hidden = false; promptBox.style.display = 'flex'; }
+      if (okBox) { okBox.hidden = true; okBox.style.display = 'none'; }
+    }
+  } else if (index === 3) {
+    if (s?.site) {
+      stationStepCompleted = true;
+      const camText = hazardCamReady(s) ? ' (📷 Hazard Cam Armed!)' : '';
+      if (badgeEl) badgeEl.textContent = 'MISSION STEP 4 OF 5 · SITE CONFIRMED ✅';
+      if (titleEl) titleEl.textContent = 'Step 4 of 5: Landing Site Confirmed!';
+      if (descEl) descEl.innerHTML = `You selected the landing ellipse at <b>${s.scenario?.sites?.[s.site]?.label || 'landing site'}</b>! Descent trajectory calculated.<br>👉 <b>Next Step:</b> Head to the lander hatch to board!`;
+      if (promptBox) { promptBox.hidden = true; promptBox.style.display = 'none'; }
+      if (okBox) { okBox.hidden = false; okBox.style.display = 'flex'; }
+      if (okTextEl) okTextEl.innerHTML = `<b>🗺️ Landing Site Confirmed!${camText}</b> 👉 Next stop: 🚀 Lander Hatch!`;
+    } else {
+      stationStepCompleted = false;
+      if (promptBox) { promptBox.hidden = false; promptBox.style.display = 'flex'; }
+      if (okBox) { okBox.hidden = true; okBox.style.display = 'none'; }
+      const sc = s?.scenario;
+      const targetCharge = sc?.lander?.hazardCamAt || 80;
+      const isCharged = s ? hazardCamReady(s) : false;
+      const isCharging = !!s?.loads?.charger;
+      const chargeVal = Math.round(s?.charge ?? 45);
+
+      if (!isCharged && !isCharging) {
+        if (titleEl) titleEl.textContent = `Step 4 of 5: Charge Lander to ${targetCharge}% at Power Panel`;
+        if (descEl) descEl.innerHTML = `The lander battery is at <b>${chargeVal}%</b>. Walk to the <b>⚡ Power Panel</b> and turn ON <b>🔌 Lander charger</b> (Switch #6) in sunlight so the <b>📷 Hazard Avoidance Camera</b> turns ON (at ${targetCharge}%) to steer around Mars boulders!`;
+        if (targetIconEl) targetIconEl.textContent = '⚡';
+        if (targetNameEl) targetNameEl.textContent = 'Power panel';
+        if (actionBtn) {
+          actionBtn.innerHTML = '<span class="btn-icon">⚡</span> Walk to Power Panel (Charge Lander)';
+          actionBtn.onclick = () => { stationLessonContext?.view?.walk?.('panel'); };
+        }
+        if (subhintEl) subhintEl.textContent = 'Tip: Switch ON #6 🔌 Lander Charger at the Power Panel while in sunlight.';
+        step.target = STATION_WAYPOINTS.panel;
+      } else if (isCharging && !isCharged) {
+        if (titleEl) titleEl.textContent = `Step 4 of 5: Lander Charging (${chargeVal}% / ${targetCharge}%)`;
+        if (descEl) descEl.innerHTML = `🔌 <b>Lander charger is ON!</b> Battery is charging in sunlight (now <b>${chargeVal}%</b>, target <b>${targetCharge}%</b> for 📷 Hazard Camera). Walk to the <b>🗺️ Planner Table</b> to study landing sites!`;
+        if (targetIconEl) targetIconEl.textContent = '🗺️';
+        if (targetNameEl) targetNameEl.textContent = 'Landing planner';
+        if (actionBtn) {
+          actionBtn.innerHTML = '<span class="btn-icon">🗺️</span> Walk to Landing Planner';
+          actionBtn.onclick = () => { stationLessonContext?.view?.walk?.('planner'); };
+        }
+        if (subhintEl) subhintEl.textContent = `Tip: Charging at ${sc?.lander?.chargePerMinute || 1}%/min in sunlight! Head to planner table.`;
+        step.target = STATION_WAYPOINTS.planner;
+      } else {
+        if (titleEl) titleEl.textContent = `Step 4 of 5: Lander Charged (${chargeVal}%) · Pick Landing Site`;
+        if (descEl) descEl.innerHTML = `✅ <b>Lander charged to ${chargeVal}%!</b> The <b>📷 Hazard Camera</b> is active to steer away from rocks. Walk to the <b>🗺️ Planner Table</b> to pick your landing ellipse!`;
+        if (targetIconEl) targetIconEl.textContent = '🗺️';
+        if (targetNameEl) targetNameEl.textContent = 'Landing planner';
+        if (actionBtn) {
+          actionBtn.innerHTML = '<span class="btn-icon">🗺️</span> Walk to Landing Planner';
+          actionBtn.onclick = () => { stationLessonContext?.view?.walk?.('planner'); };
+        }
+        if (subhintEl) subhintEl.textContent = 'Tip: Aim at the holographic table and pick the safest landing ellipse.';
+        step.target = STATION_WAYPOINTS.planner;
+      }
+    }
+  } else if (index === 4) {
+    if (s?.boarded) {
+      stationStepCompleted = true;
+      if (badgeEl) badgeEl.textContent = 'MISSION STEP 5 OF 5 · BOARDED ✅';
+      if (titleEl) titleEl.textContent = 'Step 5 of 5: Cadet Boarded & Sealed!';
+      if (descEl) descEl.innerHTML = '🚀 You have boarded the Mars lander! The hatch is locked and sealed for atmospheric entry.';
+      if (promptBox) { promptBox.hidden = true; promptBox.style.display = 'none'; }
+      if (okBox) { okBox.hidden = false; okBox.style.display = 'flex'; }
+      if (okTextEl) okTextEl.innerHTML = '<b>🚀 Cadet Boarded!</b> 👉 Hatch sealed and ready to land on Mars!';
+    } else {
+      stationStepCompleted = false;
+      if (promptBox) { promptBox.hidden = false; promptBox.style.display = 'flex'; }
+      if (okBox) { okBox.hidden = true; okBox.style.display = 'none'; }
     }
   }
 
   if (dotsBox) {
-    dotsBox.innerHTML = STATION_PRACTICAL_STEPS.map((_, i) => `<span class="dot ${i === index ? 'active' : i < index ? 'done' : ''}"></span>`).join('');
+    dotsBox.innerHTML = STATION_PRACTICAL_STEPS.map((_, i) => `<span class="dot ${i === index ? 'active' : i < index ? 'done' : ''}" style="cursor:pointer;" data-step="${i}"></span>`).join('');
+    dotsBox.querySelectorAll('.dot').forEach((dot, i) => {
+      dot.onclick = () => {
+        currentStationStep = i;
+        renderStationStep(i);
+      };
+    });
   }
 
   if (nextBtn) {
@@ -1084,7 +1186,7 @@ function completeStationStep() {
 
   speakStationText(feedbackText.replace(/<[^>]*>/g, ''));
 
-  // Automatically start 10-second countdown to show next job
+  // Automatically start 3-second countdown to show next job
   startAutoAdvanceCountdown();
 
   if (nextBtn) nextBtn.focus();
@@ -1185,17 +1287,12 @@ function startStationLesson(ctx, stepIndex = 0) {
     stationLessonEl.querySelector('#station-action-btn').onclick = () => {
       const step = STATION_PRACTICAL_STEPS[currentStationStep];
       step?.run(stationLessonContext);
-      completeStationStep();
     };
     stationLessonEl.querySelector('#station-next-step-btn').onclick = () => advanceStationLesson();
 
     window.addEventListener('keydown', e => {
       if (!stationLessonActive) return;
-      if (!stationStepCompleted) {
-        if (currentStationStep === 0 && ['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) {
-          completeStationStep();
-        }
-      } else if (e.code === 'Enter' || e.code === 'Space') {
+      if (stationStepCompleted && (e.code === 'Enter' || e.code === 'Space')) {
         e.preventDefault();
         advanceStationLesson();
       }

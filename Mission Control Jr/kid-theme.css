@@ -2712,6 +2712,11 @@ body.kid-home #journey-count, body.kid-home .wordmark { white-space: nowrap; }
   border-color: var(--kid-yellow);
   color: var(--kid-yellow);
 }
+.device-vis-panel .vis-badge.danger {
+  background: rgba(255, 74, 74, 0.25);
+  border-color: #ff4a4a;
+  color: #ff8585;
+}
 
 /* Power panel switches diagram */
 .vis-switches-grid {
@@ -2894,6 +2899,17 @@ body.kid-home #journey-count, body.kid-home .wordmark { white-space: nowrap; }
   border-color: #ff4a4a;
   background: rgba(255, 74, 74, 0.2);
   animation: pulse-glow 0.8s infinite alternate;
+}
+.vis-rack-subitem.inspect-hint {
+  border-color: var(--kid-yellow);
+  background: rgba(255, 210, 63, 0.15);
+}
+.vis-press-pill.failed {
+  background: #ff4a4a;
+  color: #fff;
+}
+.vis-rack-target-btn.failed {
+  border-color: rgba(255, 74, 74, 0.4);
 }
 .vis-rack-subitem .comp-icon {
   font-size: 14px;
