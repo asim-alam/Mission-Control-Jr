@@ -2716,18 +2716,19 @@ body.kid-home #journey-count, body.kid-home .wordmark { white-space: nowrap; }
 /* Power panel switches diagram */
 .vis-switches-grid {
   display: flex;
-  gap: 4px;
+  gap: 3px;
   justify-content: space-between;
 }
 .vis-switch-box {
   flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   background: rgba(0, 0, 0, 0.35);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 8px;
-  padding: 5px 2px;
+  padding: 5px 1px;
   gap: 2px;
   text-align: center;
 }
@@ -2785,10 +2786,13 @@ body.kid-home #journey-count, body.kid-home .wordmark { white-space: nowrap; }
   line-height: 1;
 }
 .vis-name {
-  font-size: 9.5px;
+  font-size: 8.5px;
   font-weight: 700;
   color: #fff;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 .vis-tag {
   font-size: 8px;
@@ -3082,6 +3086,138 @@ body.kid-home #journey-count, body.kid-home .wordmark { white-space: nowrap; }
   background: rgba(255, 255, 255, 0.06);
   padding: 2px 6px;
   border-radius: 5px;
+}
+
+/* Step 4: Lander Charger & Battery Visualizer */
+.vis-charger-dashboard {
+  background: rgba(14, 26, 45, 0.7);
+  border: 1.5px solid rgba(76, 201, 255, 0.3);
+  border-radius: 10px;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.vis-charger-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.vis-battery-box {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.vis-battery-labels {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: #fff;
+}
+.vis-battery-track {
+  height: 14px;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  border-radius: 7px;
+  position: relative;
+  overflow: visible;
+}
+.vis-battery-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ffb02e 0%, #3ee6b5 100%);
+  border-radius: 5px;
+  transition: width 0.4s ease;
+  min-width: 12%;
+}
+.vis-battery-fill.charging {
+  background-size: 20px 20px;
+  background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.3) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.3) 50%, rgba(255, 255, 255, 0.3) 75%, transparent 75%, transparent);
+  animation: stripe-move 1.2s linear infinite;
+}
+@keyframes stripe-move {
+  0% { background-position: 0 0; }
+  100% { background-position: 20px 0; }
+}
+.vis-battery-marker {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  left: 80%;
+  width: 2px;
+  background: #ffe14a;
+  box-shadow: 0 0 6px #ffe14a;
+  z-index: 2;
+}
+.vis-battery-marker .vis-marker-label {
+  position: absolute;
+  top: -13px;
+  left: -14px;
+  font-size: 8px;
+  font-weight: 800;
+  color: #ffe14a;
+  white-space: nowrap;
+}
+.vis-battery-goal-label {
+  font-size: 9px;
+  color: var(--kid-soft);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  line-height: 1.2;
+}
+.vis-battery-goal-label.ready {
+  color: var(--kid-mint);
+  font-weight: 700;
+}
+.vis-charger-switch-mini {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  padding: 5px 8px;
+  flex-shrink: 0;
+}
+.vis-charger-switch-mini.is-on {
+  border-color: var(--kid-mint);
+  background: rgba(62, 230, 181, 0.18);
+  box-shadow: 0 0 8px rgba(62, 230, 181, 0.3);
+}
+.vis-charger-switch-mini .vis-switch-slot {
+  width: 14px;
+  height: 28px;
+}
+.vis-charger-switch-mini .vis-lever {
+  width: 10px;
+  height: 13px;
+}
+.vis-charger-switch-mini .vis-lever.up { top: 2px; }
+.vis-charger-switch-mini .vis-lever.down { bottom: 2px; }
+.vis-charger-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+.vis-charger-info .vis-icon { font-size: 13px; }
+.vis-charger-info .vis-name { font-size: 8.5px; font-weight: 800; color: #fff; }
+.vis-charger-info .vis-state-btn {
+  font-size: 8px;
+  font-weight: 800;
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+.vis-charger-switch-mini.is-on .vis-state-btn {
+  background: var(--kid-mint);
+  color: #0c3324;
 }
 
 
