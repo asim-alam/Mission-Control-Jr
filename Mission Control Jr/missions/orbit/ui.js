@@ -82,9 +82,9 @@ const STATION_PRACTICAL_STEPS = [
     title: 'Step 4 of 5: Charge Lander to 80% & Pick Landing Site',
     badge: 'MISSION STEP 4 OF 5',
     target: STATION_WAYPOINTS.panel,
-    desc: 'Turn ON Switch #6 (<b>🔌 Lander charger</b>) at the <b>⚡ Power Panel</b> in sunlight so the <b>📷 Hazard Avoidance Camera</b> turns ON (at 80%), then choose your landing site at the <b>🗺️ Planner Table</b>.',
+    desc: 'Turn ON Switch #6 (<b>🔌 Lander charger</b>) at the <b>⚡ Power Panel</b> in sunlight and wait 5s to charge to 80% so the <b>📷 Hazard Avoidance Camera</b> turns ON, then choose your landing site at the <b>🗺️ Planner Table</b>.',
     btnHtml: '<span class="btn-icon">⚡</span> Walk to Power Panel (Charge Lander)',
-    subhint: 'Tip: Switch ON #6 🔌 Lander Charger at the Power Panel in sunlight.',
+    subhint: 'Tip: Turn ON Switch #6 (🔌 Lander charger) at Power Panel in sunlight and wait 5s to charge to 80%.',
     okText: '<b>🗺️ Landing Site Confirmed!</b> 👉 Next stop: 🚀 Lander Hatch!',
     run(ctx) {
       const s = ctx.mission;
@@ -169,8 +169,54 @@ function calculateRelativeTelemetry(player, target) {
   };
 }
 
+let lastChargeTime = 0;
+let chargeCelebrated = false;
+
+function advanceRealtimeCharge(s, ctx) {
+  if (!s || s.phase !== 'active' || s.boarded || s.tripped) {
+    lastChargeTime = Date.now();
+    return;
+  }
+  if (!s.loads?.charger || inShadow(s)) {
+    lastChargeTime = Date.now();
+    return;
+  }
+  const targetCharge = s.scenario?.lander?.hazardCamAt || 80;
+  if (s.charge >= targetCharge) {
+    lastChargeTime = Date.now();
+    return;
+  }
+
+  const now = Date.now();
+  if (!lastChargeTime) {
+    lastChargeTime = now;
+    return;
+  }
+  const elapsed = Math.min(0.5, Math.max(0, (now - lastChargeTime) / 1000));
+  lastChargeTime = now;
+
+  // Charge to 80% in 5 seconds (from 45% start to 80% is 35% -> 7% per second!)
+  const chargeRate = 7;
+  const oldCharge = s.charge;
+  s.charge = Math.min(targetCharge, s.charge + chargeRate * elapsed);
+
+  if (s.charge >= targetCharge && oldCharge < targetCharge) {
+    if (!chargeCelebrated) {
+      chargeCelebrated = true;
+      if (ctx?.hud?.toast) {
+        ctx.hud.toast('🎉 Lander Charged to 80%! 📷 Hazard Camera Active!', 'info');
+      }
+      speakStationText('Lander charged to 80%! Hazard camera is active. Now head to the landing planner table to pick your landing site.');
+      if (stationLessonActive && currentStationStep === 3) {
+        renderStationStep(3);
+      }
+    }
+  }
+}
+
 function updateStationTelemetry(ctx) {
   if (!ctx) return;
+  advanceRealtimeCharge(ctx.mission, ctx);
   const player = ctx.view?.world?.player;
 
   // 1. Update station practical lesson card telemetry if active
@@ -404,9 +450,9 @@ function getRepairGuidance(s) {
       substep: 'charge_lander',
       target: STATION_WAYPOINTS.panel,
       title: '⚡ Next: Switch ON Lander Charger in Sunlight',
-      desc: `<b>🎉 Radio Connected to Meridian Base!</b> Now walk to the <b>⚡ Power Panel</b> and switch ON <b>🔌 Lander charger</b> (Switch #6) in sunlight so the <b>📷 Hazard Camera</b> activates at ${targetCharge}%!`,
+      desc: `<b>🎉 Radio Connected to Meridian Base!</b> Now walk to the <b>⚡ Power Panel</b> and switch ON <b>🔌 Lander charger</b> (Switch #6) in sunlight. Wait 5s for the battery to charge up to ${targetCharge}% for the <b>📷 Hazard Camera</b>!`,
       btnHtml: '<span class="btn-icon">⚡</span> Walk to Power Panel (Charge Lander)',
-      subhint: 'Tip: Flip Switch #6 (🔌 Lander charger) UP into ON while in sunlight.',
+      subhint: 'Tip: Flip Switch #6 (🔌 Lander charger) UP in sunlight and wait 5s to reach 80% charge.',
       walkTarget: 'panel',
       partName: part.label,
       loadName: `${loadInfo.icon} ${loadInfo.label}`,
@@ -647,13 +693,14 @@ function renderDeviceVisualizer(stepIndex, ctx) {
     const targetCharge = sc.lander?.hazardCamAt || 80;
     const isCamReady = hazardCamReady(s);
     const chargerOn = !!loads.charger;
+    const secondsLeft = Math.max(0, Math.ceil((targetCharge - chargeVal) / 7));
 
     container.innerHTML = `
       <div class="device-vis-panel">
         <div class="vis-header">
           <span class="vis-title">🔌 LANDER CHARGER & BATTERY</span>
           <span class="vis-badge ${isCamReady ? 'ready' : chargerOn ? 'highlight' : ''}" id="vis-charger-badge">
-            ${isCamReady ? '📷 HAZARD CAM ACTIVE' : chargerOn ? '⚡ CHARGING...' : 'NEEDS CHARGE'}
+            ${isCamReady ? '📷 HAZARD CAM ACTIVE' : chargerOn ? `⚡ CHARGING (${secondsLeft}s)...` : 'NEEDS CHARGE (5s)'}
           </span>
         </div>
         <div class="vis-charger-dashboard">
@@ -672,7 +719,9 @@ function renderDeviceVisualizer(stepIndex, ctx) {
               <div class="vis-battery-goal-label ${isCamReady ? 'ready' : ''}" id="vis-battery-status">
                 ${isCamReady 
                   ? '✅ <b>Hazard Camera Active!</b> Ready to steer around rocks during landing.' 
-                  : `⚠️ <b>Needs ${targetCharge}%:</b> Turn on Switch #6 at Power Panel in sunlight!`}
+                  : chargerOn
+                    ? `⚡ <b>Charging battery to ${targetCharge}%...</b> Wait <b>${secondsLeft}s</b> for 📷 Hazard Camera to arm!`
+                    : `⚠️ <b>Needs ${targetCharge}%:</b> Turn on Switch #6 at Power Panel in sunlight and <b>wait 5s</b> to charge to 80%!`}
               </div>
             </div>
             <div class="vis-charger-switch-mini ${chargerOn ? 'is-on' : ''}" id="vis-charger-switch-mini">
@@ -707,12 +756,12 @@ function renderDeviceVisualizer(stepIndex, ctx) {
         </div>
         <div class="vis-caption-hint" id="vis-step4-hint">
           ${!isCamReady && !chargerOn
-            ? '👉 <b>Step 1:</b> Walk to <b>⚡ Power Panel</b> & flip Switch #6 (🔌 Lander charger) UP in sunlight.<br>👉 <b>Step 2:</b> Walk to <b>🗺️ Planner Table</b> to pick your landing site!'
+            ? '👉 <b>Step 1:</b> Walk to <b>⚡ Power Panel</b> & flip Switch #6 (🔌 Lander charger) UP in sunlight. <b>Wait 5s</b> to reach 80% charge!<br>👉 <b>Step 2:</b> Walk to <b>🗺️ Planner Table</b> to pick your landing site!'
             : !isCamReady && chargerOn
-              ? `⚡ <b>Charging at ${sc.lander?.chargePerMinute || 1}%/min!</b> (${chargeVal}%/${targetCharge}%). Now pick your landing site at the table.`
+              ? `⚡ <b>Charging at Power Panel:</b> Wait <b>${secondsLeft} seconds</b> to reach 80% (now <b>${chargeVal}%</b>/80%). 📷 Hazard Camera activates at 80%!`
               : chosenSite
                 ? `✅ <b>Selected:</b> ${siteObj?.label}. 📷 Hazard camera armed! Descent trajectory locked.`
-                : '👉 <b>Lander charged!</b> Select the safest landing ellipse on the holographic table.'}
+                : '👉 <b>Lander charged to 80%!</b> Select the safest landing ellipse on the holographic table.'}
         </div>
       </div>
     `;
@@ -891,6 +940,7 @@ function updateDeviceVisualizer(ctx) {
     const targetCharge = sc.lander?.hazardCamAt || 80;
     const isCamReady = hazardCamReady(s);
     const chargerOn = !!loads.charger;
+    const secondsLeft = Math.max(0, Math.ceil((targetCharge - chargeVal) / 7));
 
     const chargeBadge = container.querySelector('#vis-charger-badge');
     const chargePercent = container.querySelector('#vis-charge-percent');
@@ -901,7 +951,7 @@ function updateDeviceVisualizer(ctx) {
 
     if (chargeBadge) {
       chargeBadge.className = `vis-badge ${isCamReady ? 'ready' : chargerOn ? 'highlight' : ''}`;
-      chargeBadge.textContent = isCamReady ? '📷 HAZARD CAM ACTIVE' : chargerOn ? '⚡ CHARGING...' : 'NEEDS CHARGE';
+      chargeBadge.textContent = isCamReady ? '📷 HAZARD CAM ACTIVE' : chargerOn ? `⚡ CHARGING (${secondsLeft}s)...` : 'NEEDS CHARGE (5s)';
     }
     if (chargePercent) {
       chargePercent.innerHTML = `<b>${chargeVal}%</b> / 100%`;
@@ -914,7 +964,9 @@ function updateDeviceVisualizer(ctx) {
       batteryStatus.className = `vis-battery-goal-label ${isCamReady ? 'ready' : ''}`;
       batteryStatus.innerHTML = isCamReady
         ? '✅ <b>Hazard Camera Active!</b> Ready to steer around rocks during landing.'
-        : `⚠️ <b>Needs ${targetCharge}%:</b> Turn on Switch #6 at Power Panel in sunlight!`;
+        : chargerOn
+          ? `⚡ <b>Charging battery to ${targetCharge}%...</b> Wait <b>${secondsLeft}s</b> for 📷 Hazard Camera to arm!`
+          : `⚠️ <b>Needs ${targetCharge}%:</b> Turn on Switch #6 at Power Panel in sunlight and <b>wait 5s</b> to charge to 80%!`;
     }
     if (chargerMini) {
       chargerMini.classList.toggle('is-on', chargerOn);
@@ -926,12 +978,46 @@ function updateDeviceVisualizer(ctx) {
 
     if (hintEl) {
       hintEl.innerHTML = !isCamReady && !chargerOn
-        ? '👉 <b>Step 1:</b> Walk to <b>⚡ Power Panel</b> & flip Switch #6 (🔌 Lander charger) UP in sunlight.<br>👉 <b>Step 2:</b> Walk to <b>🗺️ Planner Table</b> to pick your landing site!'
+        ? '👉 <b>Step 1:</b> Walk to <b>⚡ Power Panel</b> & flip Switch #6 (🔌 Lander charger) UP in sunlight. <b>Wait 5s</b> to reach 80% charge!<br>👉 <b>Step 2:</b> Walk to <b>🗺️ Planner Table</b> to pick your landing site!'
         : !isCamReady && chargerOn
-          ? `⚡ <b>Charging at ${sc.lander?.chargePerMinute || 1}%/min!</b> (${chargeVal}%/${targetCharge}%). Now pick your landing site at the table.`
+          ? `⚡ <b>Charging at Power Panel:</b> Wait <b>${secondsLeft} seconds</b> to reach 80% (now <b>${chargeVal}%</b>/80%). 📷 Hazard Camera activates at 80%!`
           : s.site
             ? `✅ <b>Selected:</b> ${sc.sites?.[s.site]?.label}. 📷 Hazard camera armed! Descent trajectory locked.`
-            : '👉 <b>Lander charged!</b> Select the safest landing ellipse on the holographic table.';
+            : '👉 <b>Lander charged to 80%!</b> Select the safest landing ellipse on the holographic table.';
+    }
+
+    // Dynamic update of card text, prompt button and subhint in Step 4:
+    const titleEl = stationLessonEl?.querySelector('#station-step-title');
+    const descEl = stationLessonEl?.querySelector('#station-step-desc');
+    const actionBtn = stationLessonEl?.querySelector('#station-action-btn');
+    const subhintEl = stationLessonEl?.querySelector('#station-subhint');
+
+    if (!s.site && titleEl && descEl) {
+      if (!isCamReady && !chargerOn) {
+        titleEl.textContent = `Step 4 of 5: Charge Lander to ${targetCharge}% (Wait 5s at Power Panel)`;
+        descEl.innerHTML = `The lander battery is at <b>${chargeVal}%</b>. Walk to the <b>⚡ Power Panel</b> and turn ON <b>🔌 Lander charger</b> (Switch #6) in sunlight. <b>Wait 5 seconds</b> to fill the charge up to <b>80%</b> so the <b>📷 Hazard Avoidance Camera</b> turns ON (at ${targetCharge}%) to steer around Mars boulders!`;
+        if (actionBtn) {
+          actionBtn.innerHTML = '<span class="btn-icon">⚡</span> Walk to Power Panel (Charge Lander)';
+          actionBtn.onclick = () => { stationLessonContext?.view?.walk?.('panel'); };
+        }
+        if (subhintEl) subhintEl.textContent = 'Tip: Turn ON Switch #6 (🔌 Lander charger) at Power Panel in sunlight and wait 5s to charge to 80%.';
+      } else if (chargerOn && !isCamReady) {
+        titleEl.textContent = `Step 4 of 5: Charging Lander... (${chargeVal}% / ${targetCharge}% · Wait ${secondsLeft}s)`;
+        descEl.innerHTML = `🔌 <b>Lander charger is ON!</b> Battery is charging in sunlight. <b>Wait ${secondsLeft} seconds</b> to reach <b>80%</b> for the <b>📷 Hazard Camera</b> to activate (currently <b>${chargeVal}%</b>)!`;
+        if (actionBtn) {
+          actionBtn.innerHTML = `<span class="btn-icon">⏳</span> Charging Lander (Wait ${secondsLeft}s...)`;
+          actionBtn.onclick = () => { stationLessonContext?.view?.walk?.('panel'); };
+        }
+        if (subhintEl) subhintEl.textContent = `Tip: Charging in progress! Wait ${secondsLeft}s to full charge up to 80%.`;
+      } else if (isCamReady) {
+        titleEl.textContent = `Step 4 of 5: Lander Charged (${chargeVal}%) · Pick Landing Site`;
+        descEl.innerHTML = `✅ <b>Lander charged to ${chargeVal}%!</b> The <b>📷 Hazard Camera</b> is active to steer away from rocks. Walk to the <b>🗺️ Planner Table</b> to pick your landing ellipse!`;
+        if (actionBtn) {
+          actionBtn.innerHTML = '<span class="btn-icon">🗺️</span> Walk to Landing Planner';
+          actionBtn.onclick = () => { stationLessonContext?.view?.walk?.('planner'); };
+        }
+        if (subhintEl) subhintEl.textContent = 'Tip: Touch the table and press (E) to select your landing site!';
+      }
     }
 
     if (s.site && !stationStepCompleted) {
@@ -1068,27 +1154,29 @@ function renderStationStep(index) {
       const isCharging = !!s?.loads?.charger;
       const chargeVal = Math.round(s?.charge ?? 45);
 
+      const secondsLeft = Math.max(0, Math.ceil((targetCharge - chargeVal) / 7));
+
       if (!isCharged && !isCharging) {
-        if (titleEl) titleEl.textContent = `Step 4 of 5: Charge Lander to ${targetCharge}% at Power Panel`;
-        if (descEl) descEl.innerHTML = `The lander battery is at <b>${chargeVal}%</b>. Walk to the <b>⚡ Power Panel</b> and turn ON <b>🔌 Lander charger</b> (Switch #6) in sunlight so the <b>📷 Hazard Avoidance Camera</b> turns ON (at ${targetCharge}%) to steer around Mars boulders!`;
+        if (titleEl) titleEl.textContent = `Step 4 of 5: Charge Lander to ${targetCharge}% (Wait 5s at Power Panel)`;
+        if (descEl) descEl.innerHTML = `The lander battery is at <b>${chargeVal}%</b>. Walk to the <b>⚡ Power Panel</b> and turn ON <b>🔌 Lander charger</b> (Switch #6) in sunlight. <b>Wait 5 seconds</b> to fill the charge up to <b>80%</b> so the <b>📷 Hazard Avoidance Camera</b> turns ON (at ${targetCharge}%) to steer around Mars boulders!`;
         if (targetIconEl) targetIconEl.textContent = '⚡';
         if (targetNameEl) targetNameEl.textContent = 'Power panel';
         if (actionBtn) {
           actionBtn.innerHTML = '<span class="btn-icon">⚡</span> Walk to Power Panel (Charge Lander)';
           actionBtn.onclick = () => { stationLessonContext?.view?.walk?.('panel'); };
         }
-        if (subhintEl) subhintEl.textContent = 'Tip: Switch ON #6 🔌 Lander Charger at the Power Panel while in sunlight.';
+        if (subhintEl) subhintEl.textContent = 'Tip: Turn ON Switch #6 (🔌 Lander charger) at Power Panel in sunlight and wait 5s to charge to 80%.';
         step.target = STATION_WAYPOINTS.panel;
       } else if (isCharging && !isCharged) {
-        if (titleEl) titleEl.textContent = `Step 4 of 5: Lander Charging (${chargeVal}% / ${targetCharge}%)`;
-        if (descEl) descEl.innerHTML = `🔌 <b>Lander charger is ON!</b> Battery is charging in sunlight (now <b>${chargeVal}%</b>, target <b>${targetCharge}%</b> for 📷 Hazard Camera). Walk to the <b>🗺️ Planner Table</b> to study landing sites!`;
+        if (titleEl) titleEl.textContent = `Step 4 of 5: Charging Lander... (${chargeVal}% / ${targetCharge}% · Wait ${secondsLeft}s)`;
+        if (descEl) descEl.innerHTML = `🔌 <b>Lander charger is ON!</b> Battery is charging in sunlight. <b>Wait ${secondsLeft} seconds</b> to reach <b>80%</b> for the <b>📷 Hazard Camera</b> to activate (currently <b>${chargeVal}%</b>)!`;
         if (targetIconEl) targetIconEl.textContent = '🗺️';
         if (targetNameEl) targetNameEl.textContent = 'Landing planner';
         if (actionBtn) {
-          actionBtn.innerHTML = '<span class="btn-icon">🗺️</span> Walk to Landing Planner';
-          actionBtn.onclick = () => { stationLessonContext?.view?.walk?.('planner'); };
+          actionBtn.innerHTML = `<span class="btn-icon">⏳</span> Charging Lander (Wait ${secondsLeft}s...)`;
+          actionBtn.onclick = () => { stationLessonContext?.view?.walk?.('panel'); };
         }
-        if (subhintEl) subhintEl.textContent = `Tip: Charging at ${sc?.lander?.chargePerMinute || 1}%/min in sunlight! Head to planner table.`;
+        if (subhintEl) subhintEl.textContent = `Tip: Charging in progress! Wait ${secondsLeft}s to full charge up to 80%.`;
         step.target = STATION_WAYPOINTS.planner;
       } else {
         if (titleEl) titleEl.textContent = `Step 4 of 5: Lander Charged (${chargeVal}%) · Pick Landing Site`;
@@ -1629,7 +1717,9 @@ runMission({
   },
   sampler(ctx) { ctx.act({id: 'begin'}, {quiet: true}); ctx.saveCheckpoint(); },
   hud(ctx) {
-    const s = ctx.mission, used = powerUsed(s), avail = powerAvailable(s), {hud} = ctx;
+    const s = ctx.mission;
+    advanceRealtimeCharge(s, ctx);
+    const used = powerUsed(s), avail = powerAvailable(s), {hud} = ctx;
     hud.timer(s.phase === 'active' ? (s.stage === 'descent' ? '🚀 Landing' : `${inShadow(s) ? '🌑' : '☀️'} Pass in ${nextPass(s) - s.minute} min`) : '');
     hud.meter('power', {value: Math.max(0, avail - used), max: avail, text: s.tripped ? 'TRIPPED' : `${used} / ${avail}`, warn: s.tripped || used > avail ? 2 : !inShadow(s) && minutesToShadow(s) <= 10 && used > s.scenario.power.shadow ? 1 : 0});
     hud.meter('charge', {value: s.charge, max: 100, text: `${Math.round(s.charge)}%${hazardCamReady(s) ? ' 📷' : ''}`});
