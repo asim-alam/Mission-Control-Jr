@@ -26,6 +26,55 @@ const frameMaterial=new T.MeshStandardMaterial({color:0x172b38,metalness:.5,roug
 const dash=new T.Mesh(new T.BoxGeometry(1.8,.08,.6),new T.MeshStandardMaterial({color:0x245358,emissive:0x153e45,emissiveIntensity:.8,roughness:.6}));dash.position.set(0,.8,-1.6);dash.rotation.x=.3;cockpit.add(dash);
 const stationFill=new T.AmbientLight(0xa3c0d2,.65);station.interior.add(stationFill);
 const marker=new T.Mesh(new T.RingGeometry(.55,.63,36),new T.MeshBasicMaterial({color:0xeac092,transparent:true,opacity:.8,depthWrite:false}));marker.rotation.x=-Math.PI/2;marker.position.y=.035;station.interior.add(marker);
+
+// 3D Docking Visual Hardware & Cutscene Components
+const dockLeds=[];
+const ledGeo=new T.SphereGeometry(.065,8,8);
+const ledMatUnlit=new T.MeshStandardMaterial({color:0x16343d,emissive:0x08191f,roughness:.6});
+const dockRingLight=new T.PointLight(0x3ee6b5,0,10);dockRingLight.position.set(0,0,21.0);station.exterior.add(dockRingLight);
+for(let i=0;i<12;i++){
+  const angle=(i/12)*Math.PI*2;
+  const mesh=new T.Mesh(ledGeo,ledMatUnlit.clone());
+  mesh.position.set(Math.cos(angle)*2.08,Math.sin(angle)*2.08,20.94);
+  station.exterior.add(mesh);
+  dockLeds.push(mesh);
+}
+const dockClamps=[];
+const clampBaseMat=new T.MeshStandardMaterial({color:0x1b2832,metalness:.8,roughness:.35});
+const clampArmMat=new T.MeshStandardMaterial({color:0x3a4b56,metalness:.85,roughness:.25});
+const clampClawMat=new T.MeshStandardMaterial({color:0xffd23f,metalness:.65,roughness:.3});
+for(let i=0;i<4;i++){
+  const angle=(i/4)*Math.PI*2+Math.PI/4;
+  const pivot=new T.Group();
+  pivot.position.set(Math.cos(angle)*2.08,Math.sin(angle)*2.08,20.9);
+  pivot.rotation.z=angle+Math.PI/2;
+  const base=new T.Mesh(new T.BoxGeometry(.18,.16,.22),clampBaseMat);
+  pivot.add(base);
+  const arm=new T.Group();
+  const claw=new T.Mesh(new T.BoxGeometry(.12,.14,.44),clampArmMat);
+  claw.position.set(0,.08,.22);
+  arm.add(claw);
+  const hook=new T.Mesh(new T.BoxGeometry(.14,.15,.12),clampClawMat);
+  hook.position.set(0,.02,.41);
+  arm.add(hook);
+  arm.rotation.x=.45; // open
+  pivot.add(arm);
+  station.exterior.add(pivot);
+  dockClamps.push(arm);
+}
+const vaporRingMat=new T.MeshBasicMaterial({color:0xdff6ff,transparent:true,opacity:0,depthWrite:false,side:T.DoubleSide});
+const vaporRing=new T.Mesh(new T.RingGeometry(1.95,2.25,32),vaporRingMat);
+vaporRing.position.set(0,0,20.98);
+station.exterior.add(vaporRing);
+const rcsPlumes=[];
+for(const [x,y,z,rx,ry,rz] of [[-1.2,0,2.8,0,0,Math.PI/2],[1.2,0,2.8,0,0,-Math.PI/2],[0,1.2,2.8,-Math.PI/2,0,0],[0,-1.2,2.8,Math.PI/2,0,0]]){
+  const plume=new T.Mesh(new T.ConeGeometry(.16,.55,8),new T.MeshBasicMaterial({color:0x7de8ff,transparent:true,opacity:0}));
+  plume.position.set(x,y,z);plume.rotation.set(rx,ry,rz);shuttle.add(plume);rcsPlumes.push(plume);
+}
+let dockingSceneActive=false,dockedExteriorView=false,dockingSceneStartTime=0;
+let dockStartPos={x:0,y:0,distance:0,speed:0};
+let camStartPos=new T.Vector3(),camStartTarget=new T.Vector3();
+let clampAudioPlayed=false,elenaRadioPlayed=false;
 const audio=new OrbitalAudio();let m=createOrbit({randomizeDock:true}),env,avatar,mixer,walk,idle,ready=false,started=false,paused=false,autodock=false,overview=true,view='third',overviewYaw=.3,overviewPitch=.25,overviewDistance=5600,zoom=3,craftZoom=14,drag=null,last=performance.now(),lastHud=0,lastPhase='',toastTimer,completionShown=false,frameId,orbitalAge=0,details=false;
 const radio=new OrbitalRadio(line=>{$('orbital-radio').hidden=false;$('radio-speaker').textContent=line.speaker;$('radio-subtitle').textContent=line.text;},()=>{$('orbital-radio').hidden=true;},value=>audio.setDucked(value),text=>{$('radio-state').textContent=text;});
 const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -186,6 +235,76 @@ const TEACHER_SVG = `
 </svg>
 `;
 
+function playDockingCutscene(){
+  dockingSceneActive=true;dockedExteriorView=false;dockingSceneStartTime=performance.now();
+  clampAudioPlayed=false;elenaRadioPlayed=false;
+  dockStartPos={x:m.dock.x,y:m.dock.y,distance:m.dock.distance,speed:m.dock.speed};
+  camStartPos.copy(camera.position);camStartTarget.set(shuttle.position.x,shuttle.position.y,shuttle.position.z-3);
+  clearInput();player.enabled=false;audio.start();
+  if($('dock-alignment-svg'))$('dock-alignment-svg').style.display='none';
+  if($('dock-target-box'))$('dock-target-box').hidden=true;
+  if($('dock-center-zone'))$('dock-center-zone').hidden=true;
+  if($('dock-slow-alert'))$('dock-slow-alert').hidden=true;
+  if($('flight-lesson'))$('flight-lesson').hidden=true;
+  if($('reticle'))$('reticle').hidden=true;
+  if($('objective'))$('objective').hidden=true;
+  if($('telemetry'))$('telemetry').hidden=true;
+  if($('progress'))$('progress').hidden=true;
+  if($('controls-hint'))$('controls-hint').hidden=true;
+  let barTop=$('cinematic-bar-top');if(!barTop){barTop=document.createElement('div');barTop.id='cinematic-bar-top';barTop.className='cinematic-bar-top';document.body.appendChild(barTop);}
+  barTop.classList.remove('fade-out');barTop.classList.add('active');
+  let barBottom=$('cinematic-bar-bottom');if(!barBottom){barBottom=document.createElement('div');barBottom.id='cinematic-bar-bottom';barBottom.className='cinematic-bar-bottom';document.body.appendChild(barBottom);}
+  barBottom.classList.remove('fade-out');barBottom.classList.add('active');
+  let cutsceneHud=$('docking-cinematic-hud');if(!cutsceneHud){cutsceneHud=document.createElement('div');cutsceneHud.id='docking-cinematic-hud';document.body.appendChild(cutsceneHud);}
+  cutsceneHud.hidden=false;
+  cutsceneHud.innerHTML=`
+    <div class="dock-cutscene-top">
+      <div class="dock-cutscene-card">
+        <div class="dock-cutscene-badge">🛰️ ASTERIA CORRIDOR · TERMINAL CAPTURE</div>
+        <h2 class="dock-cutscene-title" id="cutscene-title">🎯 SOFT CAPTURE IN PROGRESS</h2>
+        <p class="dock-cutscene-desc" id="cutscene-desc">Guiding spacecraft into Asteria docking port collar...</p>
+        <div class="dock-cutscene-steps">
+          <div class="dock-step-pill active" id="cutscene-step-1">1. SOFT CAPTURE</div>
+          <div class="dock-step-pill" id="cutscene-step-2">2. HARD CLAMPS</div>
+          <div class="dock-step-pill" id="cutscene-step-3">3. AIRLOCK SEAL</div>
+        </div>
+        <div class="dock-cutscene-telemetry">
+          <div class="dock-tel-item"><span class="dock-tel-label">CLOSURE SPEED</span><span class="dock-tel-val" id="cutscene-speed">${Math.abs(dockStartPos.speed).toFixed(2)} m/s</span></div>
+          <div class="dock-tel-item"><span class="dock-tel-label">PORT DISTANCE</span><span class="dock-tel-val" id="cutscene-dist">${dockStartPos.distance.toFixed(1)} m</span></div>
+          <div class="dock-tel-item"><span class="dock-tel-label">ALIGNMENT</span><span class="dock-tel-val" id="cutscene-align">99.8% (LOCKED)</span></div>
+          <div class="dock-tel-item"><span class="dock-tel-label">LATCH STATUS</span><span class="dock-tel-val" id="cutscene-clamps">ALIGNING (0/4)</span></div>
+        </div>
+      </div>
+      <button type="button" class="dock-skip-btn" id="cutscene-skip-btn">Skip Cutscene ⏩</button>
+    </div>
+    <div class="dock-cutscene-bottom">
+      <div class="dock-pressure-bar-wrap">
+        <span class="dock-pressure-label">💨 Vestibule Pressure</span>
+        <div class="dock-pressure-track"><div class="dock-pressure-fill" id="cutscene-pressure-fill" style="width:0%"></div></div>
+        <span class="dock-pressure-val" id="cutscene-pressure-val">0.0 kPa</span>
+      </div>
+    </div>
+  `;
+  const skipBtn=$('cutscene-skip-btn');if(skipBtn)skipBtn.onclick=()=>finishDockingScene();
+}
+
+function finishDockingScene(){
+  if(!dockingSceneActive&&dockedExteriorView)return;
+  dockingSceneActive=false;dockedExteriorView=true;
+  shuttle.position.set(0,2.2,25.07);
+  dockClamps.forEach(arm=>{arm.rotation.x=-.08;});
+  dockLeds.forEach(led=>{led.material.color.setHex(0x3ee6b5);led.material.emissive.setHex(0x3ee6b5);led.material.emissiveIntensity=3;});
+  dockRingLight.intensity=3;vaporRing.material.opacity=0;rcsPlumes.forEach(p=>{p.material.opacity=0;});
+  if(!clampAudioPlayed){audio.dockLock();clampAudioPlayed=true;}
+  if(!elenaRadioPlayed){radio.say('docked');elenaRadioPlayed=true;}
+  const barTop=$('cinematic-bar-top'),barBottom=$('cinematic-bar-bottom'),cutsceneHud=$('docking-cinematic-hud');
+  if(barTop)barTop.classList.add('fade-out');if(barBottom)barBottom.classList.add('fade-out');if(cutsceneHud)cutsceneHud.hidden=true;
+  if($('objective'))$('objective').hidden=false;if($('telemetry'))$('telemetry').hidden=false;if($('progress'))$('progress').hidden=false;if($('controls-hint'))$('controls-hint').hidden=false;
+  $('location').textContent='ASTERIA SPACE STATION · DOCKED';$('readout').textContent='DOCKING CLAMP LOCKED ✅ · 101.3 kPa';$('subreadout').textContent='PORT 01 SEALED · ATMOSPHERE EQUALIZED';$('controls-hint').textContent='DRAG LOOK · WHEEL ZOOM · CLICK "OPEN HATCH" OR PRESS E TO ENTER CABIN';
+  const actionBtn=$('action');if(actionBtn){actionBtn.hidden=false;actionBtn.disabled=false;actionBtn.textContent='🚀 Open hatch & enter cabin';actionBtn.onclick=()=>boardCabin();}
+  showDockingSuccessLesson();
+}
+
 function showDockingSuccessLesson(){
   audio.ping();
   radio.say('docked');
@@ -341,9 +460,12 @@ function showDockingSuccessLesson(){
       {label: '🪐 Look at Mars from Orbit', run: () => {
         try{speechSynthesis.cancel();}catch{}
         closeModal();
+        dockedExteriorView = true;
+        $('action').hidden = false;
         $('action').disabled = false;
-        $('action').textContent = 'Open hatch & enter cabin';
+        $('action').textContent = '🚀 Open hatch & enter cabin';
         $('action').onclick = () => boardCabin();
+        renderHud();
       }}
     ],
     'ASTERIA ACADEMY · PROFESSOR PIP'
@@ -578,10 +700,10 @@ function closeFlightLesson() {
   if ($('lesson-btn') && m.phase === 'docking' && !autodock) $('lesson-btn').hidden = false;
 }
 
-function start(saved=null){if(!saved)orbitalAge=0;m=saved||createOrbit({randomizeDock:true});started=true;completionShown=false;overview=m.phase==='overview';$('opening').hidden=true;$('opening-stamp').hidden=true;$('hud').hidden=false;$('controls-hint').classList.remove('controls-faded');clearTimeout(controlsFadeTimer);controlsFadeTimer=setTimeout(()=>$('controls-hint').classList.add('controls-faded'),30000);audio.paused=false;audio.start();radio.stop();audio.update('orbit');syncSound();player.position.set(0,1.68,14);player.view='first';view='first';player.yaw=0;player.pitch=-.03;lastPhase='';closeModal();renderHud();if(m.complete)complete();else radio.say('arrival');save();if(!saved&&m.phase==='overview')showDockingBriefing();if(m.phase==='docking'&&!lessonCompletedOnce&&!autodock)startFlightLesson();}
+function start(saved=null){if(!saved)orbitalAge=0;m=saved||createOrbit({randomizeDock:true});started=true;completionShown=false;overview=m.phase==='overview';dockingSceneActive=false;dockedExteriorView=false;dockClamps.forEach(arm=>{arm.rotation.x=.45;});dockLeds.forEach(led=>{led.material.color.setHex(0x16343d);led.material.emissive.setHex(0x08191f);led.material.emissiveIntensity=0.2;});dockRingLight.intensity=0;vaporRing.material.opacity=0;rcsPlumes.forEach(p=>{p.material.opacity=0;});const barTop=$('cinematic-bar-top'),barBottom=$('cinematic-bar-bottom'),cutsceneHud=$('docking-cinematic-hud');if(barTop)barTop.classList.remove('active','fade-out');if(barBottom)barBottom.classList.remove('active','fade-out');if(cutsceneHud)cutsceneHud.hidden=true;$('opening').hidden=true;$('opening-stamp').hidden=true;$('hud').hidden=false;$('controls-hint').classList.remove('controls-faded');clearTimeout(controlsFadeTimer);controlsFadeTimer=setTimeout(()=>$('controls-hint').classList.add('controls-faded'),30000);audio.paused=false;audio.start();radio.stop();audio.update('orbit');syncSound();player.position.set(0,1.68,14);player.view='first';view='first';player.yaw=0;player.pitch=-.03;lastPhase='';closeModal();renderHud();if(m.complete)complete();else radio.say('arrival');save();if(!saved&&m.phase==='overview')showDockingBriefing();if(m.phase==='docking'&&!lessonCompletedOnce&&!autodock)startFlightLesson();}
 function restart(){clearInput();paused=false;audio.paused=false;clearApproach();start();save();}
-function run(action,choice){m.position={x:player.position.x,z:player.position.z};const result=actOrbit(m,action,choice);notify(result.message);if(result.ok){if(action==='dock'){showDockingSuccessLesson();return true;}save();audio.ping();const voice={dock:'docked',verify:'relay',board:'lander',descent:'descent'}[action];if(voice)radio.say(voice);if(['station','craft','complete'].includes(m.phase))save();closeModal();if(action==='approach'){if(m.dock.x===1.6&&m.dock.y===.65&&m.dock.distance===34){Object.assign(m.dock,randomDock());}overview=false;if(!lessonCompletedOnce&&!autodock)startFlightLesson();}if(action==='dock'){player.position.set(0,1.68,14);overview=false;view='first';player.view='first';}if(action==='verify'){station.dish.rotation.z=0;station.dish.rotation.x=.3;}}renderHud();return result.ok;}
-function interact(){if(!started||paused||!$('modal').hidden)return;const task=orbitalTask(m);if(m.phase==='docking'){if(!dockReady(m.dock)){const d=m.dock,fast=Math.abs(d.speed)>.205,unaligned=Math.abs(d.x)>.35||Math.abs(d.y)>.35,tooFar=d.distance>2;if(fast&&unaligned)notify('Too fast and not lined up! Slow down below 0.2 m/s and center the cross.');else if(fast)notify('Too fast! Slow down below 0.2 m/s (press Space to brake).');else if(unaligned&&tooFar)notify('Line up the cross and fly inside 2 m to dock.');else if(unaligned)notify('Not lined up! Center the cross (A/D and R/F) before docking.');else if(tooFar)notify(`Fly closer! Get inside 2 m to dock (currently ${d.distance.toFixed(1)} m).`);else notify('Line up the cross, get inside 2 m, and keep speed below 0.2 m/s.');return;}run('dock');return;}if(m.phase==='station'&&Math.hypot(player.position.x-task.target.x,player.position.z-task.target.z)>2.5){notify('Follow the orange marker, or press Show me the way.');return;}
+function run(action,choice){m.position={x:player.position.x,z:player.position.z};const result=actOrbit(m,action,choice);notify(result.message);if(result.ok){if(action==='dock'){playDockingCutscene();return true;}save();audio.ping();const voice={dock:'docked',verify:'relay',board:'lander',descent:'descent'}[action];if(voice)radio.say(voice);if(['station','craft','complete'].includes(m.phase))save();closeModal();if(action==='approach'){if(m.dock.x===1.6&&m.dock.y===.65&&m.dock.distance===34){Object.assign(m.dock,randomDock());}overview=false;if(!lessonCompletedOnce&&!autodock)startFlightLesson();}if(action==='dock'){player.position.set(0,1.68,14);overview=false;view='first';player.view='first';}if(action==='verify'){station.dish.rotation.z=0;station.dish.rotation.x=.3;}}renderHud();return result.ok;}
+function interact(){if(!started||paused||!$('modal').hidden)return;if(dockedExteriorView){boardCabin();return;}const task=orbitalTask(m);if(m.phase==='docking'){if(!dockReady(m.dock)){const d=m.dock,fast=Math.abs(d.speed)>.205,unaligned=Math.abs(d.x)>.35||Math.abs(d.y)>.35,tooFar=d.distance>2;if(fast&&unaligned)notify('Too fast and not lined up! Slow down below 0.2 m/s and center the cross.');else if(fast)notify('Too fast! Slow down below 0.2 m/s (press Space to brake).');else if(unaligned&&tooFar)notify('Line up the cross and fly inside 2 m to dock.');else if(unaligned)notify('Not lined up! Center the cross (A/D and R/F) before docking.');else if(tooFar)notify(`Fly closer! Get inside 2 m to dock (currently ${d.distance.toFixed(1)} m).`);else notify('Line up the cross, get inside 2 m, and keep speed below 0.2 m/s.');return;}run('dock');return;}if(m.phase==='station'&&Math.hypot(player.position.x-task.target.x,player.position.z-task.target.z)>2.5){notify('Follow the orange marker, or press Show me the way.');return;}
   if(task.action==='brief'){radio.say('brief');showModal('Next stop: Meridian base!',`<p><strong>Elena Reyes:</strong> “Jin, I have a job for you. Fix our radio antenna. Pack your kit. Then fly the lander down to the base. Amara will meet you there.”</p><p>The antenna motor is broken. Here is the plan: 1. Find the broken part. 2. Turn off power to just that part. 3. Fix it. 4. Test it. Keep the air machines on the whole time!</p><p>You are <strong>Jin Park, the engineer</strong>. Three more crew are waiting on Mars.</p>`,[{label:'Got it!',primary:true,run:()=>run('brief')}]);return;}
   if(task.action==='diagnose'){showModal('What is broken? Look first.',`<dl><dt>Station power</dt><dd>OK</dd><dt>Antenna motor</dt><dd>Working too hard!</dd><dt>Radio</dt><dd>Keeps cutting out</dd><dt>Air machines</dt><dd>OK</dd></dl><p>Which part needs fixing?</p>`,[{label:'The antenna motor',primary:true,run:()=>run('diagnose','pointing')},{label:'The air machines',run:()=>run('diagnose','habitat')},{label:'Look again later',run:closeModal}]);return;}
   if(task.action==='isolate'){showModal('Keep the air machines on!',`<p>The antenna motor has its own power switch. Turn off just that one, so it is safe to fix.</p><dl><dt>Station power and air</dt><dd>OK · keep on</dd><dt>Antenna motor</dt><dd>Broken</dd></dl>`,[{label:'Turn off the antenna motor',primary:true,run:()=>run('isolate','antenna')},{label:'Turn off all station power',run:()=>run('isolate','habitat')},{label:'Back',run:closeModal}]);return;}
@@ -613,7 +735,7 @@ function dockingGuidance(d){
   else hints.push('↕️ Up/Down: Level ✅');
   return hints.join(' · ');
 }
-function renderHud(){if(!started)return;const task=orbitalTask(m);$('progress').replaceChildren();for(const [i,text]of ['01 DOCK','02 FIX','03 PACK','04 LAND'].entries()){const item=document.createElement('span');item.textContent=text;item.className=task.stage===i+1?'current':task.stage>i+1?'done':'';$('progress').append(item);}$('step-label').textContent=`${String(Math.min(task.stage,4)).padStart(2,'0')} / 04 · ${m.phase==='station'?'JIN PARK / ASTERIA':m.phase==='complete'?'OUTPOST MERIDIAN':'CREW TRANSFER VEHICLE'}`;$('task-title').textContent=task.title;
+function renderHud(){if(!started)return;if(dockedExteriorView){$('progress').replaceChildren();for(const [i,text]of ['01 DOCK','02 FIX','03 PACK','04 LAND'].entries()){const item=document.createElement('span');item.textContent=text;item.className=i===0?'current':'';$('progress').append(item);}$('step-label').textContent='01 / 04 · DOCKED AT ASTERIA';$('task-title').textContent='Docking Complete · Hatch Ready';$('task-instruction').innerHTML='<b>🎉 Docking successful!</b> Clamps are locked and pressure is equalized. Open the hatch and enter the cabin to begin station repairs.';$('action').hidden=false;$('action').disabled=false;$('action').textContent='🚀 Open hatch & enter cabin';$('action').onclick=()=>boardCabin();$('location').textContent='ASTERIA SPACE STATION · DOCKED';$('readout').textContent='DOCKING CLAMP LOCKED ✅ · 101.3 kPa';$('subreadout').textContent='PORT 01 SEALED · ATMOSPHERE EQUALIZED';$('controls-hint').textContent='DRAG LOOK · WHEEL ZOOM · CLICK "OPEN HATCH" OR PRESS E TO ENTER CABIN';$('view').textContent='Ship view';return;}const task=orbitalTask(m);$('progress').replaceChildren();for(const [i,text]of ['01 DOCK','02 FIX','03 PACK','04 LAND'].entries()){const item=document.createElement('span');item.textContent=text;item.className=task.stage===i+1?'current':task.stage>i+1?'done':'';$('progress').append(item);}$('step-label').textContent=`${String(Math.min(task.stage,4)).padStart(2,'0')} / 04 · ${m.phase==='station'?'JIN PARK / ASTERIA':m.phase==='complete'?'OUTPOST MERIDIAN':'CREW TRANSFER VEHICLE'}`;$('task-title').textContent=task.title;
   if(m.phase==='docking'){const d=m.dock;if(dockReady(d)){$('task-instruction').innerHTML='<b>🎉 All lined up and slow!</b> Press <b>E</b> or click <b>Dock</b> below to lock onto Asteria.';}else{const items=[];if(d.x>.35)items.push(`⬅️ <b>Hold A</b> to move <b>${d.x.toFixed(1)} m Left</b> (~${Math.max(1,Math.round(d.x/0.75))} sec)`);else if(d.x<-.35)items.push(`➡️ <b>Hold D</b> to move <b>${Math.abs(d.x).toFixed(1)} m Right</b> (~${Math.max(1,Math.round(Math.abs(d.x)/0.75))} sec)`);else items.push('✅ <b>Left/Right:</b> Centered');if(d.y>.35)items.push(`⬇️ <b>Hold F</b> to move <b>${d.y.toFixed(1)} m Down</b> (~${Math.max(1,Math.round(d.y/0.6))} sec)`);else if(d.y<-.35)items.push(`⬆️ <b>Hold R</b> to move <b>${Math.abs(d.y).toFixed(1)} m Up</b> (~${Math.max(1,Math.round(Math.abs(d.y)/0.6))} sec)`);else items.push('✅ <b>Up/Down:</b> Level');if(Math.abs(d.speed)>.205)items.push(`🛑 <b>Press Space</b> to brake below 0.2 m/s (currently <b>${d.speed.toFixed(2)} m/s</b>)`);else if(d.distance>2)items.push(`🚀 <b>Tap W</b> to fly closer (currently <b>${d.distance.toFixed(1)} m</b>, need under 2 m)`);$('task-instruction').innerHTML=items.map(s=>`<div>• ${s}</div>`).join('');}}else{$('task-instruction').textContent=task.instruction;}
   $('task-instruction').hidden=false;$('action').textContent=task.label||'';$('action').hidden=!task.action;$('guide').hidden=m.phase!=='station';$('assist').hidden=m.phase!=='docking'||dockReady(m.dock);$('assist').textContent=autodock?'Docking help is on':'Help me dock';$('skip').hidden=m.phase!=='descent';
   if($('lesson-btn')) $('lesson-btn').hidden = m.phase!=='docking'||lessonActive||autodock;
@@ -636,7 +758,7 @@ function renderHud(){if(!started)return;const task=orbitalTask(m);$('progress').
   }
   $('subreadout').textContent=m.phase==='docking'?dockingGuidance(m.dock):m.phase==='station'?(task.place?`📍 Target: ${task.place} · Follow the orange ring`:'Station is safe'):'IN SUNLIGHT ABOVE MARS';$('controls-hint').textContent=m.phase==='station'?'WASD MOVE · ⬅️/➡️ TURN VIEW · DRAG LOOK · E USE · V VIEW · WHEEL ZOOM · ESC PAUSE':m.phase==='docking'?'W/S FORWARD · A/D SIDEWAYS · R/F UP/DOWN · SPACE BRAKE · MAX 0.2 m/s · E DOCK':'DRAG LOOK · WHEEL ZOOM · DETAILS FOR HELP · ESC PAUSE';
   const reticle=$('reticle');if(reticle){const ready=m.phase==='docking'&&dockReady(m.dock);reticle.style.color=ready?'#5efc8d':'#dce5dc70';reticle.style.transform=ready?'translate(-50%,-50%) scale(1.6)':'translate(-50%,-50%) scale(1)';}}
-function changeZoom(direction){if(!ready||!$('modal').hidden)return;if(m.phase==='station'){if(player.view==='third'){zoom=T.MathUtils.clamp(zoom+direction*.45,1.2,5);player.thirdPersonDistance=zoom;}else{camera.fov=T.MathUtils.clamp(camera.fov+direction*4,35,78);camera.updateProjectionMatrix();}}else if(m.phase==='craft'&&!overview){camera.fov=T.MathUtils.clamp(camera.fov+direction*4,35,78);camera.updateProjectionMatrix();}else if(m.phase==='docking'&&!overview){craftZoom=T.MathUtils.clamp(craftZoom+direction*1.5,6,30);}else{overviewDistance=T.MathUtils.clamp(overviewDistance+direction*350,4000,11000);}}
+function changeZoom(direction){if(!ready||!$('modal').hidden)return;if(m.phase==='station'&&!dockedExteriorView){if(player.view==='third'){zoom=T.MathUtils.clamp(zoom+direction*.45,1.2,5);player.thirdPersonDistance=zoom;}else{camera.fov=T.MathUtils.clamp(camera.fov+direction*4,35,78);camera.updateProjectionMatrix();}}else if(m.phase==='craft'&&!overview){camera.fov=T.MathUtils.clamp(camera.fov+direction*4,35,78);camera.updateProjectionMatrix();}else if((m.phase==='docking'||dockedExteriorView)&&!overview){craftZoom=T.MathUtils.clamp(craftZoom+direction*1.5,5,30);}else{overviewDistance=T.MathUtils.clamp(overviewDistance+direction*350,4000,11000);}}
 $('begin').onclick=()=>start();$('resume').onclick=()=>{let saved;try{saved=restoreOrbit(localStorage);}catch{}if(saved)start(saved);};$('action').onclick=()=>{document.activeElement?.blur();interact();};$('guide').onclick=()=>{const task=orbitalTask(m);if(task.target&&m.phase==='station'){player.enabled=true;const ok=player.navigate(task.target,task.target);notify(ok?'Walking you there. Press WASD to take over.':'The way is blocked. Move to the middle hall and try again.');}document.activeElement?.blur();};$('assist').onclick=()=>{autodock=!autodock;m.guided=true;if(autodock){closeFlightLesson();if($('lesson-btn'))$('lesson-btn').hidden=true;}notify(autodock?'Docking help is on. The computer will fly slowly.':'Docking help is off. You are flying!');renderHud();document.activeElement?.blur();};$('details').onclick=()=>{details=!details;$('details').setAttribute('aria-expanded',String(details));$('objective').classList.toggle('expanded',details);clearTimeout(detailsCollapseTimer);if(details)detailsCollapseTimer=setTimeout(()=>{details=false;$('objective').classList.remove('expanded');$('details').setAttribute('aria-expanded','false');renderHud();},5000);renderHud();};$('zoom-in').onclick=()=>{changeZoom(-1);document.activeElement?.blur();};$('zoom-out').onclick=()=>{changeZoom(1);document.activeElement?.blur();};$('sound').onclick=()=>{audio.start();audio.setMuted(!audio.muted);syncSound();if(!audio.muted)audio.ping();document.activeElement?.blur();};syncSound();$('replay-briefing').onclick=()=>{audio.start();radio.replay();};$('radio-skip').onclick=()=>radio.stop();$('radio-replay').onclick=()=>radio.replay();$('station-overview-marker').onclick=()=>{if(!started)start();if(m.phase==='overview')run('approach');else{overview=false;renderHud();}};$('help').onclick=help;$('atlas').onclick=atlas;$('pause').onclick=togglePause;$('view').onclick=()=>{if(m.phase==='station')player.toggleView();else if(m.phase==='overview'){if(!started)start();run('approach');}else overview=!overview;renderHud();document.activeElement?.blur();};$('skip').onclick=()=>{if(m.phase==='descent'){advanceOrbit(m,16);complete();}};
 if($('lesson-key-btn'))$('lesson-key-btn').onclick=()=>{if(!lessonActive||lessonStepCompleted)return;const step=FLIGHT_LESSON_STEPS[lessonIndex];if(step){const k=step.simKey;keys.add(k);setTimeout(()=>keys.delete(k),350);completeLessonStep();}};
 if($('lesson-next-step-btn'))$('lesson-next-step-btn').onclick=()=>{if(lessonIndex>=FLIGHT_LESSON_STEPS.length-1)showLessonGraduation();else advanceFlightLesson();};
@@ -645,10 +767,10 @@ if($('lesson-btn'))$('lesson-btn').onclick=()=>{startFlightLesson();document.act
 if($('dock-slow-alert'))$('dock-slow-alert').onclick=()=>{if(m.phase==='docking'&&dockReady(m.dock))interact();};
 installHudPresentation({hud:$('hud'),toolbar:document.querySelector('header nav'),onHelp:help,onJourney:openJourney});
 renderer.domElement.addEventListener('wheel',e=>{e.preventDefault();changeZoom(Math.sign(e.deltaY));},{passive:false});renderer.domElement.addEventListener('pointerdown',e=>{if(e.button===0&&m.phase!=='station'&&$('modal').hidden)drag={x:e.clientX,y:e.clientY};});addEventListener('pointerup',()=>drag=null);addEventListener('pointermove',e=>{if(!drag)return;overviewYaw-=(e.clientX-drag.x)*.004;overviewPitch=T.MathUtils.clamp(overviewPitch+(e.clientY-drag.y)*.003,-.55,1.2);drag={x:e.clientX,y:e.clientY};});
-addEventListener('keydown',e=>{if(['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)||!started||!$('modal').hidden)return;if(lessonActive&&!lessonStepCompleted){const step=FLIGHT_LESSON_STEPS[lessonIndex];if(step&&step.keys.includes(e.code))completeLessonStep();}else if(lessonActive&&lessonStepCompleted&&(e.code==='Enter'||e.code==='Space')){e.preventDefault();if(lessonIndex>=FLIGHT_LESSON_STEPS.length-1)showLessonGraduation();else advanceFlightLesson();}if(['KeyW','KeyS','KeyA','KeyD','KeyR','KeyF','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)){e.preventDefault();keys.add(e.code);const wasAutodock=autodock;autodock=false;if(wasAutodock)renderHud();if($('objective').classList.contains('expanded')){$('objective').classList.remove('expanded');details=false;$('details').setAttribute('aria-expanded','false');clearTimeout(detailsCollapseTimer);}}if(e.code==='KeyE'&&!e.repeat&&m.phase!=='station')interact();if(e.code==='KeyV'&&!e.repeat&&m.phase!=='station'){overview=!overview;renderHud();}if(e.code==='Equal'||e.code==='NumpadAdd')changeZoom(-1);if(e.code==='Minus'||e.code==='NumpadSubtract')changeZoom(1);});addEventListener('keyup',e=>keys.delete(e.code));addEventListener('blur',clearInput);document.addEventListener('visibilitychange',()=>{clearInput();last=performance.now();});
+addEventListener('keydown',e=>{if(['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)||!started)return;if(dockingSceneActive){if(e.code==='Space'||e.code==='Enter'||e.code==='Escape'){e.preventDefault();finishDockingScene();}return;}if(dockedExteriorView&&e.code==='KeyE'){e.preventDefault();boardCabin();return;}if(!$('modal').hidden)return;if(lessonActive&&!lessonStepCompleted){const step=FLIGHT_LESSON_STEPS[lessonIndex];if(step&&step.keys.includes(e.code))completeLessonStep();}else if(lessonActive&&lessonStepCompleted&&(e.code==='Enter'||e.code==='Space')){e.preventDefault();if(lessonIndex>=FLIGHT_LESSON_STEPS.length-1)showLessonGraduation();else advanceFlightLesson();}if(['KeyW','KeyS','KeyA','KeyD','KeyR','KeyF','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)){e.preventDefault();keys.add(e.code);const wasAutodock=autodock;autodock=false;if(wasAutodock)renderHud();if($('objective').classList.contains('expanded')){$('objective').classList.remove('expanded');details=false;$('details').setAttribute('aria-expanded','false');clearTimeout(detailsCollapseTimer);}}if(e.code==='KeyE'&&!e.repeat&&m.phase!=='station')interact();if(e.code==='KeyV'&&!e.repeat&&m.phase!=='station'){overview=!overview;renderHud();}if(e.code==='Equal'||e.code==='NumpadAdd')changeZoom(-1);if(e.code==='Minus'||e.code==='NumpadSubtract')changeZoom(1);});addEventListener('keyup',e=>keys.delete(e.code));addEventListener('blur',clearInput);document.addEventListener('visibilitychange',()=>{clearInput();last=performance.now();});
 addEventListener('resize',()=>{renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();});addEventListener('pagehide',()=>{save();clearInput();cancelAnimationFrame(frameId);radio.stop();audio.dispose();renderer.dispose();});
-function frame(now){frameId=requestAnimationFrame(frame);const dt=document.hidden?0:Math.min(.05,(now-last)/1000);last=now;const live=ready&&started&&!paused&&!journeyPaused&&$('modal').hidden;if(ready&&(!started||live)){orbitalAge+=dt;env.update(dt*(reduced?.25:1));}
-  if(live){advanceOrbit(m,dt);if(m.phase==='docking'){
+function frame(now){frameId=requestAnimationFrame(frame);const dt=document.hidden?0:Math.min(.05,(now-last)/1000);last=now;const live=ready&&started&&!paused&&!journeyPaused&&($('modal').hidden||dockingSceneActive);if(ready&&(!started||live)){orbitalAge+=dt;env.update(dt*(reduced?.25:1));}
+  if(live){if(dockingSceneActive){const elapsed=(now-dockingSceneStartTime)/1000;if(elapsed>=5.0){finishDockingScene();}else if(elapsed<1.8){const p1=Math.min(1,elapsed/1.7),e1=Math.sin(p1*Math.PI/2);shuttle.position.x=dockStartPos.x*(1-e1);shuttle.position.y=2.2+dockStartPos.y*(1-e1);shuttle.position.z=(26.2+dockStartPos.distance)*(1-e1)+25.07*e1;const camTarget=new T.Vector3(-5.6,3.8,23.8);camera.position.lerpVectors(camStartPos,camTarget,e1);const lookInterface=new T.Vector3(0,2.2,21.0);const curLook=camStartTarget.clone().lerp(lookInterface,e1);camera.lookAt(curLook);const pulse=Math.sin(elapsed*16)>0.1?.75:0;rcsPlumes.forEach(p=>{p.material.opacity=pulse*(1-p1);});const ledIdx=Math.floor(elapsed*12)%12;dockLeds.forEach((led,i)=>{const act=(i===ledIdx||i===(ledIdx+6)%12);led.material.color.setHex(act?0x3ee6b5:0x16343d);led.material.emissive.setHex(act?0x3ee6b5:0x08191f);led.material.emissiveIntensity=act?2.2:.2;});const spd=Math.max(0,dockStartPos.speed*(1-e1)).toFixed(2),dst=Math.max(0,dockStartPos.distance*(1-e1)).toFixed(2);const speedEl=$('cutscene-speed'),distEl=$('cutscene-dist');if(speedEl)speedEl.textContent=`${spd} m/s`;if(distEl)distEl.textContent=`${dst} m`;}else if(elapsed<3.4){shuttle.position.set(0,2.2,25.07);rcsPlumes.forEach(p=>{p.material.opacity=0;});const cp=Math.min(1,Math.max(0,(elapsed-1.8)/.7)),cpEase=cp*cp*(3-2*cp);dockClamps.forEach(arm=>{arm.rotation.x=.45*(1-cpEase)-.08*cpEase;});if(elapsed>=2.2){if(!clampAudioPlayed){audio.dockLock();clampAudioPlayed=true;}dockLeds.forEach(led=>{led.material.color.setHex(0x3ee6b5);led.material.emissive.setHex(0x3ee6b5);led.material.emissiveIntensity=3;});dockRingLight.intensity=3.5;const vp=Math.min(1,(elapsed-2.2)/.8);vaporRing.scale.setScalar(1+vp*.45);vaporRing.material.opacity=Math.max(0,(1-vp)*.75);}const p2Norm=Math.min(1,(elapsed-1.8)/1.6);camera.position.lerpVectors(new T.Vector3(-5.6,3.8,23.8),new T.Vector3(-4.2,3.3,22.8),p2Norm);camera.lookAt(0,2.2,21.0);const pressRatio=Math.min(1,Math.max(0,(elapsed-2.2)/1.5));const kpa=(pressRatio*101.3).toFixed(1);const pressFill=$('cutscene-pressure-fill'),pressVal=$('cutscene-pressure-val');if(pressFill)pressFill.style.width=`${pressRatio*100}%`;if(pressVal)pressVal.textContent=`${kpa} kPa`;const titleEl=$('cutscene-title'),descEl=$('cutscene-desc'),clampsEl=$('cutscene-clamps');if(titleEl)titleEl.textContent='🔒 HARD CAPTURE CONFIRMED · CLAMPS LOCKED';if(descEl)descEl.textContent='Magnetic latches engaged · 4 / 4 mechanical clamps locked tight!';if(clampsEl)clampsEl.textContent=cp>=1?'LOCKED (4/4) ✅':'ENGAGING (2/4)';const s1=$('cutscene-step-1'),s2=$('cutscene-step-2'),s3=$('cutscene-step-3');if(s1)s1.className='dock-step-pill done';if(s2)s2.className='dock-step-pill active';if(s3)s3.className='dock-step-pill';const spdEl=$('cutscene-speed'),dstEl=$('cutscene-dist');if(spdEl)spdEl.textContent='0.00 m/s';if(dstEl)dstEl.textContent='0.00 m';}else{shuttle.position.set(0,2.2,25.07);dockClamps.forEach(arm=>{arm.rotation.x=-.08;});dockLeds.forEach(led=>{led.material.color.setHex(0x3ee6b5);led.material.emissive.setHex(0x3ee6b5);led.material.emissiveIntensity=3;});dockRingLight.intensity=3;vaporRing.material.opacity=0;const pressFill=$('cutscene-pressure-fill'),pressVal=$('cutscene-pressure-val');if(pressFill)pressFill.style.width='100%';if(pressVal)pressVal.textContent='101.3 kPa (SAFE)';const p3Norm=Math.min(1,(elapsed-3.4)/1.6);camera.position.lerpVectors(new T.Vector3(-4.2,3.3,22.8),new T.Vector3(-6.6,4.2,26.2),p3Norm);camera.lookAt(0,2.2,21.0);if(!elenaRadioPlayed){radio.say('docked');elenaRadioPlayed=true;}const titleEl=$('cutscene-title'),descEl=$('cutscene-desc'),clampsEl=$('cutscene-clamps');if(titleEl)titleEl.textContent='✅ AIRLOCK SEALED · DOCKING COMPLETE!';if(descEl)descEl.textContent='Pressure equalized (101.3 kPa). Welcome aboard Asteria Station!';if(clampsEl)clampsEl.textContent='LOCKED (4/4) ✅';const s1=$('cutscene-step-1'),s2=$('cutscene-step-2'),s3=$('cutscene-step-3');if(s1)s1.className='dock-step-pill done';if(s2)s2.className='dock-step-pill done';if(s3)s3.className='dock-step-pill active done';}}advanceOrbit(m,dt);if(m.phase==='docking'&&!dockingSceneActive){
     if(autodock){
       if(lessonActive||($('flight-lesson')&&!$('flight-lesson').hidden))closeFlightLesson();
       if($('lesson-btn')&&!$('lesson-btn').hidden)$('lesson-btn').hidden=true;
@@ -727,15 +849,15 @@ function frame(now){frameId=requestAnimationFrame(frame);const dt=document.hidde
       }
     }
   }else{const alertEl=$('dock-slow-alert');if(alertEl)alertEl.hidden=true;}if(m.phase==='station'){player.enabled=true;const moved=player.update(dt*.72);if(moved&&$('objective').classList.contains('expanded')){$('objective').classList.remove('expanded');details=false;$('details').setAttribute('aria-expanded','false');clearTimeout(detailsCollapseTimer);}avatar.position.set(player.position.x,0,player.position.z);avatar.rotation.y=player.facing;if(walk&&idle){walk.setEffectiveWeight(moved?1:0);idle.setEffectiveWeight(moved?0:1);}}mixer?.update(dt);if(m.complete)complete();}
-  const inside=started&&m.phase==='station';station.interior.visible=inside;station.exterior.visible=!inside;shuttle.visible=!inside&&!['descent','complete'].includes(m.phase);avatar&&(avatar.visible=inside&&player.view==='third'&&player.cameraDistance>1.55);player.enabled=live&&inside;audio.paused=paused||journeyPaused||document.hidden;radio.pause(audio.paused);audio.update(!started?'orbit':inside?'station':['craft','descent','complete'].includes(m.phase)?'flight':'orbit');env?.setOverview(!inside&&overview);
+  const inside=started&&m.phase==='station'&&!dockingSceneActive&&!dockedExteriorView;station.interior.visible=inside;station.exterior.visible=!inside;shuttle.visible=!inside&&!['descent','complete'].includes(m.phase);avatar&&(avatar.visible=inside&&player.view==='third'&&player.cameraDistance>1.55);player.enabled=live&&inside;audio.paused=paused||journeyPaused||document.hidden;radio.pause(audio.paused);audio.update(!started?'orbit':inside?'station':['craft','descent','complete'].includes(m.phase)?'flight':'orbit');env?.setOverview(!inside&&overview);
   if(m.phase!==lastPhase){lastPhase=m.phase;keys.clear();player.release();player.route=[];camera.fov=52;camera.updateProjectionMatrix();if(m.phase==='station'){player.syncCamera();}if(m.phase==='craft')overview=false;renderHud();}
-  if(!inside){const d=m.dock,flyby=!started||m.phase==='overview';station.exterior.position.set(0,2.2,0);if(flyby){const offset=env.orbitOffset.clone().applyAxisAngle(new T.Vector3(0,1,0),reduced?0:orbitalAge*.0015);station.exterior.position.copy(env.planet.position).add(offset);}shuttle.position.set(d.x+station.exterior.position.x,station.exterior.position.y+d.y,26.2+d.distance+station.exterior.position.z);if(!started||m.phase==='overview'||overview&&m.phase!=='descent'){const center=env.overviewTarget,angle=overviewYaw+.3;camera.position.set(center.x+Math.sin(angle)*overviewDistance,center.y+Math.sin(overviewPitch)*overviewDistance*.7,center.z+Math.cos(angle)*overviewDistance);camera.lookAt(center);}else if(m.phase==='descent'){const t=Math.min(1,m.descent/16),target=env.planet.position.clone(),dir=new T.Vector3(-.5,.48,1).normalize();camera.position.copy(target).addScaledVector(dir,env.radius*(1.75-(reduced?0:t)*.735));camera.lookAt(target);$('descent-label').hidden=false;$('descent-phase').textContent=t<.24?'DEORBIT BURN':t<.55?'ENTERING THE AIR':t<.85?'ROCKETS ON · LANDING':'TOUCHDOWN / MERIDIAN';}else{const target=shuttle.position.clone().add(new T.Vector3(0,0,-3));camera.position.copy(shuttle.position).add(new T.Vector3(Math.sin(overviewYaw)*craftZoom*.75,craftZoom*.36+overviewPitch*3,craftZoom));camera.lookAt(target);}}
+  if(!inside){const d=m.dock,flyby=!started||m.phase==='overview';station.exterior.position.set(0,2.2,0);if(flyby){const offset=env.orbitOffset.clone().applyAxisAngle(new T.Vector3(0,1,0),reduced?0:orbitalAge*.0015);station.exterior.position.copy(env.planet.position).add(offset);}if(dockingSceneActive){}else if(dockedExteriorView){shuttle.position.set(0,2.2,25.07);const lookAtTarget=new T.Vector3(0,2.2,21.0);camera.position.set(lookAtTarget.x+Math.sin(overviewYaw)*craftZoom,lookAtTarget.y+Math.sin(overviewPitch)*craftZoom*.6+1.2,lookAtTarget.z+Math.cos(overviewYaw)*craftZoom);camera.lookAt(lookAtTarget);}else if(!started||m.phase==='overview'||overview&&m.phase!=='descent'){shuttle.position.set(d.x+station.exterior.position.x,station.exterior.position.y+d.y,26.2+d.distance+station.exterior.position.z);const center=env.overviewTarget,angle=overviewYaw+.3;camera.position.set(center.x+Math.sin(angle)*overviewDistance,center.y+Math.sin(overviewPitch)*overviewDistance*.7,center.z+Math.cos(angle)*overviewDistance);camera.lookAt(center);}else if(m.phase==='descent'){const t=Math.min(1,m.descent/16),target=env.planet.position.clone(),dir=new T.Vector3(-.5,.48,1).normalize();camera.position.copy(target).addScaledVector(dir,env.radius*(1.75-(reduced?0:t)*.735));camera.lookAt(target);$('descent-label').hidden=false;$('descent-phase').textContent=t<.24?'DEORBIT BURN':t<.55?'ENTERING THE AIR':t<.85?'ROCKETS ON · LANDING':'TOUCHDOWN / MERIDIAN';}else{shuttle.position.set(d.x+station.exterior.position.x,station.exterior.position.y+d.y,26.2+d.distance+station.exterior.position.z);const target=shuttle.position.clone().add(new T.Vector3(0,0,-3));camera.position.copy(shuttle.position).add(new T.Vector3(Math.sin(overviewYaw)*craftZoom*.75,craftZoom*.36+overviewPitch*3,craftZoom));camera.lookAt(target);}}
   cockpit.visible=m.phase==='craft'&&!overview&&started;cockpit.position.copy(shuttle.position);if(cockpit.visible){camera.position.copy(shuttle.position).add(new T.Vector3(0,1.55,.3));camera.lookAt(env.planet.position);cockpit.quaternion.copy(camera.quaternion);cockpit.position.copy(camera.position).add(new T.Vector3(0,-1.55,0).applyQuaternion(camera.quaternion));shuttle.visible=false;}
   if(m.phase!=='descent')$('descent-label').hidden=true;
   const stationMarker=$('station-overview-marker');stationMarker.hidden=inside||!overview||m.phase==='descent';if(!stationMarker.hidden){camera.updateMatrixWorld();const projected=station.exterior.position.clone().project(camera);stationMarker.hidden=projected.z<0||projected.z>1||Math.abs(projected.x)>.9||Math.abs(projected.y)>.85;stationMarker.style.left=`${(projected.x*.5+.5)*innerWidth}px`;stationMarker.style.top=`${(-projected.y*.5+.5)*innerHeight}px`;}
   const targetBox=$('dock-target-box'),alignSvg=$('dock-alignment-svg'),dockLine=$('dock-line'),dockBorderL=$('dock-border-l'),dockBorderR=$('dock-border-r'),dockHLine=$('dock-hline'),dockVLine=$('dock-vline'),centerZone=$('dock-center-zone');
   if(targetBox&&alignSvg){
-    const isDocking=started&&!inside&&m.phase==='docking'&&!overview;
+    const isDocking=started&&!inside&&m.phase==='docking'&&!overview&&!dockingSceneActive&&!dockedExteriorView;
     targetBox.hidden=!isDocking;
     if(centerZone)centerZone.hidden=!isDocking;
     alignSvg.style.display=isDocking?'block':'none';
