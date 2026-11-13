@@ -1,0 +1,4 @@
+1
+00:00:00,100 --> 00:00:03,089
+Opportunity couldn't prepare for its storm.
+

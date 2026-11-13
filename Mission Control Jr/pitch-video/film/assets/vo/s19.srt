@@ -1,0 +1,16 @@
+1
+00:00:00,100 --> 00:00:05,045
+When it's over, the report shows what worked, what didn't, and why.
+
+2
+00:00:04,995 --> 00:00:08,107
+Then it asks: want to try a different plan?
+
+3
+00:00:08,107 --> 00:00:11,109
+Here, failing isn't the end.
+
+4
+00:00:11,109 --> 00:00:12,468
+It's the lesson.
+

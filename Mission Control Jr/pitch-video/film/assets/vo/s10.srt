@@ -1,0 +1,8 @@
+1
+00:00:00,100 --> 00:00:01,445
+One battery.
+
+2
+00:00:01,395 --> 00:00:04,710
+More air for the crew... or keep the science running?
+

@@ -1,0 +1,8 @@
+1
+00:00:00,100 --> 00:00:03,170
+Mission Control Jr. Small decisions.
+
+2
+00:00:03,120 --> 00:00:04,696
+Giant missions.
+

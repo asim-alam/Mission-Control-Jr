@@ -1,0 +1,12 @@
+1
+00:00:00,100 --> 00:00:05,752
+A little rover called Opportunity had explored Mars for almost fifteen years.
+
+2
+00:00:05,702 --> 00:00:07,509
+It lived on sunlight.
+
+3
+00:00:07,509 --> 00:00:09,425
+And the sunlight was gone.
+

@@ -1,0 +1,8 @@
+1
+00:00:00,100 --> 00:00:02,260
+Every choice costs something.
+
+2
+00:00:02,210 --> 00:00:05,498
+And almost no child ever gets to make one.
+

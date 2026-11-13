@@ -1,0 +1,12 @@
+1
+00:00:00,100 --> 00:00:05,263
+So we built Mission Control Jr. A free 3D game in any web browser.
+
+2
+00:00:05,213 --> 00:00:08,175
+Nine missions, on Mars and the Moon.
+
+3
+00:00:08,175 --> 00:00:10,416
+Built on real NASA science.
+

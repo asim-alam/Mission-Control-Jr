@@ -1,0 +1,8 @@
+1
+00:00:00,100 --> 00:00:14,026
+Every mission stands on real NASA data: Opportunity's power in that 2018 storm, Curiosity's radiation readings, the HiRISE map of Jezero, lettuce grown on the Space Station.
+
+2
+00:00:13,976 --> 00:00:17,563
+And the game shows kids where every number comes from.
+

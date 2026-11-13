@@ -1,0 +1,20 @@
+1
+00:00:00,100 --> 00:00:03,197
+Children learn space as a list of facts.
+
+2
+00:00:03,147 --> 00:00:04,642
+Mars is red.
+
+3
+00:00:04,642 --> 00:00:06,734
+Astronauts need oxygen.
+
+4
+00:00:06,734 --> 00:00:09,329
+But a real mission isn't a fact.
+
+5
+00:00:09,329 --> 00:00:10,702
+It's a choice.
+

@@ -1,0 +1,4 @@
+1
+00:00:00,100 --> 00:00:06,676
+Its final signals, in simple words, said: my battery is low... and it's getting dark.
+

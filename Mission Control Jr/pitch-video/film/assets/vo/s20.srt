@@ -1,0 +1,8 @@
+1
+00:00:00,100 --> 00:00:02,151
+Our goal isn't a high score.
+
+2
+00:00:02,101 --> 00:00:05,770
+It's a child who can explain why their crew survived.
+

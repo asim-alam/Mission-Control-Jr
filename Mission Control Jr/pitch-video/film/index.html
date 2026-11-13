@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<title>Before the Storm — Mission Control Jr.</title>
+<style>
+  html, body { margin: 0; background: #000; }
+  #root { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: #050505; font-family: 'Inter', sans-serif; color: #f4ece2; }
+  .w { position: absolute; inset: 0; overflow: hidden; }
+  .w video { width: 100%; height: 100%; object-fit: cover; display: block; }
+  #duo { position: absolute; inset: 0; background: #c2622b; mix-blend-mode: color; opacity: .62; z-index: 5; }
+  #duo2 { position: absolute; inset: 0; background: linear-gradient(180deg, #1d3b2e 0%, transparent 60%); mix-blend-mode: multiply; opacity: .5; z-index: 5; }
+  #grain { position: absolute; inset: 0; z-index: 6; pointer-events: none; background: radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,.62) 100%); }
+  .bar { position: absolute; left: 0; right: 0; height: 104px; background: #000; z-index: 20; }
+  #bar-t { top: 0; } #bar-b { bottom: 0; }
+  #field { position: absolute; inset: 0; background: #b9532a; z-index: 8; overflow: hidden; }
+  .gl { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'League Gothic', sans-serif; font-size: 300px; letter-spacing: 6px; color: #f6e7d2; line-height: 1; }
+  #gl-0 { clip-path: inset(0 0 66% 0); } #gl-1 { clip-path: inset(34% 0 33% 0); } #gl-2 { clip-path: inset(67% 0 0 0); }
+  #gl-sub { position: absolute; left: 0; right: 0; bottom: 250px; text-align: center; font: 500 26px 'Space Mono', monospace; letter-spacing: 12px; color: #2a120a; }
+  .card { position: absolute; inset: 0; z-index: 10; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+  .card .in { text-align: center; text-shadow: 0 2px 24px rgba(0,0,0,.6); }
+  .card small { display: block; font: 400 30px 'Inter', sans-serif; letter-spacing: 3px; margin-top: 18px; color: #e9c9a8; text-transform: none; }
+  .date .in { font: 500 34px 'Space Mono', monospace; letter-spacing: 10px; align-self: flex-end; margin-bottom: 170px; max-width: 1500px; }
+  .typed .in { font: 400 54px 'Space Mono', monospace; color: #ffb37a; letter-spacing: 2px; max-width: 1500px; }
+  .small .in { font: 400 22px 'Space Mono', monospace; color: #8c7a6a; align-self: flex-end; margin-bottom: 330px; letter-spacing: 3px; }
+  .serif .in { font: italic 400 84px 'EB Garamond', serif; color: #efe6da; }
+  .lower { justify-content: flex-start; }
+  .lower .in { align-self: flex-end; margin: 0 0 160px 150px; text-align: left; font: 600 46px 'Inter', sans-serif; border-left: 6px solid #e2763c; padding-left: 26px; }
+  .lower small { font-size: 26px; margin-top: 8px; letter-spacing: 4px; text-transform: uppercase; color: #f0b58a; }
+  .big .in { font: 400 190px 'League Gothic', sans-serif; letter-spacing: 8px; line-height: .95; }
+  .big small { font: italic 400 50px 'EB Garamond', serif; letter-spacing: 1px; color: #f0c9a0; }
+  .fact .in { font: 400 150px 'League Gothic', sans-serif; letter-spacing: 6px; color: #f4ece2; }
+  .big2 .in { font: 400 130px 'League Gothic', sans-serif; letter-spacing: 5px; max-width: 1600px; line-height: 1; }
+  em { font-style: normal; color: #ff8a47; }
+  .split .in { font: 400 150px 'League Gothic', sans-serif; letter-spacing: 6px; }
+  .split small { font: 600 34px 'Space Mono', monospace; letter-spacing: 6px; color: #ffcf9e; }
+  .tag { justify-content: flex-start; } .tag .in { align-self: flex-start; margin: 150px 0 0 150px; font: 700 30px 'Space Mono', monospace; letter-spacing: 14px; color: #ffb37a; }
+  .tagr .in { font: 400 170px 'League Gothic', sans-serif; letter-spacing: 10px; align-self: flex-start; margin-top: 140px; }
+  .callout { justify-content: flex-end; }
+  .callout .in { align-self: flex-end; margin: 0 150px 160px 0; text-align: right; background: rgba(12,10,9,.78); border-right: 6px solid #e2763c; padding: 24px 32px; font: 600 40px 'Inter', sans-serif; }
+  .callout small { font: 400 22px 'Space Mono', monospace; letter-spacing: 2px; color: #d9b897; margin-top: 10px; }
+  .endcard .in { display: flex; flex-direction: column; gap: 26px; align-items: center; }
+  .endcard b { font: 700 54px 'Space Mono', monospace; color: #ffb37a; letter-spacing: 2px; }
+  .endcard span { font: 600 30px 'Inter', sans-serif; letter-spacing: 8px; }
+  .endcard i { font: 400 22px 'Inter', sans-serif; font-style: normal; color: #a89888; line-height: 1.7; max-width: 1400px; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="235" data-width="1920" data-height="1080" data-layout-allow-overlap data-layout-allow-overflow>
+<div class="w" id="w0"><video id="v0" class="clip" src="assets/nasa/n-mars-globe.mp4" data-start="1.2" data-duration="1.2" data-media-start="0.75" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w1"><video id="v1" class="clip" src="assets/nasa/n-jezero-low.mp4" data-start="2.4" data-duration="1" data-media-start="2.70" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w2"><video id="v2" class="clip" src="assets/nasa/n-opp-horizon.mp4" data-start="3.4" data-duration="1" data-media-start="2.45" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w3"><video id="v3" class="clip" src="assets/nasa/n-moon-zoom.mp4" data-start="4.4" data-duration="0.9" data-media-start="4.10" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w4"><video id="v4" class="clip" src="assets/nasa/n-artemis-pad.mp4" data-start="5.300000000000001" data-duration="0.9" data-media-start="2.05" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w5"><video id="v5" class="clip" src="assets/game/bb-outpost-push.mp4" data-start="6.200000000000001" data-duration="0.8" data-media-start="5.50" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w6"><video id="v6" class="clip" src="assets/nasa/n-persev-ground.mp4" data-start="7.000000000000001" data-duration="0.8" data-media-start="3.15" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w7"><video id="v7" class="clip" src="assets/nasa/n-earth-iss.mp4" data-start="7.800000000000001" data-duration="0.7" data-media-start="5.25" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w8"><video id="v8" class="clip" src="assets/nasa/n-opp-rim.mp4" data-start="8.5" data-duration="0.7" data-media-start="2.75" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w9"><video id="v9" class="clip" src="assets/nasa/n-sun.mp4" data-start="9.2" data-duration="0.6" data-media-start="1.85" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w10"><video id="v10" class="clip" src="assets/nasa/n-opp-tracks.mp4" data-start="9.799999999999999" data-duration="0.6" data-media-start="3.35" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w11"><video id="v11" class="clip" src="assets/game/ex-moon-relay.mp4" data-start="10.399999999999999" data-duration="0.5" data-media-start="6.45" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w12"><video id="v12" class="clip" src="assets/nasa/n-crew-walk.mp4" data-start="10.899999999999999" data-duration="0.6" data-media-start="3.35" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w13"><video id="v13" class="clip" src="assets/nasa/n-mars-dust.mp4" data-start="11.499999999999998" data-duration="1.1" data-media-start="3.35" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w14"><video id="v14" class="clip" src="assets/nasa/n-mars-dust.mp4" data-start="19" data-duration="3.5" data-media-start="0.95" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w15"><video id="v15" class="clip" src="assets/nasa/n-dark-sky.mp4" data-start="22.5" data-duration="3.3" data-media-start="0.00" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w16"><video id="v16" class="clip" src="assets/nasa/n-opp-selfie.mp4" data-start="25.8" data-duration="2.55" data-media-start="0.00" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w17"><video id="v17" class="clip" src="assets/nasa/n-opp-rim.mp4" data-start="28.35" data-duration="1.05" data-media-start="1.00" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w18"><video id="v18" class="clip" src="assets/nasa/n-opp-deck.mp4" data-start="29.4" data-duration="3.6" data-media-start="0.00" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w19"><video id="v19" class="clip" src="assets/nasa/n-opp-shadow.mp4" data-start="33" data-duration="3.4" data-media-start="1.05" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w20"><video id="v20" class="clip" src="assets/game/bb-outpost-push.mp4" data-start="47" data-duration="5" data-media-start="0.00" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w21"><video id="v21" class="clip" src="assets/game/bb-outpost-low.mp4" data-start="52" data-duration="6" data-media-start="0.00" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w22"><video id="v22" class="clip" src="assets/game/bb-basin-crane.mp4" data-start="58" data-duration="5" data-media-start="0.00" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w23"><video id="v23" class="clip" src="assets/game/bb-dawn-rise.mp4" data-start="63" data-duration="4" data-media-start="0.00" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w24"><video id="v24" class="clip" src="assets/nasa/n-mars-globe.mp4" data-start="67" data-duration="1.95" data-media-start="0.00" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w25"><video id="v25" class="clip" src="assets/nasa/n-jezero-high.mp4" data-start="68.95" data-duration="2.55" data-media-start="0.90" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w26"><video id="v26" class="clip" src="assets/nasa/n-crew-walk.mp4" data-start="71.5" data-duration="4" data-media-start="0.00" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w27"><video id="v27" class="clip" src="assets/nasa/n-persev-ground.mp4" data-start="78.8" data-duration="3.9" data-media-start="0.00" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w28"><video id="v28" class="clip" src="assets/nasa/n-persev-crater.mp4" data-start="82.7" data-duration="1.5" data-media-start="1.00" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w29"><video id="v29" class="clip" src="assets/game/ex-shelter-wall.mp4" data-start="84.2" data-duration="4.8" data-media-start="0.00" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w30"><video id="v30" class="clip" src="assets/nasa/n-opp-tracks.mp4" data-start="89" data-duration="3.9" data-media-start="0.00" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w31"><video id="v31" class="clip" src="assets/nasa/n-opp-horizon.mp4" data-start="92.9" data-duration="2.1" data-media-start="1.35" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w32"><video id="v32" class="clip" src="assets/nasa/n-artemis-pad.mp4" data-start="95" data-duration="1.8" data-media-start="1.00" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w33"><video id="v33" class="clip" src="assets/nasa/n-artemis-ign.mp4" data-start="96.8" data-duration="1.6" data-media-start="0.00" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w34"><video id="v34" class="clip" src="assets/nasa/n-artemis-lift.mp4" data-start="98.4" data-duration="1.8" data-media-start="0.00" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w35"><video id="v35" class="clip" src="assets/nasa/n-artemis-glow.mp4" data-start="100.2" data-duration="1.8" data-media-start="0.00" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w36"><video id="v36" class="clip" src="assets/nasa/n-earth-iss.mp4" data-start="102" data-duration="4" data-media-start="1.00" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w37"><video id="v37" class="clip" src="assets/nasa/n-crew-walk.mp4" data-start="106" data-duration="4" data-media-start="0.00" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w38"><video id="v38" class="clip" src="assets/game/ex-shelter-refuge.mp4" data-start="110" data-duration="4" data-media-start="1.00" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w39"><video id="v39" class="clip" src="assets/game/ui-home.mp4" data-start="114" data-duration="5.5" data-media-start="0.00" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w40"><video id="v40" class="clip" src="assets/game/ui-map.mp4" data-start="119.5" data-duration="5.5" data-media-start="0.00" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w41"><video id="v41" class="clip" src="assets/nasa/n-opp-tracks.mp4" data-start="125" data-duration="1.053" data-media-start="1.00" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w42"><video id="v42" class="clip" src="assets/game/bb-rover-wheels.mp4" data-start="126.053" data-duration="1.026" data-media-start="1.50" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w43"><video id="v43" class="clip" src="assets/nasa/n-jezero-low.mp4" data-start="127.079" data-duration="0.998" data-media-start="2.00" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w44"><video id="v44" class="clip" src="assets/game/bb-basin-crane.mp4" data-start="128.077" data-duration="0.97" data-media-start="2.50" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w45"><video id="v45" class="clip" src="assets/nasa/n-dark-sky.mp4" data-start="129.047" data-duration="0.942" data-media-start="1.00" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w46"><video id="v46" class="clip" src="assets/game/bb-outpost-low.mp4" data-start="129.989" data-duration="0.915" data-media-start="1.50" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w47"><video id="v47" class="clip" src="assets/nasa/n-opp-deck.mp4" data-start="130.904" data-duration="0.887" data-media-start="2.00" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w48"><video id="v48" class="clip" src="assets/game/ex-shelter-wall.mp4" data-start="131.791" data-duration="0.859" data-media-start="2.50" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w49"><video id="v49" class="clip" src="assets/nasa/n-flare.mp4" data-start="132.65" data-duration="0.832" data-media-start="1.00" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w50"><video id="v50" class="clip" src="assets/game/ex-shelter-event.mp4" data-start="133.482" data-duration="0.804" data-media-start="1.50" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w51"><video id="v51" class="clip" src="assets/nasa/n-veggie.mp4" data-start="134.286" data-duration="0.776" data-media-start="2.00" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w52"><video id="v52" class="clip" src="assets/game/ex-greenhouse-close.mp4" data-start="135.062" data-duration="0.748" data-media-start="2.50" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w53"><video id="v53" class="clip" src="assets/nasa/n-orion-moon.mp4" data-start="135.81" data-duration="0.721" data-media-start="1.00" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w54"><video id="v54" class="clip" src="assets/game/ex-earth-delay.mp4" data-start="136.531" data-duration="0.693" data-media-start="1.50" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w55"><video id="v55" class="clip" src="assets/nasa/n-apollo-lm.mp4" data-start="137.22400000000002" data-duration="0.665" data-media-start="2.00" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w56"><video id="v56" class="clip" src="assets/game/ex-moon-airlock.mp4" data-start="137.889" data-duration="0.638" data-media-start="2.50" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w57"><video id="v57" class="clip" src="assets/nasa/n-moon-shadows.mp4" data-start="138.52700000000002" data-duration="0.61" data-media-start="1.00" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w58"><video id="v58" class="clip" src="assets/game/ex-moon-mast.mp4" data-start="139.13700000000003" data-duration="0.582" data-media-start="1.50" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w59"><video id="v59" class="clip" src="assets/nasa/n-apollo-boot.mp4" data-start="139.71900000000002" data-duration="0.554" data-media-start="2.00" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w60"><video id="v60" class="clip" src="assets/game/ex-moon-relay.mp4" data-start="140.27300000000002" data-duration="0.527" data-media-start="2.50" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w61"><video id="v61" class="clip" src="assets/nasa/n-artemis-ign.mp4" data-start="140.8" data-duration="0.4" data-media-start="1.50" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w62"><video id="v62" class="clip" src="assets/game/ex-shelter-refuge.mp4" data-start="141.20000000000002" data-duration="0.4" data-media-start="1.50" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w63"><video id="v63" class="clip" src="assets/nasa/n-sls-engines.mp4" data-start="141.60000000000002" data-duration="0.4" data-media-start="1.50" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w64"><video id="v64" class="clip" src="assets/game/bb-outpost-push.mp4" data-start="142" data-duration="0.4" data-media-start="1.50" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w65"><video id="v65" class="clip" src="assets/nasa/n-artemis-lift.mp4" data-start="142.4" data-duration="0.4" data-media-start="1.50" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w66"><video id="v66" class="clip" src="assets/game/ex-greenhouse-beds.mp4" data-start="142.8" data-duration="0.4" data-media-start="1.50" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w67"><video id="v67" class="clip" src="assets/nasa/n-earthrise.mp4" data-start="143.20000000000002" data-duration="0.4" data-media-start="1.50" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w68"><video id="v68" class="clip" src="assets/game/bb-rover-track.mp4" data-start="143.60000000000002" data-duration="0.4" data-media-start="1.50" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w69"><video id="v69" class="clip" src="assets/game/ui-decision.mp4" data-start="145.5" data-duration="8" data-media-start="0.00" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w70"><video id="v70" class="clip" src="assets/game/ex-shelter-refuge.mp4" data-start="153.6" data-duration="3.2" data-media-start="2.00" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w71"><video id="v71" class="clip" src="assets/game/ex-greenhouse-beds.mp4" data-start="156.8" data-duration="3.2" data-media-start="2.00" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w72"><video id="v72" class="clip" src="assets/game/ex-earth-delay.mp4" data-start="160" data-duration="3.2" data-media-start="1.00" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w73"><video id="v73" class="clip" src="assets/game/ex-moon-mast.mp4" data-start="163.2" data-duration="3.2" data-media-start="0.00" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w74"><video id="v74" class="clip" src="assets/game/ui-sources.mp4" data-start="166.4" data-duration="10.4" data-media-start="0.00" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w75"><video id="v75" class="clip" src="assets/nasa/n-opp-shadow.mp4" data-start="176.8" data-duration="3.7" data-media-start="0.75" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w76"><video id="v76" class="clip" src="assets/nasa/n-veggie.mp4" data-start="180.5" data-duration="4.1" data-media-start="0.85" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w77"><video id="v77" class="clip" src="assets/game/ex-shelter-wall.mp4" data-start="184.6" data-duration="4.6" data-media-start="0.00" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w78"><video id="v78" class="clip" src="assets/game/ex-greenhouse-close.mp4" data-start="189.2" data-duration="3.4" data-media-start="1.00" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w79"><video id="v79" class="clip" src="assets/game/ex-shelter-event.mp4" data-start="192.6" data-duration="5" data-media-start="0.00" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w80"><video id="v80" class="clip" src="assets/game/bb-basin-crane.mp4" data-start="197.6" data-duration="6.4" data-media-start="0.00" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w81"><video id="v81" class="clip" src="assets/game/bb-rover-track.mp4" data-start="204" data-duration="4" data-media-start="0.00" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w82"><video id="v82" class="clip" src="assets/nasa/n-jpl-cheer.mp4" data-start="208" data-duration="3.5" data-media-start="0.00" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w83"><video id="v83" class="clip" src="assets/game/bb-outpost-low.mp4" data-start="211.5" data-duration="4" data-media-start="0.00" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w84"><video id="v84" class="clip" src="assets/nasa/n-dark-sky.mp4" data-start="215.5" data-duration="3.45" data-media-start="0.00" data-track-index="1" muted playsinline></video></div>
+<div class="w" id="w85"><video id="v85" class="clip" src="assets/game/bb-dawn-rise.mp4" data-start="218.95" data-duration="6" data-media-start="0.00" data-track-index="1" muted playsinline></video></div>
+<div id="duo" class="clip" data-start="1.2" data-duration="11.4" data-track-index="2"></div>
+<div id="duo2" class="clip" data-start="1.2" data-duration="11.4" data-track-index="2"></div>
+<div id="grain"></div>
+<div id="field" class="clip" data-start="12.6" data-duration="3.4" data-track-index="2">
+  <div class="gl" id="gl-0">BEFORE THE STORM</div><div class="gl" id="gl-1">BEFORE THE STORM</div><div class="gl" id="gl-2">BEFORE THE STORM</div>
+  <div id="gl-sub">A JUNIOR ASTRONAUT MISSION TRAINER</div>
+</div>
+<div id="c-mars-date" class="clip card date" data-start="16.3" data-duration="2.6" data-track-index="3"><div class="in">MARS &nbsp;·&nbsp; JUNE 2018</div></div>
+<div id="c-type" class="clip card typed" data-start="37" data-duration="6.9" data-track-index="3"><div class="in"><span class="ch">M</span><span class="ch">Y</span><span class="ch">&nbsp;</span><span class="ch">B</span><span class="ch">A</span><span class="ch">T</span><span class="ch">T</span><span class="ch">E</span><span class="ch">R</span><span class="ch">Y</span><span class="ch">&nbsp;</span><span class="ch">I</span><span class="ch">S</span><span class="ch">&nbsp;</span><span class="ch">L</span><span class="ch">O</span><span class="ch">W</span><span class="ch">&nbsp;</span><span class="ch">A</span><span class="ch">N</span><span class="ch">D</span><span class="ch">&nbsp;</span><span class="ch">I</span><span class="ch">T</span><span class="ch">’</span><span class="ch">S</span><span class="ch">&nbsp;</span><span class="ch">G</span><span class="ch">E</span><span class="ch">T</span><span class="ch">T</span><span class="ch">I</span><span class="ch">N</span><span class="ch">G</span><span class="ch">&nbsp;</span><span class="ch">D</span><span class="ch">A</span><span class="ch">R</span><span class="ch">K</span><span class="ch">.</span></div></div>
+<div id="c-type-src" class="clip card small" data-start="39.5" data-duration="4.4" data-track-index="3"><div class="in">Opportunity’s final data, in plain words · 10 June 2018</div></div>
+<div id="c-never" class="clip card serif" data-start="44.2" data-duration="2.7" data-track-index="3"><div class="in">It never woke up.</div></div>
+<div id="c-team-0" class="clip card lower" data-start="52.6" data-duration="2" data-track-index="3"><div class="in">BONGO APHELION<small>NASA Space Apps Challenge 2026</small></div></div>
+<div id="c-team-1" class="clip card lower" data-start="54.6" data-duration="1.6" data-track-index="3"><div class="in">Md. Asim Alam Chowdhury<small>Frontend</small></div></div>
+<div id="c-team-2" class="clip card lower" data-start="56.2" data-duration="1.6" data-track-index="3"><div class="in">Parvej Shah<small>Cloud Engineer</small></div></div>
+<div id="c-team-3" class="clip card lower" data-start="57.8" data-duration="1.6" data-track-index="3"><div class="in">Md. Saikat Islam<small>Backend Developer</small></div></div>
+<div id="c-team-4" class="clip card lower" data-start="59.4" data-duration="1.6" data-track-index="3"><div class="in">Md. Inzamamul Lohani<small>Story Designer</small></div></div>
+<div id="c-team-5" class="clip card lower" data-start="61" data-duration="1.7" data-track-index="3"><div class="in">Fayroz Tasnim Rowza<small>Research &amp; Analysis</small></div></div>
+<div id="c-title" class="clip card big" data-start="63.2" data-duration="3.7" data-track-index="3"><div class="in">MISSION CONTROL JR.<small>Small decisions. Giant missions.</small></div></div>
+<div id="c-fact-1" class="clip card fact" data-start="68" data-duration="3.4" data-track-index="3"><div class="in">MARS IS RED.</div></div>
+<div id="c-fact-2" class="clip card fact" data-start="72" data-duration="3.4" data-track-index="3"><div class="in">ASTRONAUTS NEED OXYGEN.</div></div>
+<div id="c-fact-3" class="clip card big2" data-start="75.6" data-duration="3.1" data-track-index="3"><div class="in">A REAL MISSION IS A <em>CHOICE.</em></div></div>
+<div id="c-batt" class="clip card split" data-start="79.2" data-duration="4.6" data-track-index="3"><div class="in">ONE BATTERY<small>AIR FOR THE CREW &nbsp;/&nbsp; KEEP THE SCIENCE RUNNING</small></div></div>
+<div id="c-water" class="clip card split" data-start="84.5" data-duration="4.5" data-track-index="3"><div class="in">ONE TANK OF WATER<small>DRINK IT &nbsp;/&nbsp; SHIELD THE CREW FROM THE SUN</small></div></div>
+<div id="c-costs" class="clip card big2" data-start="89.6" data-duration="5.4" data-track-index="3"><div class="in">EVERY CHOICE COSTS SOMETHING.</div></div>
+<div id="c-artemis" class="clip card date" data-start="95.6" data-duration="5.8" data-track-index="3"><div class="in">ARTEMIS &nbsp;·&nbsp; MOON, THEN MARS</div></div>
+<div id="c-ages" class="clip card date" data-start="105" data-duration="4.6" data-track-index="3"><div class="in">TOMORROW’S MISSION PLANNERS ARE <em>7–9</em> TODAY</div></div>
+<div id="c-product" class="clip card date" data-start="117.5" data-duration="7" data-track-index="3"><div class="in">FREE &nbsp;·&nbsp; ANY WEB BROWSER &nbsp;·&nbsp; 9 MISSIONS ON MARS &amp; THE MOON</div></div>
+<div id="c-real" class="clip card tag" data-start="125.2" data-duration="1.6" data-track-index="3"><div class="in">REAL</div></div>
+<div id="c-game" class="clip card tag" data-start="126.3" data-duration="1.4" data-track-index="3"><div class="in">GAME</div></div>
+<div id="c-decide" class="clip card tagr" data-start="146.2" data-duration="2.8" data-track-index="3"><div class="in">YOU DECIDE.</div></div>
+<div id="c-m-1" class="clip card lower" data-start="154" data-duration="2.8" data-track-index="3"><div class="in">Solar storm shelter</div></div>
+<div id="c-m-2" class="clip card lower" data-start="157.2" data-duration="2.8" data-track-index="3"><div class="in">Birthday salad greenhouse</div></div>
+<div id="c-m-3" class="clip card lower" data-start="160.4" data-duration="2.8" data-track-index="3"><div class="in">Water recycler · Earth is minutes away</div></div>
+<div id="c-m-4" class="clip card lower" data-start="163.6" data-duration="2.6" data-track-index="3"><div class="in">Chase sunlight on the Moon</div></div>
+<div id="c-src-1" class="clip card callout" data-start="167.2" data-duration="4.4" data-track-index="3"><div class="in">Opportunity power data<small>2018 global dust storm · NASA/JPL-Caltech</small></div></div>
+<div id="c-src-2" class="clip card callout" data-start="171.8" data-duration="3.8" data-track-index="3"><div class="in">Curiosity RAD radiation readings<small>NASA/JPL-Caltech/SwRI</small></div></div>
+<div id="c-src-3" class="clip card callout" data-start="175.8" data-duration="3.8" data-track-index="3"><div class="in">HiRISE map of Jezero crater<small>NASA/JPL-Caltech/University of Arizona</small></div></div>
+<div id="c-src-4" class="clip card callout" data-start="179.8" data-duration="4.6" data-track-index="3"><div class="in">Veggie: lettuce grown on the ISS<small>NASA</small></div></div>
+<div id="c-fail" class="clip card big2" data-start="192.8" data-duration="4.6" data-track-index="3"><div class="in">FAILING ISN’T THE END. <em>IT’S THE LESSON.</em></div></div>
+<div id="c-next-1" class="clip card date" data-start="204.6" data-duration="4.4" data-track-index="3"><div class="in">NEXT &nbsp;·&nbsp; CLASSROOMS &nbsp;·&nbsp; LIVE SPACE WEATHER &nbsp;·&nbsp; MORE LANGUAGES</div></div>
+<div id="c-next-2" class="clip card date" data-start="209.4" data-duration="5.6" data-track-index="3"><div class="in">LOOKING FOR TEACHERS, SCHOOLS &amp; MENTORS</div></div>
+<div id="c-final" class="clip card big" data-start="226" data-duration="4.6" data-track-index="3"><div class="in">MISSION CONTROL JR.<small>Small decisions. Giant missions.</small></div></div>
+<div id="c-end" class="clip card endcard" data-start="230.7" data-duration="4.3" data-track-index="3"><div class="in"><b>mission-control-jr.netlify.app</b><span>BONGO APHELION · NASA Space Apps Challenge 2026</span><i>Footage: NASA, NASA/JPL-Caltech, NASA/GSFC/SDO. Use of NASA imagery does not imply endorsement.<br>Music: “Cinematic Documentary” by AShamaluevMusic · Voice: Ava (Microsoft neural TTS)</i></div></div>
+<div class="bar" id="bar-t"></div><div class="bar" id="bar-b"></div>
+<audio id="music" class="clip" src="assets/music/score-ashamaluev-cinematic-documentary.wav" data-start="0" data-duration="235" data-track-index="5" data-volume="1" data-fade-out="2.5" data-automation='{"version":1,"lanes":[{"target":"volume","points":[{"t":0,"v":0.95},{"t":15.75,"v":0.95},{"t":16.05,"v":0.7},{"t":18.35,"v":0.7},{"t":18.65,"v":0.32},{"t":24.45,"v":0.32},{"t":24.75,"v":0.7},{"t":25.35,"v":0.7},{"t":25.65,"v":0.32},{"t":35.75,"v":0.32},{"t":36.05,"v":0.7},{"t":36.35,"v":0.7},{"t":36.65,"v":0.32},{"t":43.75,"v":0.32},{"t":44.05,"v":0.03},{"t":46.75,"v":0.03},{"t":47.05,"v":0.32},{"t":51.25,"v":0.32},{"t":51.55,"v":0.7},{"t":51.65,"v":0.7},{"t":51.95,"v":0.32},{"t":62.85,"v":0.32},{"t":63.15,"v":0.7},{"t":66.65,"v":0.7},{"t":66.95,"v":0.32},{"t":101.35,"v":0.32},{"t":101.65,"v":0.7},{"t":101.55,"v":0.7},{"t":101.85,"v":0.32},{"t":124.95,"v":0.32},{"t":125.25,"v":1},{"t":143.75,"v":1},{"t":144.05,"v":0.03},{"t":145.25,"v":0.03},{"t":145.55,"v":0.7},{"t":145.35,"v":0.7},{"t":145.65,"v":0.32},{"t":214.85,"v":0.32},{"t":215.15,"v":0.7},{"t":215.05,"v":0.7},{"t":215.35,"v":0.03},{"t":215.95,"v":0.03},{"t":216.25,"v":0.32},{"t":219.35,"v":0.32},{"t":219.65,"v":0.7},{"t":219.85,"v":0.7},{"t":220.15,"v":0.32},{"t":222.75,"v":0.32},{"t":223.05,"v":0.7},{"t":225.35,"v":0.7},{"t":225.65,"v":0.32},{"t":231.05,"v":0.32},{"t":231.35,"v":0.7},{"t":235,"v":0.7}]}]}'></audio>
+<audio id="vo-s02" class="clip" src="assets/vo/s02.mp3" data-start="19" data-duration="5.11" data-track-index="6" data-volume="1.15"></audio>
+<audio id="vo-s03" class="clip" src="assets/vo/s03.mp3" data-start="26" data-duration="9.43" data-track-index="6" data-volume="1.15"></audio>
+<audio id="vo-s04" class="clip" src="assets/vo/s04.mp3" data-start="37" data-duration="6.65" data-track-index="6" data-volume="1.15"></audio>
+<audio id="vo-s06" class="clip" src="assets/vo/s06.mp3" data-start="47.3" data-duration="3.67" data-track-index="6" data-volume="1.15"></audio>
+<audio id="vo-s07" class="clip" src="assets/vo/s07.mp3" data-start="52.2" data-duration="10.34" data-track-index="6" data-volume="1.15"></audio>
+<audio id="vo-s09" class="clip" src="assets/vo/s09.mp3" data-start="67.3" data-duration="10.70" data-track-index="6" data-volume="1.15"></audio>
+<audio id="vo-s10" class="clip" src="assets/vo/s10.mp3" data-start="78.8" data-duration="4.73" data-track-index="6" data-volume="1.15"></audio>
+<audio id="vo-s11" class="clip" src="assets/vo/s11.mp3" data-start="84.2" data-duration="3.98" data-track-index="6" data-volume="1.15"></audio>
+<audio id="vo-s12" class="clip" src="assets/vo/s12.mp3" data-start="89" data-duration="5.52" data-track-index="6" data-volume="1.15"></audio>
+<audio id="vo-s13" class="clip" src="assets/vo/s13.mp3" data-start="95.2" data-duration="5.88" data-track-index="6" data-volume="1.15"></audio>
+<audio id="vo-s14" class="clip" src="assets/vo/s14.mp3" data-start="102.2" data-duration="11.38" data-track-index="6" data-volume="1.15"></audio>
+<audio id="vo-s15" class="clip" src="assets/vo/s15.mp3" data-start="114.2" data-duration="10.44" data-track-index="6" data-volume="1.15"></audio>
+<audio id="vo-s16" class="clip" src="assets/vo/s16.mp3" data-start="146" data-duration="7.39" data-track-index="6" data-volume="1.15"></audio>
+<audio id="vo-s17" class="clip" src="assets/vo/s17.mp3" data-start="153.8" data-duration="12.31" data-track-index="6" data-volume="1.15"></audio>
+<audio id="vo-s18" class="clip" src="assets/vo/s18.mp3" data-start="166.6" data-duration="17.57" data-track-index="6" data-volume="1.15"></audio>
+<audio id="vo-s19" class="clip" src="assets/vo/s19.mp3" data-start="184.8" data-duration="12.48" data-track-index="6" data-volume="1.15"></audio>
+<audio id="vo-s20" class="clip" src="assets/vo/s20.mp3" data-start="197.8" data-duration="5.78" data-track-index="6" data-volume="1.15"></audio>
+<audio id="vo-s21" class="clip" src="assets/vo/s21.mp3" data-start="204.2" data-duration="10.39" data-track-index="6" data-volume="1.15"></audio>
+<audio id="vo-s22" class="clip" src="assets/vo/s22.mp3" data-start="216" data-duration="3.05" data-track-index="6" data-volume="1.15"></audio>
+<audio id="vo-s23" class="clip" src="assets/vo/s23.mp3" data-start="220.5" data-duration="1.99" data-track-index="6" data-volume="1.15"></audio>
+<audio id="vo-s24" class="clip" src="assets/vo/s24.mp3" data-start="226" data-duration="4.70" data-track-index="6" data-volume="1.15"></audio>
+</div>
+<script>
+const tl = gsap.timeline({paused: true});
+tl.fromTo('#w0', {scale: 1.18, rotation: 2, xPercent: -0.8}, {scale: 1.24, rotation: 1.2, xPercent: 0.8, duration: 1.2, ease: 'none'}, 1.2);
+tl.fromTo('#w1', {scale: 1.18, rotation: -3, xPercent: 0}, {scale: 1.24, rotation: -1.7999999999999998, xPercent: 0, duration: 1, ease: 'none'}, 2.4);
+tl.fromTo('#w2', {scale: 1.18, rotation: 4, xPercent: 0.8}, {scale: 1.24, rotation: 2.4, xPercent: -0.8, duration: 1, ease: 'none'}, 3.4);
+tl.fromTo('#w3', {scale: 1.18, rotation: -2, xPercent: -0.8}, {scale: 1.24, rotation: -1.2, xPercent: 0.8, duration: 0.9, ease: 'none'}, 4.4);
+tl.fromTo('#w4', {scale: 1.18, rotation: 3, xPercent: 0}, {scale: 1.24, rotation: 1.7999999999999998, xPercent: 0, duration: 0.9, ease: 'none'}, 5.300000000000001);
+tl.fromTo('#w5', {scale: 1.18, rotation: -4, xPercent: 0.8}, {scale: 1.24, rotation: -2.4, xPercent: -0.8, duration: 0.8, ease: 'none'}, 6.200000000000001);
+tl.fromTo('#w6', {scale: 1.18, rotation: 2, xPercent: -0.8}, {scale: 1.24, rotation: 1.2, xPercent: 0.8, duration: 0.8, ease: 'none'}, 7.000000000000001);
+tl.fromTo('#w7', {scale: 1.18, rotation: -3, xPercent: 0}, {scale: 1.24, rotation: -1.7999999999999998, xPercent: 0, duration: 0.7, ease: 'none'}, 7.800000000000001);
+tl.fromTo('#w8', {scale: 1.18, rotation: 4, xPercent: 0.8}, {scale: 1.24, rotation: 2.4, xPercent: -0.8, duration: 0.7, ease: 'none'}, 8.5);
+tl.fromTo('#w9', {scale: 1.18, rotation: -2, xPercent: -0.8}, {scale: 1.24, rotation: -1.2, xPercent: 0.8, duration: 0.6, ease: 'none'}, 9.2);
+tl.fromTo('#w10', {scale: 1.18, rotation: 3, xPercent: 0}, {scale: 1.24, rotation: 1.7999999999999998, xPercent: 0, duration: 0.6, ease: 'none'}, 9.799999999999999);
+tl.fromTo('#w11', {scale: 1.18, rotation: -4, xPercent: 0.8}, {scale: 1.24, rotation: -2.4, xPercent: -0.8, duration: 0.5, ease: 'none'}, 10.399999999999999);
+tl.fromTo('#w12', {scale: 1.18, rotation: 2, xPercent: -0.8}, {scale: 1.24, rotation: 1.2, xPercent: 0.8, duration: 0.6, ease: 'none'}, 10.899999999999999);
+tl.fromTo('#w13', {scale: 1.18, rotation: -3, xPercent: 0}, {scale: 1.24, rotation: -1.7999999999999998, xPercent: 0, duration: 1.1, ease: 'none'}, 11.499999999999998);
+tl.fromTo('#w14', {scale: 1.04, rotation: 0, xPercent: 0.8}, {scale: 1.10, rotation: 0, xPercent: -0.8, duration: 3.5, ease: 'none'}, 19);
+tl.fromTo('#w15', {scale: 1.04, rotation: 0, xPercent: -0.8}, {scale: 1.10, rotation: 0, xPercent: 0.8, duration: 3.3, ease: 'none'}, 22.5);
+tl.fromTo('#w16', {scale: 1.04, rotation: 0, xPercent: 0}, {scale: 1.10, rotation: 0, xPercent: 0, duration: 2.55, ease: 'none'}, 25.8);
+tl.fromTo('#w17', {scale: 1.04, rotation: 0, xPercent: 0.8}, {scale: 1.10, rotation: 0, xPercent: -0.8, duration: 1.05, ease: 'none'}, 28.35);
+tl.fromTo('#w18', {scale: 1.04, rotation: 0, xPercent: -0.8}, {scale: 1.10, rotation: 0, xPercent: 0.8, duration: 3.6, ease: 'none'}, 29.4);
+tl.fromTo('#w19', {scale: 1.04, rotation: 0, xPercent: 0}, {scale: 1.10, rotation: 0, xPercent: 0, duration: 3.4, ease: 'none'}, 33);
+tl.fromTo('#w20', {scale: 1.06, rotation: 0, xPercent: 0.8}, {scale: 1.12, rotation: 0, xPercent: -0.8, duration: 5, ease: 'none'}, 47);
+tl.fromTo('#w21', {scale: 1.04, rotation: 0, xPercent: -0.8}, {scale: 1.10, rotation: 0, xPercent: 0.8, duration: 6, ease: 'none'}, 52);
+tl.fromTo('#w22', {scale: 1.04, rotation: 0, xPercent: 0}, {scale: 1.10, rotation: 0, xPercent: 0, duration: 5, ease: 'none'}, 58);
+tl.fromTo('#w23', {scale: 1.04, rotation: 0, xPercent: 0.8}, {scale: 1.10, rotation: 0, xPercent: -0.8, duration: 4, ease: 'none'}, 63);
+tl.fromTo('#w24', {scale: 1.04, rotation: 0, xPercent: -0.8}, {scale: 1.10, rotation: 0, xPercent: 0.8, duration: 1.95, ease: 'none'}, 67);
+tl.fromTo('#w25', {scale: 1.04, rotation: 0, xPercent: 0}, {scale: 1.10, rotation: 0, xPercent: 0, duration: 2.55, ease: 'none'}, 68.95);
+tl.fromTo('#w26', {scale: 1.04, rotation: 0, xPercent: 0.8}, {scale: 1.10, rotation: 0, xPercent: -0.8, duration: 4, ease: 'none'}, 71.5);
+tl.fromTo('#w27', {scale: 1.04, rotation: 0, xPercent: -0.8}, {scale: 1.10, rotation: 0, xPercent: 0.8, duration: 3.9, ease: 'none'}, 78.8);
+tl.fromTo('#w28', {scale: 1.04, rotation: 0, xPercent: 0}, {scale: 1.10, rotation: 0, xPercent: 0, duration: 1.5, ease: 'none'}, 82.7);
+tl.fromTo('#w29', {scale: 1.04, rotation: 0, xPercent: 0.8}, {scale: 1.10, rotation: 0, xPercent: -0.8, duration: 4.8, ease: 'none'}, 84.2);
+tl.fromTo('#w30', {scale: 1.04, rotation: 0, xPercent: -0.8}, {scale: 1.10, rotation: 0, xPercent: 0.8, duration: 3.9, ease: 'none'}, 89);
+tl.fromTo('#w31', {scale: 1.04, rotation: 0, xPercent: 0}, {scale: 1.10, rotation: 0, xPercent: 0, duration: 2.1, ease: 'none'}, 92.9);
+tl.fromTo('#w32', {scale: 1.04, rotation: 0, xPercent: 0.8}, {scale: 1.10, rotation: 0, xPercent: -0.8, duration: 1.8, ease: 'none'}, 95);
+tl.fromTo('#w33', {scale: 1.04, rotation: 0, xPercent: -0.8}, {scale: 1.10, rotation: 0, xPercent: 0.8, duration: 1.6, ease: 'none'}, 96.8);
+tl.fromTo('#w34', {scale: 1.04, rotation: 0, xPercent: 0}, {scale: 1.10, rotation: 0, xPercent: 0, duration: 1.8, ease: 'none'}, 98.4);
+tl.fromTo('#w35', {scale: 1.04, rotation: 0, xPercent: 0.8}, {scale: 1.10, rotation: 0, xPercent: -0.8, duration: 1.8, ease: 'none'}, 100.2);
+tl.fromTo('#w36', {scale: 1.04, rotation: 0, xPercent: -0.8}, {scale: 1.10, rotation: 0, xPercent: 0.8, duration: 4, ease: 'none'}, 102);
+tl.fromTo('#w37', {scale: 1.04, rotation: 0, xPercent: 0}, {scale: 1.10, rotation: 0, xPercent: 0, duration: 4, ease: 'none'}, 106);
+tl.fromTo('#w38', {scale: 1.04, rotation: 0, xPercent: 0.8}, {scale: 1.10, rotation: 0, xPercent: -0.8, duration: 4, ease: 'none'}, 110);
+tl.fromTo('#w39', {scale: 1.04, rotation: 0, xPercent: -0.8}, {scale: 1.10, rotation: 0, xPercent: 0.8, duration: 5.5, ease: 'none'}, 114);
+tl.fromTo('#w40', {scale: 1.04, rotation: 0, xPercent: 0}, {scale: 1.10, rotation: 0, xPercent: 0, duration: 5.5, ease: 'none'}, 119.5);
+tl.fromTo('#w41', {scale: 1.08, rotation: 0, xPercent: 0.8}, {scale: 1.14, rotation: 0, xPercent: -0.8, duration: 1.053, ease: 'none'}, 125);
+tl.fromTo('#w42', {scale: 1.08, rotation: 0, xPercent: -0.8}, {scale: 1.14, rotation: 0, xPercent: 0.8, duration: 1.026, ease: 'none'}, 126.053);
+tl.fromTo('#w43', {scale: 1.08, rotation: 0, xPercent: 0}, {scale: 1.14, rotation: 0, xPercent: 0, duration: 0.998, ease: 'none'}, 127.079);
+tl.fromTo('#w44', {scale: 1.08, rotation: 0, xPercent: 0.8}, {scale: 1.14, rotation: 0, xPercent: -0.8, duration: 0.97, ease: 'none'}, 128.077);
+tl.fromTo('#w45', {scale: 1.08, rotation: 0, xPercent: -0.8}, {scale: 1.14, rotation: 0, xPercent: 0.8, duration: 0.942, ease: 'none'}, 129.047);
+tl.fromTo('#w46', {scale: 1.08, rotation: 0, xPercent: 0}, {scale: 1.14, rotation: 0, xPercent: 0, duration: 0.915, ease: 'none'}, 129.989);
+tl.fromTo('#w47', {scale: 1.08, rotation: 0, xPercent: 0.8}, {scale: 1.14, rotation: 0, xPercent: -0.8, duration: 0.887, ease: 'none'}, 130.904);
+tl.fromTo('#w48', {scale: 1.08, rotation: 0, xPercent: -0.8}, {scale: 1.14, rotation: 0, xPercent: 0.8, duration: 0.859, ease: 'none'}, 131.791);
+tl.fromTo('#w49', {scale: 1.08, rotation: 0, xPercent: 0}, {scale: 1.14, rotation: 0, xPercent: 0, duration: 0.832, ease: 'none'}, 132.65);
+tl.fromTo('#w50', {scale: 1.08, rotation: 0, xPercent: 0.8}, {scale: 1.14, rotation: 0, xPercent: -0.8, duration: 0.804, ease: 'none'}, 133.482);
+tl.fromTo('#w51', {scale: 1.08, rotation: 0, xPercent: -0.8}, {scale: 1.14, rotation: 0, xPercent: 0.8, duration: 0.776, ease: 'none'}, 134.286);
+tl.fromTo('#w52', {scale: 1.08, rotation: 0, xPercent: 0}, {scale: 1.14, rotation: 0, xPercent: 0, duration: 0.748, ease: 'none'}, 135.062);
+tl.fromTo('#w53', {scale: 1.08, rotation: 0, xPercent: 0.8}, {scale: 1.14, rotation: 0, xPercent: -0.8, duration: 0.721, ease: 'none'}, 135.81);
+tl.fromTo('#w54', {scale: 1.08, rotation: 0, xPercent: -0.8}, {scale: 1.14, rotation: 0, xPercent: 0.8, duration: 0.693, ease: 'none'}, 136.531);
+tl.fromTo('#w55', {scale: 1.08, rotation: 0, xPercent: 0}, {scale: 1.14, rotation: 0, xPercent: 0, duration: 0.665, ease: 'none'}, 137.22400000000002);
+tl.fromTo('#w56', {scale: 1.08, rotation: 0, xPercent: 0.8}, {scale: 1.14, rotation: 0, xPercent: -0.8, duration: 0.638, ease: 'none'}, 137.889);
+tl.fromTo('#w57', {scale: 1.08, rotation: 0, xPercent: -0.8}, {scale: 1.14, rotation: 0, xPercent: 0.8, duration: 0.61, ease: 'none'}, 138.52700000000002);
+tl.fromTo('#w58', {scale: 1.08, rotation: 0, xPercent: 0}, {scale: 1.14, rotation: 0, xPercent: 0, duration: 0.582, ease: 'none'}, 139.13700000000003);
+tl.fromTo('#w59', {scale: 1.08, rotation: 0, xPercent: 0.8}, {scale: 1.14, rotation: 0, xPercent: -0.8, duration: 0.554, ease: 'none'}, 139.71900000000002);
+tl.fromTo('#w60', {scale: 1.08, rotation: 0, xPercent: -0.8}, {scale: 1.14, rotation: 0, xPercent: 0.8, duration: 0.527, ease: 'none'}, 140.27300000000002);
+tl.fromTo('#w61', {scale: 1.1, rotation: 0, xPercent: 0}, {scale: 1.16, rotation: 0, xPercent: 0, duration: 0.4, ease: 'none'}, 140.8);
+tl.fromTo('#w62', {scale: 1.1, rotation: 0, xPercent: 0.8}, {scale: 1.16, rotation: 0, xPercent: -0.8, duration: 0.4, ease: 'none'}, 141.20000000000002);
+tl.fromTo('#w63', {scale: 1.1, rotation: 0, xPercent: -0.8}, {scale: 1.16, rotation: 0, xPercent: 0.8, duration: 0.4, ease: 'none'}, 141.60000000000002);
+tl.fromTo('#w64', {scale: 1.1, rotation: 0, xPercent: 0}, {scale: 1.16, rotation: 0, xPercent: 0, duration: 0.4, ease: 'none'}, 142);
+tl.fromTo('#w65', {scale: 1.1, rotation: 0, xPercent: 0.8}, {scale: 1.16, rotation: 0, xPercent: -0.8, duration: 0.4, ease: 'none'}, 142.4);
+tl.fromTo('#w66', {scale: 1.1, rotation: 0, xPercent: -0.8}, {scale: 1.16, rotation: 0, xPercent: 0.8, duration: 0.4, ease: 'none'}, 142.8);
+tl.fromTo('#w67', {scale: 1.1, rotation: 0, xPercent: 0}, {scale: 1.16, rotation: 0, xPercent: 0, duration: 0.4, ease: 'none'}, 143.20000000000002);
+tl.fromTo('#w68', {scale: 1.1, rotation: 0, xPercent: 0.8}, {scale: 1.16, rotation: 0, xPercent: -0.8, duration: 0.4, ease: 'none'}, 143.60000000000002);
+tl.fromTo('#w69', {scale: 1.04, rotation: 0, xPercent: -0.8}, {scale: 1.10, rotation: 0, xPercent: 0.8, duration: 8, ease: 'none'}, 145.5);
+tl.fromTo('#w70', {scale: 1.04, rotation: 0, xPercent: 0}, {scale: 1.10, rotation: 0, xPercent: 0, duration: 3.2, ease: 'none'}, 153.6);
+tl.fromTo('#w71', {scale: 1.04, rotation: 0, xPercent: 0.8}, {scale: 1.10, rotation: 0, xPercent: -0.8, duration: 3.2, ease: 'none'}, 156.8);
+tl.fromTo('#w72', {scale: 1.04, rotation: 0, xPercent: -0.8}, {scale: 1.10, rotation: 0, xPercent: 0.8, duration: 3.2, ease: 'none'}, 160);
+tl.fromTo('#w73', {scale: 1.04, rotation: 0, xPercent: 0}, {scale: 1.10, rotation: 0, xPercent: 0, duration: 3.2, ease: 'none'}, 163.2);
+tl.fromTo('#w74', {scale: 1.04, rotation: 0, xPercent: 0.8}, {scale: 1.10, rotation: 0, xPercent: -0.8, duration: 10.4, ease: 'none'}, 166.4);
+tl.fromTo('#w75', {scale: 1.04, rotation: 0, xPercent: -0.8}, {scale: 1.10, rotation: 0, xPercent: 0.8, duration: 3.7, ease: 'none'}, 176.8);
+tl.fromTo('#w76', {scale: 1.04, rotation: 0, xPercent: 0}, {scale: 1.10, rotation: 0, xPercent: 0, duration: 4.1, ease: 'none'}, 180.5);
+tl.fromTo('#w77', {scale: 1.04, rotation: 0, xPercent: 0.8}, {scale: 1.10, rotation: 0, xPercent: -0.8, duration: 4.6, ease: 'none'}, 184.6);
+tl.fromTo('#w78', {scale: 1.04, rotation: 0, xPercent: -0.8}, {scale: 1.10, rotation: 0, xPercent: 0.8, duration: 3.4, ease: 'none'}, 189.2);
+tl.fromTo('#w79', {scale: 1.04, rotation: 0, xPercent: 0}, {scale: 1.10, rotation: 0, xPercent: 0, duration: 5, ease: 'none'}, 192.6);
+tl.fromTo('#w80', {scale: 1.04, rotation: 0, xPercent: 0.8}, {scale: 1.10, rotation: 0, xPercent: -0.8, duration: 6.4, ease: 'none'}, 197.6);
+tl.fromTo('#w81', {scale: 1.04, rotation: 0, xPercent: -0.8}, {scale: 1.10, rotation: 0, xPercent: 0.8, duration: 4, ease: 'none'}, 204);
+tl.fromTo('#w82', {scale: 1.04, rotation: 0, xPercent: 0}, {scale: 1.10, rotation: 0, xPercent: 0, duration: 3.5, ease: 'none'}, 208);
+tl.fromTo('#w83', {scale: 1.04, rotation: 0, xPercent: 0.8}, {scale: 1.10, rotation: 0, xPercent: -0.8, duration: 4, ease: 'none'}, 211.5);
+tl.fromTo('#w84', {scale: 1.04, rotation: 0, xPercent: -0.8}, {scale: 1.10, rotation: 0, xPercent: 0.8, duration: 3.45, ease: 'none'}, 215.5);
+tl.fromTo('#w85', {scale: 1.04, rotation: 0, xPercent: 0}, {scale: 1.10, rotation: 0, xPercent: 0, duration: 6, ease: 'none'}, 218.95);
+tl.fromTo('#c-mars-date .in', {opacity: 0, y: 18, x: 0}, {opacity: 1, y: 0, x: 0, duration: .55, ease: 'power3.out'}, 16.3);
+tl.to('#c-mars-date .in', {opacity: 0, duration: .35, ease: 'power2.in'}, 18.50);
+tl.fromTo('#c-type-src .in', {opacity: 0, y: 18, x: 0}, {opacity: 1, y: 0, x: 0, duration: .55, ease: 'power3.out'}, 39.5);
+tl.to('#c-type-src .in', {opacity: 0, duration: .35, ease: 'power2.in'}, 43.50);
+tl.fromTo('#c-never .in', {opacity: 0, y: 18, x: 0}, {opacity: 1, y: 0, x: 0, duration: .55, ease: 'power3.out'}, 44.2);
+tl.to('#c-never .in', {opacity: 0, duration: .35, ease: 'power2.in'}, 46.50);
+tl.fromTo('#c-team-0 .in', {opacity: 0, y: 0, x: -30}, {opacity: 1, y: 0, x: 0, duration: .55, ease: 'power3.out'}, 52.6);
+tl.to('#c-team-0 .in', {opacity: 0, duration: .35, ease: 'power2.in'}, 54.20);
+tl.fromTo('#c-team-1 .in', {opacity: 0, y: 0, x: -30}, {opacity: 1, y: 0, x: 0, duration: .55, ease: 'power3.out'}, 54.6);
+tl.to('#c-team-1 .in', {opacity: 0, duration: .35, ease: 'power2.in'}, 55.80);
+tl.fromTo('#c-team-2 .in', {opacity: 0, y: 0, x: -30}, {opacity: 1, y: 0, x: 0, duration: .55, ease: 'power3.out'}, 56.2);
+tl.to('#c-team-2 .in', {opacity: 0, duration: .35, ease: 'power2.in'}, 57.40);
+tl.fromTo('#c-team-3 .in', {opacity: 0, y: 0, x: -30}, {opacity: 1, y: 0, x: 0, duration: .55, ease: 'power3.out'}, 57.8);
+tl.to('#c-team-3 .in', {opacity: 0, duration: .35, ease: 'power2.in'}, 59.00);
+tl.fromTo('#c-team-4 .in', {opacity: 0, y: 0, x: -30}, {opacity: 1, y: 0, x: 0, duration: .55, ease: 'power3.out'}, 59.4);
+tl.to('#c-team-4 .in', {opacity: 0, duration: .35, ease: 'power2.in'}, 60.60);
+tl.fromTo('#c-team-5 .in', {opacity: 0, y: 0, x: -30}, {opacity: 1, y: 0, x: 0, duration: .55, ease: 'power3.out'}, 61);
+tl.to('#c-team-5 .in', {opacity: 0, duration: .35, ease: 'power2.in'}, 62.30);
+tl.fromTo('#c-title .in', {opacity: 0, y: 18, x: 0}, {opacity: 1, y: 0, x: 0, duration: .55, ease: 'power3.out'}, 63.2);
+tl.to('#c-title .in', {opacity: 0, duration: .35, ease: 'power2.in'}, 66.50);
+tl.fromTo('#c-fact-1 .in', {opacity: 0, y: 18, x: 0}, {opacity: 1, y: 0, x: 0, duration: .55, ease: 'power3.out'}, 68);
+tl.to('#c-fact-1 .in', {opacity: 0, duration: .35, ease: 'power2.in'}, 71.00);
+tl.fromTo('#c-fact-2 .in', {opacity: 0, y: 18, x: 0}, {opacity: 1, y: 0, x: 0, duration: .55, ease: 'power3.out'}, 72);
+tl.to('#c-fact-2 .in', {opacity: 0, duration: .35, ease: 'power2.in'}, 75.00);
+tl.fromTo('#c-fact-3 .in', {opacity: 0, y: 18, x: 0}, {opacity: 1, y: 0, x: 0, duration: .55, ease: 'power3.out'}, 75.6);
+tl.to('#c-fact-3 .in', {opacity: 0, duration: .35, ease: 'power2.in'}, 78.30);
+tl.fromTo('#c-batt .in', {opacity: 0, y: 18, x: 0}, {opacity: 1, y: 0, x: 0, duration: .55, ease: 'power3.out'}, 79.2);
+tl.to('#c-batt .in', {opacity: 0, duration: .35, ease: 'power2.in'}, 83.40);
+tl.fromTo('#c-water .in', {opacity: 0, y: 18, x: 0}, {opacity: 1, y: 0, x: 0, duration: .55, ease: 'power3.out'}, 84.5);
+tl.to('#c-water .in', {opacity: 0, duration: .35, ease: 'power2.in'}, 88.60);
+tl.fromTo('#c-costs .in', {opacity: 0, y: 18, x: 0}, {opacity: 1, y: 0, x: 0, duration: .55, ease: 'power3.out'}, 89.6);
+tl.to('#c-costs .in', {opacity: 0, duration: .35, ease: 'power2.in'}, 94.60);
+tl.fromTo('#c-artemis .in', {opacity: 0, y: 18, x: 0}, {opacity: 1, y: 0, x: 0, duration: .55, ease: 'power3.out'}, 95.6);
+tl.to('#c-artemis .in', {opacity: 0, duration: .35, ease: 'power2.in'}, 101.00);
+tl.fromTo('#c-ages .in', {opacity: 0, y: 18, x: 0}, {opacity: 1, y: 0, x: 0, duration: .55, ease: 'power3.out'}, 105);
+tl.to('#c-ages .in', {opacity: 0, duration: .35, ease: 'power2.in'}, 109.20);
+tl.fromTo('#c-product .in', {opacity: 0, y: 18, x: 0}, {opacity: 1, y: 0, x: 0, duration: .55, ease: 'power3.out'}, 117.5);
+tl.to('#c-product .in', {opacity: 0, duration: .35, ease: 'power2.in'}, 124.10);
+tl.fromTo('#c-real .in', {opacity: 0, y: 18, x: 0}, {opacity: 1, y: 0, x: 0, duration: .55, ease: 'power3.out'}, 125.2);
+tl.to('#c-real .in', {opacity: 0, duration: .35, ease: 'power2.in'}, 126.40);
+tl.fromTo('#c-game .in', {opacity: 0, y: 18, x: 0}, {opacity: 1, y: 0, x: 0, duration: .55, ease: 'power3.out'}, 126.3);
+tl.to('#c-game .in', {opacity: 0, duration: .35, ease: 'power2.in'}, 127.30);
+tl.fromTo('#c-decide .in', {opacity: 0, y: 18, x: 0}, {opacity: 1, y: 0, x: 0, duration: .55, ease: 'power3.out'}, 146.2);
+tl.to('#c-decide .in', {opacity: 0, duration: .35, ease: 'power2.in'}, 148.60);
+tl.fromTo('#c-m-1 .in', {opacity: 0, y: 0, x: -30}, {opacity: 1, y: 0, x: 0, duration: .55, ease: 'power3.out'}, 154);
+tl.to('#c-m-1 .in', {opacity: 0, duration: .35, ease: 'power2.in'}, 156.40);
+tl.fromTo('#c-m-2 .in', {opacity: 0, y: 0, x: -30}, {opacity: 1, y: 0, x: 0, duration: .55, ease: 'power3.out'}, 157.2);
+tl.to('#c-m-2 .in', {opacity: 0, duration: .35, ease: 'power2.in'}, 159.60);
+tl.fromTo('#c-m-3 .in', {opacity: 0, y: 0, x: -30}, {opacity: 1, y: 0, x: 0, duration: .55, ease: 'power3.out'}, 160.4);
+tl.to('#c-m-3 .in', {opacity: 0, duration: .35, ease: 'power2.in'}, 162.80);
+tl.fromTo('#c-m-4 .in', {opacity: 0, y: 0, x: -30}, {opacity: 1, y: 0, x: 0, duration: .55, ease: 'power3.out'}, 163.6);
+tl.to('#c-m-4 .in', {opacity: 0, duration: .35, ease: 'power2.in'}, 165.80);
+tl.fromTo('#c-src-1 .in', {opacity: 0, y: 0, x: -30}, {opacity: 1, y: 0, x: 0, duration: .55, ease: 'power3.out'}, 167.2);
+tl.to('#c-src-1 .in', {opacity: 0, duration: .35, ease: 'power2.in'}, 171.20);
+tl.fromTo('#c-src-2 .in', {opacity: 0, y: 0, x: -30}, {opacity: 1, y: 0, x: 0, duration: .55, ease: 'power3.out'}, 171.8);
+tl.to('#c-src-2 .in', {opacity: 0, duration: .35, ease: 'power2.in'}, 175.20);
+tl.fromTo('#c-src-3 .in', {opacity: 0, y: 0, x: -30}, {opacity: 1, y: 0, x: 0, duration: .55, ease: 'power3.out'}, 175.8);
+tl.to('#c-src-3 .in', {opacity: 0, duration: .35, ease: 'power2.in'}, 179.20);
+tl.fromTo('#c-src-4 .in', {opacity: 0, y: 0, x: -30}, {opacity: 1, y: 0, x: 0, duration: .55, ease: 'power3.out'}, 179.8);
+tl.to('#c-src-4 .in', {opacity: 0, duration: .35, ease: 'power2.in'}, 184.00);
+tl.fromTo('#c-fail .in', {opacity: 0, y: 18, x: 0}, {opacity: 1, y: 0, x: 0, duration: .55, ease: 'power3.out'}, 192.8);
+tl.to('#c-fail .in', {opacity: 0, duration: .35, ease: 'power2.in'}, 197.00);
+tl.fromTo('#c-next-1 .in', {opacity: 0, y: 18, x: 0}, {opacity: 1, y: 0, x: 0, duration: .55, ease: 'power3.out'}, 204.6);
+tl.to('#c-next-1 .in', {opacity: 0, duration: .35, ease: 'power2.in'}, 208.60);
+tl.fromTo('#c-next-2 .in', {opacity: 0, y: 18, x: 0}, {opacity: 1, y: 0, x: 0, duration: .55, ease: 'power3.out'}, 209.4);
+tl.to('#c-next-2 .in', {opacity: 0, duration: .35, ease: 'power2.in'}, 214.60);
+tl.fromTo('#c-final .in', {opacity: 0, y: 18, x: 0}, {opacity: 1, y: 0, x: 0, duration: .55, ease: 'power3.out'}, 226);
+tl.to('#c-final .in', {opacity: 0, duration: .35, ease: 'power2.in'}, 230.20);
+tl.fromTo('#c-end .in', {opacity: 0, y: 18, x: 0}, {opacity: 1, y: 0, x: 0, duration: .55, ease: 'power3.out'}, 230.7);
+tl.to('#c-end .in', {opacity: 0, duration: .35, ease: 'power2.in'}, 234.60);
+gsap.utils.toArray('#c-type .ch').forEach((el, i) => tl.fromTo(el, {opacity: 0}, {opacity: 1, duration: .01}, 37.6 + i * 0.115));
+tl.fromTo('#c-type .in', {opacity: 1}, {opacity: 0, duration: .5}, 43.3);
+// glitch-slice title reveal
+const gl = [['#gl-0', -260, 40], ['#gl-1', 220, -30], ['#gl-2', -140, 60]];
+gl.forEach(([s, x0, x1], i) => {
+  tl.fromTo(s, {x: x0, opacity: 0}, {x: x1, opacity: 1, duration: .12, ease: 'steps(2)'}, 12.75 + i * .06);
+  tl.to(s, {x: -x1 * .6, duration: .08, ease: 'steps(1)'}, 13.0 + i * .05);
+  tl.to(s, {x: 0, duration: .5, ease: 'expo.out'}, 13.15 + i * .04);
+  tl.to(s, {x: x1 * .4, duration: .06, ease: 'steps(1)'}, 14.4 + i * .03);
+  tl.to(s, {x: 0, duration: .1, ease: 'steps(1)'}, 14.5);
+});
+tl.fromTo('#gl-sub', {opacity: 0, scale: 1.08}, {opacity: 1, scale: 1, duration: 1, ease: 'power3.out'}, 13.6);
+tl.fromTo('#field', {opacity: 1}, {opacity: 0, duration: .5, ease: 'power2.in'}, 15.45);
+// letterbox breathes open for the final title
+tl.fromTo('.bar', {height: 104}, {height: 0, duration: 1.2, ease: 'power2.inOut'}, 225.2);
+window.__timelines['main'] = tl;
+</script>
+</body>
+</html>

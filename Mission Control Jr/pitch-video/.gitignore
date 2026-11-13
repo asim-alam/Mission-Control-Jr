@@ -1,0 +1,7 @@
+# Render temp, logs and raw downloads (re-fetch with yt-dlp; see PROGRESS.md)
+work-*/
+.hyperframes/
+*.log
+source/
+renders/
+node_modules/

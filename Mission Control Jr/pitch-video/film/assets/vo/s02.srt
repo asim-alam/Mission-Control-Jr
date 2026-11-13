@@ -1,0 +1,8 @@
+1
+00:00:00,100 --> 00:00:03,374
+A dust storm swallowed the entire planet.
+
+2
+00:00:03,324 --> 00:00:05,090
+The sky went dark.
+
