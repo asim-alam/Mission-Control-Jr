@@ -25,6 +25,9 @@ export async function runMission(spec) {
   let carry = {}; try { carry = spec.carryFrom ? readJourney(localStorage).records[spec.carryFrom]?.carry || {} : {}; } catch {}
   const saved = sampleMode ? {state: null} : loadSaved(spec.id, undefined, {schema: spec.schema, migrate: spec.migrate});
   let paused = false, hudClock = 0;
+  const completedSharedSteps = new Set();
+  let stepAlertElShared = null;
+  let stepAlertTimerShared = null;
   const deck = spec.id === 'orbit' ? 'station' : spec.id;
   const lessonOptions = () => ({
     deck,
@@ -123,11 +126,7 @@ export async function runMission(spec) {
       if (moving === false) hud.notice('The way is blocked. Walk around the equipment with WASD.', true);
       else if (!spec.rules.getInstruction) hud.toast('Walking… press E when you get there.', 'quiet');
     });
-let completedSharedSteps = new Set();
-let stepAlertElShared = null;
-let stepAlertTimerShared = null;
-
-function showStepAlertShared(title, text, nextTip, icon = '🎉') {
+function showStepAlertShared(title, text, nextTip, icon = '🎉', onOpenLesson = null) {
   if (!stepAlertElShared) {
     stepAlertElShared = document.createElement('div');
     stepAlertElShared.id = 'mission-step-alert';
@@ -141,6 +140,7 @@ function showStepAlertShared(title, text, nextTip, icon = '🎉') {
         <p id="shared-step-alert-msg"></p>
         <span class="step-alert-next" id="shared-step-alert-next"></span>
       </div>
+      <button type="button" class="step-alert-lesson-btn" id="shared-step-alert-lesson">🎓 Pip’s Lesson</button>
       <button type="button" class="step-alert-dismiss" aria-label="Dismiss alert">✕</button>
     `;
     document.body.appendChild(stepAlertElShared);
@@ -152,11 +152,21 @@ function showStepAlertShared(title, text, nextTip, icon = '🎉') {
   stepAlertElShared.querySelector('#shared-step-alert-title').textContent = title;
   stepAlertElShared.querySelector('#shared-step-alert-msg').textContent = text;
   stepAlertElShared.querySelector('#shared-step-alert-next').textContent = nextTip ? `👉 Next: ${nextTip}` : '';
+
+  const lessonBtn = stepAlertElShared.querySelector('#shared-step-alert-lesson');
+  if (lessonBtn) {
+    lessonBtn.onclick = () => {
+      stepAlertElShared.hidden = true;
+      if (onOpenLesson) onOpenLesson();
+      else openPipLesson(spec.id, { step: pipLessonStep[spec.id]?.(ctx.mission) || 0, autoVoice: true });
+    };
+  }
+
   stepAlertElShared.hidden = false;
   clearTimeout(stepAlertTimerShared);
   stepAlertTimerShared = setTimeout(() => {
     if (stepAlertElShared) stepAlertElShared.hidden = true;
-  }, 7500);
+  }, 8500);
 
   if (narration()) {
     try {
@@ -191,11 +201,13 @@ function showStepAlertShared(title, text, nextTip, icon = '🎉') {
                 : text.includes('power') || text.includes('battery') ? '⚡'
                 : text.includes('plan') ? '📋'
                 : '🎉';
+              const lessonStep = pipLessonStep[spec.id] ? pipLessonStep[spec.id](ctx.mission) : Math.min(i, 2);
               showStepAlertShared(
                 `STEP ${stepNum} COMPLETE: ${text}! ✅`,
                 `Great work, Cadet! Step ${stepNum} accomplished.`,
                 nextTip,
-                icon
+                icon,
+                () => openPipLesson(spec.id, { step: lessonStep, autoVoice: true, onFinish: () => ctx.setControls() })
               );
               hud.toast(`🎉 Step ${stepNum} done! Next: ${nextTip}`, 'info');
               break;

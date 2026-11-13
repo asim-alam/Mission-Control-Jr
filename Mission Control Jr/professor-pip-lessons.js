@@ -76,11 +76,16 @@ export const pipLessons = {
 };
 
 export const pipLessonStep = {
+  orbit: s => s?.docked ? 1 : 0,
+  docked: () => 0,
   station: s => s.comms ? (s.site ? 3 : 2) : s.diagnosed || s.fixed ? 1 : 0,
+  storm: s => s?.sheltered || s?.sealed ? 2 : (s?.batteryInstalled || (s?.cleaned && s.cleaned.filter(Boolean).length >= 2)) ? 1 : 0,
+  rover: s => s?.returned || (s?.photos && s.photos.length >= 2) ? 3 : (s?.photos && s.photos.length === 1) ? 2 : s?.route ? 1 : 0,
   'solar-shelter': s => s.stage !== 'prep' ? 2 : s.mapViewed ? 1 : 0,
   greenhouse: s => s.day > s.scenario.growDays ? 2 : s.plan ? 1 : 0,
   'earth-delay': s => s.fixed || s.swaps.length ? 2 : s.plan ? 1 : 0,
   'lunar-sunlight': s => s.plug === 'port' && s.tracker ? 2 : s.plan ? 1 : 0,
   'lunar-dust': s => s.innerOpen || (s.pressurized && Object.values(s.items).every(item => item.dust <= s.scenario.cleanEnough)) ? 2 : s.pressurized ? 1 : 0,
   'lunar-relay': s => s.at === 'hollow' || s.stowed ? 2 : s.plan ? 1 : 0,
+  extended: () => 0,
 };

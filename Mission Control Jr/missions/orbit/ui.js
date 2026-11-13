@@ -1,5 +1,5 @@
 // "Arrival at Mars" — briefing, radio-part and locker choices, landing planner, hatch check and debrief.
-import {mountPipLesson, pipLessonOpen} from '../../professor-pip.js';
+import {mountPipLesson, openPipLesson, pipLessonOpen} from '../../professor-pip.js';
 import {pipLessonStep} from '../../professor-pip-lessons.js';
 import {runMission} from '../shared/controller.js';
 import {planCards, compareTable} from '../shared/hud.js';
@@ -1574,6 +1574,7 @@ function showStepCompletionAlert(step) {
         <p id="step-alert-msg"></p>
         <span class="step-alert-next" id="step-alert-next"></span>
       </div>
+      <button type="button" class="step-alert-lesson-btn" id="orbit-alert-lesson">🎓 Pip’s Lesson</button>
       <button type="button" class="step-alert-dismiss" aria-label="Dismiss alert">✕</button>
     `;
     document.body.appendChild(stepAlertEl);
@@ -1592,11 +1593,19 @@ function showStepCompletionAlert(step) {
   if (msgEl) msgEl.textContent = step.completeMsg;
   if (nextEl) nextEl.textContent = `👉 ${step.nextTip}`;
 
+  const lessonBtn = stepAlertEl.querySelector('#orbit-alert-lesson');
+  if (lessonBtn) {
+    lessonBtn.onclick = () => {
+      stepAlertEl.hidden = true;
+      openPipLesson('station', { step: Math.min(3, Math.max(0, step.num - 1)), autoVoice: true });
+    };
+  }
+
   stepAlertEl.hidden = false;
   clearTimeout(stepAlertTimer);
   stepAlertTimer = setTimeout(() => {
     if (stepAlertEl) stepAlertEl.hidden = true;
-  }, 7500);
+  }, 8500);
 
   speakStationText(`${step.completeTitle}. ${step.completeMsg}`);
 }
@@ -1753,7 +1762,8 @@ function debrief(ctx) {
     <p class="mx-tip">💡 ${tip}</p>${compare}
     <aside class="mx-detail"><b>More details</b><br>The broken part was the <b>${partLabel(ctx.mission, r.fault)}</b>. ${r.usedTester ? 'You found it with the tester.' : r.inspected ? 'You found it by looking closely.' : 'You found it by trying fixes.'} Next, the base gets ready for a dust storm. ${r.comms ? 'Because the radio works, the base heard about the storm early.' : ''}</aside>`,
     actions: [
-      {label: '🔁 Try the landing again', primary: true, disabled: !ctx.checkpoint || !r.completed, run: () => ctx.retry(() => { ctx.view.returnToInterior?.(); ctx.close(); })},
+      {label: '🎓 Pip’s debrief lesson', primary: true, run: () => openPipLesson('station', {deck: 'station', step: 0, autoVoice: true, finishLabel: 'Back to report', onFinish: () => debrief(ctx)})},
+      {label: '🔁 Try the landing again', disabled: !ctx.checkpoint || !r.completed, run: () => ctx.retry(() => { ctx.view.returnToInterior?.(); ctx.close(); })},
       {label: '↺ Play again (new broken part)', run: () => ctx.restart()}, {label: '🗺️ Back to the map', run: ctx.openJourney}, {label: 'Sources', run: () => ctx.sourcesDialog(() => debrief(ctx))}]});
 }
 

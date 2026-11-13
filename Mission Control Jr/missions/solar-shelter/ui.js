@@ -1,5 +1,6 @@
 // "A Place to Hide" (v3) — explainer, alert, refuge tablet, refuge check, event sensors and debrief.
 import {runMission} from '../shared/controller.js';
+import {openPipLesson} from '../../professor-pip.js';
 import {compareTable} from '../shared/hud.js';
 import {readHistory, pushHistory, snapshot} from '../shared/runtime.js';
 import {tuneScenario} from '../../simulation/difficulty.js';
@@ -192,7 +193,8 @@ function debrief(ctx) {
     <p>🔎 <b>What stayed weaker:</b> ${NAMES[ex.worst]} collected the most. In ${m.scenario.seats[ex.seat].label} the most still came through the <b>${ex.weakest.label.toLowerCase()}</b>.</p>
     ${notes.map(n => `<p class="mx-tip">💡 ${n}</p>`).join('')}${compare}
     <aside class="mx-detail"><b>More details</b><br>These numbers come from a made-up model of this refuge. Real shelters are designed with careful measurements and computer models. Water, plastic and packed supplies all help, and where you put them matters as much as what they are.</aside>`,
-    actions: [{label: '🔁 Try changing one thing', primary: true, run: () => retry(ctx)}, {label: '👀 See the cutaway', run: () => cutaway(ctx)},
+    actions: [{label: '🎓 Pip’s debrief lesson', primary: true, run: () => openPipLesson(ID, {deck: ID, step: 0, autoVoice: true, finishLabel: 'Back to report', onFinish: () => debrief(ctx)})},
+      {label: '🔁 Try changing one thing', run: () => retry(ctx)}, {label: '👀 See the cutaway', run: () => cutaway(ctx)},
       {label: '↺ Start over', run: () => ctx.restart()}, {label: '🗺️ Map', run: ctx.openJourney}, {label: 'Mission science', run: () => ctx.sourcesDialog(() => debrief(ctx))}]});
 }
 function cutaway(ctx) {

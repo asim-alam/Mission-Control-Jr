@@ -178,7 +178,7 @@ function showEnding(){
       </div>
       <p><b>💡 Your Astronaut Skill:</b> A true explorer observes the terrain with their own eyes and always saves enough energy to make it home safely.</p>
     </div>
-    <p class="reserve-rule"><strong>What if you chose another way?</strong> Driving over the soft patch could make the wheels slip and use more battery. ${tip}</p>${m.events.filter(e=>['hazard','collision','sample','return','retry'].includes(e.type)).slice(-4).map(e=>`<div class="event-row">${Math.floor(e.time)} s · ${e.text}</div>`).join('')}<p><strong>What next?</strong> ${m.outcome==='success'?`Amara adds the mapped boundary to the field record. Elena asks what follow-up measurement could test its interpretation. ${m.earthFieldReport?.status==='delivered'?'Your photos reached Earth!':'Your photos are on the way to Earth.'} Continue to the shelter exercise.`:'The question is still open. You can try again.'}</p><p class="fine-print">This is a pretend future Mars trip. The numbers are game rules.</p>`,[{label:'Print my report',run:()=>window.print()},{label:'Think about it',run:reflection},...(m.checkpoint?[{label:'Try again from the last safe spot',run:restore}]:[]),{label:'Play again',run:()=>location.reload()},...(m.returned?[{label:'Done! See your journey',run:openJourney},{label:'Continue · A Place to Hide',run:()=>goToChapter('solar-shelter')}]:[{label:'Your journey',run:openJourney}])], 'EXPEDITION DEBRIEF');drawMap($('debrief-map'),false);audio.pause(false);audio.say(m.outcome,true);
+    <p class="reserve-rule"><strong>What if you chose another way?</strong> Driving over the soft patch could make the wheels slip and use more battery. ${tip}</p>${m.events.filter(e=>['hazard','collision','sample','return','retry'].includes(e.type)).slice(-4).map(e=>`<div class="event-row">${Math.floor(e.time)} s · ${e.text}</div>`).join('')}<p><strong>What next?</strong> ${m.outcome==='success'?`Amara adds the mapped boundary to the field record. Elena asks what follow-up measurement could test its interpretation. ${m.earthFieldReport?.status==='delivered'?'Your photos reached Earth!':'Your photos are on the way to Earth.'} Continue to the shelter exercise.`:'The question is still open. You can try again.'}</p><p class="fine-print">This is a pretend future Mars trip. The numbers are game rules.</p>`,[{label:'🎓 Pip’s debrief lesson',run:()=>openPipLesson('rover',{autoVoice:true})},{label:'Print my report',run:()=>window.print()},{label:'Think about it',run:reflection},...(m.checkpoint?[{label:'Try again from the last safe spot',run:restore}]:[]),{label:'Play again',run:()=>location.reload()},...(m.returned?[{label:'Done! See your journey',run:openJourney},{label:'Continue · A Place to Hide',run:()=>goToChapter('solar-shelter')}]:[{label:'Your journey',run:openJourney}])], 'EXPEDITION DEBRIEF');drawMap($('debrief-map'),false);audio.pause(false);audio.say(m.outcome,true);
 }
 function reflection(){showDialog('Try it somewhere new.',`<p>A new path looks shorter, but the ground might be soft. What should you check first?</p>`,[{label:'Look at the ground, check the battery for home, and have a backup path.',run:()=>{toast('Yes! Look first, then check you have enough to get home.');event(m,'reflection','You looked, checked, and kept a backup.');endingShown=false;showEnding();}},{label:'The map promises the shortcut is fine.',run:()=>toast('A map helps you plan. But it cannot tell if the ground is soft. Look with your eyes too.')},{label:'Back to the report',run:()=>{endingShown=false;showEnding();}}]);}
 function restore(){const restored=retry(m);if(!restored){toast('There is no safe spot to go back to yet.');return;}m=restored;endingShown=false;hazeSaid=false;slipSaid=false;actionKey='';photo=null;$('photo-frame').hidden=true;closeDialog();if(!m.aboard)player.position.copy(groundPoint(m.vehicle.x-3,m.vehicle.z,1.68));toast('Back to the last safe spot. Try again!');}
@@ -305,6 +305,7 @@ function showStepCompletionAlertRover(step, m) {
         <p id="rover-alert-msg"></p>
         <span class="step-alert-next" id="rover-alert-next"></span>
       </div>
+      <button type="button" class="step-alert-lesson-btn" id="rover-alert-lesson">🎓 Pip’s Lesson</button>
       <button type="button" class="step-alert-dismiss" aria-label="Dismiss alert">✕</button>
     `;
     document.body.appendChild(stepAlertElRover);
@@ -319,11 +320,19 @@ function showStepCompletionAlertRover(step, m) {
   stepAlertElRover.querySelector('#rover-alert-msg').textContent = msgText;
   stepAlertElRover.querySelector('#rover-alert-next').textContent = `👉 Next: ${step.nextTip}`;
 
+  const lessonBtn = stepAlertElRover.querySelector('#rover-alert-lesson');
+  if (lessonBtn) {
+    lessonBtn.onclick = () => {
+      stepAlertElRover.hidden = true;
+      openPipLesson('rover', { step: Math.min(3, Math.max(0, (step.stage || 1) - 1)), autoVoice: true });
+    };
+  }
+
   stepAlertElRover.hidden = false;
   clearTimeout(stepAlertTimerRover);
   stepAlertTimerRover = setTimeout(() => {
     if (stepAlertElRover) stepAlertElRover.hidden = true;
-  }, 7500);
+  }, 8500);
 
   try {
     const textToSpeak = `${step.title}. ${msgText}. Next: ${step.nextTip}`;

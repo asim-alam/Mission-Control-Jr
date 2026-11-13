@@ -123,9 +123,9 @@ function render(){
   if($('mission-progress-bar')) $('mission-progress-bar').style.width=`${chapters.length?Math.round(doneCount/chapters.length*100):0}%`;
   
   const nextChapter=chapters.find(c=>c.id===next);
-  $('continue').disabled=campaign==='moon'&&complete;
+  $('continue').disabled=false;
   if(complete){
-    $('continue').textContent=campaign==='mars'?'👑 Be the Base Boss':'🌕 Moon missions done!';
+    $('continue').textContent=campaign==='mars'?'👑 Be the Base Boss':'🌕 Replay Moon Missions';
     $('continue').title=$('continue').textContent;
   } else if(nextChapter){
     const num = Number(nextChapter.number) ? `Mission ${Number(nextChapter.number)}` : 'Mission';
@@ -156,7 +156,11 @@ function render(){
     startPipTypewriter(msgList);
   }
 
-  document.querySelectorAll('[data-campaign]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.campaign===campaign)));
+  document.querySelectorAll('[data-campaign]').forEach(b=>{
+    const isSelected = b.dataset.campaign === campaign;
+    b.setAttribute('aria-pressed', String(isSelected));
+    b.classList.toggle('active', isSelected);
+  });
   $('return-active').hidden=!active;
   $('chapters').className='trail-grid';
   $('chapters').replaceChildren();
@@ -481,6 +485,8 @@ $('return-active').onclick=resume;
 $('continue').onclick=()=>{
   const next=nextStoryChapter(state,state.selectedCampaign);
   if(next)requestChapter(next);
+  else if(state.selectedCampaign==='moon')requestChapter('lunar-sunlight', true);
+  else toggleMissionMap(true, {syncPath: true});
 };
 if($('quick-mission')) $('quick-mission').onclick=()=>requestChapter('storm');
 $('extended-start')?.addEventListener('click',()=>requestChapter('extended'));
@@ -553,7 +559,15 @@ window.addEventListener('popstate',()=>{
   }
 });
 
-document.querySelectorAll('[data-campaign]').forEach(button=>button.onclick=()=>{state.selectedCampaign=button.dataset.campaign;persist();render();});
+document.querySelectorAll('[data-campaign]').forEach(button=>button.onclick=()=>{
+  state.selectedCampaign=button.dataset.campaign;
+  persist();
+  render();
+  if($('mission-map') && !$('mission-map').hidden){
+    const scrollEl=document.querySelector('.mission-map-scroll');
+    if(scrollEl) scrollEl.scrollTo({top: 0, behavior: 'instant'});
+  }
+});
 
 render();
 persist();

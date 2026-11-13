@@ -189,12 +189,14 @@ body.kid-home #campaign-bar .header-campaign-selector button:hover {
   color: #ffffff !important;
   background: rgb(255 255 255 / 12%) !important;
 }
-body.kid-home #campaign-bar .header-campaign-selector button[data-campaign="mars"][aria-pressed="true"] {
+body.kid-home #campaign-bar .header-campaign-selector button[data-campaign="mars"][aria-pressed="true"],
+body.kid-home #campaign-bar .header-campaign-selector button[data-campaign="mars"].active {
   background: linear-gradient(180deg, #ff793f, #c0392b) !important;
   color: #ffffff !important; border-color: #ffaa80 !important;
   box-shadow: 0 2px 8px rgb(192 57 43 / 60%) !important;
 }
-body.kid-home #campaign-bar .header-campaign-selector button[data-campaign="moon"][aria-pressed="true"] {
+body.kid-home #campaign-bar .header-campaign-selector button[data-campaign="moon"][aria-pressed="true"],
+body.kid-home #campaign-bar .header-campaign-selector button[data-campaign="moon"].active {
   background: linear-gradient(180deg, #6c5ce7, #4834d4) !important;
   color: #ffffff !important; border-color: #a29bfe !important;
   box-shadow: 0 2px 8px rgb(72 52 212 / 60%) !important;
@@ -284,7 +286,8 @@ body.kid-home .dest-toggle-btn {
   box-shadow: 0 3px 0 #15113d; transition: translate .15s, border-color .15s;
 }
 body.kid-home .dest-toggle-btn:hover { translate: 0 -2px; border-color: var(--kid-yellow) !important; }
-body.kid-home .dest-toggle-btn[aria-pressed="true"] {
+body.kid-home .dest-toggle-btn[aria-pressed="true"],
+body.kid-home .dest-toggle-btn.active {
   border-color: var(--kid-yellow) !important; background: var(--kid-panel-2) !important;
   box-shadow: 0 3px 0 #9e780a, 0 0 0 3px rgb(255 210 63 / 25%);
 }
@@ -296,7 +299,8 @@ body.kid-home .planet-mars { background: radial-gradient(circle at 35% 30%, #ffb
 body.kid-home .planet-mars::after { content: ''; position: absolute; width: 7px; height: 5px; left: 18px; top: 10px; border-radius: 50%; background: #b8401f; }
 body.kid-home .planet-moon { background: radial-gradient(circle at 35% 30%, #fbfbff, #c9c7dd 55%, #8f8ca8); }
 body.kid-home .planet-moon::after { content: ''; position: absolute; width: 6px; height: 6px; left: 18px; top: 9px; border-radius: 50%; background: #a9a6c0; }
-body.kid-home .dest-toggle-btn[aria-pressed="true"] .planet { animation: kid-spin-wobble 3s ease-in-out infinite; }
+body.kid-home .dest-toggle-btn[aria-pressed="true"] .planet,
+body.kid-home .dest-toggle-btn.active .planet { animation: kid-spin-wobble 3s ease-in-out infinite; }
 
 body.kid-home .title-rank-picker {
   display: flex; align-items: center; gap: 8px; margin: 0;
@@ -1484,6 +1488,25 @@ body.kid-home #journey-count, body.kid-home .wordmark { white-space: nowrap; }
   color: var(--kid-yellow);
   font-weight: 700;
   margin-top: 2px;
+}
+.mission-step-alert-card .step-alert-lesson-btn {
+  background: linear-gradient(180deg, #ffd23f, #e6b800) !important;
+  color: #1a153b !important;
+  font-family: var(--kid-display) !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  padding: 6px 14px !important;
+  border-radius: 999px !important;
+  border: 1.5px solid #fff5c0 !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+  box-shadow: 0 3px 0 #9e780a, 0 4px 12px rgba(255, 210, 63, 0.4) !important;
+  transition: transform .12s, filter .12s !important;
+}
+.mission-step-alert-card .step-alert-lesson-btn:hover {
+  transform: translateY(-2px) scale(1.03) !important;
+  filter: brightness(1.1) !important;
 }
 .mission-step-alert-card .step-alert-dismiss {
   background: rgba(255, 255, 255, 0.12);

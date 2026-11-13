@@ -345,6 +345,7 @@ function showStepCompletionAlertStorm(step) {
         <p id="storm-alert-msg"></p>
         <span class="step-alert-next" id="storm-alert-next"></span>
       </div>
+      <button type="button" class="step-alert-lesson-btn" id="storm-alert-lesson">🎓 Pip’s Lesson</button>
       <button type="button" class="step-alert-dismiss" aria-label="Dismiss alert">✕</button>
     `;
     document.body.appendChild(stepAlertElStorm);
@@ -358,11 +359,19 @@ function showStepCompletionAlertStorm(step) {
   stepAlertElStorm.querySelector('#storm-alert-msg').textContent = step.msg;
   stepAlertElStorm.querySelector('#storm-alert-next').textContent = `👉 Next: ${step.nextTip}`;
 
+  const lessonBtn = stepAlertElStorm.querySelector('#storm-alert-lesson');
+  if (lessonBtn) {
+    lessonBtn.onclick = () => {
+      stepAlertElStorm.hidden = true;
+      openPipLesson('storm', { step: Math.min(2, Math.max(0, step.num - 1)), autoVoice: true });
+    };
+  }
+
   stepAlertElStorm.hidden = false;
   clearTimeout(stepAlertTimerStorm);
   stepAlertTimerStorm = setTimeout(() => {
     if (stepAlertElStorm) stepAlertElStorm.hidden = true;
-  }, 7500);
+  }, 8500);
 
   try {
     const textToSpeak = `Job ${step.num} complete! ${step.title}. ${step.msg}. Next: ${step.nextTip}`;
@@ -495,6 +504,7 @@ function showEnding() {
       <p><b>💡 Your Astronaut Skill:</b> When unexpected storms strike in space, teamwork and prioritizing life support first is what keeps everyone alive!</p>
     </div>`,[
     {label:`Next mission · ${evacuated?'Rover rescue drive':'Tracks in the Dust'}`,run:()=>goToChapter('rover')},
+    {label:'🎓 Pip’s debrief lesson',run:()=>openPipLesson('storm',{autoVoice:true})},
     {label:'↺ Play again',run:startMission},{label:'👑 Be the Base Boss',run:()=>goToChapter('extended')},
     {label:'🗺️ Back to mission map',run:openJourney}
   ], 'HOW DID IT GO?');

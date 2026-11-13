@@ -17,13 +17,14 @@ export function mountPipLesson(container, mission, options) {
   return button;
 }
 
-export function openPipLesson(mission, {deck = mission, step = 0, finishLabel = 'Back to mission', onFinish, onOpen, onClose} = {}) {
+export function openPipLesson(mission, {deck = mission, step = 0, finishLabel = 'Back to mission', autoVoice = true, onFinish, onOpen, onClose} = {}) {
   if (pipLessonOpen()) return;
   const lesson = pipLessons[deck];
   if (!lesson) return;
   const {title, slides} = lesson;
   let page = Math.max(0, Math.min(step, slides.length - 1));
   let narration, speechWasPaused;
+  let voiceEnabled = autoVoice;
   const opener = document.activeElement;
   const listeners = new AbortController();
 
@@ -61,17 +62,51 @@ export function openPipLesson(mission, {deck = mission, step = 0, finishLabel = 
   const find = selector => panel.querySelector(selector);
   const stage = find('.cartoon-teacher-stage'), voice = find('.teacher-voice-btn');
   const back = find('[data-back]'), next = find('[data-next]'), finish = find('[data-finish]');
-  const speech = window.speechSynthesis;
+  const speech = typeof window !== 'undefined' ? window.speechSynthesis : null;
 
   function stopVoice() {
     if (narration) {
       narration = null;
-      speech.cancel();
+      try { speech?.cancel(); } catch {}
     }
     stage.classList.remove('is-talking');
-    if (speechWasPaused) speech.pause();
+    if (speechWasPaused) {
+      try { speech?.pause(); } catch {}
+    }
     speechWasPaused = false;
     voice.textContent = 'Read aloud';
+  }
+
+  function speakSlide() {
+    if (!speech || typeof window.SpeechSynthesisUtterance !== 'function') return;
+    stopVoice();
+    const slide = slides[page];
+    if (!slide) return;
+    const cleanText = `${slide.title}. ${slide.summary} ${slide.try}`.replace(/[\u{1F300}-\u{1F6FF}]/gu, '');
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    speechWasPaused = speech.paused;
+    try { speech.cancel(); } catch {}
+    if (speechWasPaused) {
+      try { speech.resume(); } catch {}
+    }
+    narration = utterance;
+    utterance.rate = 0.95;
+    utterance.pitch = 1.18;
+    utterance.onstart = () => {
+      if (narration === utterance) {
+        stage.classList.add('is-talking');
+      }
+    };
+    utterance.onend = utterance.onerror = () => {
+      if (narration !== utterance) return;
+      narration = null;
+      stage.classList.remove('is-talking');
+      voice.textContent = 'Read aloud';
+    };
+    voice.textContent = 'Stop reading';
+    try {
+      speech.speak(utterance);
+    } catch {}
   }
 
   function render() {
@@ -83,6 +118,14 @@ export function openPipLesson(mission, {deck = mission, step = 0, finishLabel = 
     find('.blackboard-fact-pill').textContent = slide.try;
     back.disabled = page === 0;
     next.disabled = page === slides.length - 1;
+
+    if (voiceEnabled && speech && typeof window.SpeechSynthesisUtterance === 'function') {
+      setTimeout(() => {
+        if (classroom === panel && panel.open && voiceEnabled) {
+          speakSlide();
+        }
+      }, 160);
+    }
   }
 
   find('h2').textContent = title;
@@ -94,23 +137,13 @@ export function openPipLesson(mission, {deck = mission, step = 0, finishLabel = 
   if (speech && typeof window.SpeechSynthesisUtterance === 'function') {
     voice.hidden = false;
     voice.onclick = () => {
-      if (narration) { stopVoice(); return; }
-      const slide = slides[page];
-      const utterance = new SpeechSynthesisUtterance(`${slide.title}. ${slide.summary} ${slide.try}`);
-      speechWasPaused = speech.paused;
-      speech.cancel();
-      if (speechWasPaused) speech.resume();
-      narration = utterance;
-      utterance.rate = .95;
-      utterance.pitch = 1.18;
-      utterance.onstart = () => stage.classList.toggle('is-talking', narration === utterance);
-      utterance.onend = utterance.onerror = () => {
-        if (narration !== utterance) return;
-        narration = null;
+      if (narration) {
+        voiceEnabled = false;
         stopVoice();
-      };
-      voice.textContent = 'Stop reading';
-      speech.speak(utterance);
+      } else {
+        voiceEnabled = true;
+        speakSlide();
+      }
     };
   }
   panel.addEventListener('close', () => {

@@ -1,4 +1,4 @@
-import {mountPipLesson, pipLessonOpen} from '../../professor-pip.js';
+import {mountPipLesson, openPipLesson, pipLessonOpen} from '../../professor-pip.js';
 import {showCameraView} from '../../player.js';
 import {sites, quests, nearestSite, planRoute, facilities} from './region.js';
 import {newExpedition, arrive, restore, save, questAction, doQuest, lightTime, pingEarth} from './progress.js';
@@ -212,11 +212,19 @@ function showBaseBossAlert(title, text, nextTip, icon = '🎉') {
       <p>${text}</p>
       ${nextTip ? `<div class="step-alert-next">👉 Next: ${nextTip}</div>` : ''}
     </div>
+    <button type="button" class="step-alert-lesson-btn" id="boss-alert-lesson">🎓 Pip’s Lesson</button>
     <button type="button" class="step-alert-dismiss" aria-label="Dismiss">✕</button>
   `;
   card.querySelector('.step-alert-dismiss').onclick = () => card.remove();
+  const lessonBtn = card.querySelector('#boss-alert-lesson');
+  if (lessonBtn) {
+    lessonBtn.onclick = () => {
+      card.remove();
+      openPipLesson('extended', { autoVoice: true });
+    };
+  }
   document.body.appendChild(card);
-  setTimeout(() => { if (card.parentNode) card.remove(); }, 8000);
+  setTimeout(() => { if (card.parentNode) card.remove(); }, 8500);
   try {
     if ('speechSynthesis' in window && !window.speechSynthesis.speaking) {
       const utter = new SpeechSynthesisUtterance(`${title}. ${text}. Next: ${nextTip}`);
