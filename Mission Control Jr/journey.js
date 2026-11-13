@@ -240,16 +240,34 @@ function scrollToActiveMission({ smooth = false } = {}){
   const container=$('chapters');
   if(!scrollEl || !container)return;
 
+  if(window.scrollY !== 0) window.scrollTo(0, 0);
+
   const currentTarget=container.querySelector('.chapter.current');
-  if(!currentTarget || currentTarget === container.firstElementChild) {
+  if(!currentTarget) {
+    scrollEl.scrollTo({
+      top: 0,
+      behavior: smooth ? 'smooth' : 'instant'
+    });
+    return;
+  }
+
+  // Calculate target position relative to scrollEl's content top
+  const scrollRect = scrollEl.getBoundingClientRect();
+  const targetRect = currentTarget.getBoundingClientRect();
+  const currentScrollTop = scrollEl.scrollTop;
+  const targetTopRelativeToContent = targetRect.top - scrollRect.top + currentScrollTop;
+
+  // If the target is in the first row or near the top (within 120px of top), show from the very top!
+  if (targetTopRelativeToContent <= 120) {
     scrollEl.scrollTo({
       top: 0,
       behavior: smooth ? 'smooth' : 'instant'
     });
   } else {
-    currentTarget.scrollIntoView({
-      block: 'center',
-      inline: 'nearest',
+    // Scroll so the active mission card is comfortably visible with headroom
+    const desiredTop = Math.max(0, targetTopRelativeToContent - 24);
+    scrollEl.scrollTo({
+      top: desiredTop,
       behavior: smooth ? 'smooth' : 'instant'
     });
   }

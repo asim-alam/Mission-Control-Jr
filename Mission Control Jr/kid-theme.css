@@ -132,10 +132,12 @@ header button, .header-actions button { background: var(--kid-panel-2); border: 
 /* ------------------------------------------------------------------ */
 body.kid-home { background: var(--kid-space); color: var(--kid-ink); }
 body.kid-home #campaign-bar {
+  position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important;
   height: 60px; padding: 0 20px;
   background: rgb(18 15 46 / 92%) !important;
   border-bottom: 2px solid #3a3190 !important;
   backdrop-filter: blur(10px);
+  z-index: 50 !important;
 }
 body.kid-home .wordmark { display: inline-flex; align-items: center; gap: 8px; font-size: 20px; font-weight: 700; letter-spacing: 0; color: var(--kid-ink); }
 body.kid-home .logo-rocket { display: inline-block; font-size: 24px; animation: kid-float 3s ease-in-out infinite; }
@@ -448,40 +450,74 @@ body.kid-home .settings-gear-btn:hover {
 /* ------------------------------------------------------------------ */
 /* SEPARATE FULL-SCREEN EXPEDITION MAP VIEW                           */
 /* ------------------------------------------------------------------ */
+body.map-open {
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+}
+
 body.kid-home #mission-map {
-  position: fixed; inset: 60px 0 0 !important; z-index: 30;
+  position: fixed; inset: 60px 0 0 !important; z-index: 30 !important;
   background: rgb(14 11 36 / 95%) !important;
   backdrop-filter: blur(12px);
-  display: flex; flex-direction: column;
+  display: flex !important; flex-direction: column !important;
+  overflow: hidden !important;
 }
 body.kid-home #mission-map[hidden] { display: none !important; }
 body.kid-home .mission-map-deck {
-  width: 100%; max-width: 1240px; margin: 0 auto; height: 100%;
-  display: flex; flex-direction: column; padding: 0 16px;
-  box-sizing: border-box; overflow: hidden;
+  width: 100% !important; max-width: 100% !important; height: 100% !important;
+  display: flex !important; flex-direction: column !important;
+  min-height: 0 !important;
+  padding: 0 !important; margin: 0 !important;
+  box-sizing: border-box !important; overflow: hidden !important;
 }
 
 /* Scrollable Map View for all Mission Cards */
 body.kid-home .mission-map-scroll {
-  flex: 1;
-  overflow-y: scroll !important;
+  flex: 1 1 auto !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
   overflow-x: hidden !important;
-  scroll-behavior: smooth !important;
+  scroll-behavior: auto !important;
   -webkit-overflow-scrolling: touch !important;
-  overscroll-behavior-y: contain;
-  padding: 30px 14px 80px;
+  overscroll-behavior-y: contain !important;
+  padding: 24px 20px 140px !important;
+  box-sizing: border-box !important;
+  outline: none;
+  /* Playful glowing scrollbar visible for kids on desktop */
+  scrollbar-width: thin !important;
+  scrollbar-color: #5a4cc0 rgb(14 11 36 / 60%) !important;
 }
+body.kid-home .mission-map-scroll::-webkit-scrollbar {
+  display: block !important;
+  width: 10px !important;
+}
+body.kid-home .mission-map-scroll::-webkit-scrollbar-track {
+  background: rgb(14 11 36 / 70%) !important;
+  border-radius: 999px !important;
+  margin: 16px 0 !important;
+}
+body.kid-home .mission-map-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #5a4cc0, #806cf7) !important;
+  border-radius: 999px !important;
+  border: 2px solid rgb(14 11 36 / 80%) !important;
+}
+body.kid-home .mission-map-scroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #806cf7, var(--kid-yellow)) !important;
+}
+
 /* ------------------------------------------------------------------ */
 /* EXPEDITION MAP: RESPONSIVE MISSION CARDS GRID                     */
 /* ------------------------------------------------------------------ */
 body.kid-home #chapters.trail-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 22px;
-  max-width: 1160px;
+  gap: 24px;
+  max-width: 1200px;
   width: 100%;
   margin: 0 auto;
-  padding: 24px 16px 80px;
+  padding: 8px 16px 60px;
   box-sizing: border-box;
 }
 
@@ -761,7 +797,7 @@ body.kid-home #sampler-close {
 
 @media (max-width: 850px) {
   body.kid-home #campaign-bar { height: 56px; padding: 0 12px; }
-  body.kid-home #journey, body.kid-home #transition, body.kid-home #sampler { inset: 56px 0 0 !important; }
+  body.kid-home #journey, body.kid-home #transition, body.kid-home #sampler, body.kid-home #mission-map, body.kid-home #settings-dialog { inset: 56px 0 0 !important; }
   body.kid-home #active-chapter { display: none; }
   body.kid-home .wordmark { font-size: 17px; }
   body.kid-home #journey-count { display: inline-block !important; font-size: 14px; padding: 4px 10px; }
