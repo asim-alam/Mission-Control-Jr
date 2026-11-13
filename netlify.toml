@@ -1,0 +1,10 @@
+[build]
+  base = "Mission Control Jr"
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+[build.processing.html]
+  pretty_urls = false

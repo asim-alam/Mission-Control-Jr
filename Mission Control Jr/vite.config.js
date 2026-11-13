@@ -57,18 +57,17 @@ function cleanChapterRoutes() {
         type: 'asset',
         fileName: '_redirects',
         source: [
-          ...MISSIONS.flatMap(mission=>[
-            `/${mission.path}/ /${mission.path} 301`,
-            mission.id==='extended'
-              ? `/${mission.path} /${mission.file} 200`
-              : `/${mission.path} /index.html?mission=${mission.id} 200`,
-          ]),
-          '/campaign/ /campaign 301',
+          // Force shell routes so a file like orbit.html cannot shadow /orbit.
+          ...MISSIONS.map(mission=>mission.id==='extended'
+            ? `/${mission.path} /${mission.file} 200`
+            : `/${mission.path} /index.html 200!`),
           '/campaign /campaign.html 200',
-          '/mission-map/ /mission-map 301',
-          '/mission-map /index.html?view=mission-map 200',
-          ...MISSIONS.map(mission=>`/index.html?mission=${mission.id} /${mission.path} 301!`),
-          '/index.html?view=mission-map /mission-map 301!',
+          '/mission-map /index.html 200!',
+          ...MISSIONS.flatMap(mission=>[
+            `/index.html mission=${mission.id} sampler=1 /${mission.path}?sampler=1 301!`,
+            `/index.html mission=${mission.id} /${mission.path} 301!`,
+          ]),
+          '/index.html view=mission-map /mission-map 301!',
           '/index.html / 301!',
           '/extended /base-boss 301',
         ].join('\n')+'\n',
