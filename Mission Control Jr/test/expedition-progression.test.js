@@ -26,6 +26,17 @@ test('return requires parking, terminal transfer and a separate final crew count
   const m=prepared();act2(m,'return');Object.assign(m.vehicle,HOME);m.vehicle.parking=false;assert.equal(act2(m,'dock').ok,false);m.vehicle.parking=true;assert.ok(act2(m,'dock').ok);assert.equal(m.ended,false);assert.equal(act2(m,'crew').ok,false);
   act2(m,'exit');m.walker={x:50,z:0};assert.equal(act2(m,'transfer').ok,false);m.walker={...SERVICE.comms};assert.equal(act2(m,'crew').ok,false);assert.ok(act2(m,'transfer').ok);assert.equal(act2(m,'transfer').ok,false);assert.ok(act2(m,'crew').ok);assert.equal(m.outcome,'abort');
 });
+test('a return started on foot first directs the player back to the rover', () => {
+  const m = fieldArrival(prepared());
+  assert.ok(act2(m, 'science').ok);
+  assert.ok(act2(m, 'exit').ok);
+  assert.ok(act2(m, 'return').ok);
+  assert.equal(task2(m).action, 'board');
+  assert.equal(task2(m).target, m.vehicle);
+  assert.ok(act2(m, 'board').ok);
+  assert.equal(task2(m).action, 'dock');
+});
+
 test('interrupted fieldwork checkpoint and clean restart preserve independent progress',()=>{
   const m=fieldArrival(prepared());act2(m,'science');act2(m,'exit');act2(m,'photo','context');finish2(m,true);const restored=retry(m);assert.equal(restored.phase,'science');assert.equal(restored.photos.context,false);assert.equal(restored.aboard,true);assert.ok(restored.assisted);
   const fresh=createExpedition();assert.equal(fresh.phase,'briefing');assert.deepEqual(fresh.reports,[false,false]);assert.equal(fresh.spareCollected,false);assert.equal(fresh.dataTransferred,false);restored.reports[0]=false;assert.equal(m.reports[0],true);

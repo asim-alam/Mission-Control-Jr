@@ -145,7 +145,7 @@ export async function createWorld({container, preset = 'interior', bounds, start
    */
   function register(spec) {
     const item = {range: 2.4, holdSeconds: 0, enabled: () => true, ...spec};
-    item.object.traverse(o => { o.userData.interactId = item.id; });
+    item.object.userData.interactId = item.id;
     items.set(item.id, item); return () => { if (focused === item) setFocus(null); items.delete(item.id); };
   }
   function distanceTo(item) { item.object.getWorldPosition(tmp); return Math.hypot(tmp.x - player.position.x, tmp.z - player.position.z); }
@@ -153,10 +153,11 @@ export async function createWorld({container, preset = 'interior', bounds, start
     raycaster.setFromCamera(ndc, camera); raycaster.far = 6 + player.cameraDistance;
     const targets = [...items.values()].filter(i => i.object.visible && i.enabled()).map(i => i.object);
     for (const hit of raycaster.intersectObjects(targets, true)) {
-      let o = hit.object; while (o && !o.userData.interactId) o = o.parent;
-      const item = o && items.get(o.userData.interactId);
-      if (item && item.enabled() && distanceTo(item) <= item.range) return item;
-      if (item) return null; // blocked by a thing that is too far
+      for (let object = hit.object; object; object = object.parent) {
+        const item = items.get(object.userData.interactId);
+        if (item?.object !== object || !item.enabled()) continue;
+        return distanceTo(item) <= item.range ? item : null;
+      }
     }
     return null;
   }

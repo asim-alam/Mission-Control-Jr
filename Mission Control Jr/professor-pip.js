@@ -6,20 +6,13 @@ let classroom;
 
 export const pipLessonOpen = () => Boolean(classroom?.open);
 
-export function mountPipLesson(container, mission, options) {
-  const button = document.createElement('button');
-  button.type = 'button';
-  button.className = 'pip-lesson-button';
-  button.textContent = 'Pip’s lesson';
-  button.setAttribute('aria-haspopup', 'dialog');
-  button.onclick = () => openPipLesson(mission, options());
-  container.append(button);
-  return button;
+export function openPipMilestone(slide, options) {
+  if (slide) openPipLesson(null, {...options, milestone: slide});
 }
 
-export function openPipLesson(mission, {deck = mission, step = 0, finishLabel = 'Back to mission', onFinish, onOpen, onClose} = {}) {
+export function openPipLesson(mission, {deck = mission, step = 0, milestone, finishLabel = 'Back to mission', onFinish, onOpen, onClose} = {}) {
   if (pipLessonOpen()) return;
-  const lesson = pipLessons[deck];
+  const lesson = milestone ? {title: milestone.title, slides: [milestone]} : pipLessons[deck];
   if (!lesson) return;
   const {title, slides} = lesson;
   let page = Math.max(0, Math.min(step, slides.length - 1));
@@ -29,7 +22,7 @@ export function openPipLesson(mission, {deck = mission, step = 0, finishLabel = 
 
   const panel = document.createElement('dialog');
   classroom = panel;
-  panel.className = 'pip-classroom';
+  panel.className = milestone ? 'pip-classroom pip-milestone' : 'pip-classroom';
   panel.setAttribute('aria-labelledby', 'pip-classroom-title');
   panel.innerHTML = `
     <div class="pip-classroom-header">
@@ -78,7 +71,7 @@ export function openPipLesson(mission, {deck = mission, step = 0, finishLabel = 
     stopVoice();
     const slide = slides[page];
     find('.lesson-slide-counter').textContent = `Step ${page + 1} of ${slides.length}`;
-    find('h3').textContent = slide.title;
+    find('h3').textContent = milestone ? 'What you learned' : slide.title;
     find('.blackboard-summary').textContent = slide.summary;
     find('.blackboard-fact-pill').textContent = slide.try;
     back.disabled = page === 0;
@@ -86,6 +79,11 @@ export function openPipLesson(mission, {deck = mission, step = 0, finishLabel = 
   }
 
   find('h2').textContent = title;
+  if (milestone) {
+    find('.teacher-badge').textContent = 'Professor Pip · Milestone';
+    find('.lesson-slide-counter').hidden = true;
+    back.parentElement.hidden = true;
+  }
   finish.textContent = finishLabel;
   back.onclick = () => { page--; render(); };
   next.onclick = () => { page++; render(); };

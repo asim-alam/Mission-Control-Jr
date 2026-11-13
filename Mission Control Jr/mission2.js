@@ -63,6 +63,7 @@ export function task2(m){
   }
   if (m.phase === 'postdrive' && m.aboard) return task(7, 'Get out at Meridian', 'Press E or choose Get out. Then walk to the base computer.', 'exit', 'Get out · E');
   if(m.phase==='postdrive')return m.dataTransferred?task(7,'Check everyone is home','At the base computer, check that Jin and Amara are back.','crew','Everyone is home!',SERVICE.comms):task(7,'Send your photos','Get out and walk to the base computer. Send your photos and notes.','transfer','Send photos and notes',SERVICE.comms);
+  if (!m.aboard) return task(7, 'Get back in the rover', 'Walk to Rover Two and press E or choose Get in the rover.', 'board', 'Get in the rover (E)', m.vehicle, 5);
   return task(7,'Drive home','Follow the safe path home. Stop in the base circle and press P.','dock','Park at the base',HOME,13);
 }
 export function objective2(m){return task2(m).title;}

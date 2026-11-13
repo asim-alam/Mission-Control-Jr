@@ -5,6 +5,7 @@ import vm from 'node:vm';
 import { EVENTS, WORK } from '../story.js';
 import {modeledStormExposure,remainingCrewCondition} from '../simulation/legacy-exposure.js';
 import {selectDecisionReview} from '../simulation/decision-review.js';
+import {trackPipMilestones} from '../professor-pip-milestones.js';
 
 // Exercise the actual mission controller without requiring WebGL or audio.
 const main = readFileSync(new URL('../main.js', import.meta.url), 'utf8');
@@ -31,7 +32,7 @@ function game(random = () => 0.99) {
     createElement: () => new Element(),
   };
   const context = vm.createContext({
-    EVENTS, WORK, modeledStormExposure, remainingCrewCondition, selectDecisionReview, document, shelter: { visible: false }, roverShelter:{visible:false},
+    EVENTS, WORK, modeledStormExposure, remainingCrewCondition, selectDecisionReview, trackPipMilestones, openPipMilestone() {}, document, shelter: { visible: false }, roverShelter:{visible:false},
     playBeep() {}, startAudio() {}, completeChapter(...args) { completions.push(args); }, openJourney() {}, Math: Object.assign(Object.create(Math), { random }),
   });
   vm.runInContext(controller + `

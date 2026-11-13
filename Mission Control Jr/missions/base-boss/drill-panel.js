@@ -1,4 +1,4 @@
-import {mountPipLesson} from '../../professor-pip.js';
+import {openPipMilestone} from '../../professor-pip.js';
 import {cropGoal, drillOutcome, evidence, newDrill, replyMinute, solarForTurn, stages, tryPlan} from './outpost-drill.js';
 
 function content(tag, text, className) {
@@ -44,9 +44,7 @@ export function mountDrill(root, onChange) {
       dial('CREW RESERVES', `${run.air} air · ${run.water} water`, run.shieldWater ? `${run.shieldWater} water set aside as shielding` : 'Stored training units'),
       dial('GROWTH', `${run.crop} / ${cropGoal} cycles`, run.crop === cropGoal ? 'Harvest ready' : 'Light and water cycles'),
     );
-    const guide = content('div', '', 'mission-guidance mission-guidance-tools');
-    mountPipLesson(guide, 'outpost-drill', () => ({step: run.turn, finishLabel: 'Back to drill'}));
-    body.replaceChildren(phaseLabel, title, brief, guide, stats);
+    body.replaceChildren(phaseLabel, title, brief, stats);
     if (phase) body.append(content('p', 'Check the forecast below each option, then choose one job for this shift.', 'drill-brief'));
     if (phase && run.turn > 0) {
       const minutes = replyMinute - run.turn * 10;
@@ -76,6 +74,11 @@ export function mountDrill(root, onChange) {
           render();
           body.scrollIntoView({block: 'start', behavior: 'instant'});
           body.querySelector('h2').focus({preventScroll: true});
+          if (run.turn === stages.length) openPipMilestone({
+            title: 'Verdant drill complete',
+            summary: 'The battery, crew reserves, and crop all share limited supplies. Each shift changed what you had available for the next one.',
+            try: 'Review your three choices to see what helped the crew and what changed the harvest.',
+          }, {finishLabel: 'See drill results'});
         };
         options.append(button);
       }

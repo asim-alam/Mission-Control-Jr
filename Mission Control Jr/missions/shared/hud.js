@@ -33,7 +33,6 @@ export function buildHud({title, place, meters}) {
     </div>
     <div id="objective"><h2>Loading…</h2></div>
     <p class="mx-instruction" id="mx-instruction" aria-live="polite" hidden></p>
-    <div class="mx-job-tools"></div>
     <div id="mx-details" hidden>
       <ol class="mx-steps" id="mx-steps"></ol>
       <p class="mx-keys">WASD to walk · tap Places to walk there · drag to look · E to use · V to switch view</p>
@@ -45,7 +44,7 @@ export function buildHud({title, place, meters}) {
   <div class="mx-prompt" id="mx-prompt" hidden><button type="button" id="mx-use"><kbd>E</kbd><span id="mx-use-label"></span><i class="mx-hold" id="mx-hold"></i></button></div>
   <section class="mx-walk" aria-label="Walk to a place">
     <button id="mx-next-place" type="button" hidden></button>
-    <details id="mx-places"><summary>🚶 Places · tap to walk</summary><div id="locations"></div></details>
+    <details id="mx-places"><summary>Places</summary><div id="locations"></div></details>
   </section>
   <div class="mx-toast" id="mx-toast" role="status" aria-live="polite"></div>
   <div id="dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title" hidden><div class="card"><p class="eyebrow" id="dialog-label"></p><h2 id="dialog-title"></h2><div id="dialog-body"></div><div id="dialog-actions"></div></div></div>`);

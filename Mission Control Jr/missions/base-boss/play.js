@@ -1,4 +1,5 @@
-import {mountPipLesson, pipLessonOpen} from '../../professor-pip.js';
+import {openPipMilestone, pipLessonOpen} from '../../professor-pip.js';
+import {baseBossLessons} from '../../professor-pip-milestones.js';
 import {showCameraView} from '../../player.js';
 import {sites, quests, nearestSite, planRoute, facilities} from './region.js';
 import {newExpedition, arrive, restore, save, questAction, doQuest, lightTime, pingEarth} from './progress.js';
@@ -93,10 +94,6 @@ function refreshReadout() {
     : motion.speed < -.35 ? 'REVERSING' : motion.speed > .35 ? 'DRIVING' : 'PARKED';
 }
 
-mountPipLesson($('objective').querySelector('.mission-guidance-tools'), 'extended', () => ({
-  step: state.completed.valve ? 2 : state.active ? 1 : 0,
-  onOpen: () => { held.clear(); touch.clear(); },
-}));
 function updateObjective() {
   const active = state.active && quests[state.active];
   const finished = Object.keys(state.completed).length;
@@ -210,6 +207,11 @@ function performJob(id, site, from) {
   renderStation();
   persist();
   if (!from?.isConnected) station.querySelector('button')?.focus({preventScroll: true});
+  if (action === 'deliver') openPipMilestone({
+    title: quests[id].title + ' · Job complete',
+    summary: baseBossLessons[id],
+    try: allJobsDone() ? 'Head back to Reyes at Meridian for your final report.' : 'Check the map for the next crew that needs help.',
+  }, {finishLabel: 'Keep exploring', onOpen: () => { held.clear(); touch.clear(); }});
 }
 
 function renderStation() {
@@ -294,6 +296,11 @@ function finishExpedition() {
   setDestination(null);
   stateChanged();
   $('field-log').click();
+  openPipMilestone({
+    title: 'Meridian’s bases are connected',
+    summary: 'Your deliveries helped the crews share water, food, radio service, and shelter supplies. A repair at one base can help a crew at another.',
+    try: 'Open your field report to see what each delivery changed.',
+  }, {finishLabel: 'See field report', onOpen: () => { held.clear(); touch.clear(); }});
 }
 
 function stateChanged() {

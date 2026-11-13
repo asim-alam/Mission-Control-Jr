@@ -208,8 +208,7 @@
   border-radius: 10px;
   padding: 8px 10px;
 }
-.pip-classroom button,
-.mission-guidance .pip-lesson-button {
+.pip-classroom button {
   margin: 0;
   font: 650 13px/1.2 'Fredoka Variable', system-ui, sans-serif;
   min-height: 44px;
@@ -222,16 +221,9 @@
 }
 .pip-classroom button:disabled { opacity: .48; cursor: default; }
 .pip-classroom button.primary { color: #291608; background: #ffab65; border-color: #ffc18e; }
-.pip-classroom button:hover:enabled, .mission-guidance .pip-lesson-button:hover { filter: brightness(1.15); }
-.pip-classroom [hidden], .pip-lesson-button[hidden] { display: none !important; }
+.pip-classroom button:hover:enabled { filter: brightness(1.15); }
+.pip-classroom [hidden] { display: none !important; }
 
-.mission-guidance-tools, .mx-job-tools {
-  display: flex;
-  gap: 6px;
-  margin-top: 6px;
-}
-.mission-guidance .pip-lesson-button { color: #ffe18e; }
-.mission-guidance .pip-lesson-button::before { content: '↗ '; }
 .mission-guidance { border-left: 3px solid #a98bff; }
 .mx-job .mx-job-heading .mx-eyebrow { color: #ffd98a; }
 .mx-job.mission-guidance { border-color: #6651bc; border-left-color: #a98bff; }

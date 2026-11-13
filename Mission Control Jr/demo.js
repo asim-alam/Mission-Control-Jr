@@ -1,4 +1,5 @@
-import {mountPipLesson, openPipLesson, pipLessonOpen} from './professor-pip.js';
+import {openPipMilestone, pipLessonOpen} from './professor-pip.js';
+import {trackPipMilestones} from './professor-pip-milestones.js';
 import {startPip} from './companion.js';startPip('storm');
 import * as THREE from 'three';
 const sampleMode=new URLSearchParams(location.search).get('sampler')==='1';
@@ -194,6 +195,7 @@ function perform(type,value) {
   if(type==='seal')airlock.getObjectByName('door_left').position.x=-.5;
   if(mission.ended)showEnding();
   renderNavigation();updateVisuals();renderMission();renderInteraction();
+  showStormMilestone();
 }
 function startCleaning(index) {
   if(job)return;
@@ -267,11 +269,14 @@ function renderInteraction(force=false) {
   $('target-description').textContent=description;$('action-buttons').replaceChildren(...buttons);
   $('job-track').hidden=!job;$('action-help').textContent=!near?'Walk closer, or tap this place in the walk-to list.':job?'Brushing… Stay next to the panel.':'Press E or tap a button above.';
 }
-mountPipLesson($('mission-panel').querySelector('.mission-guidance-tools'), 'storm', () => ({
-  step: mission.repaired || mission.inside ? 2 : mission.diagnosed ? 1 : 0,
-  onOpen: () => { player.enabled = false; player.release(); audio.pause(true); },
-  onClose: () => audio.pause(journeyPaused || !$('dialog').hidden),
-}));
+const stormMilestones = trackPipMilestones('storm', mission);
+function showStormMilestone() {
+  openPipMilestone(stormMilestones.update(mission), {
+    finishLabel: mission.ended ? 'See mission report' : 'Continue',
+    onOpen: () => { player.enabled = false; player.release(); audio.pause(true); },
+    onClose: () => audio.pause(journeyPaused),
+  });
+}
 function renderMission() {
   $('objective').textContent=objective(mission);
   const time=Math.max(0,Math.ceil((mission.prepSeconds??PREPARATION_SECONDS)-mission.elapsed));
@@ -317,6 +322,7 @@ function updateVisuals() {
 }
 function startMission() {
   if(!ready)return;closeDialog();audio.stop();audio.start();mission=createMission(chapterTuning('storm'));act(mission,'start');if(sampleMode){act(mission,'diagnose');for(let i=0;i<3;i++)act(mission,'clean',i);for(const id of ['openBay','battery','install'])act(mission,id);for(let i=0;i<3;i++)for(let turn=0;turn<=i;turn++)act(mission,'rotate',i);act(mission,'connect');}
+  stormMilestones.reset(mission);
   journal.length=0;endingShown=false;job=null;transition=null;selected=null;lastInteractionKey='';alarmClock=0;brushClock=0;player.reset();player.bounds={minX:-18,maxX:18,minZ:-18,maxZ:18};player.obstacles=outsideObstacles;
   exterior.visible=true;interior.visible=false;$('landing').hidden=true;$('hud').hidden=false;
   toggleTasks(false);$('controls').classList.remove('controls-faded');setTimeout(()=>{if(mission.started)$('controls').classList.add('controls-faded');},30000);
@@ -331,7 +337,6 @@ function startMission() {
     </div>
     <p><b>First job:</b> Follow the green beacon to the base computer and check what needs fixing. You can also use the <b>Base computer</b> walk button.</p>`,[
     {label:'Start mission',run:closeDialog},
-    {label:'Pip’s lesson',run:()=>openPipLesson('storm',{finishLabel:'Back to briefing'})},
   ], 'MARS DAY 12');
 }
 function showEnding() {
@@ -369,6 +374,7 @@ function showEnding() {
     {label:'🗺️ Back to mission map',run:openJourney}
   ], 'HOW DID IT GO?');
   audio.pause(false);
+  showStormMilestone();
 }
 $('begin').onclick=startMission;
 addEventListener('pagehide',()=>{audio.stop();audio.context?.close();player.release();renderer.setAnimationLoop(null);renderer.dispose();});

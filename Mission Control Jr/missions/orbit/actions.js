@@ -149,7 +149,10 @@ export function applyAction(s, {id, targetId, payload} = {}) {
   }
   if (id === 'board') {
     if (!s.site) return fail('Pick a landing site at the planner table first.');
-    if (s.holding) return fail('Put down what you are holding first.');
+    if (s.holding) {
+      const item = s.holding === 'tester' ? 'signal tester' : 'spare amplifier';
+      return fail(`Landing is on hold. Return the ${item} to the Spares Locker first.`);
+    }
     recordDecision(s, id, {site: s.site, comms: s.comms, charge: s.charge, minute: s.minute});
     s.loads.charger = false; s.boarded = true; s.stage = 'descent';
     spend(s, sc.minutes.board);
@@ -165,6 +168,10 @@ export function getObjective(s) {
   if (s.phase === 'brief') return 'Arrival at Mars';
   if (s.phase === 'debrief') return s.stoppedEarly ? 'Game stopped. Try again from a safe spot.' : 'See how your landing went';
   if (s.stage === 'descent') return 'Landing on Mars…';
+  if (s.holding && s.site && s.comms) {
+    const item = s.holding === 'tester' ? 'signal tester' : 'spare amplifier';
+    return `Landing blocked: return the ${item} to the Spares Locker`;
+  }
   if (s.tripped) return 'The breaker tripped! Hold E on the yellow handle at the power panel';
   if (!inShadow(s) && minutesToShadow(s) <= 10 && powerUsed(s) > sc.power.shadow) return `Shadow soon! Use ${sc.power.shadow} power units or less`;
   if (s.holding === 'tester') return 'Clip the tester onto the radio rack';

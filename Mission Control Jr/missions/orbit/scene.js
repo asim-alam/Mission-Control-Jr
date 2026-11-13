@@ -238,8 +238,8 @@ export async function createArrivalScene({container, getState, act, onPause, ope
 
   function zap(pid) { ({feed: feedPlug, amp: oldAmp, card})[pid].getWorldPosition(sparkAt); zapTime = .5; shake = .4; }
   /** Leave the station view for a cinematic approach over the actual Mars globe. */
-  async function fly(cameraView = 'exterior') {
-    landingCamera = cameraView === 'cockpit' ? 'cockpit' : 'exterior';
+  async function fly() {
+    landingCamera = 'exterior';
     landingView = true; missionSpace.visible = false; station.position.copy(stationOrbitPosition); station.visible = true;
     const start = orbitPosition.clone().addScaledVector(landingAxis, environment.radius * 2.85);
     const cameraStart = start.clone().add(new THREE.Vector3(0, environment.radius * .62, environment.radius * 1.1));
@@ -266,6 +266,7 @@ export async function createArrivalScene({container, getState, act, onPause, ope
 
   const guideTarget = () => {
     const st = s(); if (!playing()) return null;
+    if (st.holding && st.site && st.comms) return lockerDoor;
     if (st.tripped) return breaker;
     if (st.holding === 'tester') return port;
     if (st.holding === 'amp') return st.loads.amp ? toggles.amp.parent : oldAmp;

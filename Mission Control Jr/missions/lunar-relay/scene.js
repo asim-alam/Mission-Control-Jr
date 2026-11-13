@@ -110,7 +110,8 @@ export async function createRelayScene({container, getState, act, onPause, onDri
   const dishHit = hitBox(dishPivot, [.8, .8, .6], [0, .1, 0]);
   const drillHit = hitBox(drill, [.9, 1.3, .9], [0, .65, 0]);
   const coreHit = hitBox(coreOut, [.25, .5, .25], [0, 0, 0]);
-  const hatchHit = hitBox(hab, [.6, 2, 1.6], [5.55, 2, 0]);
+  const hatchHit = hitBox(hab, [.6, 2, 1.6], [0, 0, 0]);
+  hatchHit.position.set(5.55, 2, 0);
   // ▲ ▼ buttons on the relay hub.
   const btn = (color, x) => { const m = new THREE.Mesh(new THREE.CylinderGeometry(.05, .05, .03, 16), new THREE.MeshStandardMaterial({color, emissive: color, emissiveIntensity: .4})); m.rotation.x = Math.PI / 2; m.position.set(x, .48, .262); relay.add(m); return m; };
   const upBtn = btn(0x2bd96b, .12), downBtn = btn(0xff5a4a, -.12);
@@ -382,8 +383,9 @@ export async function createRelayScene({container, getState, act, onPause, onDri
   const worldOf = o => { const v = new THREE.Vector3(); o.getWorldPosition(v); return v; };
   return {world, sync, idle: () => syncQueue, drive, walkTargets, NEXT,
     walk(id) {
+      if (id === 'hatch') return player.navigate({x: 7.2, z: 0}, worldOf(hatchHit));
       const st = s();
-      const target = id === 'rover' ? worldOf(seatHit) : id === 'relay' ? worldOf(st.relay === 'crate' ? crate : relay) : id === 'drill' ? worldOf(st.drill === 'ground' ? drill : xMarks[st.earthAsked && st.cores ? 'b' : 'a']) : new THREE.Vector3(7.2, 0, 0);
+      const target = id === 'rover' ? worldOf(seatHit) : id === 'relay' ? worldOf(st.relay === 'crate' ? crate : relay) : worldOf(st.drill === 'ground' ? drill : xMarks[st.earthAsked && st.cores ? 'b' : 'a']);
       const from = new THREE.Vector2(player.position.x - target.x, player.position.z - target.z); const d = Math.max(.01, from.length());
       return player.navigate({x: target.x + from.x / d * 1.8, z: target.z + from.y / d * 1.8}, {x: target.x, z: target.z});
     },

@@ -134,7 +134,7 @@ body.mx-details-on .mx-detail { display: block; }
 .mx-notice.is-warning { color: #ffe7a8; }
 .mx-job:has(#mx-details:not([hidden])) { max-height: min(50dvh, 360px); overflow: auto; }
 .mx-walk { display: flex; align-items: center; gap: 8px; right: auto; padding: 5px 8px; }
-.mx-walk summary { cursor: pointer; padding: 10px 8px; font-weight: 800; }
+.mx-walk summary { cursor: pointer; min-height: 44px; padding: 10px 8px; font-size: .85rem; font-weight: 800; }
 .mx-walk #locations { position: absolute; left: 0; bottom: calc(100% + 8px); width: min(420px, calc(100vw - 16px)); max-height: 32dvh; overflow: auto; display: flex; flex-wrap: wrap; background: var(--mx-panel); border: 2px solid var(--mx-line); border-radius: 16px; padding: 8px; }
 .mx-walk #mx-next-place { padding: 5px 10px; font-size: .85rem; min-height: 44px; }
 .mx-walk details:not([open]) #locations { display: none; }
@@ -142,6 +142,8 @@ body.mx-details-on .mx-detail { display: block; }
 .mx-prompt button { text-align: left; line-height: 1.2; }
 .mx-prompt kbd { flex: none; }
 @media (max-width: 860px) {
+  .mx-walk { max-width: calc(100vw - 72px); }
+  .mx-walk #mx-next-place { min-width: 0; overflow-wrap: anywhere; }
   .mx-job { top: auto; bottom: 124px; right: 8px; width: min(300px, calc(100vw - 16px)); }
   .mx-job .mx-keys { display: block; }
   .mx-prompt button { font-size: .92rem; padding: 7px 10px; }

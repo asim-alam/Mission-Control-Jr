@@ -133,7 +133,7 @@ export async function createJourneyScene(host) {
     if (!alive) return;
     frame = requestAnimationFrame(render);
     // Low-power throttling & background tab suppression
-    if (document.hidden || now - last < 33) return;
+    if (document.hidden || document.body.classList.contains('map-open') || now - last < 33) return;
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
 

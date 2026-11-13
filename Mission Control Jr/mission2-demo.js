@@ -1,4 +1,5 @@
-import {mountPipLesson, openPipLesson, pipLessonOpen} from './professor-pip.js';
+import {openPipMilestone, pipLessonOpen} from './professor-pip.js';
+import {trackPipMilestones} from './professor-pip-milestones.js';
 import {startPip} from './companion.js';startPip('rover');
 import * as THREE from 'three';
 import {connectChapter,completeChapter,goToChapter,openJourney,journeyPaused} from './campaign-bridge.js';
@@ -6,6 +7,7 @@ import {attachArrivalContext} from './surface-orbit-link.js';
 attachArrivalContext();
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {Player, showCameraView} from './player.js';
+import {isBlocked} from './navigation.js';
 import {ExpeditionAudio} from './mission2-audio.js';
 import {HOME,RIDGE,HAZARD,BOUNDS,ROUTES,ROCKS,OUTPOST_SOLIDS,heightAt,surfaceAt,slopeAt,distance,routeLength,routeEnergy,safeReturnPoints} from './expedition-terrain.js';
 import {stepRover,blocked} from './rover-controller.js';
@@ -69,14 +71,40 @@ function showDialog(title,html,actions,eyebrow='MERIDIAN OPERATIONS'){
 }
 function closeDialog(){referenceGeneration++;disposeReference?.();disposeReference=null;clearInput();$('dialog').hidden=true;$('hud').inert=false;audio.pause(false);setInput();}
 function togglePause(){if(pipLessonOpen()||!m.started||m.ended)return;if(!$('dialog').hidden){closeDialog();return;}photo=null;$('photo-frame').hidden=true;showDialog('Expedition paused',`${Object.entries(audio.volumes).map(([key,value])=>`<label>${key} volume <input data-volume="${key}" type="range" min="0" max="1" step=".05" value="${value}"></label>`).join('')}<label>Reduce camera motion <input id="reduced" type="checkbox" ${reduced?'checked':''}></label><p>WASD or arrows drive. Space stops. P is the parking brake. E gets in or out. V changes the view. Shift saves battery. M opens the map when parked.</p>`,[{label:'Resume',run:closeDialog},{label:'Restart expedition',run:()=>location.reload()}]);$('dialog-body').querySelectorAll('[data-volume]').forEach(i=>i.oninput=()=>audio.settings({[i.dataset.volume]:Number(i.value)}));$('reduced').onchange=e=>{reduced=e.target.checked;};}
+const roverMilestones = trackPipMilestones('rover', m);
+function showRoverMilestone() {
+  const lesson = roverMilestones.update(m);
+  if (!lesson) return;
+  queueMicrotask(() => openPipMilestone(lesson, {
+    finishLabel: m.ended ? 'See mission report' : 'Continue',
+    onOpen: () => { clearInput(); setInput(); audio.pause(true); },
+    onClose: () => { setInput(); audio.pause(journeyPaused || (!m.ended && !$('dialog').hidden)); },
+  }));
+}
 function run(type,value){
   if(photo&&type!=='photo')closePhoto();
   m.walker={x:player.position.x,z:player.position.z};const beforeAboard=m.aboard,result=act2(m,type,value);toast(result.message);if(result.line&&!m.ended)audio.say(result.line,['launch','science','return','dock'].includes(type));if(result.ok&&type==='launch')audio.say('ready');if(result.ok&&type==='check'&&value==='battery')audio.say('checks');audio.effect();actionKey='';
   if(result.ok)clearInput();
   if(result.ok&&['brakeTest','launch'].includes(type)){$('target-description').hidden=true;$('details-toggle').setAttribute('aria-expanded','false');if(type==='brakeTest')toast('Driving test passed! Next: pick a path and tell us why.');}
   if(result.ok&&type==='board'){view='third';orbitYaw=0;pitch=.18;inputLockUntil=performance.now()+200;if(m.phase==='test'){$('target-description').hidden=false;$('details-toggle').setAttribute('aria-expanded','true');toast('DRIVING TEST: press P → drive a little and steer → Space to stop → P to park.');}applyZoom();}
-  if(result.ok&&beforeAboard&&!m.aboard){const side=m.vehicle.heading+Math.PI/2;const x=m.vehicle.x+Math.cos(side)*3,z=m.vehicle.z-Math.sin(side)*3;if(blocked(x,z)){m.aboard=true;m.driving=true;toast('Something is in the way. Park on clear, firm ground.');}else{player.position.copy(groundPoint(x,z,1.68));player.yaw=m.vehicle.heading-Math.PI/2;player.pitch=-.12;player.view=view;}}
-  setInput();renderActions();if(m.ended)showEnding();return result;
+  if (result.ok && beforeAboard && !m.aboard) {
+    const {x, z, heading} = m.vehicle;
+    const side = heading + Math.PI / 2;
+    const exit = [3, -3, 3.6, -3.6].map(offset => ({
+      x: x + Math.cos(side) * offset, z: z - Math.sin(side) * offset,
+    })).find(point => !blocked(point.x, point.z) && !isBlocked(point.x, point.z, player.obstacles, .45));
+    if (!exit) {
+      m.aboard = true;
+      m.driving = true;
+      toast('Something is in the way. Park on clear, firm ground.');
+    } else {
+      player.position.copy(groundPoint(exit.x, exit.z, 1.68));
+      player.yaw = heading - Math.PI / 2;
+      player.pitch = -.12;
+      player.view = view;
+    }
+  }
+  setInput();renderActions();if(m.ended)showEnding();else if(result.ok)showRoverMilestone();return result;
 }
 function start(){audio.start();$('landing').hidden=true;$('hud').hidden=false;$('mission-panel').hidden=false;toggleTasks(false);$('controls').classList.remove('controls-faded');setTimeout(()=>{if(m.started)$('controls').classList.add('controls-faded');},30000);run('start');showBriefing();setInput();renderActions();}
 function showBriefing(){
@@ -92,7 +120,6 @@ function showBriefing(){
     <p class="reserve-rule">Aim to get home with at least <b>${margin}% battery and ${margin}% air</b>. Picking up a rock is optional.</p>${batteryNote}`,
     [
       {label:'Get the rover ready',run:()=>{run('acceptBrief');closeDialog();}},
-      {label:'Pip’s lesson',run:()=>openPipLesson('rover',{finishLabel:'Back to briefing'})},
     ],'MARS DAY 16 · TODAY’S PLAN');
 }
 function referenceArchive(index=0){if(m.aboard||(distance(player.position,SERVICE.comms)>3&&distance(player.position,ROVER_PAD)>6)){toast('Walk to the base computer or the robot rover pad to see the models.');return;}showDialog('Mars model room',`<p>Drag to spin a model. Use the wheel to zoom.</p><div id="reference-tabs" class="reference-tabs"></div><div id="reference-stage" class="reference-stage"></div><div id="reference-credit"></div>`,[{label:'Back to the trip',run:closeDialog}],'MERIDIAN / INTERACTIVE 3D ARCHIVE');
@@ -129,9 +156,20 @@ function performTask(task){
   const actions={briefing:showBriefing,check:()=>run('check',['battery','wheels','camera','comms'].find(id=>!m.checks[id])),plan:()=>m.phase==='planning'?showPlan():plan(),terrainDecision,context:()=>startPhoto('context'),close:()=>startPhoto('close'),describe,sample};
   (actions[task.action]||(()=>run(task.action)))();
 }
+function walkToTask(task) {
+  const {x, z} = task.target;
+  const reach = Math.min(task.radius * .6, 2.4);
+  const directions = [0, Math.PI / 2, Math.PI, -Math.PI / 2];
+  const approach = task.target === m.vehicle
+    ? [{x: x + Math.sin(m.vehicle.heading) * 3, z: z + Math.cos(m.vehicle.heading) * 3}]
+    : [{x, z}];
+  approach.push(...directions.map(angle => ({x: x + Math.cos(angle) * reach, z: z + Math.sin(angle) * reach})));
+  const found = approach.some(point => player.navigate(point, task.target));
+  toast(found ? 'Walking to the marker. Use WASD or arrows to take over.' : 'The approach is blocked. Use WASD or arrows to go around the equipment.');
+}
 function renderActions(){
   const task=task2(m),v=m.vehicle,actor=m.aboard?v:player.position,near=!task.target||distance(actor,task.target)<=task.radius;
-  $('interaction').hidden=!!photo||(!task.target&&!task.action)||(!!task.target&&!near&&!(!m.aboard&&['prep','postdrive','science','briefing'].includes(m.phase)));
+  $('interaction').hidden=!!photo||(!task.target&&!task.action)||(!!task.target&&!near&&!(!m.aboard&&['prep','postdrive','science','briefing','return'].includes(m.phase)));
   $('target-kind').textContent=`STEP ${String(task.stage).padStart(2,'0')} / 08 · ${m.aboard?'ROVER TWO':'JIN PARK / EVA'}`;
   $('target-title').textContent=task.title;$('target-description').textContent=task.instruction;
   const driveTest=m.phase==='test'&&m.aboard,testReady=v.distance-m.brakeStart>=5&&v.steeringTravel-m.brakeTurn>=.6&&v.parking&&Math.abs(v.speed)<.05;$('drive-coach').hidden=!driveTest;$('drive-coach').textContent=driveTest?`1 Release P → 2 Drive ${Math.min(5,v.distance-m.brakeStart).toFixed(1)}/5 m · steer ${v.steeringTravel-m.brakeTurn>=.6?'✓':'left/right'} → 3 Space stop → 4 P park → 5 Done!`:'';
@@ -141,7 +179,7 @@ function renderActions(){
   const key=[task.action,task.label,near,m.aboard,nearVehicle(),v.parking,m.phase,m.sample,m.checks.brakes,m.dataTransferred,testReady,distance(player.position,SERVICE.comms)<3].join('|');if(key===actionKey)return;actionKey=key;
   const actions=[],panel=[],allChecks=['battery','wheels','camera','comms'].every(id=>m.checks[id]);
   if(task.action)actions.push(button(task.label,()=>performTask(task),!near||(driveTest&&!testReady)));
-  if(!m.aboard&&task.target&&!near&&['prep','postdrive','science','briefing'].includes(m.phase))actions.push(button('Walk to the marker',()=>{const target=task.target===m.vehicle?{x:m.vehicle.x+Math.sin(m.vehicle.heading)*3,z:m.vehicle.z+Math.cos(m.vehicle.heading)*3}:task.target;const found=player.navigate(groundPoint(target.x,target.z,1.68),groundPoint(task.target.x,task.target.z));toast(found?'Jin is walking to the station. WASD / arrows take over at any time.':'The approach is blocked. Use WASD / arrows to move around the equipment.');}));
+  if(!m.aboard&&task.target&&!near&&['prep','postdrive','science','briefing','return'].includes(m.phase))actions.push(button('Walk to the marker',()=>walkToTask(task)));
   if(!m.aboard&&allChecks&&task.action!=='board')actions.push(button('Drive Rover Two · board (E)',()=>requireNear(()=>run('board')),!nearVehicle()));
   if(m.aboard&&task.action!=='exit')panel.push(button('Exit rover · E',()=>run('exit'),!v.parking));
   if(['outbound','science'].includes(m.phase))panel.push(button(m.scienceComplete?'Return with required records':'Review / abort & return',()=>run('return')));
@@ -166,7 +204,7 @@ function showEnding(){
       </div>
       <p><b>💡 Your Astronaut Skill:</b> A true explorer observes the terrain with their own eyes and always saves enough energy to make it home safely.</p>
     </div>
-    <p class="reserve-rule"><strong>What if you chose another way?</strong> Driving over the soft patch could make the wheels slip and use more battery. ${tip}</p>${m.events.filter(e=>['hazard','collision','sample','return','retry'].includes(e.type)).slice(-4).map(e=>`<div class="event-row">${Math.floor(e.time)} s · ${e.text}</div>`).join('')}<p><strong>What next?</strong> ${m.outcome==='success'?`Amara adds the mapped boundary to the field record. Elena asks what follow-up measurement could test its interpretation. ${m.earthFieldReport?.status==='delivered'?'Your photos reached Earth!':'Your photos are on the way to Earth.'} Continue to the shelter exercise.`:'The question is still open. You can try again.'}</p><p class="fine-print">This is a pretend future Mars trip. The numbers are game rules.</p>`,[{label:'Print my report',run:()=>window.print()},{label:'Think about it',run:reflection},...(m.checkpoint?[{label:'Try again from the last safe spot',run:restore}]:[]),{label:'Play again',run:()=>location.reload()},...(m.returned?[{label:'Done! See your journey',run:openJourney},{label:'Continue · A Place to Hide',run:()=>goToChapter('solar-shelter')}]:[{label:'Your journey',run:openJourney}])], 'EXPEDITION DEBRIEF');drawMap($('debrief-map'),false);audio.pause(false);audio.say(m.outcome,true);
+    <p class="reserve-rule"><strong>What if you chose another way?</strong> Driving over the soft patch could make the wheels slip and use more battery. ${tip}</p>${m.events.filter(e=>['hazard','collision','sample','return','retry'].includes(e.type)).slice(-4).map(e=>`<div class="event-row">${Math.floor(e.time)} s · ${e.text}</div>`).join('')}<p><strong>What next?</strong> ${m.outcome==='success'?`Amara adds the mapped boundary to the field record. Elena asks what follow-up measurement could test its interpretation. ${m.earthFieldReport?.status==='delivered'?'Your photos reached Earth!':'Your photos are on the way to Earth.'} Continue to the shelter exercise.`:'The question is still open. You can try again.'}</p><p class="fine-print">This is a pretend future Mars trip. The numbers are game rules.</p>`,[{label:'Print my report',run:()=>window.print()},{label:'Think about it',run:reflection},...(m.checkpoint?[{label:'Try again from the last safe spot',run:restore}]:[]),{label:'Play again',run:()=>location.reload()},...(m.returned?[{label:'Done! See your journey',run:openJourney},{label:'Continue · A Place to Hide',run:()=>goToChapter('solar-shelter')}]:[{label:'Your journey',run:openJourney}])], 'EXPEDITION DEBRIEF');drawMap($('debrief-map'),false);audio.pause(false);audio.say(m.outcome,true);showRoverMilestone();
 }
 function reflection(){showDialog('Try it somewhere new.',`<p>A new path looks shorter, but the ground might be soft. What should you check first?</p>`,[{label:'Look at the ground, check the battery for home, and have a backup path.',run:()=>{toast('Yes! Look first, then check you have enough to get home.');event(m,'reflection','You looked, checked, and kept a backup.');endingShown=false;showEnding();}},{label:'The map promises the shortcut is fine.',run:()=>toast('A map helps you plan. But it cannot tell if the ground is soft. Look with your eyes too.')},{label:'Back to the report',run:()=>{endingShown=false;showEnding();}}]);}
 function restore(){const restored=retry(m);if(!restored){toast('There is no safe spot to go back to yet.');return;}m=restored;endingShown=false;hazeSaid=false;slipSaid=false;actionKey='';photo=null;$('photo-frame').hidden=true;closeDialog();if(!m.aboard)player.position.copy(groundPoint(m.vehicle.x-3,m.vehicle.z,1.68));toast('Back to the last safe spot. Try again!');}
@@ -195,11 +233,6 @@ function targetWaypoint(){
   const points=m.route?ROUTES[m.route].points:[];
   if(points.length){const i=m.reports.findIndex(done=>!done),cap=i>=0?points.indexOf(reportStations(m)[i]):points.length-1;while(m.waypoint<cap&&distance(m.vehicle,points[m.waypoint])<12)m.waypoint++;return points[Math.min(m.waypoint,cap)];}return task2(m).target||HOME;
 }
-mountPipLesson($('mission-panel').querySelector('.mission-guidance-tools'), 'rover', () => ({
-  step: ['return','postdrive'].includes(m.phase) ? 3 : m.phase === 'science' ? 2 : ['planning','outbound'].includes(m.phase) ? 1 : 0,
-  onOpen: () => { clearInput(); setInput(); audio.pause(true); },
-  onClose: () => { setInput(); audio.pause(journeyPaused || !$('dialog').hidden); },
-}));
 function renderHud(){
   const v=m.vehicle,f=forecast(m),t=targetWaypoint(),surface=surfaceAt(v.x,v.z),heading=((90-v.heading*180/Math.PI)%360+360)%360;
   const task = task2(m);

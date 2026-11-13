@@ -1,8 +1,8 @@
 // Page controller shared by the expansion missions: HUD, Pip, saving, pause, retry, prompts.
 // Each mission supplies its rules (pure functions), its 3D scene and its story/debrief screens.
 import {buildHud, dialog, closeDialog, dialogOpen, narration} from './hud.js';
-import {mountPipLesson, openPipLesson, pipLessonOpen} from '../../professor-pip.js';
-import {pipLessonStep} from '../../professor-pip-lessons.js';
+import {openPipMilestone, pipLessonOpen} from '../../professor-pip.js';
+import {trackPipMilestones} from '../../professor-pip-milestones.js';
 import {showCameraView} from '../../player.js';
 import {learningMode} from '../../simulation/learning.js';
 import {startPip} from '../../companion.js';
@@ -26,13 +26,6 @@ export async function runMission(spec) {
   const saved = sampleMode ? {state: null} : loadSaved(spec.id, undefined, {schema: spec.schema, migrate: spec.migrate});
   let paused = false, hudClock = 0;
   const deck = spec.id === 'orbit' ? 'station' : spec.id;
-  const lessonOptions = () => ({
-    deck,
-    step: pipLessonStep[deck](ctx.mission),
-    onOpen: () => { ctx.view.world.interaction.stopHold(); ctx.setControls(); },
-    onClose: () => ctx.setControls(),
-  });
-
   const ctx = {
     id: spec.id, hud, sampleMode, carry, report, persist, view: null, checkpoint: null,
     mission: saved.state || spec.create(carry),
@@ -57,6 +50,7 @@ export async function runMission(spec) {
       }
       if (result.ok) { persist(ctx.mission, true); ctx.view?.sync?.(); }
       if (ctx.mission.phase === 'debrief') spec.debrief(ctx);
+      if (result.ok) showMilestone();
       return result;
     },
     playing: () => ctx.mission.phase === 'active' && !dialogOpen() && !pipLessonOpen() && !paused && !journeyPaused && !ctx.busy,
@@ -72,15 +66,10 @@ export async function runMission(spec) {
     },
     close() { closeDialog(); ctx.setControls(); },
     dialog,
-    briefing(screen) {
-      dialog({...screen, actions: [
-        ...screen.actions,
-        {label: 'Pip’s lesson', run: () => openPipLesson(spec.id, {...lessonOptions(), finishLabel: 'Back to briefing'})},
-      ]});
-    },
+    briefing: dialog,
     saveCheckpoint() { ctx.checkpoint = snapshot(ctx.mission); },
-    retry(after) { hud.notice(''); ctx.mission = restore(ctx.checkpoint); report.reset(); ctx.view.sync?.({animate: false}); after(); },
-    restart() { hud.notice(''); clearSaved(spec.id); ctx.mission = ctx.fresh(); report.reset(); ctx.view.sync?.({animate: false}); spec.brief(ctx); },
+    retry(after) { hud.notice(''); ctx.mission = restore(ctx.checkpoint); milestones.reset(ctx.mission); report.reset(); ctx.view.sync?.({animate: false}); after(); },
+    restart() { hud.notice(''); clearSaved(spec.id); ctx.mission = ctx.fresh(); milestones.reset(ctx.mission); report.reset(); ctx.view.sync?.({animate: false}); spec.brief(ctx); },
     sourcesDialog(back) { dialog({title: 'Where this comes from', body: spec.sources(ctx), actions: [{label: '← Back', run: back}]}); },
     pause() {
       if (dialogOpen() || pipLessonOpen() || ctx.mission.phase !== 'active' || ctx.busy) return;
@@ -90,6 +79,23 @@ export async function runMission(spec) {
     },
     openJourney,
   };
+
+  const milestones = trackPipMilestones(deck, ctx.mission);
+  function showMilestone() {
+    if (!ctx.view || ctx.busy || journeyPaused || document.hidden || pipLessonOpen()) return;
+    const lesson = milestones.update(ctx.mission);
+    if (!lesson) return;
+    const mission = ctx.mission;
+    // Let the interaction finish updating its own screen before showing Pip.
+    queueMicrotask(() => {
+      if (ctx.mission !== mission) return;
+      openPipMilestone(lesson, {
+        finishLabel: dialogOpen() && mission.phase === 'debrief' ? 'See mission report' : 'Continue',
+        onOpen: () => { ctx.view.world.interaction.stopHold(); ctx.setControls(); },
+        onClose: () => ctx.setControls(),
+      });
+    });
+  }
 
   function showPause() {
     dialog({title: 'Paused', body: '<p>The mission clock is stopped.</p>', actions: [
@@ -112,7 +118,6 @@ export async function runMission(spec) {
     showCameraView(viewButton, world.player.view);
     viewButton.onclick = () => world.player.toggleView();
     viewButton.hidden = false;
-    mountPipLesson(document.querySelector('.mx-job-tools'), spec.id, lessonOptions);
     world.interaction.on('focus', f => hud.prompt(f)); world.interaction.on('hold', p => hud.hold(p));
     const use = $('mx-use');
     use.onclick = e => { if (e.detail === 0) world.interaction.use(); }; // keyboard activation
@@ -137,6 +142,7 @@ export async function runMission(spec) {
           m.notice = '';
         }
         spec.hud(ctx);
+        showMilestone();
       }
       hud.edge(world.guideScreen()); persist(ctx.mission); ctx.setControls();
     });

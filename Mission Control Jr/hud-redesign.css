@@ -493,8 +493,6 @@ body:has(#world) #hud #toast {
 #hud #mission-panel.mission-guidance #forecast { white-space: normal; }
 #hud #mission-panel.mission-guidance:not(.expanded):has(#tasks-toggle-card) { padding-bottom: 17px !important; }
 #hud #mission-panel.mission-guidance:not(.expanded) #task-distance { white-space: normal; }
-#hud #mission-panel.mission-guidance .pip-lesson-button,
-body:has(#space) #objective.mission-guidance .pip-lesson-button { color: var(--kid-yellow) !important; }
 #hud #mission-panel.mission-guidance:not(.expanded) #objective { white-space: normal; }
 #hud #mission-panel.mission-guidance #rover-instruction { display: block; margin: 5px 0 0; }
 #hud #rover-instruction { font-size: 13px; line-height: 1.4; }

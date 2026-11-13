@@ -1,4 +1,4 @@
-import {mountPipLesson, openPipLesson, pipLessonOpen} from './professor-pip.js';
+import {openPipLesson, pipLessonOpen} from './professor-pip.js';
 // Restored exterior prologue. Successful docking hands off to missions/orbit/ui.js via entry.js.
 import {readApproach,saveApproach,clearApproach} from './missions/orbit/approach-state.js';
 import {startPip} from './companion.js';startPip('orbit');
@@ -155,11 +155,6 @@ function showDockingBriefing(){
     [
       {label:'Start flying',primary:true,run:()=>{closeModal();if(m.phase==='overview')run('approach');}},
       {label:'Help me dock',run:()=>{closeModal();if(m.phase==='overview')run('approach');autodock=true;m.guided=true;closeFlightLesson();notify('Docking help is on.');renderHud();}},
-      {label:'Pip’s lesson',run:()=>openPipLesson('orbit',{
-        finishLabel:'Back to briefing',
-        onOpen:()=>radio.pause(true),
-        onClose:()=>radio.pause(paused||journeyPaused||document.hidden),
-      })},
       {label:'Look around',run:closeModal}
     ],
     'FLIGHT BRIEFING · DOCKING AT ASTERIA'
@@ -538,16 +533,7 @@ function dockingGuidance(d){
   else hints.push('↕️ Up/Down: Level ✅');
   return hints.join(' · ');
 }
-const flightPip = mountPipLesson($('objective').querySelector('.objective-actions'), 'orbit', () => ({
-  deck: dockedExteriorView ? 'docked' : 'orbit',
-  step: !dockedExteriorView && m.phase === 'docking' && m.dock.distance <= 10 ? 1 : 0,
-  finishLabel: dockedExteriorView ? 'Enter Asteria' : 'Back to mission',
-  onFinish: dockedExteriorView ? boardCabin : undefined,
-  onOpen: () => { keys.clear(); radio.pause(true); },
-  onClose: () => radio.pause(paused || journeyPaused || document.hidden),
-}));
 function renderHud(){if(!started)return;
-  flightPip.hidden = dockingSceneActive || !dockedExteriorView && !['overview','docking'].includes(m.phase);
   const canSwitch = !dockedExteriorView && !dockingSceneActive && ['docking','station','craft'].includes(m.phase);
   $('view').hidden = !canSwitch;
   $('orbit-overview').hidden = m.phase !== 'docking' || dockingSceneActive;

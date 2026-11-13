@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import {mountPipLesson, pipLessonOpen} from './professor-pip.js';
+import {openPipMilestone, pipLessonOpen} from './professor-pip.js';
+import {trackPipMilestones} from './professor-pip-milestones.js';
 import {showCameraView} from './player.js';
 import {connectChapter,completeChapter,openJourney,journeyPaused} from './campaign-bridge.js';
 import { EVENTS, WORK } from './story.js';
@@ -145,6 +146,7 @@ const RES = ['power', 'oxygen', 'water', 'food', 'radiation', 'equipment', 'mora
 const RES_LABEL = { power: 'Power', oxygen: 'Air', water: 'Water', food: 'Food', radiation: 'Sun shield', equipment: 'Machines', morale: 'Happy' };
 let carriedMission={stormOutcome:null,successfulTraverse:false};try{carriedMission=readMissionCarry(localStorage);}catch{/* Direct play remains available without browser storage. */}
 let state;
+const campaignMilestones = trackPipMilestones('campaign', {sol: 1});
 let stormLevel = 0;
 
 function newGame(seed = 42) {
@@ -167,6 +169,7 @@ function newGame(seed = 42) {
     shieldWater: 0, shelterType: null, exposurePoints: 0, cropProgress: 0, cropPlantedSol: null,
     ended: false,
   };
+  campaignMilestones.reset(state);
   shelter.visible = false;
   roverShelter.visible = false;
   render();
@@ -239,6 +242,7 @@ function endDay() {
   state.sol++;
   stormLevel = EVENTS[state.sol]?.storm ? 1 : 0;
   render();
+  openPipMilestone(campaignMilestones.update(state), {finishLabel: 'Continue'});
 }
 
 function resolveChoice(ch) {
@@ -327,6 +331,7 @@ function ending() {
     <section class="learning-summary"><h3>Your big choices</h3><ol>${review||'<li>No big choices yet.</li>'}${summarizedWork}</ol><p><b>What you learned:</b> power, air, water, food and crew health are all connected. A choice today changes what you can do later.</p><p>${explanation}</p><p><b>Try again?</b> Different jobs or hiding spots would change your numbers and how the crew feels at the end.</p><p><b>Just a game:</b> the radiation points and health numbers are made up for the game. Crew members can get hurt and need rest, but nobody ever dies.</p><p><b>This is real!</b> NASA is building machines that clean and reuse air and water, so astronauts can go on long trips. <a href="https://www.nasa.gov/directorates/stmd/game-changing-development-program/next-generation-life-support-ngls/" target="_blank" rel="noopener">NASA Next Generation Life Support</a></p></section>
     <p class="lesson">This is a game. The numbers are made simple so they are fun to play with.</p>`,
     [{ label: 'Back to the map', onClick:openJourney },{ label: 'Begin a new mission', onClick: () => { hideModal(); newGame(); } }]);
+  openPipMilestone(campaignMilestones.update(state), {finishLabel: 'See mission report'});
 }
 
 // ---------- UI ----------
@@ -415,11 +420,6 @@ $('start').onclick = () => {
 
 
 // ---------- Loop ----------
-mountPipLesson($('campaign-guidance'), 'campaign', () => ({
-  step: state.ended || state.sol >= 30 ? 2 : state.sol > 1 ? 1 : 0,
-}));
-$('campaign-guidance').hidden = true;
-$('start').addEventListener('click', () => { $('campaign-guidance').hidden = false; });
 window.addEventListener('keydown', event => { if (event.code === 'KeyV' && !event.repeat) toggleView(); });
 const timer = new THREE.Timer();
 timer.connect(document);

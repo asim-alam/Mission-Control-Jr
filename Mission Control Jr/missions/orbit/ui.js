@@ -1,6 +1,5 @@
 // "Arrival at Mars" — briefing, radio-part and locker choices, landing planner, hatch check and debrief.
-import {mountPipLesson, pipLessonOpen} from '../../professor-pip.js';
-import {pipLessonStep} from '../../professor-pip-lessons.js';
+import {pipLessonOpen} from '../../professor-pip.js';
 import {runMission} from '../shared/controller.js';
 import {planCards, compareTable} from '../shared/hud.js';
 import {readHistory, pushHistory, snapshot, clearSaved} from '../shared/runtime.js';
@@ -1476,18 +1475,10 @@ function startStationLesson(ctx, stepIndex = 0) {
           </div>
         </div>
       </div>
-      <div class="mission-guidance-tools"></div>
       <div class="lesson-dots" id="station-lesson-dots" aria-hidden="true">
       </div>
     `;
     document.body.appendChild(stationLessonEl);
-    mountPipLesson(stationLessonEl.querySelector('.mission-guidance-tools'), 'orbit', () => ({
-      deck: 'station',
-      step: pipLessonStep.station(stationLessonContext.mission),
-      onOpen: () => stationLessonContext.setControls(),
-      onClose: () => stationLessonContext.setControls(),
-    }));
-
     stationLessonEl.querySelector('#station-lesson-skip-btn').onclick = () => closeStationLesson();
     stationLessonEl.querySelector('#station-action-btn').onclick = () => {
       const step = STATION_PRACTICAL_STEPS[currentStationStep];
@@ -1678,13 +1669,25 @@ function planner(ctx) {
 function hatch(ctx) {
   const s = ctx.mission, sc = s.scenario;
   if (!s.site) { ctx.hud.toast('Pick a landing site at the planner table first.', 'warn'); return; }
+  if (s.holding) {
+    const item = s.holding === 'tester' ? 'signal tester' : 'spare amplifier';
+    ctx.dialog({label: 'LANDING CHECK', title: 'Put it away before landing', body: `
+      <p role="alert" class="mx-landing-blocked">🛑 Landing cannot start while you are holding the ${item}.</p>
+      <p>Return it to the <b>🧰 Spares Locker</b>, then come back to the lander hatch.</p>`,
+      actions: [
+        {label: '🧰 Walk to Spares Locker', primary: true, run: () => { ctx.close(); ctx.view?.walk?.('locker'); }},
+        {label: 'Not yet', run: () => ctx.close()}
+      ]});
+    return;
+  }
   const site = sc.sites[s.site], warn = [];
-  const land = async cameraView => {
+  const land = async () => {
     ctx.checkpoint = snapshot(ctx.mission);
     ctx.close(); const r = ctx.act({id: 'board'}); if (!r.ok) return;
     ctx.busy = true; ctx.setControls();
     try {
-      await ctx.view.fly(cameraView);
+      // Arrival uses one clear landing view: an outside, third-person shot.
+      await ctx.view.fly('exterior');
     } finally {
       ctx.busy = false; ctx.setControls();
     }
@@ -1696,10 +1699,9 @@ function hatch(ctx) {
     <p>Site: <b>${site.icon} ${site.label}</b> (${site.ground}).</p>
     ${warn.length ? `<ul class="mx-howto">${warn.map(w => `<li>${w}</li>`).join('')}</ul>` : '<p>✅ Beacon on and hazard camera ready. Everything looks good!</p>'}
     <p class="mx-last">${timeLine(s)}. We undock on that pass.</p>
-    <p><b>Choose your view:</b> look through the cockpit window, or watch the lander from outside.</p>`,
+    <p>The camera will follow the lander from outside as it descends.</p>`,
     actions: [
-      {label: '🚀 Land · First person', primary: true, run: () => land('cockpit')},
-      {label: '🎥 Land · Outside camera', run: () => land('exterior')},
+      {label: '🚀 Begin landing', primary: true, run: () => land()},
       {label: 'Not yet', run: () => ctx.close()}]});
 }
 
@@ -1854,6 +1856,7 @@ runMission({
 
 function getStationTarget(s) {
   if (s.stage === 'descent' || s.phase !== 'active') return null;
+  if (s.holding && s.site && s.comms) return {id: 'locker', name: 'Spares Locker', icon: '🧰'};
   if (s.tripped) return {id: 'panel', name: 'Power panel', icon: '⚡'};
   if (!inShadow(s) && minutesToShadow(s) <= 10 && powerUsed(s) > s.scenario.power.shadow) {
     return {id: 'panel', name: 'Power panel', icon: '⚡'};

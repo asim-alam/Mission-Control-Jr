@@ -450,11 +450,21 @@ body.kid-home .settings-gear-btn:hover {
 /* ------------------------------------------------------------------ */
 body.kid-home #mission-map {
   position: fixed; inset: 60px 0 0 !important; z-index: 30;
-  background: rgb(14 11 36 / 95%) !important;
-  backdrop-filter: blur(12px);
+  /* Keep the map opaque while it is open. The animated 3D title scene is paused
+     underneath it, so a live blur only adds a costly full-screen pass. */
+  background: rgb(14 11 36 / 98%) !important;
+  backdrop-filter: none;
   display: flex; flex-direction: column;
 }
 body.kid-home #mission-map[hidden] { display: none !important; }
+.mx-landing-blocked {
+  padding: 12px 14px;
+  border: 2px solid var(--kid-pink);
+  border-radius: 14px;
+  background: rgb(96 22 48 / 72%);
+  color: #fff !important;
+  font-weight: 800;
+}
 body.kid-home .mission-map-deck {
   width: 100%; max-width: 1240px; margin: 0 auto; height: 100%;
   display: flex; flex-direction: column; padding: 0 16px;
@@ -464,9 +474,9 @@ body.kid-home .mission-map-deck {
 /* Scrollable Map View for all Mission Cards */
 body.kid-home .mission-map-scroll {
   flex: 1;
-  overflow-y: scroll !important;
+  overflow-y: auto !important;
   overflow-x: hidden !important;
-  scroll-behavior: smooth !important;
+  scroll-behavior: auto !important;
   -webkit-overflow-scrolling: touch !important;
   overscroll-behavior-y: contain;
   padding: 30px 14px 80px;
