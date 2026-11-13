@@ -48,24 +48,50 @@ export function installHiddenScrollUI() {
   document.addEventListener('scroll', event => syncScroller(event.target), true);
   document.addEventListener('wheel', event => {
     const container = event.target instanceof Element ? event.target.closest('.scroll-hidden') : null;
-    if (!container || container.matches('.mission-map-scroll, .native-scroll')) return;
-    event.preventDefault();
-    event.stopPropagation();
-    if (container.scrollHeight > container.clientHeight) container.scrollTop += event.deltaY;
-    syncScroller(container);
+    if (container && !container.matches('.mission-map-scroll, .native-scroll')) {
+      event.preventDefault();
+      event.stopPropagation();
+      if (container.scrollHeight > container.clientHeight) container.scrollTop += event.deltaY;
+      syncScroller(container);
+      return;
+    }
+    const map = document.getElementById('mission-map');
+    if (map && !map.hidden) {
+      const scrollEl = document.querySelector('.mission-map-scroll');
+      if (scrollEl && !scrollEl.contains(event.target)) {
+        event.preventDefault();
+        scrollEl.scrollTop += event.deltaY;
+      }
+    }
   }, { capture: true, passive: false });
   document.addEventListener('keydown', event => {
     const container = event.target instanceof Element ? event.target.closest('.scroll-hidden') : null;
-    if (!container) return;
-    const page = Math.max(40, container.clientHeight * .82);
-    const deltas = { ArrowDown: 40, ArrowUp: -40, PageDown: page, PageUp: -page, ' ': page };
-    if (!(event.key in deltas) && event.key !== 'Home' && event.key !== 'End') return;
-    event.preventDefault();
-    event.stopPropagation();
-    if (event.key === 'Home') container.scrollTop = 0;
-    else if (event.key === 'End') container.scrollTop = container.scrollHeight;
-    else container.scrollTop += deltas[event.key];
-    syncScroller(container);
+    if (container) {
+      const page = Math.max(40, container.clientHeight * .82);
+      const deltas = { ArrowDown: 40, ArrowUp: -40, PageDown: page, PageUp: -page, ' ': page };
+      if (!(event.key in deltas) && event.key !== 'Home' && event.key !== 'End') return;
+      event.preventDefault();
+      event.stopPropagation();
+      if (event.key === 'Home') container.scrollTop = 0;
+      else if (event.key === 'End') container.scrollTop = container.scrollHeight;
+      else container.scrollTop += deltas[event.key];
+      syncScroller(container);
+      return;
+    }
+    const map = document.getElementById('mission-map');
+    if (map && !map.hidden && !['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target?.tagName)) {
+      const scrollEl = document.querySelector('.mission-map-scroll');
+      if (scrollEl) {
+        const page = Math.max(60, scrollEl.clientHeight * .82);
+        const deltas = { ArrowDown: 60, ArrowUp: -60, PageDown: page, PageUp: -page, ' ': page };
+        if (event.key in deltas || event.key === 'Home' || event.key === 'End') {
+          event.preventDefault();
+          if (event.key === 'Home') scrollEl.scrollTo({ top: 0, behavior: 'smooth' });
+          else if (event.key === 'End') scrollEl.scrollTo({ top: scrollEl.scrollHeight, behavior: 'smooth' });
+          else scrollEl.scrollBy({ top: deltas[event.key], behavior: 'smooth' });
+        }
+      }
+    }
   }, true);
   const observer = new MutationObserver(schedule);
   observer.observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ['hidden', 'class', 'open'] });

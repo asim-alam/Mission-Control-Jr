@@ -463,49 +463,56 @@ body.kid-home #mission-map {
   position: fixed; inset: 60px 0 0 !important; z-index: 30 !important;
   background: rgb(14 11 36 / 95%) !important;
   backdrop-filter: blur(12px);
-  display: flex !important; flex-direction: column !important;
+  -webkit-backdrop-filter: blur(12px);
   overflow: hidden !important;
 }
 body.kid-home #mission-map[hidden] { display: none !important; }
+
 body.kid-home .mission-map-deck {
-  width: 100% !important; max-width: 100% !important; height: 100% !important;
-  display: flex !important; flex-direction: column !important;
-  min-height: 0 !important;
-  padding: 0 !important; margin: 0 !important;
-  box-sizing: border-box !important; overflow: hidden !important;
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
 }
 
 /* Scrollable Map View for all Mission Cards */
 body.kid-home .mission-map-scroll {
-  flex: 1 1 auto !important;
+  position: absolute !important;
+  inset: 0 !important;
   width: 100% !important;
   height: 100% !important;
-  min-height: 0 !important;
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
-  scroll-behavior: auto !important;
-  -webkit-overflow-scrolling: touch !important;
-  overscroll-behavior-y: contain !important;
-  padding: 24px 20px 140px !important;
   box-sizing: border-box !important;
+  overflow-y: scroll !important;
+  overflow-x: hidden !important;
+  scroll-behavior: smooth !important;
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y !important;
+  overscroll-behavior: contain !important;
+  padding: 24px 20px 180px !important;
   outline: none;
   /* Playful glowing scrollbar visible for kids on desktop */
   scrollbar-width: thin !important;
-  scrollbar-color: #5a4cc0 rgb(14 11 36 / 60%) !important;
+  scrollbar-color: #806cf7 rgba(14, 11, 36, 0.7) !important;
 }
 body.kid-home .mission-map-scroll::-webkit-scrollbar {
+  -webkit-appearance: none !important;
   display: block !important;
-  width: 10px !important;
+  width: 12px !important;
 }
 body.kid-home .mission-map-scroll::-webkit-scrollbar-track {
-  background: rgb(14 11 36 / 70%) !important;
+  background: rgba(14, 11, 36, 0.75) !important;
   border-radius: 999px !important;
-  margin: 16px 0 !important;
+  margin: 12px 2px !important;
 }
 body.kid-home .mission-map-scroll::-webkit-scrollbar-thumb {
   background: linear-gradient(180deg, #5a4cc0, #806cf7) !important;
   border-radius: 999px !important;
-  border: 2px solid rgb(14 11 36 / 80%) !important;
+  border: 2px solid rgba(14, 11, 36, 0.8) !important;
+  min-height: 48px !important;
 }
 body.kid-home .mission-map-scroll::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(180deg, #806cf7, var(--kid-yellow)) !important;

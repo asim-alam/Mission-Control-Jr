@@ -309,6 +309,8 @@ function toggleMissionMap(open,{syncPath=false}={}){
     jBtn.textContent=show?'✕ Close':'🗺️ Mission Map';
   }
   if(show){
+    const scrollEl=document.querySelector('.mission-map-scroll');
+    if(scrollEl)scrollEl.focus?.({preventScroll:true});
     requestAnimationFrame(()=>{
       scrollToActiveMission({ smooth: false });
     });
