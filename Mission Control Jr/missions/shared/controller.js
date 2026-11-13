@@ -117,6 +117,19 @@ export async function runMission(spec) {
     world.player.onViewChange = view => showCameraView(viewButton, view);
     showCameraView(viewButton, world.player.view);
     viewButton.onclick = () => world.player.toggleView();
+    let zoomFov = world.camera.fov;
+    const zoom = amount => {
+      if (world.player.view === 'third') {
+        world.player.thirdPersonDistance = Math.max(1.2, Math.min(8, world.player.thirdPersonDistance + amount));
+        world.player.syncCamera();
+      } else {
+        zoomFov = Math.max(42, Math.min(78, zoomFov + amount * 8));
+        world.camera.fov = zoomFov;
+        world.camera.updateProjectionMatrix();
+      }
+    };
+    $('zoom-in').onclick = () => zoom(-.6);
+    $('zoom-out').onclick = () => zoom(.6);
     viewButton.hidden = false;
     world.interaction.on('focus', f => hud.prompt(f)); world.interaction.on('hold', p => hud.hold(p));
     const use = $('mx-use');

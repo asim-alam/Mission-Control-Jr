@@ -20,6 +20,7 @@ export function buildHud({title, place, meters}) {
     <div class="mx-timer" id="mx-timer" hidden></div>
     <div class="mx-actions">
       <button id="view" type="button" hidden>First person</button>
+      <button id="zoom-out" type="button" aria-label="Zoom out">−</button><button id="zoom-in" type="button" aria-label="Zoom in">+</button>
       <button id="pause" type="button">⏸️ Pause</button><button id="journey" type="button">🗺️ Map</button>
     </div>
   </header>

@@ -431,6 +431,8 @@ function toggleView() {
   showCameraView($('view'), cameraView);
 }
 $('view').onclick = toggleView;
+$('zoom-in').onclick = () => world?.zoom(-.08, cameraView === 'first');
+$('zoom-out').onclick = () => world?.zoom(.08, cameraView === 'first');
 
 addEventListener('keydown', event => {
   if (modalOpen() || event.altKey || event.metaKey || event.ctrlKey) return;

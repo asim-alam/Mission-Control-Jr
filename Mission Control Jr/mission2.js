@@ -16,6 +16,7 @@ export function retry(m){if(!m.checkpoint)return null;const next=JSON.parse(JSON
 export function forecast(m,seconds=0,charge=0){return returnForecast(m.vehicle,m.battery,m.oxygen,seconds,charge,m.eco,m.drainScale??1);}
 export function task2(m){
   const task=(stage,title,instruction,action,label,target=null,radius=3)=>({stage,title,instruction,action,label,target,radius});
+  if(m.phase==='test')m.phase='planning';
   if(m.ended)return task(8,'Mission finished!','Look back at your drive, your photos and your choices.');
   if(m.phase==='briefing')return task(1,'Listen to Elena’s plan','Find out where we are going and the big safety rule.','briefing','Hear the plan',SERVICE.comms);
   if(m.phase==='prep'){
@@ -31,22 +32,9 @@ export function task2(m){
     for (const [id, [title, instruction, label]] of Object.entries(checks)) {
       if (!m.checks[id]) return task(2, title, instruction, 'check', label, SERVICE[id]);
     }
-    if(!m.checks.brakes)return task(2,'Get in the rover','Climb in. Amara rides next to you.','board','Get in the rover (E)',m.vehicle,5);
-    return task(3,'Pick a path','Look at three paths. Which one is safest?','plan','Look at the paths',m.vehicle,5);
+    return task(2,'Get in the rover','Climb in with Amara, then choose a route to Kestrel Ridge.','board','Get in the rover (E)',m.vehicle,5);
   }
-  if (m.phase === 'test') {
-    const moved = m.vehicle.distance - m.brakeStart >= 5;
-    const turned = m.vehicle.steeringTravel - m.brakeTurn >= .6;
-    const instruction = !m.aboard ? 'Return to the rover and press E to get back in.'
-      : moved && turned && m.vehicle.parking ? 'Choose Finish the test drive.'
-        : m.vehicle.parking ? 'Press P to release the parking brake.'
-          : !moved ? 'Drive forward with W and turn with A or D. Travel at least 5 metres.'
-            : !turned ? 'Turn with A or D while moving.'
-              : Math.abs(m.vehicle.speed) >= .05 ? 'Hold Space until the rover stops.'
-                : 'Press P to set the parking brake.';
-    return task(2, 'Test drive: steer and stop', instruction, 'brakeTest', 'Finish the test drive', HOME, 28);
-  }
-  if(m.phase==='planning')return task(3,'Pick a path and say why','Choose a path. Make sure there is battery to get home.','plan','Look at the paths');
+  if(m.phase==='planning')return task(3,'Choose your route','Compare the paths and the battery estimate for the trip home.','plan','Choose a route',m.vehicle,5);
   if(m.phase==='outbound'){
     const i=m.reports.findIndex(done=>!done);if(i>=0)return task(4,`Radio stop ${i+1} of 2 · ${i===0?'where are we?':'how is the ground?'}`,'Drive to the marker. Stop, press P, then radio home.','report',`Radio home from stop ${i+1}`,reportStations(m)[i],13);
     if(!m.hazard)return task(5,'Look at the strange ground','Stop at the marker next to the cracked ground. Press P. Look before you drive on it.','hazard','Look at the cracked ground',inspectionPoint(m),13);
@@ -78,8 +66,8 @@ export function act2(m,type,value){
   else if(!m.briefAccepted)return no('Listen to Elena’s plan first.');
   else if(type==='spare'){if(m.phase!=='prep'||m.aboard||distance(m.walker,SERVICE.spare)>3)return no('Walk to the battery shelf.');if(m.spareCollected)return no('You already have the spare battery.');m.spareCollected=true;message='Got the spare battery! Carry it to the glowing spot on the rover.';}
   else if(type==='check'){
-    if(!nearBase||!['prep','test'].includes(m.phase))return no('Do the rover checks at the base.');
-    if(!(value in m.checks)||value==='brakes')return no('Do the test drive to check the brakes.');
+    if(!nearBase||m.phase!=='prep')return no('Do the rover checks at the base.');
+    if(!(value in m.checks)||value==='brakes')return no('The rover is ready. Choose a route when you are ready.');
     if(m.checks[value])return no('Already checked!');
     if(m.aboard||distance(m.walker,SERVICE[value])>3)return no('Get out and walk to the glowing spot.');
     if(value==='battery'&&!m.spareCollected)return no('Get the spare battery from the shelf first.');
@@ -89,24 +77,21 @@ export function act2(m,type,value){
   }else if(type==='board'){
     if(m.aboard)return no('You are already in the rover.');if(!['battery','wheels','camera','comms'].every(id=>m.checks[id]))return no('Finish the four rover checks first.');
     if(Math.abs(m.vehicle.speed)>.05||!m.vehicle.parking)return no('Stop, then press P for the parking brake.');
-    m.aboard=true;m.driving=true;if(m.phase==='prep'&&!m.checks.brakes){m.phase='test';m.brakeStart=m.vehicle.distance;m.brakeTurn=m.vehicle.steeringTravel;}message='You are driving! Amara is with you. Press P to let go of the brake. WASD to drive.';
+    m.aboard=true;m.driving=true;if(m.phase==='prep')m.phase='planning';message='You are driving! Amara is with you. Choose a route on the map, or take a short drive first.';
   }else if(type==='exit'){
     if(!m.aboard)return no('You are already outside.');if(Math.abs(m.vehicle.speed)>.05||!m.vehicle.parking)return no('Stop and press P before you get out.');
     m.aboard=false;m.driving=false;message='You climbed out. Amara stays with the rover and talks by radio.';
   }else if(type==='brakeTest'){
-    if(!nearBase||m.phase!=='test')return no('Do the test drive near the base.');
-    if(m.vehicle.distance-m.brakeStart<5||m.vehicle.steeringTravel-m.brakeTurn<.6)return no('Drive 5 metres and turn a little before you stop.');
-    if(Math.abs(m.vehicle.speed)>.05||!m.vehicle.parking)return no('Stop all the way, then press P.');
-    m.checks.brakes=true;m.phase='prep';message='Test drive passed! Steering and brakes work.';
+    return no('The test drive is optional. Choose a route whenever you are ready.');
   }else if(type==='plan'){
-    if(m.phase!=='prep'||!nearBase)return no('Finish the checks at the base, then pick a path.');
-    if(!Object.values(m.checks).every(Boolean))return no('Finish all five rover checks first.');
+    if(m.phase!=='planning'||!nearBase)return no('Choose a route while parked near the base.');
+    if(!['battery','wheels','camera','comms'].every(id=>m.checks[id]))return no('Finish the rover checks before choosing a route.');
     if(Math.abs(m.vehicle.speed)>.05||!m.vehicle.parking)return no('Park before you look at the paths.');m.phase='planning';message='Look at each path: how long, how bumpy, and how much battery it uses.';line='route';
   }else if(type==='launch'){
-    if(m.phase!=='planning'||!ROUTES[value?.route]||value.reason!=='evidence')return no('Pick a path by looking at the ground and the battery. The shortest path is not always best.');
+    if(m.phase!=='planning'||!ROUTES[value?.route])return no('Choose one of the paths shown on the trip map.');
     if(!nearBase||!parked)return no('Go back near the base, stop, and press P before you leave.');
     if(!m.aboard)return no('Get in the rover with Amara first.');
-    if(!Object.values(m.checks).every(Boolean))return no('Some rover checks are not done yet.');
+    if(!['battery','wheels','camera','comms'].every(id=>m.checks[id]))return no('Some rover checks are not done yet.');
     m.route=value.route;m.reason=true;m.marginReviewed=true;m.phase='outbound';m.waypoint=1;m.trail=[{x:m.vehicle.x,z:m.vehicle.z}];m.earthStatus=earthPacket('departure-status',m.elapsed,'Departure status');checkpoint(m);message='We are off! Follow your path. If you see something strange, you can change the plan.';line='departure';
   }else if(type==='report'){
     const i=m.reports.findIndex(done=>!done);if(m.phase!=='outbound'||i<0)return no('You already radioed from both stops.');
@@ -165,6 +150,6 @@ export function advance2(m,dt,telemetry,paused=false){
 }
 export function assessment2(m){
   const navigation=m.drivingSeconds>0?(Math.max(0,10-m.collisions*2)+10*(1-Math.min(1,m.overspeed/m.drivingSeconds)))*Math.min(1,(m.drivenMetres||0)/100):0;
-  const margin=m.returnReserve||20,parts=[['Readiness',Object.values(m.checks).filter(Boolean).length*4,20],['Plan & adapt',(m.reason?5:0)+(m.marginReviewed?5:0)+(m.hazard?5:0),15],['Safe navigation',navigation,20],['Reserves',(m.optionalReviewed?5:0)+(m.returned&&m.battery>=margin?5:0)+(m.returned&&m.oxygen>=margin?5:0),15],['Science',(m.photos.context?5:0)+(m.photos.close?5:0)+(m.observation?5:0),15],['Communication',(m.route?2:0)+(m.reported?2:0)+(m.returned?1:0),5],['Safe return',m.returned?10:0,10]];
+  const margin=m.returnReserve||20,parts=[['Readiness',['battery','wheels','camera','comms'].filter(id=>m.checks[id]).length*5,20],['Plan & adapt',(m.reason?5:0)+(m.marginReviewed?5:0)+(m.hazard?5:0),15],['Safe navigation',navigation,20],['Reserves',(m.optionalReviewed?5:0)+(m.returned&&m.battery>=margin?5:0)+(m.returned&&m.oxygen>=margin?5:0),15],['Science',(m.photos.context?5:0)+(m.photos.close?5:0)+(m.observation?5:0),15],['Communication',(m.route?2:0)+(m.reported?2:0)+(m.returned?1:0),5],['Safe return',m.returned?10:0,10]];
   return {parts,total:Math.round(parts.reduce((s,p)=>s+p[1],0))};
 }

@@ -23,7 +23,6 @@ export const pipMilestones = {
     'Check the report to see how much power and air were left.')],
   ],
   rover: [
-    [s => s.checks.brakes, milestone('Driving test passed', 'You proved the rover can steer and stop while you are still close to base.', 'Compare the routes and keep enough battery for the trip home.')],
     [s => s.scienceComplete, milestone('Field evidence recorded', 'Your wide photo shows where the layers meet. The ruler in the close photo shows the size of the details.', 'Check your reserves before deciding whether to collect a bonus rock or head home.')],
     [s => s.ended && s.returned, s => milestone('The crew is home', s.scienceComplete
       ? 'Bringing back your notes and photos lets other scientists check what you saw.'

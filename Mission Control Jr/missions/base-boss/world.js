@@ -293,7 +293,7 @@ export async function buildWorld(canvas) {
   const aim = new THREE.Vector3();
   const target = new THREE.Vector3();
   const desired = new THREE.Vector3();
-  let cameraReady = false, roll = 0;
+  let cameraReady = false, roll = 0, cameraScale = 1, cameraFov = 52;
   let outside = false, previousView;
   const wheels = Array.from({length: 6}, (_, i) => roverFrame.getObjectByName(`wheel_${i}`));
 
@@ -309,6 +309,13 @@ export async function buildWorld(canvas) {
 
   return {
     canWalk: Boolean(astronaut),
+    zoom(amount, firstPerson = false) {
+      if (firstPerson) {
+        cameraFov = THREE.MathUtils.clamp(cameraFov + amount * 32, 38, 72);
+        camera.fov = cameraFov;
+        camera.updateProjectionMatrix();
+      } else cameraScale = THREE.MathUtils.clamp(cameraScale + amount, .65, 1.45);
+    },
     route(plan, destination) {
       if (trail) {
         scene.remove(trail);
@@ -398,6 +405,7 @@ export async function buildWorld(canvas) {
           base.z + frontZ * distance + frontX * distance * .58);
         target.set(base.x - frontX * 2, height + (base.footprint ? 3.3 : 2), base.z - frontZ * 2);
       }
+      desired.copy(target).add(desired.sub(target).multiplyScalar(cameraScale));
       if (!cameraReady || previousView !== firstPerson || outside !== Boolean(eva) || camera.position.distanceTo(desired) > 35) {
         camera.position.copy(desired);
         aim.copy(target);

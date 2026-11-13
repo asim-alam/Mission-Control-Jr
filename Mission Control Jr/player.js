@@ -10,7 +10,7 @@ export class Player {
   constructor(camera,canvas,onInteract,onPause,onStep,onViewChange=()=>{}) {
     this.camera=camera;this.canvas=canvas;this.enabled=false;this.keys=new Set();this.route=[];
     this.obstacles=[];this.bounds={minX:-18,maxX:18,minZ:-18,maxZ:18};this.stepClock=0;this.drag=null;
-    this.position=new THREE.Vector3();this.yaw=0;this.pitch=0;this.facing=0;this.view='first';this.inside=false;
+    this.position=new THREE.Vector3();this.yaw=0;this.pitch=0;this.facing=0;this.view='third';this.inside=false;
     this.cameraObjects=[];this.cameraRay=new THREE.Raycaster();this.cameraDistance=0;this.onViewChange=onViewChange;
     camera.rotation.order='YXZ';this.reset();
     addEventListener('keydown',e=> {

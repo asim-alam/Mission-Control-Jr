@@ -85,8 +85,8 @@ function run(type,value){
   if(photo&&type!=='photo')closePhoto();
   m.walker={x:player.position.x,z:player.position.z};const beforeAboard=m.aboard,result=act2(m,type,value);toast(result.message);if(result.line&&!m.ended)audio.say(result.line,['launch','science','return','dock'].includes(type));if(result.ok&&type==='launch')audio.say('ready');if(result.ok&&type==='check'&&value==='battery')audio.say('checks');audio.effect();actionKey='';
   if(result.ok)clearInput();
-  if(result.ok&&['brakeTest','launch'].includes(type)){$('target-description').hidden=true;$('details-toggle').setAttribute('aria-expanded','false');if(type==='brakeTest')toast('Driving test passed! Next: pick a path and tell us why.');}
-  if(result.ok&&type==='board'){view='third';orbitYaw=0;pitch=.18;inputLockUntil=performance.now()+200;if(m.phase==='test'){$('target-description').hidden=false;$('details-toggle').setAttribute('aria-expanded','true');toast('DRIVING TEST: press P → drive a little and steer → Space to stop → P to park.');}applyZoom();}
+  if(result.ok&&type==='launch'){$('target-description').hidden=true;$('details-toggle').setAttribute('aria-expanded','false');}
+  if(result.ok&&type==='board'){view='third';orbitYaw=0;pitch=.18;inputLockUntil=performance.now()+200;applyZoom();}
   if (result.ok && beforeAboard && !m.aboard) {
     const {x, z, heading} = m.vehicle;
     const side = heading + Math.PI / 2;
@@ -104,7 +104,7 @@ function run(type,value){
       player.view = view;
     }
   }
-  setInput();renderActions();if(m.ended)showEnding();else if(result.ok)showRoverMilestone();return result;
+  setInput();renderActions();if(result.ok&&type==='board')showPlan();if(m.ended)showEnding();else if(result.ok)showRoverMilestone();return result;
 }
 function start(){audio.start();$('landing').hidden=true;$('hud').hidden=false;$('mission-panel').hidden=false;toggleTasks(false);$('controls').classList.remove('controls-faded');setTimeout(()=>{if(m.started)$('controls').classList.add('controls-faded');},30000);run('start');showBriefing();setInput();renderActions();}
 function showBriefing(){
@@ -114,7 +114,7 @@ function showBriefing(){
   showDialog('Elena: bring the evidence home.',`
     <div class="briefing-transcript">
       <p><b>Elena Reyes:</b> “Jin, take Amara to Kestrel Ridge. Photograph the rock layers and bring everyone home safely.”</p>
-      <p>Start with the rover inspection and driving test, then pick a route. If the ground looks strange, stop and check it.</p>
+      <p>Inspect the rover, climb in with Amara, then choose a route. If the ground looks strange, stop and check it.</p>
       <p>Take a wide shot of both rock layers and a close-up with the ruler for scale. The photos show the layers. On their own, they can’t tell you how the layers formed.</p>
     </div>
     <p class="reserve-rule">Aim to get home with at least <b>${margin}% battery and ${margin}% air</b>. Picking up a rock is optional.</p>${batteryNote}`,
@@ -132,11 +132,10 @@ function requireNear(fn){if(!nearVehicle()){toast('Walk to the rover first.');re
 function toggleParking(){document.activeElement?.blur();if(!m.aboard){toast('You are walking. Choose Drive the rover to get in.');return;}if(Math.abs(m.vehicle.speed)>.15){toast('Hold Space to stop first. Then press P.');return;}m.vehicle.parking=!m.vehicle.parking;actionKey='';toast(m.vehicle.parking?'Parking brake set.':'Brake off! Use WASD or arrows to drive.');}
 function plan(){const r=run('plan');if(!r.ok)return;showPlan();}
 function showPlan(){
-  showDialog('Pick a path. Plan the trip home.',`<p>There are three paths to Kestrel Ridge. The map shows the land. But it cannot tell you if the ground is soft.</p><canvas id="plan-map" class="plan-map" width="450" height="380" aria-label="Map of three rover routes and uncertain ground"></canvas><div class="route-grid">${Object.entries(ROUTES).map(([id,r])=>`<button class="route-card ${id===planRoute?'active':''}" data-route="${id}"><b>${r.name}</b><span>${Math.round(routeLength(r.points))} m there · uses about ${Math.ceil(routeEnergy(r.points))}% battery</span><span>${r.surface}</span><span>${r.note}</span></button>`).join('')}</div><p class="reserve-rule">Save at least <strong>${m.returnReserve||20}%</strong> battery and air for when you get home. The numbers are made simple for the game.</p><label for="reason">Why this path?</label><select id="reason" class="reason-select"><option value="evidence">I looked at the ground and hills. I will have battery left, and a backup path.</option><option value="shortest">The shortest path always uses the least battery.</option><option value="longest">The longest path is always the safest.</option><option value="map">The map promises the ground is hard.</option></select><p class="fine-print">When you leave, a message goes to Earth. It takes 12 minutes to get there.</p>`,[{label:'Go! Start driving',run:()=>{const r=run('launch',{route:planRoute,reason:$('reason').value});if(r.ok)closeDialog();}},{label:'Back to the rover',run:()=>{m.phase='prep';closeDialog();actionKey='';}}], 'PLAN YOUR TRIP');
-  const prompt=new Option('Pick a reason…','',true,true);$('reason').prepend(prompt);
-  const projection=document.createElement('p');projection.id='plan-projection';projection.className='reserve-rule';$('reason').before(projection);
+  showDialog('Choose a route to Kestrel Ridge',`<p>Compare the distance, rough ground and battery estimate. Choose a path to start driving.</p><canvas id="plan-map" class="plan-map" width="450" height="380" aria-label="Map of three rover routes and uncertain ground"></canvas><div class="route-grid">${Object.entries(ROUTES).map(([id,r])=>`<button class="route-card ${id===planRoute?'active':''}" data-route="${id}"><b>Drive: ${r.name}</b><span>${Math.round(routeLength(r.points))} m there · uses about ${Math.ceil(routeEnergy(r.points))}% battery</span><span>${r.surface}</span><span>${r.note}</span></button>`).join('')}</div><p id="plan-projection" class="reserve-rule"></p><details class="route-hint"><summary>Help me choose</summary><p>Shorter paths can cross rough or soft ground. Compare the battery estimate for the trip home, then choose a route that leaves enough power for the return.</p></details><p class="reserve-rule">Keep at least <strong>${m.returnReserve||20}%</strong> battery and air for the trip home.</p>`,[{label:'Drive around first',run:closeDialog}], 'PLAN YOUR TRIP');
+  const projection=$('plan-projection');
   const updateProjection=()=>{const r=ROUTES[planRoute],f=forecast({...m,vehicle:RIDGE},routeLength(r.points)/2.6+75,routeEnergy(r.points));projection.textContent=`When you get home you will have about ${f.battery.toFixed(0)}% battery and ${f.oxygen.toFixed(0)}% air. Soft ground can use more.`;};
-  $('dialog-body').querySelectorAll('[data-route]').forEach(b=>b.onclick=()=>{planRoute=b.dataset.route;$('dialog-body').querySelectorAll('[data-route]').forEach(c=>c.classList.toggle('active',c===b));drawMap($('plan-map'),true);updateProjection();});drawMap($('plan-map'),true);updateProjection();
+  $('dialog-body').querySelectorAll('[data-route]').forEach(b=>b.onclick=()=>{planRoute=b.dataset.route;const result=run('launch',{route:planRoute,reason:'evidence'});if(result.ok)closeDialog();});drawMap($('plan-map'),true);updateProjection();
 }
 function openMap(){if(Math.abs(m.vehicle.speed)>.05||!m.vehicle.parking){toast('Stop and press P before you open the map.');return;}const f=forecast(m);showDialog('Trip map',`<canvas id="large-map" class="plan-map" width="500" height="460"></canvas><p>Orange: your path. Green: where you drove. Striped circle: ground that might be soft. North is up. The way home is light blue.</p><p class="reserve-rule">At home you will have about <strong>${Math.max(0,f.battery).toFixed(0)}% battery and ${Math.max(0,f.oxygen).toFixed(0)}% air</strong>. Home is ${Math.round(f.metres)} m away. This is a guess, not a promise.</p>`,[{label:'Back to driving',run:closeDialog}]);drawMap($('large-map'),false);}
 function openJournal(){if(m.aboard&&Math.abs(m.vehicle.speed)>.05){toast('Park before you read the diary.');return;}showDialog('Trip diary',`<p>Your science jobs: a wide photo of both rocks, a close photo with the ruler, and one thing you saw. Picking up a rock is extra.</p>${m.events.slice(-12).reverse().map(e=>`<div class="event-row">${Math.floor(e.time/60)}:${String(Math.floor(e.time%60)).padStart(2,'0')} · ${e.text}</div>`).join('')}${journal.slice(0,8).map(l=>`<div class="journal-entry"><b>${l.speaker}</b><p>${l.text}</p></div>`).join('')}`, [{label:'Continue expedition',run:closeDialog}]);}
@@ -172,13 +171,13 @@ function renderActions(){
   $('interaction').hidden=!!photo||(!task.target&&!task.action)||(!!task.target&&!near&&!(!m.aboard&&['prep','postdrive','science','briefing','return'].includes(m.phase)));
   $('target-kind').textContent=`STEP ${String(task.stage).padStart(2,'0')} / 08 · ${m.aboard?'ROVER TWO':'JIN PARK / EVA'}`;
   $('target-title').textContent=task.title;$('target-description').textContent=task.instruction;
-  const driveTest=m.phase==='test'&&m.aboard,testReady=v.distance-m.brakeStart>=5&&v.steeringTravel-m.brakeTurn>=.6&&v.parking&&Math.abs(v.speed)<.05;$('drive-coach').hidden=!driveTest;$('drive-coach').textContent=driveTest?`1 Release P → 2 Drive ${Math.min(5,v.distance-m.brakeStart).toFixed(1)}/5 m · steer ${v.steeringTravel-m.brakeTurn>=.6?'✓':'left/right'} → 3 Space stop → 4 P park → 5 Done!`:'';
+  $('drive-coach').hidden=true;$('drive-coach').textContent='';
   const next=targetWaypoint(),bearing=((Math.atan2(next.x-v.x,-(next.z-v.z))*180/Math.PI)%360+360)%360;
   $('task-distance').textContent=m.aboard&&['outbound','return'].includes(m.phase)?`Next marker ${Math.round(distance(v,next))} m · ${Math.round(bearing)}° bearing${near?' · action in range':''}`:task.target?`${Math.round(distance(actor,task.target))} m · ${near?'ready to interact':'follow the orange marker'}`:'Time to choose';
   $('inspect-exhibit').hidden=m.aboard||!exhibits||distance(player.position,ROVER_PAD)>6;
-  const key=[task.action,task.label,near,m.aboard,nearVehicle(),v.parking,m.phase,m.sample,m.checks.brakes,m.dataTransferred,testReady,distance(player.position,SERVICE.comms)<3].join('|');if(key===actionKey)return;actionKey=key;
+  const key=[task.action,task.label,near,m.aboard,nearVehicle(),v.parking,m.phase,m.sample,m.dataTransferred,distance(player.position,SERVICE.comms)<3].join('|');if(key===actionKey)return;actionKey=key;
   const actions=[],panel=[],allChecks=['battery','wheels','camera','comms'].every(id=>m.checks[id]);
-  if(task.action)actions.push(button(task.label,()=>performTask(task),!near||(driveTest&&!testReady)));
+  if(task.action)actions.push(button(task.label,()=>performTask(task),!near));
   if(!m.aboard&&task.target&&!near&&['prep','postdrive','science','briefing','return'].includes(m.phase))actions.push(button('Walk to the marker',()=>walkToTask(task)));
   if(!m.aboard&&allChecks&&task.action!=='board')actions.push(button('Drive Rover Two · board (E)',()=>requireNear(()=>run('board')),!nearVehicle()));
   if(m.aboard&&task.action!=='exit')panel.push(button('Exit rover · E',()=>run('exit'),!v.parking));
@@ -242,7 +241,7 @@ function renderHud(){
     && (!task.target || distance(v, task.target) > task.radius) ? 'Press P to release the brake, then drive to the orange marker.' : task.instruction;
   if ($('objective').textContent !== task.title) $('objective').textContent = task.title;
   if ($('rover-instruction').textContent !== instruction) $('rover-instruction').textContent = instruction;
-  $('phase-note').textContent=`${TRAVERSE_QUESTION} ${m.phase==='prep'||m.phase==='test'?'The base keeps its own battery. The rover uses the spare.':`${Math.floor(m.elapsed/60)}:${String(Math.floor(m.elapsed%60)).padStart(2,'0')} outside · save ${m.returnReserve||20}% for home`}`;
+  $('phase-note').textContent=`${TRAVERSE_QUESTION} ${m.phase==='prep'?'The base keeps its own battery. The rover uses the spare.':`${Math.floor(m.elapsed/60)}:${String(Math.floor(m.elapsed%60)).padStart(2,'0')} outside · save ${m.returnReserve||20}% for home`}`;
   const vital=(icon,label,value,essential=false,max=100)=>{const n=Math.max(0,Math.min(100,Math.round(value/max*100))),state=n<20?'danger':n<40?'warning':'healthy';return `<span class="vital-chip ${essential?'vital-essential':''}" data-state="${state}" role="img" aria-label="${label} ${Math.round(value)}" title="${label}: ${Math.round(value)}"><span class="vital-icon" aria-hidden="true">${icon}</span><b>${Math.round(value)}</b><i style="width:${n}%"></i></span>`;};
   $('vitals').innerHTML=vital('⚡','Rover battery',m.battery,true)+vital('O₂','Suit air',m.oxygen)+vital('♙','Everyone here',2,true,2)+vital('⌂','Battery left at home',Math.max(0,f.battery),true)+vital('↩','Air left at home',Math.max(0,f.oxygen),true);
   const current=task2(m);$('stage-count').textContent=`${current.stage} / 8`;$('objective-progress').value=current.stage-1;
@@ -258,7 +257,7 @@ function renderHud(){
     marker.style.top=`${(-pos.y*.5+.5)*innerHeight}px`;
   }
   else marker.hidden=true;
-  $('tasks').innerHTML=[['Hear the plan',m.briefAccepted],['Get ready + driving test',Object.values(m.checks).every(Boolean)],['Pick a path',!!m.route],['Two radio stops',m.reports.every(Boolean)],['Look at the strange ground',!!m.detour],['Rock photos',m.scienceComplete],['Drive home safe',m.returned]].map(([text,done],i)=>`<div class="${done?'done':current.stage===i+1?'current':''}">${done?'✓':String(i+1).padStart(2,'0')} ${text}</div>`).join('');
+  $('tasks').innerHTML=[['Hear the plan',m.briefAccepted],['Get the rover ready',['battery','wheels','camera','comms'].every(id=>m.checks[id])],['Pick a path',!!m.route],['Two radio stops',m.reports.every(Boolean)],['Look at the strange ground',!!m.detour],['Rock photos',m.scienceComplete],['Drive home safe',m.returned]].map(([text,done],i)=>`<div class="${done?'done':current.stage===i+1?'current':''}">${done?'✓':String(i+1).padStart(2,'0')} ${text}</div>`).join('');
   $('inventory').textContent=m.sample?'CAMERA · ROCK IN A BAG':m.checks.battery?'CAMERA · TOOLS':'SPARE BATTERY · READY TO PUT IN';
   $('hud').classList.toggle('foot',!m.aboard);$('speed').textContent=(Math.abs(v.speed)*(1-v.slip)*3.6).toFixed(1);$('heading').textContent=`${String(Math.round(heading)).padStart(3,'0')}° · HEADING`;$('surface').textContent=surface==='loose'?'UNCERTAIN / SOFT MATERIAL':`${surface.toUpperCase()} GROUND`;$('traction').textContent=`SLOPE ${slopeAt(v.x,v.z).toFixed(1)}° · SLIP ${Math.round(v.slip*100)}%`;$('gear').textContent=v.parking?'PARKING BRAKE SET':v.speed<-.05?'REVERSE':'DRIVE · SPACE TO BRAKE';$('eco').classList.toggle('active',m.eco);$('eco').textContent=`Eco: ${m.eco?'On':'Off'} · Shift`;showCameraView($('view'), view);
   if(!m.aboard)$('gear').textContent='ON FOOT · BOARD ROVER TO DRIVE';

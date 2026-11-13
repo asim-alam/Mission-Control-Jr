@@ -41,6 +41,9 @@ const audio=new MissionAudio((id,line)=> {
   journal.unshift({speaker:line.speaker,text:line.text});
 },()=>{$('radio').hidden=true;});
 const player=new Player(camera,renderer.domElement,()=>interact(),()=>togglePause(),()=>audio.effect('step'),renderView);
+player.view='third';player.syncCamera();
+let zoomFov=camera.fov;
+function changeCameraZoom(amount){if(player.view==='third'){player.thirdPersonDistance=THREE.MathUtils.clamp((player.thirdPersonDistance||3.8)+amount,1.5,9);player.syncCamera();}else{zoomFov=THREE.MathUtils.clamp(zoomFov+amount*8,42,78);camera.fov=zoomFov;camera.updateProjectionMatrix();}}
 function renderView() {
   showCameraView($('view'), player.view);
 }
@@ -139,6 +142,7 @@ function scheduleTasksCollapse(){clearTimeout(panelCollapseTimer);if($('mission-
 $('mission-panel').addEventListener('pointermove',()=>{if($('mission-panel').classList.contains('expanded'))scheduleTasksCollapse();});
 $('mission-panel').addEventListener('focusin',()=>{if($('mission-panel').classList.contains('expanded'))scheduleTasksCollapse();});
 $('view').onclick=()=>{if(player.enabled)player.toggleView();};
+$('zoom-in').onclick=()=>changeCameraZoom(-.6);$('zoom-out').onclick=()=>changeCameraZoom(.6);
 $('skip-voice').onclick=()=>audio.skip();$('replay-voice').onclick=()=>audio.replay();
 $('journal').onclick=()=>showDialog('Mission journal',`<p>Your next job: <strong>${objective(mission)}</strong></p>${mission.log.map(text=>`<p>• ${text}</p>`).join('')}${journal.map(entry=>`<div class="journal-entry"><b>${entry.speaker}</b><p>${entry.text}</p></div>`).join('')}`,[{label:'Back to the mission',run:closeDialog}], 'WHAT HAPPENED SO FAR');
 addEventListener('keydown',e=>{if(e.code==='KeyJ'&&player.enabled)$('journal').click();if(e.code==='KeyT'&&player.enabled)toggleTasks();});

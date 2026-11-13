@@ -59,6 +59,7 @@ export async function createWorld({container, preset = 'interior', bounds, start
   avatar.model.visible = false;
   scene.add(avatar.model);
   player.thirdPersonDistance = preset === 'moon' ? 3.5 : 1.9;
+  player.view = 'third';
   player.eyeHeight = eyeHeight;
   player.bounds = bounds; player.position.set(start.x, eyeHeight, start.z); player.yaw = start.yaw || 0; player.pitch = -.12; player.syncCamera();
 
