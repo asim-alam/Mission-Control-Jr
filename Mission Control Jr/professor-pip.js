@@ -11,12 +11,13 @@ export function openPipMilestone(slide, options) {
 }
 
 export function mountPipLesson(container, mission, options) {
+  if (!container) return null;
   const button = document.createElement('button');
   button.type = 'button';
   button.className = 'pip-lesson-button';
   button.textContent = 'Pip’s lesson';
   button.setAttribute('aria-haspopup', 'dialog');
-  button.onclick = () => openPipLesson(mission, options());
+  button.onclick = () => openPipLesson(mission, typeof options === 'function' ? options() : (options || {}));
   container.append(button);
   return button;
 }

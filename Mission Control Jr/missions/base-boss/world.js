@@ -405,7 +405,10 @@ export async function buildWorld(canvas) {
           base.z + frontZ * distance + frontX * distance * .58);
         target.set(base.x - frontX * 2, height + (base.footprint ? 3.3 : 2), base.z - frontZ * 2);
       }
-      desired.copy(target).add(desired.sub(target).multiplyScalar(cameraScale));
+      if (!firstPerson && cameraScale !== 1) {
+        desired.sub(target).multiplyScalar(cameraScale).add(target);
+      }
+      desired.y = Math.max(desired.y, ground(desired.x, desired.z) + (surveyId ? 3 : 2));
       if (!cameraReady || previousView !== firstPerson || outside !== Boolean(eva) || camera.position.distanceTo(desired) > 35) {
         camera.position.copy(desired);
         aim.copy(target);

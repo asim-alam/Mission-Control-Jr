@@ -94,10 +94,13 @@ function refreshReadout() {
     : motion.speed < -.35 ? 'REVERSING' : motion.speed > .35 ? 'DRIVING' : 'PARKED';
 }
 
-mountPipLesson($('objective').querySelector('.mission-guidance-tools'), 'extended', () => ({
-  step: state.completed.valve ? 2 : state.active ? 1 : 0,
-  onOpen: () => { held.clear(); touch.clear(); },
-}));
+const guidanceContainer = $('objective')?.querySelector('.mission-guidance-tools') || $('objective');
+if (guidanceContainer) {
+  mountPipLesson(guidanceContainer, 'extended', () => ({
+    step: state.completed.valve ? 2 : state.active ? 1 : 0,
+    onOpen: () => { held.clear(); touch.clear(); },
+  }));
+}
 function updateObjective() {
   const active = state.active && quests[state.active];
   const finished = Object.keys(state.completed).length;
@@ -407,18 +410,22 @@ $('toggle-map').onclick = () => {
   $('toggle-map').textContent = content.hidden ? 'Show map' : 'Hide map';
 };
 function openModal(dialog) {
-  document.querySelector('.base-tools').open = false;
+  const baseTools = document.querySelector('.base-tools');
+  if (baseTools) baseTools.open = false;
   held.clear();
   touch.clear();
   dialog.showModal();
 }
 $('sources').onclick = () => openModal(references);
 $('start-drill').onclick = () => {
-  document.querySelector('.base-tools').open = false;
+  const baseTools = document.querySelector('.base-tools');
+  if (baseTools) baseTools.open = false;
   held.clear();
   touch.clear();
   drill.show();
 };
+$('zoom-in')?.addEventListener('click', () => world?.zoom(-.12, cameraView === 'first'));
+$('zoom-out')?.addEventListener('click', () => world?.zoom(.12, cameraView === 'first'));
 $('survey').onclick = () => {
   survey = survey ? null : currentSite;
   refreshReadout();
@@ -588,7 +595,7 @@ function frame(now) {
 }
 
 currentSite = atSite();
-survey = currentSite;
+survey = null;
 renderStation();
 updateObjective();
 setDestination(jobTarget() ?? nextJobSite());

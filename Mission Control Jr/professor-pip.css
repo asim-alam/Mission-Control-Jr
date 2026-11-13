@@ -225,6 +225,32 @@
 .pip-classroom [hidden] { display: none !important; }
 
 .mission-guidance { border-left: 3px solid #a98bff; }
+.mission-guidance-tools {
+  margin-top: 8px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.pip-lesson-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #272063, #151139);
+  color: #ffd23f;
+  border: 1px solid rgba(62, 230, 181, 0.5);
+  border-radius: 9px;
+  padding: 5px 12px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  transition: transform 0.15s, background 0.15s, border-color 0.15s;
+}
+.pip-lesson-button:hover {
+  background: linear-gradient(135deg, #372d8a, #1f1954);
+  border-color: #3ee6b5;
+  transform: translateY(-1px);
+}
 .mx-job .mx-job-heading .mx-eyebrow { color: #ffd98a; }
 .mx-job.mission-guidance { border-color: #6651bc; border-left-color: #a98bff; }
 
