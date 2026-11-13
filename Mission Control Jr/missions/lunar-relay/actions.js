@@ -179,26 +179,66 @@ export function getObjective(s) {
     if (s.relay === 'ground' && s.relayAt === 'saddle') {
       if (!s.legs) return 'Put the relay’s legs out: hold E on it';
       const hop = relayHops(s, 'hollow');
-      if (!hop.field) return 'Raise the mast: press E on the green ▲';
+      if (!hop.field && s.stages < sc.relay.stages) return 'Raise the mast: press E on the green ▲';
       if (!s.aimed) return 'Aim the dish at the base: hold E on the dish';
     }
     return 'Drive down into Shadow Hollow';
   }
   // Shadow Hollow
   if (s.coreReady) return 'Take the core out of the drill';
-  if (s.stowed > s.messages.length) return 'Send the data: hold E on the rover radio';
+  if (s.stowed > s.messages.length) return 'Send the data from the rover radio';
   if (s.drill === 'ground' && s.cores < (s.earthAsked ? 2 : 1)) return s.drillAt === 'a' && s.earthAsked && s.cores ? 'Move the drill to the second X' : 'Drill a core: hold E on the drill';
   if (s.drill === 'rover' && s.cores < (s.earthAsked ? 2 : 1)) return s.earthAsked ? 'Earth wants one more! Take the drill again' : 'Take the drill off the rover';
   if (s.drill === 'ground') return 'Pick up the drill and put it on the rover';
   return 'Drive home over the hill';
 }
+export function getInstruction(s) {
+  if (s.phase !== 'active') return null;
+  if (!s.plan) return {text: 'Choose whether to carry a relay or send the data after you get back over the ridge.'};
+  if (s.hand === 'relay') return s.at === 'base' || !s.scenario.stops[s.at].relaySpot
+    ? {place: 'rover', text: 'Use the rover’s rear cargo deck to load the relay.'}
+    : {text: 'Aim at the yellow ring on the ground and use it to set the relay down.'};
+  if (s.hand === 'drill') {
+    if (s.cores >= (s.earthAsked ? 2 : 1)) return {place: 'rover', text: 'Use the rear cargo deck to put the drill away.'};
+    return {place: 'drill', text: s.cores ? 'Use the second glowing X to set down the drill.' : 'Use the first glowing X to set down the drill.'};
+  }
+  if (s.hand === 'core') return {place: 'rover', text: 'Use the sample box on the rover to store the core.'};
+  const drive = to => ({place: 'rover', text: `Use the rover seat, then choose ${s.scenario.stops[to].name} on the drive screen.`});
+  if (s.at === 'base') {
+    if (s.stowed) return {place: 'hatch', text: 'Hold E or hold the prompt on the base hatch to bring your sample inside.'};
+    if (s.plan === 'relay' && s.relay === 'crate') return {place: 'relay', text: 'Use the relay’s handle at its crate to pick it up.'};
+    return drive('saddle');
+  }
+  if (s.at === 'saddle') {
+    if (s.stowed) return drive('base');
+    if (s.plan === 'relay' && s.relay === 'rover') return {place: 'rover', text: 'Use the rear cargo deck to lift off the relay.'};
+    if (s.relay === 'ground' && s.relayAt === 'saddle') {
+      if (!s.legs) return {place: 'relay', text: 'Hold E or hold the prompt on the relay frame to lower its legs.'};
+      if (!relayHops(s, 'hollow').field && s.stages < s.scenario.relay.stages) return {place: 'relay', text: 'Use the green ▲ until the mast can reach the hollow.'};
+      if (!s.aimed) return {place: 'relay', text: 'Aim at the dish. Hold E or hold the prompt until the relay finds the base.'};
+    }
+    return drive('hollow');
+  }
+  if (s.coreReady) return {place: 'drill', text: 'Use the core at the top of the drill to take it out.'};
+  if (s.stowed > s.messages.length) return {place: 'rover', text: hasLink(s)
+    ? 'Use the rover radio to send your sample data. Watch for Earth’s reply.'
+    : 'Use the rover radio to save the data. It will send when you drive back into signal range.'};
+  const more = s.cores < (s.earthAsked ? 2 : 1);
+  if (s.drill === 'ground') return {place: 'drill', text: !more ? 'Use the drill to pick it up, then stow it on the rover.'
+    : s.cores && s.drillAt === 'a' ? 'Use the drill to pick it up. Carry it to the second glowing X.'
+    : 'Aim at the drill on the X. Hold E or hold the prompt until the core comes up.'};
+  if (more) return {place: 'rover', text: 'Use the rear cargo deck to take the drill.'};
+  return drive('saddle');
+}
+
 export function getSteps(s) {
   const relay = s.plan === 'relay';
   const list = [
     {text: 'Pick a plan', done: !!s.plan},
-    ...(relay ? [{text: 'Load the relay on the rover', done: s.relay !== 'crate'}, {text: 'Set up the relay on the ridge', done: hasLinkTo(s)}] : []),
+    ...(relay ? [{text: 'Load the relay on the rover', done: s.relay === 'rover' || s.relay === 'ground' || s.at !== 'base'}, {text: 'Set up the relay on the ridge', done: hasLinkTo(s)}] : []),
     {text: 'Drill a core in the hollow', done: s.stowed > 0},
-    {text: 'Send the data', done: s.messages.length > 0},
+    {text: 'Send the first core’s data', done: s.messages.length > 0},
+    ...(s.earthAsked ? [{text: 'Collect and send the second core', done: s.messages.length > 1}] : []),
     {text: 'Drive home and go inside', done: s.finished},
   ];
   if (s.phase !== 'brief') { const now = list.find(x => !x.done); if (now) now.now = true; }

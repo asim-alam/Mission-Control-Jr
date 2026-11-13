@@ -1,6 +1,10 @@
 // Page controller shared by the expansion missions: HUD, Pip, saving, pause, retry, prompts.
 // Each mission supplies its rules (pure functions), its 3D scene and its story/debrief screens.
-import {buildHud, dialog, closeDialog, dialogOpen} from './hud.js';
+import {buildHud, dialog, closeDialog, dialogOpen, narration} from './hud.js';
+import {mountPipLesson, openPipLesson, pipLessonOpen} from '../../professor-pip.js';
+import {pipLessonStep} from '../../professor-pip-lessons.js';
+import {showCameraView} from '../../player.js';
+import {learningMode} from '../../simulation/learning.js';
 import {startPip} from '../../companion.js';
 import {connectChapter, openJourney, journeyPaused} from '../../campaign-bridge.js';
 import {readJourney} from '../../journey-state.js';
@@ -13,13 +17,21 @@ import {loadSaved, makeSaver, clearSaved, snapshot, restore, reporter} from './r
 export async function runMission(spec) {
   const $ = id => document.getElementById(id);
   const hud = buildHud({title: spec.title, place: spec.place, meters: spec.meters});
-  startPip(spec.id);
+  const pauseButton = $('pause'), viewButton = $('view');
+  startPip(spec.id, {collapsed: Boolean(spec.rules.getInstruction)});
   const sampleMode = new URLSearchParams(location.search).get('sampler') === '1';
   const persist = makeSaver(spec.id, {sampleMode});
   const report = reporter(spec.id);
   let carry = {}; try { carry = spec.carryFrom ? readJourney(localStorage).records[spec.carryFrom]?.carry || {} : {}; } catch {}
   const saved = sampleMode ? {state: null} : loadSaved(spec.id, undefined, {schema: spec.schema, migrate: spec.migrate});
   let paused = false, hudClock = 0;
+  const deck = spec.id === 'orbit' ? 'station' : spec.id;
+  const lessonOptions = () => ({
+    deck,
+    step: pipLessonStep[deck](ctx.mission),
+    onOpen: () => { ctx.view.world.interaction.stopHold(); ctx.setControls(); },
+    onClose: () => ctx.setControls(),
+  });
 
   const ctx = {
     id: spec.id, hud, sampleMode, carry, report, persist, view: null, checkpoint: null,
@@ -27,47 +39,103 @@ export async function runMission(spec) {
     fresh() { return spec.create(carry); },
     act(action, {quiet = false} = {}) {
       const result = spec.rules.applyAction(ctx.mission, action);
-      if (!quiet || !result.ok) hud.toast(result.message, result.ok ? 'info' : 'warn');
+      if (!quiet || !result.ok) {
+        if (spec.rules.getInstruction && (!result.ok || !dialogOpen())) hud.notice(result.message, !result.ok);
+        else hud.toast(result.message, result.ok ? 'info' : 'warn');
+      }
+      if (!result.ok && dialogOpen()) {
+        const body = $('dialog-body');
+        let feedback = body.querySelector('.mx-action-feedback');
+        if (!feedback) {
+          feedback = document.createElement('p');
+          feedback.className = 'mx-tip mx-action-feedback';
+          feedback.setAttribute('role', 'status');
+          body.append(feedback);
+        }
+        feedback.textContent = result.message;
+        feedback.scrollIntoView({block: 'nearest'});
+      }
       if (result.ok) { persist(ctx.mission, true); ctx.view?.sync?.(); }
       if (ctx.mission.phase === 'debrief') spec.debrief(ctx);
       return result;
     },
-    playing: () => ctx.mission.phase === 'active' && !dialogOpen() && !paused && !journeyPaused && !ctx.busy,
+    playing: () => ctx.mission.phase === 'active' && !dialogOpen() && !pipLessonOpen() && !paused && !journeyPaused && !ctx.busy,
     busy: false,
-    setControls() { if (!ctx.view) return; ctx.view.world.player.enabled = ctx.playing(); if (!ctx.playing()) ctx.view.world.player.release(); },
+    setControls() {
+      if (!ctx.view) return;
+      const active = ctx.playing();
+      const {player} = ctx.view.world;
+      player.enabled = active;
+      pauseButton.disabled = !active;
+      viewButton.disabled = !active;
+      if (!active) player.release();
+    },
     close() { closeDialog(); ctx.setControls(); },
     dialog,
+    briefing(screen) {
+      dialog({...screen, actions: [
+        ...screen.actions,
+        {label: 'Pip’s lesson', run: () => openPipLesson(spec.id, {...lessonOptions(), finishLabel: 'Back to briefing'})},
+      ]});
+    },
     saveCheckpoint() { ctx.checkpoint = snapshot(ctx.mission); },
-    retry(after) { ctx.mission = restore(ctx.checkpoint); report.reset(); ctx.view.sync?.({animate: false}); after(); },
-    restart() { clearSaved(spec.id); ctx.mission = ctx.fresh(); report.reset(); ctx.view.sync?.({animate: false}); spec.brief(ctx); },
+    retry(after) { hud.notice(''); ctx.mission = restore(ctx.checkpoint); report.reset(); ctx.view.sync?.({animate: false}); after(); },
+    restart() { hud.notice(''); clearSaved(spec.id); ctx.mission = ctx.fresh(); report.reset(); ctx.view.sync?.({animate: false}); spec.brief(ctx); },
     sourcesDialog(back) { dialog({title: 'Where this comes from', body: spec.sources(ctx), actions: [{label: '← Back', run: back}]}); },
     pause() {
-      if (dialogOpen() || ctx.mission.phase !== 'active') return; paused = true; ctx.setControls();
-      dialog({title: 'Paused', body: '<p>The clock is stopped. Take a break!</p>', actions: [
-        {label: '▶ Keep playing', primary: true, run: () => { paused = false; ctx.close(); }},
-        {label: 'Sources', run: () => ctx.sourcesDialog(() => { paused = false; ctx.pause(); })}, {label: '🗺️ Map', run: openJourney}]});
+      if (dialogOpen() || pipLessonOpen() || ctx.mission.phase !== 'active' || ctx.busy) return;
+      paused = true;
+      ctx.setControls();
+      showPause();
     },
     openJourney,
   };
 
-  $('pause').onclick = () => ctx.pause(); $('journey').onclick = openJourney;
+  function showPause() {
+    dialog({title: 'Paused', body: '<p>The mission clock is stopped.</p>', actions: [
+      {label: 'Keep playing', primary: true, run: () => { paused = false; ctx.close(); }},
+      {label: `Read aloud: ${narration() ? 'On' : 'Off'}`, run: () => { hud.toggleNarration(); showPause(); }},
+      {label: `Science details: ${learningMode() === 'details' ? 'On' : 'Off'}`, run: () => { hud.toggleScience(); showPause(); }},
+      {label: 'Sources', run: () => ctx.sourcesDialog(showPause)},
+    ]});
+  }
+
+  pauseButton.disabled = true;
+  pauseButton.onclick = () => ctx.pause(); $('journey').onclick = openJourney;
   document.addEventListener('visibilitychange', () => { if (document.hidden && ctx.playing()) ctx.pause(); });
   connectChapter(spec.id, () => ctx.setControls());
   try {
     ctx.view = await spec.scene(ctx);
     const {world} = ctx.view;
+    viewButton.disabled = true;
+    world.player.onViewChange = view => showCameraView(viewButton, view);
+    showCameraView(viewButton, world.player.view);
+    viewButton.onclick = () => world.player.toggleView();
+    viewButton.hidden = false;
+    mountPipLesson(document.querySelector('.mx-job-tools'), spec.id, lessonOptions);
     world.interaction.on('focus', f => hud.prompt(f)); world.interaction.on('hold', p => hud.hold(p));
     const use = $('mx-use');
     use.onclick = e => { if (e.detail === 0) world.interaction.use(); }; // keyboard activation
     use.onpointerdown = () => world.interaction.use(); use.onpointerup = () => world.interaction.stopHold(); use.onpointerleave = () => world.interaction.stopHold();
-    hud.walkButtons(ctx.view.walkTargets, target => { if (ctx.playing()) { ctx.view.walk(target); hud.toast('Walking… press E when you get there.', 'quiet'); } });
+    hud.walkButtons(ctx.view.walkTargets, target => {
+      if (!ctx.playing()) return;
+      const moving = ctx.view.walk(target);
+      if (moving === false) hud.notice('The way is blocked. Walk around the equipment with WASD.', true);
+      else if (!spec.rules.getInstruction) hud.toast('Walking… press E when you get there.', 'quiet');
+    });
     world.onFrame(dt => {
       if (ctx.playing()) spec.rules.advance?.(ctx.mission, dt, ctx);
       hudClock += dt;
       if (hudClock >= .1) {
         hudClock = 0; const m = ctx.mission;
-        hud.objective(spec.rules.getObjective(m)); hud.steps(spec.rules.getSteps(m));
-        if (m.notice) { hud.toast(m.notice, 'warn'); m.notice = ''; }
+        hud.objective(spec.rules.getObjective(m), {read: !spec.rules.getInstruction});
+        if (spec.rules.getInstruction) hud.instruction(ctx.busy ? {text: 'Watch the scene. The next instruction will appear when it ends.'} : spec.rules.getInstruction?.(m));
+        hud.steps(spec.rules.getSteps(m));
+        if (m.notice) {
+          if (spec.rules.getInstruction) hud.notice(m.notice, true);
+          else hud.toast(m.notice, 'warn');
+          m.notice = '';
+        }
         spec.hud(ctx);
       }
       hud.edge(world.guideScreen()); persist(ctx.mission); ctx.setControls();
@@ -75,6 +143,7 @@ export async function runMission(spec) {
     if (saved.migrated) hud.toast(ctx.mission.notice || 'Your saved game was updated to the new version.', 'quiet');
     if (saved.discarded) hud.toast('Your old save was from an older version, so this is a fresh start.', 'quiet');
     if (sampleMode) spec.sampler(ctx);
+    else if (saved.state && ctx.mission.phase === 'active' && spec.resumePlan && !ctx.mission.plan) spec.resumePlan(ctx);
     else if (saved.state && ctx.mission.phase === 'active') dialog({title: 'Welcome back!', body: '<p>We found your saved game. Keep going?</p>', actions: [{label: '▶ Keep playing', primary: true, run: () => ctx.close()}, {label: 'Start over', run: () => ctx.restart()}]});
     else if (ctx.mission.phase === 'debrief') spec.debrief(ctx);
     else spec.brief(ctx);

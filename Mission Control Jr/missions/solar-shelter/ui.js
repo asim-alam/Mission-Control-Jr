@@ -5,7 +5,7 @@ import {readHistory, pushHistory, snapshot} from '../shared/runtime.js';
 import {tuneScenario} from '../../simulation/difficulty.js';
 import {shelterScenario} from './scenario.js';
 import {createMission, migrateSave, SHELTER_SCHEMA, PEOPLE, SEAT_IDS, SURFACE_IDS} from './state.js';
-import {applyAction, advanceMission, applyBlueprint, getObjective, getSteps, getResult, checkRefuge, blockingIssues, estimate, seatLevel, seatTransmission, surfaceTransmission,
+import {applyAction, advanceMission, applyBlueprint, getObjective, getInstruction, getSteps, getResult, checkRefuge, blockingIssues, estimate, seatLevel, seatTransmission, surfaceTransmission,
   teamExposure, explain, NAMES, ASSISTS, rackWater, railPanels, zoneBags} from './actions.js';
 import {createShelterScene} from './scene.js';
 
@@ -51,35 +51,12 @@ function brief(ctx) {
     actions: [{label: '▶ Watch the 30-second explainer', primary: true, run: () => explainer(ctx)}, {label: 'Skip to the alert', run: () => alertCard(ctx)}, {label: 'Mission science', run: () => ctx.sourcesDialog(() => brief(ctx))}]});
 }
 function alertCard(ctx) {
-  ctx.dialog({label: 'SPACE WEATHER ALERT · TO ALL CREW', title: 'Particle warning', body: `
+  ctx.briefing({label: 'SPACE WEATHER ALERT · TO ALL CREW', title: 'Particle warning', body: `
     <div class="kid-mission-intro">
-      <p>☀️⚡ <b>Solar Radiation Alert!</b> High-energy particles from a Sun eruption are headed toward Mars. Protect all 5 crew members in the habitat refuge before the storm arrives!</p>
+      <p><b>Elena:</b> “An eruption on the Sun may send energetic particles our way. ${ctx.mission.scenario.forecastText} We need a safer place for all five of us.”</p>
     </div>
-    <div class="kid-section-title">🧰 What You Need This Level</div>
-    <div class="kid-supplies-grid">
-      <div class="kid-supply-pill"><span class="pill-icon">💧</span><div class="pill-text"><b>Water Bag Modules</b><span>Water is rich in hydrogen, the best shield against radiation</span></div></div>
-      <div class="kid-supply-pill"><span class="pill-icon">🛡️</span><div class="pill-text"><b>Poly Shield Panels</b><span>Dense plastic panels absorb fast-moving cosmic rays</span></div></div>
-      <div class="kid-supply-pill"><span class="pill-icon">🧳</span><div class="pill-text"><b>Supply Bags</b><span>Stacked cargo blocks secondary particle scatter</span></div></div>
-      <div class="kid-supply-pill"><span class="pill-icon">📊</span><div class="pill-text"><b>Exposure Dosimeter</b><span>Monitors radiation doses for all crew members</span></div></div>
-    </div>
-    <div class="kid-section-title">📋 Your Jobs (Do in order)</div>
-    <ol class="kid-jobs-list">
-      <li><span class="step-num">1</span><b>Open Refuge Tablet:</b> Check your blueprint and available work minutes.</li>
-      <li><span class="step-num">2</span><b>Reinforce Outer Walls:</b> Mount water modules and poly panels where exposure is highest.</li>
-      <li><span class="step-num">3</span><b>Keep Clearances Open:</b> Never block the refuge entrance door, air vent, or drinking water tap!</li>
-      <li><span class="step-num">4</span><b>Seat the Crew:</b> Place astronauts in the deepest, most protected center seats.</li>
-      <li><span class="step-num">5</span><b>Wait Out the Event:</b> Monitor dose rates until particle radiation returns to safe baseline.</li>
-    </ol>
-    <div class="kid-controls-bar">
-      <span>🎮 <b>Controls:</b></span>
-      <span><kbd>WASD</kbd> / <kbd>Arrows</kbd> Walk &amp; Turn</span>
-      <span><kbd>E</kbd> or Click: Pick up / Place</span>
-      <span>Hold <kbd>E</kbd> for heavy builds</span>
-      <span><kbd>Q</kbd> Drop item</span>
-    </div>
-    <p><b>Elena (to everyone):</b> “Listen up, all four of you. Earth’s forecasters saw a big eruption on the Sun. It <i>might</i> send a burst of energetic particles our way.”</p>
-    <p><b>Elena:</b> “${ctx.mission.scenario.forecastText} Our refuge is only half ready. Let’s make it stronger.”</p>
-    <p class="sx-goal">🎯 <b>Your goal:</b> protect all five of us with the supplies and time we have.</p>`,
+    <p>Open the refuge tablet first. Use water bags, panels, and cargo to shield the seats where the crew will wait.</p>
+    <p><b>Keep the door, vent, and drinking water tap clear.</b></p>`,
     actions: [{label: '▶ Let’s get to work', primary: true, run: () => { ctx.act({id: 'begin'}, {quiet: true}); ctx.saveCheckpoint(); ctx.close(); }}, {label: '☀️ Replay the explainer', run: () => explainer(ctx)}]});
 }
 
@@ -149,11 +126,12 @@ function ensurePanel(ctx) {
     <table class="sx-people-table"><thead><tr><th></th><th>rate now</th><th>total so far</th></tr></thead><tbody id="sx-rows"></tbody></table>
     <div class="sx-tools"><button type="button" id="sx-overlay" aria-pressed="false">✨ Illustration</button><button type="button" id="sx-speed" aria-pressed="false">⏩ Faster</button><button type="button" id="sx-science">🔬 Science</button></div>
     <p class="sx-illus" id="sx-illus" hidden>ILLUSTRATION · real particles are invisible</p></section>
-    <div class="sx-tablet-btn"><button type="button" id="sx-tablet">📋 Refuge map</button><button type="button" id="sx-explain">☀️ What is this?</button></div>`);
+    <div class="sx-tablet-btn"><button type="button" id="sx-tablet">📋 Refuge map</button><button type="button" id="sx-explain">☀️ What is this?</button><button type="button" id="sx-put-back" hidden>Put item back</button></div>`);
   $('sx-overlay').onclick = () => ctx.act({id: 'toggleOverlay'});
   $('sx-speed').onclick = () => { speed = speed === 1 ? 3 : 1; $('sx-speed').setAttribute('aria-pressed', String(speed > 1)); };
   $('sx-science').onclick = () => ctx.sourcesDialog(() => ctx.close());
   $('sx-tablet').onclick = () => { if (ctx.mission.phase === 'active') tablet(ctx); };
+  $('sx-put-back').onclick = () => { if (ctx.playing()) ctx.act({id: 'putBack'}); };
   $('sx-explain').onclick = () => explainer(ctx, 0, () => ctx.close());
 }
 function sensorPanel(ctx) {
@@ -230,7 +208,7 @@ runMission({
   migrate: old => migrateSave(old, tuneScenario(ID, shelterScenario)),
   meters: [{id: 'time', icon: '⏱', label: 'Work time used'}, {id: 'shield', icon: '🛡️', label: 'Refuge estimate'}, {id: 'dose', icon: '📈', label: 'Team exposure'}],
   create: carry => createMission({scenario: tuneScenario(ID, shelterScenario), initialCarry: carry}),
-  rules: {applyAction, getObjective, getSteps, advance: (m, dt) => advanceMission(m, dt, {speed})},
+  rules: {applyAction, getObjective, getInstruction, getSteps, advance: (m, dt) => advanceMission(m, dt, {speed})},
   scene: ctx => createShelterScene({container: $('world'), getState: () => ctx.mission, act: a => ctx.act(a), onPause: () => ctx.pause(),
     onTablet: () => tablet(ctx), onCheck: () => check(ctx), onElena: () => elena(ctx)}),
   brief, sources, debrief,
@@ -249,6 +227,7 @@ runMission({
     hud.meter('shield', {value: (1 - avg) * 100, max: 70, text: `${Math.round((1 - avg) * 100)}% blocked`, warn: .3});
     hud.meter('dose', {value: Math.max(0, 12 - teamExposure(m)), max: 12, text: teamExposure(m).toFixed(1), warn: .3});
     sensorPanel(ctx);
+    $('sx-put-back').hidden = !m.held || m.stage !== 'prep';
     if (m.phase === 'active' && m.stage === 'after' && !ctx.allClearShown && !ctx.busy) {
       ctx.allClearShown = true;
       ctx.dialog({label: 'ALL CLEAR', title: 'The sensors are back to normal', body: '<p>The particle levels have dropped back to normal. Everyone can come out of the refuge.</p>',

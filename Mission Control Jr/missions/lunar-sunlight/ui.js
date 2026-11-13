@@ -5,7 +5,7 @@ import {readHistory, pushHistory} from '../shared/runtime.js';
 import {tuneScenario} from '../../simulation/difficulty.js';
 import {lunarSunScenario} from './scenario.js';
 import {createMission} from './state.js';
-import {applyAction, getObjective, getSteps, getResult, PLANS, runWatch, cableNeeded, panelHeight, sunShare} from './actions.js';
+import {applyAction, getObjective, getInstruction, getSteps, getResult, PLANS, runWatch, cableNeeded, panelHeight, sunShare} from './actions.js';
 import {createSunScene} from './scene.js';
 
 const ID = 'lunar-sunlight';
@@ -20,33 +20,12 @@ function sources(ctx) {
 
 function brief(ctx) {
   const sc = ctx.mission.scenario;
-  ctx.dialog({label: 'MOON · SOUTH POLE · HORIZON BASE', title: 'Chasing the Sun', body: `
+  ctx.briefing({label: 'MOON · SOUTH POLE · HORIZON BASE', title: 'Chasing the Sun', body: `
     <div class="kid-mission-intro">
-      <p>☀️🔆 <b>Capture the Low Polar Sun!</b> Near the Moon’s South Pole, the Sun never climbs high—it skims right along the horizon, casting colossal shadows. Build a tall solar tower to capture sunlight for Horizon Base!</p>
+      <p><b>Elena:</b> “The Sun stays low here, so even a small hill can put our panels in shadow. Let’s get a solar mast above it.”</p>
     </div>
-    <div class="kid-section-title">🧰 What You Need This Level</div>
-    <div class="kid-supplies-grid">
-      <div class="kid-supply-pill"><span class="pill-icon">🛒</span><div class="pill-text"><b>Mobile Tower Cart</b><span>Tows the telescoping solar mast to high elevation pads</span></div></div>
-      <div class="kid-supply-pill"><span class="pill-icon">▲</span><div class="pill-text"><b>Telescoping Mast</b><span>Lifts solar panels high above crater shadows</span></div></div>
-      <div class="kid-supply-pill"><span class="pill-icon">🔌</span><div class="pill-text"><b>High-Voltage Cable</b><span>Carries solar electric power back to base sockets</span></div></div>
-      <div class="kid-supply-pill"><span class="pill-icon">☀️</span><div class="pill-text"><b>Sun Tracker Sensor</b><span>Rotates panels to track the low circling Sun</span></div></div>
-    </div>
-    <div class="kid-section-title">📋 Your Jobs (Do in order)</div>
-    <ol class="kid-jobs-list">
-      <li><span class="step-num">1</span><b>Tow Cart to Pad:</b> Grab the cart handle and position it on the Near Pad or Ridge Pad.</li>
-      <li><span class="step-num">2</span><b>Deploy Legs &amp; Raise Mast:</b> Put stabilizer legs down, then hold ▲ to elevate the mast.</li>
-      <li><span class="step-num">3</span><b>Open Solar Wings:</b> Unfold photovoltaic wings and turn on automatic sun tracking.</li>
-      <li><span class="step-num">4</span><b>Plug Cable into Base:</b> Carry the heavy cable plug back to the base power socket.</li>
-      <li><span class="step-num">5</span><b>Set Power Plan &amp; Watch:</b> Choose a power strategy and watch 18 days of sunlight at the console!</li>
-    </ol>
-    <div class="kid-controls-bar">
-      <span>🎮 <b>Controls:</b></span>
-      <span><kbd>WASD</kbd> / <kbd>Arrows</kbd> Walk &amp; Turn</span>
-      <span><kbd>E</kbd> Grab cart handle &amp; plug</span>
-      <span>Hold <kbd>E</kbd> / <kbd>▲</kbd> to raise the mast stages</span>
-    </div>
-    <p><b>Jin:</b> “Welcome to Horizon Base! Down here the Sun stays low, right on the horizon. Hills make <b>giant shadows</b>.”</p>
-    <p><b>Elena:</b> “Our new solar mast is on that cart. Tow it to a pad, raise it up, and run the cable back to the base. Then the battery stays full and our science keeps running!”</p>
+    <p>Pick a pad for the cart. Set the supports before raising the mast, then plug the solar panels into Horizon Base.</p>
+    <p>You’ll see how your choice affects the power available to heat the base and run experiments.</p>
     <aside class="mx-detail"><b>More details</b><br>The panel makes ${sc.panelKW} kW in sunlight. The base needs ${sc.essentialKW} kW to stay warm, and science uses ${sc.scienceKW} kW more. The battery holds ${sc.batteryKWh} kWh.</aside>`,
     actions: [{label: '▶ Let’s go!', primary: true, run: () => { ctx.act({id: 'begin'}, {quiet: true}); planBoard(ctx); }}, {label: 'Is this real?', run: () => ctx.sourcesDialog(() => brief(ctx))}]});
 }
@@ -127,9 +106,9 @@ runMission({
   id: ID, title: 'Chasing the Sun', place: 'MISSION CONTROL JR. · MOON SOUTH POLE',
   meters: [{id: 'suit', icon: '🧑‍🚀', label: 'Suit air'}, {id: 'battery', icon: '🔋', label: 'Base battery'}, {id: 'cable', icon: '🔌', label: 'Cable'}],
   create: () => createMission({scenario: tuneScenario(ID, lunarSunScenario), seed: 42 + readHistory(ID).length}),
-  rules: {applyAction, getObjective, getSteps},
+  rules: {applyAction, getObjective, getInstruction, getSteps},
   scene: ctx => createSunScene({container: document.getElementById('world'), getState: () => ctx.mission, act: a => ctx.act(a), onPause: () => ctx.pause(), onConsole: () => consoleScreen(ctx)}),
-  brief, sources, debrief,
+  brief, sources, debrief, resumePlan: planBoard,
   sampler(ctx) { ctx.act({id: 'begin'}, {quiet: true}); ctx.saveCheckpoint(); },
   hud(ctx) {
     const s = ctx.mission, sc = s.scenario, {hud} = ctx;

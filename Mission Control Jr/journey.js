@@ -143,7 +143,7 @@ function render(){
   }
 
   $('journey-title').innerHTML='MISSION CONTROL<br><span>JUNIOR.</span>';
-  $('journey-intro').textContent=campaign==='moon'?'Bonus Moon missions: chase sunlight, fight dust, and send messages from Horizon base.':'Train as a junior astronaut on Mars! Fly in, keep the base safe, drive a rover, and help your crew.';
+  $('journey-intro').textContent=campaign==='moon'?'Bonus Moon missions: chase sunlight, fight dust, and send messages from Horizon base.':'Train as a junior astronaut on Mars. Fly a ship, protect the base, and explore in a rover.';
   
   // Rotating typewriter Pip message
   const pipKey = `${campaign}-${complete ? 'done' : (next || 'orbit')}`;
@@ -334,7 +334,7 @@ function resume(){
   $('journey').hidden=true;$('transition').hidden=true;frame.hidden=false;hold(false);frame.focus();
 }
 
-const transitions={storm:{tag:'DAY 12 · AT THE BASE',title:'The base needs you!',copy:'Jin landed at Meridian base. The next day, the radio you fixed brings bad news: a big dust storm is coming! Get the power ready and keep the crew safe.'},rover:{tag:'DAY 16 · ROVER TIME',title:'Time to explore!',copy:'The storm is over! Now Jin drives the rover and Amara does the science. Take photos of the rocks, then bring everyone home.'}};
+const transitions={storm:{tag:'DAY 12 · AT THE BASE',title:'The base needs you!',copy:'The radio you fixed brings news of a dust storm. Get Meridian Base ready before it arrives.'},rover:{tag:'DAY 16 · ROVER TIME',title:'Time to explore!',copy:'The storm has passed. Join Amara on a rover trip to photograph rock layers at Kestrel Ridge.'}};
 
 function requestChapter(id,replay=false){
   if(!chapterById(id))return;
@@ -347,8 +347,8 @@ function requestChapter(id,replay=false){
   if(!info){launch(id);return;}
   if(id==='rover'){
     const outcome=state.records.storm?.carry?.stormOutcome;
-    if(outcome==='evacuated')info={...info,title:'The base is being fixed.',copy:'The crew left the base to stay safe. Now it is being fixed. The rover battery is not full, so keep extra for the trip home.'};
-    else if(outcome==='survived')info={...info,title:'Everyone is safe, but power is low.',copy:'The base got through the storm, just barely. The rover battery is not full. Luca says: turn back if the home battery drops below 24%.'};
+    if(outcome==='evacuated')info={...info,title:'The base is being fixed.',copy:'The crew got out safely. Repairs are underway, so the rover leaves with a partly charged battery.'};
+    else if(outcome==='survived')info={...info,title:'Everyone is safe, but power is low.',copy:'The crew made it through the storm. Watch your return forecast closely with a partly charged battery.'};
   }
   clearPresentation();pending=id;hold(true);
   stopPipTypewriter();
@@ -363,8 +363,8 @@ function requestChapter(id,replay=false){
   $('transition-begin').focus();
 }
 
-$('sampler-start').onclick=()=>{ $('sampler').hidden=false; $('sampler-close').focus(); };
-$('sampler-close').onclick=()=>{ $('sampler').hidden=true; $('sampler-start').focus(); };
+$('sampler-start')?.addEventListener('click',()=>{ $('sampler').hidden=false; $('sampler-close').focus(); });
+$('sampler-close').onclick=()=>{ $('sampler').hidden=true; $('sampler-start')?.focus(); };
 if($('sampler-close-top')) $('sampler-close-top').onclick=()=>{ $('sampler').hidden=true; $('sampler-start').focus(); };
 document.querySelectorAll('[data-sample]').forEach(button=>button.onclick=()=>launch(button.dataset.sample,{sampler:true}));
 
@@ -465,7 +465,7 @@ $('continue').onclick=()=>{
   if(next)requestChapter(next);
 };
 if($('quick-mission')) $('quick-mission').onclick=()=>requestChapter('storm');
-$('extended-start').onclick=()=>requestChapter('extended');
+$('extended-start')?.addEventListener('click',()=>requestChapter('extended'));
 $('transition-begin').onclick=()=>launch(pending);
 $('transition-back').onclick=resume;
 

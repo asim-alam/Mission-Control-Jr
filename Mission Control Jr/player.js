@@ -1,6 +1,11 @@
 import * as THREE from 'three';
 import { isBlocked, planRoute } from './navigation.js';
 
+export function showCameraView(button, view) {
+  button.textContent = view === 'first' ? 'First person' : 'Third person';
+  button.setAttribute('aria-label', `${button.textContent} view. Switch to ${view === 'first' ? 'third' : 'first'} person (V)`);
+}
+
 export class Player {
   constructor(camera,canvas,onInteract,onPause,onStep,onViewChange=()=>{}) {
     this.camera=camera;this.canvas=canvas;this.enabled=false;this.keys=new Set();this.route=[];
@@ -47,11 +52,13 @@ export class Player {
     // Probe the center and near-plane corners so the camera pulls in at walls.
     const right=new THREE.Vector3(1,0,0).applyEuler(camera.rotation);
     const up=new THREE.Vector3(0,1,0).applyEuler(camera.rotation);
+    const blockers=[];
+    for(const object of this.cameraObjects) object.traverseVisible(node=>{if(node.isMesh)blockers.push(node);});
     let distance=desiredDistance;
     for(const [x,y]of[[0,0],[-.16,-.12],[.16,-.12],[-.16,.12],[.16,.12]]) {
       const origin=focus.clone().addScaledVector(right,x).addScaledVector(up,y);
       this.cameraRay.set(origin,backward);this.cameraRay.far=desiredDistance+.18;
-      const hit=this.cameraRay.intersectObjects(this.cameraObjects,true).find(hit=>hit.object.isMesh);
+      const hit=this.cameraRay.intersectObjects(blockers,false)[0];
       if(hit)distance=Math.min(distance,Math.max(0,hit.distance-.18));
     }
     this.cameraDistance=distance;camera.position.copy(focus).addScaledVector(backward,distance);

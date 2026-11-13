@@ -294,7 +294,7 @@ export async function buildWorld(canvas) {
   const target = new THREE.Vector3();
   const desired = new THREE.Vector3();
   let cameraReady = false, roll = 0;
-  let outside = false;
+  let outside = false, previousView;
   const wheels = Array.from({length: 6}, (_, i) => roverFrame.getObjectByName(`wheel_${i}`));
 
   function resize() {
@@ -337,7 +337,9 @@ export async function buildWorld(canvas) {
       statusLight(models.verdant, 'service_indicator', last?.recyclerRan ?? Boolean(expedition.completed.valve));
       models.verdant.getObjectByName('grow_lights').visible = last?.lit ?? true;
     },
-    render(state, motion, dt, surveyId, eva, serviceSite) {
+    render(state, motion, dt, surveyId, eva, serviceSite, view) {
+      const firstPerson = view === 'first' && !surveyId;
+      rover.visible = !firstPerson || Boolean(eva);
       const x = state.x, z = state.z, h = state.heading;
       const y = ground(x, z);
       const dx = Math.sin(h), dz = Math.cos(h);
@@ -353,7 +355,7 @@ export async function buildWorld(canvas) {
       desired.set(x - dx * 10.5, y + 6.2, z - dz * 10.5);
       desired.y = Math.max(desired.y, ground(desired.x, desired.z) + 2.5);
       target.set(x + dx * 2, y + 2, z + dz * 2);
-      if (astronaut) astronaut.visible = Boolean(eva);
+      if (astronaut) astronaut.visible = Boolean(eva) && !firstPerson;
       if (eva) {
         const height = ground(eva.x, eva.z);
         const forwardX = Math.sin(eva.heading), forwardZ = Math.cos(eva.heading);
@@ -372,6 +374,15 @@ export async function buildWorld(canvas) {
         target.set(eva.x + forwardX * 1.8, height + 1.45, eva.z + forwardZ * 1.8);
         roverRing.position.set(x, y + .11, z);
       }
+      if (firstPerson) {
+        if (eva) {
+          desired.set(eva.x, ground(eva.x, eva.z) + 1.65, eva.z);
+          target.set(eva.x + Math.sin(eva.heading) * 12, desired.y - .5, eva.z + Math.cos(eva.heading) * 12);
+        } else {
+          desired.set(x + dx * 1.2, y + 2.25, z + dz * 1.2);
+          target.set(x + dx * 16, y + 2.05, z + dz * 16);
+        }
+      }
       roverRing.visible = Boolean(eva);
       beacon.visible = Boolean(eva && serviceSite);
       if (beacon.visible) {
@@ -387,7 +398,7 @@ export async function buildWorld(canvas) {
           base.z + frontZ * distance + frontX * distance * .58);
         target.set(base.x - frontX * 2, height + (base.footprint ? 3.3 : 2), base.z - frontZ * 2);
       }
-      if (!cameraReady || outside !== Boolean(eva) || camera.position.distanceTo(desired) > 35) {
+      if (!cameraReady || previousView !== firstPerson || outside !== Boolean(eva) || camera.position.distanceTo(desired) > 35) {
         camera.position.copy(desired);
         aim.copy(target);
         cameraReady = true;
@@ -397,6 +408,7 @@ export async function buildWorld(canvas) {
         aim.lerp(target, alpha);
       }
       outside = Boolean(eva);
+      previousView = firstPerson;
       camera.lookAt(aim);
       const focus = surveyId ? facilities[surveyId] : eva ?? state;
       const lightY = ground(focus.x, focus.z);

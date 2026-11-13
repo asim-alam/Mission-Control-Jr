@@ -5,7 +5,7 @@ import {readHistory, pushHistory} from '../shared/runtime.js';
 import {tuneScenario} from '../../simulation/difficulty.js';
 import {greenhouseScenario} from './scenario.js';
 import {createMission, BEDS, GREENHOUSE_SAVE_SCHEMA, migrateGreenhouseState} from './state.js';
-import {applyAction, getObjective, getSteps, getResult, PLANS, lightPower, batteryNeeded, isReady, moistureState, leafSurfaceState} from './actions.js';
+import {applyAction, getObjective, getInstruction, getSteps, getResult, PLANS, lightPower, batteryNeeded, isReady, moistureState, leafSurfaceState} from './actions.js';
 import {createGreenhouseScene} from './scene.js';
 
 const ID = 'greenhouse';
@@ -20,34 +20,12 @@ function sources(ctx) {
 }
 function brief(ctx) {
   const rested = ctx.mission.crewRested ? '<p>After the Sun storm, the crew is rested and ready to farm.</p>' : '';
-  ctx.dialog({label: 'MARS DAYS 32–34 · THE GREENHOUSE', title: 'A birthday promise', body: `${rested}
+  ctx.briefing({label: 'MARS DAYS 32–34 · THE GREENHOUSE', title: 'A birthday promise', body: `${rested}
     <div class="kid-mission-intro">
-      <p>🎂 <b>Elena’s Birthday is in 3 Days!</b> Amara promised her a crisp, fresh salad on Mars. Cultivate the three crop beds, manage light and water budgets, and prepare a fresh harvest celebration!</p>
+      <p><b>Amara:</b> “It’s Elena’s birthday in three days. I promised her a salad. Can you help me get the crops ready?”</p>
     </div>
-    <div class="kid-section-title">🧰 What You Need This Level</div>
-    <div class="kid-supplies-grid">
-      <div class="kid-supply-pill"><span class="pill-icon">🥬</span><div class="pill-text"><b>3 Plant Beds</b><span>Red lettuce, mizuna greens &amp; spicy chile peppers</span></div></div>
-      <div class="kid-supply-pill"><span class="pill-icon">💡</span><div class="pill-text"><b>Light Levers</b><span>Off → Half → Full light (uses daily solar kWh)</span></div></div>
-      <div class="kid-supply-pill"><span class="pill-icon">💧</span><div class="pill-text"><b>Water Wheel</b><span>Turn to water soil; keep needle in the green zone</span></div></div>
-      <div class="kid-supply-pill"><span class="pill-icon">🌀</span><div class="pill-text"><b>Air Vent Fan</b><span>Check vent airflow to keep leaf surfaces dry</span></div></div>
-    </div>
-    <div class="kid-section-title">📋 Your Jobs (Do in order)</div>
-    <ol class="kid-jobs-list">
-      <li><span class="step-num">1</span><b>Pick a Lighting Plan:</b> Balance battery savings vs. bonus pepper growth.</li>
-      <li><span class="step-num">2</span><b>Water the Soil:</b> Turn blue valve wheels until the moisture dial turns green.</li>
-      <li><span class="step-num">3</span><b>Check Airflow at Vent:</b> Confirm fan is really spinning (readout can say LOW when stopped!).</li>
-      <li><span class="step-num">4</span><b>End Day at Console:</b> Check power reserves and advance to the next day.</li>
-      <li><span class="step-num">5</span><b>Harvest with Clean Tools:</b> Pick the ripe crops and serve Elena’s birthday feast!</li>
-    </ol>
-    <div class="kid-controls-bar">
-      <span>🎮 <b>Controls:</b></span>
-      <span><kbd>WASD</kbd> / <kbd>Arrows</kbd> Walk &amp; Turn</span>
-      <span><kbd>Mouse</kbd> Look</span>
-      <span><kbd>E</kbd> Turn levers &amp; wheels</span>
-      <span>Walk buttons take you right to each bed!</span>
-    </div>
-    <p><b>Amara:</b> “Shh! It’s Elena’s birthday in three days. I promised her a <b>fresh salad</b>. Can you help me grow it?”</p>
-    <p>You have three beds of already-established plants: 🥬 <b>red lettuce</b>, 🌿 <b>mizuna</b> and 🌶️ <b>chile peppers</b>. They were growing before this story began. Plants need <b>light</b>, the right amount of <b>water</b> and moving air. Light uses power, and we only have so much each day.</p><p>We will skip through two short practice growing periods. A fresh harvest is a <b>food supplement</b>, not the crew's whole diet.</p>
+    <p>Choose how to share the available light between lettuce, mizuna greens, and peppers. Water the soil and check that the fan is actually moving air.</p>
+    <p>The crops are already growing. You’ll look after them for two short practice days before the harvest.</p>
     <aside class="mx-detail"><b>NASA study details</b><br>OSD-269 used a 16-hour light / 8-hour dark schedule. The VEG-03A lettuce pillows received about 200 µmol/m²/s of photosynthetically active radiation at the centre of the unit, with a 12:3:1 red:blue:green LED ratio. NASA's VEG-01A and VEG-01B lettuce crops were first harvested after 33 days. This game starts with established plants and skips time; its two practice growing periods are not real seed-to-harvest times. These are measured ISS study conditions; the game's light settings are simplified power choices.</aside>`,
     actions: [{label: '▶ Let’s grow!', primary: true, run: () => { ctx.act({id: 'begin'}, {quiet: true}); planBoard(ctx); }}, {label: 'Is this real?', run: () => ctx.sourcesDialog(() => brief(ctx))}]});
 }
@@ -118,9 +96,9 @@ runMission({
   title: 'The Greenhouse Promise', place: 'MISSION CONTROL JR. · MARS DAYS 32–34', carryFrom: 'solar-shelter',
   meters: [{id: 'power', icon: '⚡', label: 'Light power today'}, {id: 'battery', icon: '🔋', label: 'Battery'}, {id: 'water', icon: '💧', label: 'Water tank'}],
   create: carry => createMission({scenario: tuneScenario(ID, greenhouseScenario), initialCarry: carry}),
-  rules: {applyAction, getObjective, getSteps},
+  rules: {applyAction, getObjective, getInstruction, getSteps},
   scene: async ctx => { const view = await createGreenhouseScene({container: document.getElementById('world'), getState: () => ctx.mission, act: a => ctx.act(a), onPause: () => ctx.pause(), onConsole: () => consoleScreen(ctx)}); view.world.onInspect = text => ctx.hud.toast(text, 'quiet'); return view; },
-  brief, sources, debrief,
+  brief, sources, debrief, resumePlan: planBoard,
   sampler(ctx) { ctx.act({id: 'begin'}, {quiet: true}); ctx.saveCheckpoint(); ctx.act({id: 'choosePlan', payload: 'salad'}, {quiet: true}); },
   hud(ctx) {
     const s = ctx.mission, sc = s.scenario, {hud} = ctx, power = lightPower(s);

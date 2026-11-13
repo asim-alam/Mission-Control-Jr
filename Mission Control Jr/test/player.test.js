@@ -88,3 +88,30 @@ test('left and right arrow keys rotate the camera yaw view angle in walking scen
     assert.equal(camera.rotation.y, player.yaw, 'Camera rotation yaw should match player yaw');
   } finally {globalThis.addEventListener=original;}
 });
+
+test('walking camera ignores sprites and hidden scenery in the collision ray', () => {
+  const original = globalThis.addEventListener;
+  globalThis.addEventListener = () => {};
+  try {
+    const camera = new THREE.PerspectiveCamera();
+    const player = new Player(camera, {addEventListener() {}}, () => {}, () => {}, () => {});
+    const scenery = new THREE.Group();
+    const sprite = new THREE.Sprite();
+    const wall = new THREE.Mesh(new THREE.BoxGeometry(8, 5, .2), new THREE.MeshBasicMaterial());
+    wall.position.set(0, 2, 11);
+    wall.visible = false;
+    scenery.add(sprite, wall);
+    scenery.updateMatrixWorld(true);
+    player.cameraObjects = [scenery];
+    player.toggleView();
+    assert.equal(player.cameraDistance, 3.8);
+    wall.visible = true;
+    player.syncCamera();
+    assert.ok(player.cameraDistance < 2);
+    sprite.material.dispose();
+    wall.geometry.dispose();
+    wall.material.dispose();
+  } finally {
+    globalThis.addEventListener = original;
+  }
+});

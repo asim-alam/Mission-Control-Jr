@@ -273,7 +273,9 @@ export async function createArrivalScene({container, getState, act, onPause, ope
       if (st.fixed || st.diagnosed) { const p = st.fixed ? null : st.scenario.parts[st.diagnosed]; if (p && st.loads[p.load]) return toggles[p.load].parent; if (st.fixed) { const off = st.scenario.testNeeds.find(l => !st.loads[l]); return off ? toggles[off].parent : testBtn; } return st.diagnosed === 'amp' ? lockerDoor : ({feed: feedPlug, card})[st.diagnosed]; }
       const need = st.scenario.testNeeds.find(l => !st.loads[l]); return need ? toggles[need].parent : testBtn;
     }
-    return st.site ? hatchControl : ground;
+    if (st.site) return hatchControl;
+    if (!hazardCamReady(st) && !(st.loads.charger && inShadow(st))) return toggles.charger.parent;
+    return ground;
   };
   world.onFrame(() => world.guide(guideTarget(), .35));
 
@@ -281,6 +283,6 @@ export async function createArrivalScene({container, getState, act, onPause, ope
     walkTargets: WALK_TARGETS,
     walk(id) {
       const t = WALK_TARGETS.find(w => w.id === id); if (!t) return;
-      if (!player.navigate({x: t.x, z: t.z}, t.look)) world.onInspect?.('The path is blocked. Walk to the middle of the hall and try again.');
+      return player.navigate({x: t.x, z: t.z}, t.look);
     }};
 }

@@ -153,14 +153,51 @@ export function getObjective(s) {
   if (!s.airflowChecked) return 'Check the fan: does air move when the panel says LOW?';
   if (!s.fanRunning) return 'Reset the fan controller to restore airflow';
   if (s.day > s.scenario.growDays) {
+    if (noHarvest(s)) return 'Review the crop results';
     if (BEDS.some(id => isReady(s, id))) return s.holding === 'basket' ? 'Pick the ready plants' : 'Harvest day! Get the basket';
     if (s.holding === 'basket' && !s.harvestChecked) return 'Check the leaves and clean basket at the table';
     return s.holding === 'basket' ? 'Serve dinner: put the basket on the table' : 'Harvest day! Get the basket';
   }
   if (batteryNeeded(s) > s.batteryKWh + 1e-9) return 'Too much light! Turn a light down';
-  if (BEDS.some(id => !s.beds[id].harvested && moistureState(s, id) === 'dry' && s.beds[id].light !== 'off')) return `Day ${s.day}: water the dry beds`;
+  if (dryLitBed(s)) return `Day ${s.day}: water the dry beds`;
   return `Day ${s.day}: set the lights, water, then end the day`;
 }
+export const noHarvest = s => s.day > s.scenario.growDays && !s.basketContents.length && !BEDS.some(id => isReady(s, id));
+export const dryLitBed = s => BEDS.find(id => !s.beds[id].harvested && s.beds[id].light !== 'off' && moistureState(s, id) === 'dry');
+export function bedToDim(s) {
+  if (batteryNeeded(s) <= s.batteryKWh + 1e-9) return null;
+  return BEDS.find(id => !s.beds[id].harvested && s.beds[id].light === 'full')
+    ?? BEDS.find(id => !s.beds[id].harvested && s.beds[id].light === 'half');
+}
+
+export function getInstruction(s) {
+  if (s.phase !== 'active') return null;
+  if (!s.plan) return {text: 'Choose which crops get the most light.'};
+  if (s.holding === 'hose') return {place: 'line', text: 'Hold E or hold the prompt on the empty pipe fitting.'};
+  if (s.leak === 'leaking' || s.leak === 'hose-fitted') return {place: 'line', text: 'Aim at the red valve. Hold E or hold the prompt until it turns.'};
+  if (s.leak === 'isolated') return {place: 'line', text: 'Aim at the old hose and press E or tap to unclip it.'};
+  if (s.leak === 'hose-off') return {place: 'shelf', text: 'Take the spare hose from the tool shelf with E or a tap.'};
+  if (!s.airflowChecked) return {place: 'fan', text: 'Aim at the vent and press E or tap to check whether it is blowing.'};
+  if (!s.fanRunning) return {place: 'fan', text: 'Use the same vent again to reset the fan. Watch the blades spin.'};
+  if (s.day > s.scenario.growDays) {
+    if (noHarvest(s)) return {place: 'console', text: 'No plants are ready to pick. Check the greenhouse console, then choose Stop practice to review and retry.'};
+    const ready = BEDS.find(id => isReady(s, id));
+    if (s.holding !== 'basket') return {place: 'table', text: 'Use the basket on the table to pick it up.'};
+    if (ready) return {place: ready, text: 'Aim at the ready plants and use the harvest prompt.'};
+    return {place: 'table', text: s.harvestChecked ? 'Use the table again to serve the food.' : 'Use the table to check the leaves and the basket before serving.'};
+  }
+  const dim = bedToDim(s);
+  if (dim) return {place: dim, text: 'Use the light lever to cycle the lamp down. Check the light power meter.'};
+  if (s.tankL > 0) {
+    const dry = dryLitBed(s);
+    if (dry) return {place: dry, text: 'Use the water valve at the marked bed. Stop when its soil reads Good.'};
+  }
+  if (BEDS.every(id => s.beds[id].light === 'off')) return {
+    text: `Use a bed’s light lever to turn on its lamp. ${PLANS[s.plan].text}`,
+  };
+  return {place: 'console', text: 'Check each bed’s light and soil on the console, then choose End the day.'};
+}
+
 export function getSteps(s) {
   const grow = s.day > s.scenario.growDays, fixed = s.leak === 'fixed' || s.leak === 'none';
   const list = [
@@ -173,7 +210,12 @@ export function getSteps(s) {
     {text: 'Check the harvest', done: s.harvestChecked},
     {text: 'Serve dinner', done: s.served},
   ];
-  if (s.phase !== 'brief') { const now = list.find(x => !x.done); if (now) now.now = true; }
+  if (s.phase === 'active') {
+    const fixingLeak = !fixed;
+    const current = !s.plan ? 0 : fixingLeak ? 4 : !s.fanRunning ? 1 : !grow ? (s.day === 1 ? 2 : 3)
+      : noHarvest(s) || BEDS.some(id => isReady(s, id)) ? 5 : !s.harvestChecked ? 6 : 7;
+    list[current].now = true;
+  }
   return list;
 }
 export function getResult(s) {

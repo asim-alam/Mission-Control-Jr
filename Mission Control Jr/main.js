@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import {mountPipLesson, pipLessonOpen} from './professor-pip.js';
+import {showCameraView} from './player.js';
 import {connectChapter,completeChapter,openJourney,journeyPaused} from './campaign-bridge.js';
 import { EVENTS, WORK } from './story.js';
 import { buildOutpost } from './outpost.js';
@@ -102,7 +104,10 @@ const roverOpening = new THREE.Mesh(new THREE.BoxGeometry(1.1,1.15,.06),new THRE
 roverOpening.position.set(0,.75,1.28);roverShelter.add(roverOpening);
 roverShelter.position.set(10,0,4);roverShelter.visible=false;scene.add(roverShelter);
 
-buildOutpost(scene);
+let commander;
+buildOutpost(scene).then(() => {
+  commander = scene.children.find(model => model.name === 'astronaut GLB');
+});
 
 // Dust particles for storms
 const dustCount = 3000;
@@ -333,10 +338,26 @@ function render() {
     showModal(`<h2 id="modal-heading">${ev.title}</h2><p>${ev.text}</p>`, ev.choices.map((c) => ({ label: c.label, onClick: () => { hideModal(); resolveChoice(c); } })));
     $('work').innerHTML = '';
   } else {
-    $('work').innerHTML = '<h3>Pick today\'s job for the crew</h3>';
+    const lastJob = state.decisionHistory.findLast(entry => entry.type === 'work');
+    const lowest = ['power', 'oxygen', 'water', 'food', 'equipment'].reduce((low, key) => state.res[key] < state.res[low] ? key : low);
+    const tip = state.sol === 1
+      ? 'Check the meters, then pick one job. The crew will use supplies as the sol ends.'
+      : `${RES_LABEL[lowest]} is lowest. Pick one job to help the crew through this sol.`;
+    $('work').innerHTML = `<h3>Pick today’s job</h3><p class="small work-tip">${tip}</p>`;
+    if (lastJob?.sol === state.sol - 1) {
+      const summary = document.createElement('p');
+      summary.className = 'small work-tip';
+      summary.textContent = `Sol ${lastJob.sol} done · ${WORK.find(w => w.id === lastJob.choice).label}`;
+      $('work').appendChild(summary);
+    }
     WORK.forEach((w) => {
       const b = document.createElement('button');
-      b.textContent = w.label;
+      b.textContent = w.id === 'farm' ? 'Tend the plants' : w.label;
+      const effects = Object.entries(w.fx).map(([key, amount]) => `${amount > 0 ? '+' : '−'}${Math.abs(amount)} ${RES_LABEL[key].toLowerCase()}`);
+      if (w.rest) effects.push(`−${w.rest} tiredness`);
+      const detail = document.createElement('small');
+      detail.textContent = effects.join(' · ');
+      b.appendChild(detail);
       b.onclick = () => chooseWork(w);
       $('work').appendChild(b);
     });
@@ -374,7 +395,17 @@ function hideModal() {
   $('hud').inert = false;
 }
 
+let cameraView = 'third';
+function toggleView() {
+  if ($('hud').hidden || !$('modal').hidden || pipLessonOpen()) return;
+  cameraView = cameraView === 'first' ? 'third' : 'first';
+  showCameraView($('view'), cameraView);
+}
+$('view').onclick = toggleView;
+
 $('start').onclick = () => {
+  $('view').hidden = false;
+  showCameraView($('view'), cameraView);
   $('title').style.display = 'none';
   $('hud').hidden = false;
   startAudio();
@@ -382,7 +413,14 @@ $('start').onclick = () => {
   newGame();
 };
 
+
 // ---------- Loop ----------
+mountPipLesson($('campaign-guidance'), 'campaign', () => ({
+  step: state.ended || state.sol >= 30 ? 2 : state.sol > 1 ? 1 : 0,
+}));
+$('campaign-guidance').hidden = true;
+$('start').addEventListener('click', () => { $('campaign-guidance').hidden = false; });
+window.addEventListener('keydown', event => { if (event.code === 'KeyV' && !event.repeat) toggleView(); });
 const timer = new THREE.Timer();
 timer.connect(document);
 let angle = 0.6;
@@ -391,8 +429,14 @@ renderer.setAnimationLoop((time) => {
   if(journeyPaused)return;
   const dt = Math.min(timer.getDelta(), 0.1);
   angle += dt * 0.05;
-  camera.position.set(Math.cos(angle) * 22, 9, Math.sin(angle) * 22);
-  camera.lookAt(0, 2, 0);
+  if (commander) commander.visible = cameraView === 'third';
+  if (cameraView === 'first') {
+    camera.position.set(4.4, 1.65, 3.8);
+    camera.lookAt(-2, 1.5, -3.5);
+  } else {
+    camera.position.set(Math.cos(angle) * 22, 9, Math.sin(angle) * 22);
+    camera.lookAt(0, 2, 0);
+  }
   const target = stormLevel ? 0.8 : 0;
   dustMat.opacity += (target - dustMat.opacity) * dt * 2;
   scene.fog.far += ((stormLevel ? 35 : 160) - scene.fog.far) * dt;

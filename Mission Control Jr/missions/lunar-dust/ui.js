@@ -5,7 +5,7 @@ import {readHistory, pushHistory} from '../shared/runtime.js';
 import {tuneScenario} from '../../simulation/difficulty.js';
 import {lunarDustScenario} from './scenario.js';
 import {createMission, ITEMS} from './state.js';
-import {applyAction, getObjective, getSteps, getResult, PLANS, dirtyItems} from './actions.js';
+import {applyAction, getObjective, getInstruction, getSteps, getResult, PLANS, dirtyItems} from './actions.js';
 import {createDustScene} from './scene.js';
 
 const ID = 'lunar-dust';
@@ -19,34 +19,12 @@ function sources(ctx) {
 
 function brief(ctx) {
   const sc = ctx.mission.scenario;
-  ctx.dialog({label: 'MOON · HORIZON BASE AIRLOCK', title: 'Dust Busters', body: `
+  ctx.briefing({label: 'MOON · HORIZON BASE AIRLOCK', title: 'Dust Busters', body: `
     <div class="kid-mission-intro">
-      <p>🪖 <b>Moonwalk Complete!</b> But look at your suits—they are covered in abrasive lunar dust! Moon dust is sharp like shattered glass. Clean all equipment in the airlock before opening the habitat door!</p>
+      <p><b>Luca:</b> “Leave your dusty gear in the airlock. Moon dust can scratch a visor and make the crew cough.”</p>
     </div>
-    <div class="kid-section-title">🧰 What You Need This Level</div>
-    <div class="kid-supplies-grid">
-      <div class="kid-supply-pill"><span class="pill-icon">🧹</span><div class="pill-text"><b>Suit Brush</b><span>Removes thick dust from boots and suits (zero power, creates airborne dust)</span></div></div>
-      <div class="kid-supply-pill"><span class="pill-icon">🌀</span><div class="pill-text"><b>Airlock Vacuum</b><span>Suction cleaning for suit folds and supply bags (uses moderate power)</span></div></div>
-      <div class="kid-supply-pill"><span class="pill-icon">⚡</span><div class="pill-text"><b>EDS Shield Plate</b><span>Electrodynamic shield cleans smooth helmet visors without scratching</span></div></div>
-      <div class="kid-supply-pill"><span class="pill-icon">🌬️</span><div class="pill-text"><b>Air Scrubber &amp; Filters</b><span>Pumps airborne dust through replaceable filter cartridges</span></div></div>
-    </div>
-    <div class="kid-section-title">📋 Your Jobs (Do in order)</div>
-    <ol class="kid-jobs-list">
-      <li><span class="step-num">1</span><b>Seal Outer Hatch:</b> Close the airlock door and pressurize with cabin air.</li>
-      <li><span class="step-num">2</span><b>Clean Visors with EDS:</b> Use the electrodynamic plate so the helmet visor doesn't scratch.</li>
-      <li><span class="step-num">3</span><b>Clean Suit, Boots &amp; Bag:</b> Brush or vacuum all clinging dust off external gear.</li>
-      <li><span class="step-num">4</span><b>Run the Air Scrubber:</b> Filter dusty air; swap the filter cartridge if it fills up.</li>
-      <li><span class="step-num">5</span><b>Enter Habitat When Safe:</b> Open the inner hatch only after the airlock screen shows GREEN!</li>
-    </ol>
-    <div class="kid-controls-bar">
-      <span>🎮 <b>Controls:</b></span>
-      <span><kbd>WASD</kbd> / <kbd>Arrows</kbd> Walk &amp; Turn</span>
-      <span><kbd>Mouse</kbd> Look</span>
-      <span><kbd>E</kbd> Pick up &amp; Use cleaning tools</span>
-      <span>Monitor power units and filter status!</span>
-    </div>
-    <p><b>Amara:</b> “What a moonwalk! But look at us. We are covered in Moon dust.”</p>
-    <p><b>Luca (on the radio):</b> “Don’t bring that dust inside! It is sharp like tiny bits of glass. It scratches things and makes people cough. Clean everything in the airlock first.”</p>
+    <p>Pick a cleaning plan for your suit, helmet, and gear. You have <b>${sc.powerUnits} power units</b> and <b>${sc.spareFilters} spare filter${sc.spareFilters === 1 ? '' : 's'}</b>.</p>
+    <p>Clear the dust from the air and wait for the safe reading before opening the inner hatch.</p>
     <aside class="mx-detail"><b>More details</b><br>You have ${sc.powerUnits} power units and ${sc.spareFilters} spare filter${sc.spareFilters === 1 ? '' : 's'}. The vacuum uses ${sc.tools.vacuum.power} power each time, the EDS ${sc.tools.eds.power}, the air fan ${sc.scrub.power}.</aside>`,
     actions: [{label: '▶ Let’s bust some dust!', primary: true, run: () => { ctx.act({id: 'begin'}, {quiet: true}); planBoard(ctx); }}, {label: 'Is this real?', run: () => ctx.sourcesDialog(() => brief(ctx))}]});
 }
@@ -102,9 +80,9 @@ runMission({
   id: ID, title: 'Dust Busters', place: 'MISSION CONTROL JR. · MOON BASE AIRLOCK',
   meters: [{id: 'power', icon: '⚡', label: 'Power'}, {id: 'air', icon: '🌫️', label: 'Dust in the air'}, {id: 'filter', icon: '🌬️', label: 'Filter'}],
   create: () => createMission({scenario: tuneScenario(ID, lunarDustScenario), seed: 42 + readHistory(ID).length}),
-  rules: {applyAction, getObjective, getSteps},
+  rules: {applyAction, getObjective, getInstruction, getSteps},
   scene: ctx => createDustScene({container: document.getElementById('world'), getState: () => ctx.mission, act: a => ctx.act(a), onPause: () => ctx.pause()}),
-  brief, sources, debrief,
+  brief, sources, debrief, resumePlan: planBoard,
   sampler(ctx) { ctx.act({id: 'begin'}, {quiet: true}); ctx.saveCheckpoint(); },
   hud(ctx) {
     const s = ctx.mission, sc = s.scenario, {hud} = ctx;

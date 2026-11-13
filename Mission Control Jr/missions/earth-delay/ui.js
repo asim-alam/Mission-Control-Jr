@@ -5,7 +5,7 @@ import {readHistory, pushHistory} from '../shared/runtime.js';
 import {tuneScenario} from '../../simulation/difficulty.js';
 import {delayScenario} from './scenario.js';
 import {createMission} from './state.js';
-import {applyAction, advanceMission, getObjective, getSteps, getResult, PLANS, PART_NAMES, messageProgress, earthRoundTrip, earthAnswer, waterRate} from './actions.js';
+import {applyAction, advanceMission, getObjective, getInstruction, getSteps, getResult, PLANS, PART_NAMES, messageProgress, earthRoundTrip, earthAnswer, waterRate} from './actions.js';
 import {createDelayScene} from './scene.js';
 
 const ID = 'earth-delay';
@@ -19,34 +19,12 @@ function sources(ctx) {
 }
 function brief(ctx) {
   const sc = ctx.mission.scenario, carry = ctx.mission.carryL;
-  ctx.dialog({label: `MARS DAY ${sc.sol} · ALARM!`, title: 'The water machine broke!', body: `
+  ctx.briefing({label: `MARS DAY ${sc.sol} · ALARM!`, title: 'The water machine broke!', body: `
     <div class="kid-mission-intro">
-      <p>🚨 <b>Water Recycler Offline!</b> The habitat water machine stopped working. You have <b>${ctx.mission.waterL.toFixed(0)} litres</b> of reserve water left${carry ? ` (plus ${carry.toFixed(0)} L saved in the greenhouse)` : ''}. Earth is far away—radio signals take <b>${(sc.oneWaySeconds / 60).toFixed(0)} minutes</b> each way!</p>
+      <p><b>Luca:</b> “Our water recycler stopped. We have <b>${ctx.mission.waterL.toFixed(0)} L</b> left${carry ? `, including ${carry.toFixed(0)} L saved in the greenhouse` : ''}. Switch on Save Water while we work out what broke.”</p>
     </div>
-    <div class="kid-section-title">🧰 What You Need This Level</div>
-    <div class="kid-supplies-grid">
-      <div class="kid-supply-pill"><span class="pill-icon">📡</span><div class="pill-text"><b>Earth Link Console</b><span>Transmit diagnostic readings across deep space</span></div></div>
-      <div class="kid-supply-pill"><span class="pill-icon">🧪</span><div class="pill-text"><b>Multimeter Tester</b><span>Test pump, valve &amp; filter voltages to isolate faults</span></div></div>
-      <div class="kid-supply-pill"><span class="pill-icon">🔧</span><div class="pill-text"><b>Spare Parts Locker</b><span>1 spare pump, 1 spare valve, and replacement filters</span></div></div>
-      <div class="kid-supply-pill"><span class="pill-icon">🚿</span><div class="pill-text"><b>Save-Water Lever</b><span>Cut daily water usage in half while troubleshooting</span></div></div>
-    </div>
-    <div class="kid-section-title">📋 Your Jobs (Do in order)</div>
-    <ol class="kid-jobs-list">
-      <li><span class="step-num">1</span><b>Turn on Save-Water Mode:</b> Flip the water conservation lever so supplies last longer.</li>
-      <li><span class="step-num">2</span><b>Choose Strategy:</b> Decide whether to ask Earth, test yourself, or do both together.</li>
-      <li><span class="step-num">3</span><b>Power OFF Before Repair:</b> Always switch off the electrical breaker before opening the panel!</li>
-      <li><span class="step-num">4</span><b>Test &amp; Replace:</b> Use the multimeter to find the broken component, then swap in the spare.</li>
-      <li><span class="step-num">5</span><b>Restore Flow &amp; Report:</b> Turn power on, verify clean water flow, and notify Earth!</li>
-    </ol>
-    <div class="kid-controls-bar">
-      <span>🎮 <b>Controls:</b></span>
-      <span><kbd>WASD</kbd> / <kbd>Arrows</kbd> Walk &amp; Turn</span>
-      <span><kbd>Mouse</kbd> Look</span>
-      <span><kbd>E</kbd> Test &amp; Swap parts</span>
-      <span>Walk buttons guide you directly to each machine!</span>
-    </div>
-    <p><b>Luca:</b> “Our water recycler just stopped! It cleans all our water. We have <b>${ctx.mission.waterL.toFixed(0)} litres</b> left${carry ? `, including ${carry.toFixed(0)} L saved in the greenhouse tank` : ''}.”</p>
-    <p><b>Elena:</b> “We can ask the experts on Earth. But Earth is far away. A message takes <b>${(sc.oneWaySeconds / 60).toFixed(0)} minutes</b> to get there, even at the speed of light, and the answer takes just as long to come back.”</p>
+    <p>Decide whether to test it yourself, call Earth, or do both. Each radio message takes about <b>${(sc.oneWaySeconds / 60).toFixed(0)} minutes</b> to reach Earth. The reply takes just as long to come back.</p>
+    <p><b>Before you open the panel, switch off the breaker.</b></p>
     <aside class="mx-detail"><b>More details</b><br>Time runs ${sc.timeScale}× faster here: one real second is ${sc.timeScale} mission seconds. The crew uses ${sc.waterUseLPerMin} L of water a minute, or ${sc.saveUseLPerMin} L in save mode.</aside>`,
     actions: [{label: '▶ Let’s fix it!', primary: true, run: () => { ctx.act({id: 'begin'}, {quiet: true}); planBoard(ctx); }}, {label: 'Is this real?', run: () => ctx.sourcesDialog(() => brief(ctx))}]});
 }
@@ -116,9 +94,9 @@ runMission({
   id: ID, title: 'Message to Earth', place: 'MISSION CONTROL JR. · MARS DAY 35', carryFrom: 'greenhouse',
   meters: [{id: 'water', icon: '💧', label: 'Water left'}, {id: 'earth', icon: '📡', label: 'Earth’s answer'}, {id: 'spares', icon: '🔧', label: 'Spare parts'}],
   create: carry => createMission({scenario: tuneScenario(ID, delayScenario), initialCarry: carry, seed: 42 + readHistory(ID).length}),
-  rules: {applyAction, getObjective, getSteps, advance: (m, dt) => advanceMission(m, dt)},
+  rules: {applyAction, getObjective, getInstruction, getSteps, advance: (m, dt) => advanceMission(m, dt)},
   scene: ctx => createDelayScene({container: document.getElementById('world'), getState: () => ctx.mission, act: a => ctx.act(a), onPause: () => ctx.pause(), onConsole: () => consoleScreen(ctx)}),
-  brief, sources, debrief,
+  brief, sources, debrief, resumePlan: planBoard,
   sampler(ctx) { ctx.act({id: 'begin'}, {quiet: true}); ctx.saveCheckpoint(); ctx.act({id: 'choosePlan', payload: 'both'}, {quiet: true}); },
   hud(ctx) {
     const s = ctx.mission, {hud} = ctx, p = messageProgress(s), sc = s.scenario;

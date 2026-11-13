@@ -133,7 +133,11 @@ export function getObjective(s) {
   if (s.message.status === 'arrived' && !s.readAnswer) return 'Earth answered! Read it at the console';
   const bad = knownBad(s), needsWork = bad.length > 0 || (s.plan !== 'earth' && PARTS.some(p => !s.findings[p]));
   if (s.plan === 'earth' && !earthKnows(s) && !bad.length) return s.saveMode ? 'Wait for Earth’s answer at the console' : 'Turn on save-water mode while you wait';
-  if (s.holding && s.holding !== 'meter') return `Fit the new ${PART_NAMES[s.holding]} in the machine`;
+  if (s.holding && s.holding !== 'meter') {
+    if (s.power) return 'Turn off the power lever';
+    if (s.panel === 'closed') return 'Open the panel: hold E on it';
+    return `Fit the new ${PART_NAMES[s.holding]} in the machine`;
+  }
   if (needsWork) {
     if (s.power) return 'Turn off the power lever';
     if (s.panel === 'closed') return 'Open the panel: hold E on it';
@@ -146,6 +150,33 @@ export function getObjective(s) {
   if (!s.power) return 'Turn the power lever back on';
   return 'Do a test run: press the lamp on the machine';
 }
+export function getInstruction(s) {
+  if (s.phase !== 'active') return null;
+  if (!s.plan) return {text: 'Pick a plan to test the parts, ask Earth, or do both.'};
+  if (s.fixed) return {place: 'console', text: 'Open Earth Link and choose Finish the mission.'};
+  if (s.plan !== 'self' && s.message.status === 'none') return {place: 'console', text: 'Open Earth Link and choose Send the message.'};
+  if (s.message.status === 'arrived' && !s.readAnswer) return {place: 'console', text: 'Open Earth Link to see which parts Earth says to replace.'};
+  const bad = knownBad(s);
+  if (s.plan === 'earth' && !earthKnows(s) && !bad.length) return s.saveMode
+    ? {place: 'console', text: 'Open Earth Link and choose Wait for the answer.'}
+    : {place: 'save', text: 'Press E or tap the Save Water switch so supplies last longer.'};
+  const part = s.holding && s.holding !== 'meter' ? s.holding : null;
+  const untested = s.plan !== 'earth' && !earthKnows(s) && PARTS.find(id => !s.findings[id]);
+  if (part || bad.length || untested) {
+    if (s.power) return {place: 'recycler', text: 'Press E or tap the power lever to turn the recycler off.'};
+    if (s.panel === 'closed') return {place: 'recycler', text: 'Aim at the panel door. Hold E or hold the prompt until it opens.'};
+    if (part) return {place: 'recycler', text: 'Aim at the matching slot inside the open panel. Hold E or hold the prompt to fit the part.'};
+    if (bad.length) return {place: 'shelf', text: 'Use the matching spare on the shelf. Then bring it back to the open panel.'};
+    if (untested === 'filter') return {place: 'recycler', text: 'Hold E or hold the prompt on the filter inside the panel to check for a clog.'};
+    return s.holding === 'meter'
+      ? {place: 'recycler', text: 'Aim at the marked part inside the open panel. Hold E or hold the prompt to test it.'}
+      : {place: 'shelf', text: 'Use the yellow multimeter on the shelf to pick it up.'};
+  }
+  if (s.panel === 'open') return {place: 'recycler', text: 'Hold E or hold the prompt on the panel door until it closes.'};
+  if (!s.power) return {place: 'recycler', text: 'Use the power lever to switch the recycler back on.'};
+  return {place: 'recycler', text: 'Use the test lamp on the recycler. If the test fails, follow the message on the card.'};
+}
+
 export function getSteps(s) {
   const opened = s.panel === 'open' || s.swaps.length > 0 || s.testRuns.length > 0;
   const found = knownBad(s).length > 0 || s.swaps.some(w => w.needed);

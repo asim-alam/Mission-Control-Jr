@@ -84,12 +84,11 @@ body:has(#world) #hud.minimal-hud ~ #minimal-forecast { display: block; position
 #hud #mission-panel:not(.expanded) { top: 60px; left: 16px; width: 280px; height: 88px; min-height: 88px; padding: 10px 13px; border-radius: 12px; background: var(--ui-bg); }
 #hud #mission-panel:not(.expanded) .panel-heading { float: right; width: auto; }
 #hud #mission-panel:not(.expanded) .panel-heading .eyebrow { font: 9px 'JetBrains Mono', monospace; letter-spacing: 1px; }
-#hud #mission-panel:not(.expanded) #close-tasks { display: none; }
 #hud #mission-panel:not(.expanded) #objective-progress { width: calc(100% - 58px); margin: 3px 0 0; }
 #hud #mission-panel:not(.expanded) h2 { width: calc(100% - 4px); margin: 4px 0 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 16px; }
 #hud #mission-panel:not(.expanded) #task-distance { width: calc(100% - 2px); margin: 1px 0 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font: 10px 'JetBrains Mono', monospace; }
 #hud #mission-panel.expanded { width: min(310px, calc(100vw - 32px)); max-height: min(68dvh, 700px); overflow: auto; border-radius: 12px; background: var(--ui-bg); }
-#hud #mission-panel.expanded #close-tasks { min-width: 44px; min-height: 44px; }
+#hud #mission-panel #tasks-button { margin-left: auto; font-size: 11px; padding: 2px 8px; }
 #hud #mission-panel.expanded #objective { margin: 8px 0; }
 #hud #mission-panel.expanded #mission-actions button { min-height: 44px; }
 #hud #world-labels { z-index: 2; }
@@ -113,6 +112,8 @@ body:has(#space) #telemetry strong { margin: 4px 0; }
 body:has(#space) #objective { top: 56px; left: 16px; bottom: auto; width: 286px; max-width: calc(100vw - 32px); max-height: 40dvh; padding: 11px 13px; border: 1px solid var(--ui-line); border-left: 2px solid var(--ui-accent); border-radius: 12px; background: var(--ui-bg); }
 body:has(#space) #objective h2 { font-size: 16px; margin: 4px 0; }
 body:has(#space) #objective:not(.expanded) #task-instruction { display: none; }
+body:has(#space) #objective #distance { white-space: normal; overflow-wrap: anywhere; }
+body:has(#space) #objective .objective-actions button { padding-inline: 9px; }
 body:has(#space) #objective:not(.expanded) .objective-actions { margin-top: 5px; }
 body:has(#space) #objective:not(.expanded) .objective-actions button { min-height: 44px; }
 body:has(#space) #objective.expanded { max-height: min(60dvh, 620px); overflow: auto; }
@@ -150,9 +151,9 @@ body:has(#space):has(#hud.minimal-hud) header .brand, body:has(#space):has(#hud.
 body:has(#space):has(#hud.minimal-hud) header nav { position: fixed; top: 56px; right: 8px; z-index: 50; }
 body:has(#space) #hud.photo-mode, body:has(#space) #hud.photo-mode ~ #orbital-radio, body:has(#space) #hud.photo-mode ~ #station-overview-marker { visibility: hidden !important; }
 body:has(#space):has(#hud.photo-mode) header { visibility: hidden; }
-body:has(#space) #hud.photo-mode .hud-mode-button { visibility: visible !important; position: fixed; top: 56px; }
-body:has(#space) #hud.photo-mode .hud-mode-button[data-hud-mode="minimal-hud"] { right: 64px; }
-body:has(#space) #hud.photo-mode .hud-mode-button[data-hud-mode="photo-mode"] { right: 8px; }
+body:has(#space):has(#hud.photo-mode) nav .hud-mode-button { visibility: visible !important; position: fixed; top: 56px; }
+body:has(#space):has(#hud.photo-mode) nav .hud-mode-button[data-hud-mode="minimal-hud"] { right: 64px; }
+body:has(#space):has(#hud.photo-mode) nav .hud-mode-button[data-hud-mode="photo-mode"] { right: 8px; }
 
 @media (max-width: 760px) {
   #hud #topbar { min-height: 48px; height: auto; flex-wrap: wrap; padding: 4px 8px; }
@@ -224,11 +225,26 @@ body:has(#space) #objective, body:has(#space) #orbital-radio, body:has(#space) #
 abbr[title] { text-decoration: underline dotted; text-underline-offset: 3px; cursor: help; }
 #hud #toast { top: 118px; background: var(--ui-bg) !important; }
 #hud:has(#radio:not([hidden])) #toast { display: none; }
-#hud .toolbar, body:has(#space) nav { max-width: 58vw; overflow-x: auto; scrollbar-width: none; }
+#hud .toolbar, body:has(#space) nav { max-width: none; overflow: visible; }
+#hud .toolbar { flex-wrap: nowrap; }
+.mission-tools {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 8px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(90px, 1fr));
+  width: min(260px, calc(100vw - 16px));
+  gap: 5px;
+  padding: 8px;
+  background: var(--ui-bg);
+  border: 1px solid var(--ui-line);
+  border-radius: 12px;
+}
+.mission-tools[hidden] { display: none; }
 #hud .toolbar::-webkit-scrollbar, body:has(#space) nav::-webkit-scrollbar { display: none; }
 @media (max-width: 650px) {
   #hud #topbar { gap: 4px; padding-inline: 6px; }
-  #hud .toolbar { max-width: 50vw; }
+  #hud .toolbar { max-width: none; }
   #hud #vitals { gap: 3px; }
   #hud #vitals .vital-chip { width: 44px; }
   #hud #mission-panel:not(.expanded) { left: 6px; width: min(280px, calc(100vw - 12px)); top: 56px; }
@@ -256,9 +272,9 @@ abbr[title] { text-decoration: underline dotted; text-underline-offset: 3px; cur
 
 /* Mission 2's default objective is a compact, non-scrollable summary. */
 #hud #mission-panel:not(.expanded) { width: min(280px, calc(100vw - 16px)); height: auto !important; min-height: 0 !important; max-height: none !important; overflow: visible !important; padding: 10px 13px 12px !important; }
-#hud #mission-panel:not(.expanded) .panel-heading { display: flex; align-items: center; justify-content: flex-start; width: 100%; float: none !important; }
+#hud #mission-panel:not(.expanded) .panel-heading { display: flex; align-items: center; gap: 5px; justify-content: space-between; width: 100%; float: none !important; }
 #hud #mission-panel:not(.expanded) .panel-heading .eyebrow { margin: 0 !important; text-align: left !important; font: 9px 'JetBrains Mono', monospace; letter-spacing: 1px; }
-#hud #mission-panel:not(.expanded) #close-tasks { display: none !important; }
+
 #hud #mission-panel:not(.expanded) #objective { display: block; width: 100%; margin: 3px 0 0; font-size: 16px; line-height: 1.25; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 #hud #mission-panel:not(.expanded) #task-distance { display: block; width: 100%; margin: 2px 0 0; font: 10px 'JetBrains Mono', monospace; line-height: 1.35; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 #hud #mission-panel:not(.expanded) #objective-progress { display: block; width: 100%; height: 3px; margin: 6px 0 0; }
@@ -282,13 +298,12 @@ body:has(#space) header { height: 48px !important; min-height: 48px !important; 
 body:has(#space) #chapter { font-size: 9px; letter-spacing: 1.2px; white-space: nowrap; }
 body:has(#space) nav { display: flex; align-items: center; gap: 5px; max-width: none; overflow: visible; }
 body:has(#space) nav > button { min-height: 44px; padding: 4px 11px; }
-body:has(#space) #menu-controls { position: absolute; z-index: 30; top: calc(100% + 7px); right: 54px; display: grid; grid-template-columns: repeat(2, minmax(110px, 1fr)); gap: 5px; width: min(300px, calc(100vw - 20px)); padding: 8px; border: 1px solid var(--ui-line); border-radius: 12px; background: var(--ui-bg); box-shadow: 0 8px 22px rgb(0 0 0 / 45%); }
+body:has(#space) #menu-controls { position: absolute; z-index: 30; top: calc(100% + 7px); right: 8px; display: grid; grid-template-columns: repeat(2, minmax(110px, 1fr)); gap: 5px; width: min(300px, calc(100vw - 20px)); padding: 8px; border: 1px solid var(--ui-line); border-radius: 12px; background: var(--ui-bg); box-shadow: 0 8px 22px rgb(0 0 0 / 45%); }
 body:has(#space) #menu-controls[hidden] { display: none !important; }
 body:has(#space) #menu-controls button { min-height: 44px; }
 
-/* The opening copy owns its own scroll region while the orbit canvas stays fixed. */
-body:has(#space) #opening { position: fixed; z-index: 8; top: 60px; bottom: 12px; left: clamp(14px, 6vw, 110px); right: auto; width: min(570px, calc(100vw - 28px)); max-width: none; padding: 14px 18px 26px; overflow-y: auto; overscroll-behavior: contain; background: linear-gradient(90deg, rgb(7 16 23 / 96%), rgb(7 16 23 / 84%) 78%, rgb(7 16 23 / 44%)); }
-body:has(#space) #opening h1 { font-size: clamp(46px, 6.2vw, 82px); line-height: .94; margin: 15px 0 12px; }
+/* Let the title card fit its content and keep the orbit canvas fixed. */
+body:has(#space) #opening { position: fixed; z-index: 8; top: max(58px, 8dvh); left: clamp(14px, 6vw, 110px); width: min(530px, calc(100vw - 28px)); max-width: none; max-height: calc(100dvh - max(58px, 8dvh) - 12px); padding: 14px 18px; overflow-y: auto; overscroll-behavior: contain; }
 body:has(#space) #opening .eyebrow { margin-bottom: 7px; }
 body:has(#space) #opening .opening-copy { font-size: clamp(16px, 1.8vw, 21px); line-height: 1.45; margin: 10px 0; }
 body:has(#space) #opening .fine { max-width: 54ch; margin: 12px 0; font-size: 11px; line-height: 1.55; }
@@ -331,8 +346,7 @@ body.home-scene-fallback #home-scene canvas { display: none; }
   body:has(#space) header { padding-inline: 6px !important; }
   body:has(#space) nav { margin-left: auto; }
   body:has(#space) nav > button { min-height: 44px; padding-inline: 8px; font-size: 10px; }
-  body:has(#space) #opening { left: 8px; top: 58px; bottom: 8px; width: min(520px, calc(100vw - 16px)); padding: 13px 15px 26px; }
-  body:has(#space) #opening h1 { font-size: clamp(45px, 11vw, 66px); }
+  body:has(#space) #opening { left: 8px; width: min(520px, calc(100vw - 16px)); padding: 12px 14px; }
 }
 
 @media (max-width: 480px) {
@@ -461,4 +475,52 @@ body:has(#world) #hud #toast {
     width: min(360px, calc(100vw - 220px));
     max-width: calc(100vw - 220px);
   }
+}
+
+/* Put the current instruction and the optional lesson in the same edge card. */
+#hud #mission-panel.mission-guidance .mission-summary {
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto auto auto;
+  height: auto;
+  padding-right: 0;
+}
+#hud #mission-panel.mission-guidance :is(#objective, #next-action) {
+  grid-column: 1 / -1;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+#hud #mission-panel.mission-guidance .summary-head { flex-wrap: wrap; white-space: normal; }
+#hud #mission-panel.mission-guidance #forecast { white-space: normal; }
+#hud #mission-panel.mission-guidance:not(.expanded):has(#tasks-toggle-card) { padding-bottom: 17px !important; }
+#hud #mission-panel.mission-guidance:not(.expanded) #task-distance { white-space: normal; }
+#hud #mission-panel.mission-guidance .pip-lesson-button,
+body:has(#space) #objective.mission-guidance .pip-lesson-button { color: var(--kid-yellow) !important; }
+#hud #mission-panel.mission-guidance:not(.expanded) #objective { white-space: normal; }
+#hud #mission-panel.mission-guidance #rover-instruction { display: block; margin: 5px 0 0; }
+#hud #rover-instruction { font-size: 13px; line-height: 1.4; }
+
+/* Let the storm mission's compact objective grow when its instruction wraps. */
+#hud #mission-panel.mission-guidance:not(.expanded) {
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: min(78dvh, 360px) !important;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-bottom: 17px !important;
+}
+#hud #mission-panel.mission-guidance:not(.expanded) .mission-summary {
+  height: auto !important;
+  min-height: 0;
+  grid-template-rows: auto auto auto;
+  align-items: start;
+  row-gap: 4px;
+}
+#hud #mission-panel.mission-guidance:not(.expanded) #objective,
+#hud #mission-panel.mission-guidance:not(.expanded) #next-action {
+  position: relative;
+  min-width: 0;
+  margin: 0;
+  line-height: 1.28;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }

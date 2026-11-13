@@ -1,9 +1,36 @@
 const HUD_STYLE_CLASSES = ['minimal-hud', 'photo-mode'];
 
 /** Add keyboard and clickable display modes to a playable mission HUD. */
-export function installHudPresentation({ hud, toolbar, onHelp, onJourney } = {}) {
+export function installHudPresentation({ hud, toolbar, onHelp, onJourney, menu, menuItems = [] } = {}) {
   if (!hud) return;
   installDialogCaptionTransfer();
+  if (!menu && toolbar) {
+    const toggle = document.createElement('button');
+    toggle.type = 'button';
+    toggle.textContent = 'Menu';
+    toggle.setAttribute('aria-controls', 'mission-tools');
+    toggle.setAttribute('aria-expanded', 'false');
+    menu = document.createElement('div');
+    menu.id = 'mission-tools';
+    menu.className = 'mission-tools';
+    menu.hidden = true;
+    for (const id of menuItems) menu.append(document.getElementById(id));
+    toolbar.append(toggle, menu);
+    const setMenu = open => {
+      menu.hidden = !open;
+      toggle.setAttribute('aria-expanded', String(open));
+    };
+    toggle.onclick = () => setMenu(menu.hidden);
+    menu.addEventListener('click', event => {
+      if (event.target.closest('button')) setMenu(false);
+    });
+    document.addEventListener('click', event => {
+      if (!menu.contains(event.target) && !toggle.contains(event.target)) setMenu(false);
+    });
+    document.addEventListener('keydown', event => {
+      if (event.code === 'Escape' && !menu.hidden) setMenu(false);
+    });
+  }
   const syncCampaignFrame = () => {
     if (window.parent !== window) {
       const mode = HUD_STYLE_CLASSES.find(name => hud.classList.contains(name)) || 'normal';
@@ -15,6 +42,7 @@ export function installHudPresentation({ hud, toolbar, onHelp, onJourney } = {})
     { className: 'minimal-hud', label: 'HUD', title: 'Toggle minimal HUD (F2)' },
     { className: 'photo-mode', label: 'Photo', title: 'Toggle photo mode (F3)' },
   ];
+  const modeButtons = [];
   for (const mode of modes) {
     const button = document.createElement('button');
     button.type = 'button';
@@ -27,11 +55,13 @@ export function installHudPresentation({ hud, toolbar, onHelp, onJourney } = {})
       const active = !hud.classList.contains(mode.className);
       HUD_STYLE_CLASSES.forEach(name => hud.classList.toggle(name, name === mode.className && active));
       modes.forEach(({ className }) => toolbar?.querySelector(`[data-hud-mode="${className}"]`)?.setAttribute('aria-pressed', String(className === mode.className && active)));
+      for (const control of modeButtons) (active ? toolbar : menu ?? toolbar)?.append(control);
       syncCampaignFrame();
       button.blur();
     });
     button.dataset.hudMode = mode.className;
-    toolbar?.append(button);
+    modeButtons.push(button);
+    (menu ?? toolbar)?.append(button);
   }
   syncCampaignFrame();
 
@@ -42,7 +72,7 @@ export function installHudPresentation({ hud, toolbar, onHelp, onJourney } = {})
     journey.title = 'Open the connected expedition menu';
     journey.setAttribute('aria-label', 'Open the connected expedition menu');
     journey.addEventListener('click', () => onJourney?.());
-    toolbar.prepend(journey);
+    (menu ?? toolbar).prepend(journey);
   }
 
   window.addEventListener('keydown', event => {

@@ -1,3 +1,4 @@
+import {mountPipLesson} from '../../professor-pip.js';
 import {cropGoal, drillOutcome, evidence, newDrill, replyMinute, solarForTurn, stages, tryPlan} from './outpost-drill.js';
 
 function content(tag, text, className) {
@@ -43,7 +44,10 @@ export function mountDrill(root, onChange) {
       dial('CREW RESERVES', `${run.air} air · ${run.water} water`, run.shieldWater ? `${run.shieldWater} water set aside as shielding` : 'Stored training units'),
       dial('GROWTH', `${run.crop} / ${cropGoal} cycles`, run.crop === cropGoal ? 'Harvest ready' : 'Light and water cycles'),
     );
-    body.replaceChildren(phaseLabel, title, brief, stats);
+    const guide = content('div', '', 'mission-guidance mission-guidance-tools');
+    mountPipLesson(guide, 'outpost-drill', () => ({step: run.turn, finishLabel: 'Back to drill'}));
+    body.replaceChildren(phaseLabel, title, brief, guide, stats);
+    if (phase) body.append(content('p', 'Check the forecast below each option, then choose one job for this shift.', 'drill-brief'));
     if (phase && run.turn > 0) {
       const minutes = replyMinute - run.turn * 10;
       body.append(content('p', `Earth reply in about ${Math.round(minutes)} mission minutes. You can act while you wait.`, 'drill-radio'));

@@ -19,38 +19,56 @@ export function buildHud({title, place, meters}) {
     <div class="mx-title"><small>${esc(place)}</small><h1>${esc(title)}</h1></div>
     <div class="mx-timer" id="mx-timer" hidden></div>
     <div class="mx-actions">
-      <button id="mx-narrate" type="button" aria-pressed="false" title="Read the story out loud">🔊 Read to me</button>
-      <button id="mx-details" type="button" aria-pressed="false" title="Show extra science details">🔬 Details</button>
+      <button id="view" type="button" hidden>First person</button>
       <button id="pause" type="button">⏸️ Pause</button><button id="journey" type="button">🗺️ Map</button>
     </div>
   </header>
   <section class="mx-meters" id="mx-meters" aria-label="Mission supplies">${meters.map(m => `
     <div class="mx-meter" data-meter="${m.id}"><span class="mx-meter-icon" aria-hidden="true">${m.icon}</span><span class="mx-meter-body"><span class="mx-meter-label">${esc(m.label)}</span><span class="mx-bar"><i></i></span><b class="mx-meter-value">—</b></span></div>`).join('')}
   </section>
-  <section class="mx-job" aria-label="Your job">
-    <p class="mx-eyebrow">YOUR JOB NOW</p>
+  <section class="mx-job mission-guidance" aria-label="Your job">
+    <div class="mx-job-heading">
+      <p class="mx-eyebrow" id="mx-job-count">Your job now</p>
+      <button id="mx-job-details" type="button" aria-expanded="false" aria-controls="mx-details">Details</button>
+    </div>
     <div id="objective"><h2>Loading…</h2></div>
-    <ol class="mx-steps" id="mx-steps"></ol>
+    <p class="mx-instruction" id="mx-instruction" aria-live="polite" hidden></p>
+    <div class="mx-job-tools"></div>
+    <div id="mx-details" hidden>
+      <ol class="mx-steps" id="mx-steps"></ol>
+      <p class="mx-keys">WASD to walk · tap Places to walk there · drag to look · E to use · V to switch view</p>
+    </div>
     <p class="mx-notice" id="notice" role="status" aria-live="polite"></p>
   </section>
   <div class="mx-crosshair" aria-hidden="true"></div>
   <div class="mx-edge" id="mx-edge" aria-hidden="true">➤</div>
   <div class="mx-prompt" id="mx-prompt" hidden><button type="button" id="mx-use"><kbd>E</kbd><span id="mx-use-label"></span><i class="mx-hold" id="mx-hold"></i></button></div>
-  <section class="mx-walk" aria-label="Walk to a place"><p class="mx-eyebrow">WALK TO</p><div id="locations"></div><p class="mx-keys">WASD / arrows walk · ⬅️/➡️ turn · drag to look · <b>E</b> or click to use · hold <b>E</b> for long jobs</p></section>
+  <section class="mx-walk" aria-label="Walk to a place">
+    <button id="mx-next-place" type="button" hidden></button>
+    <details id="mx-places"><summary>🚶 Places · tap to walk</summary><div id="locations"></div></details>
+  </section>
   <div class="mx-toast" id="mx-toast" role="status" aria-live="polite"></div>
   <div id="dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title" hidden><div class="card"><p class="eyebrow" id="dialog-label"></p><h2 id="dialog-title"></h2><div id="dialog-body"></div><div id="dialog-actions"></div></div></div>`);
-  const narrate = $('mx-narrate'), details = $('mx-details');
-  const sync = () => {
-    narrate.setAttribute('aria-pressed', String(narration()));
-    details.setAttribute('aria-pressed', String(learningMode() === 'details'));
-    document.body.classList.toggle('mx-details-on', learningMode() === 'details');
+  const syncDetails = () => document.body.classList.toggle('mx-details-on', learningMode() === 'details');
+  const details = $('mx-job-details'), steps = $('mx-details');
+  details.onclick = () => {
+    steps.hidden = !steps.hidden;
+    details.setAttribute('aria-expanded', String(!steps.hidden));
   };
-  narrate.onclick = () => { store.set(NARRATION_KEY, narration() ? 'off' : 'on'); if (!narration()) try { speechSynthesis.cancel(); } catch {} sync(); };
-  details.onclick = () => { store.set(LEARNING_KEY, learningMode() === 'details' ? 'simple' : 'details'); sync(); hud.onDetails?.(); };
-  sync();
+  syncDetails();
+  const nextPlace = $('mx-next-place'), places = $('mx-places');
+  let destinations = [], walk = () => {}, currentPlace;
+  nextPlace.onclick = () => walk(currentPlace);
   let toastTimer = 0, lastObjective = '', lastStepsKey = '';
   const hud = {
-    onDetails: null,
+    toggleNarration() {
+      store.set(NARRATION_KEY, narration() ? 'off' : 'on');
+      if (!narration()) try { speechSynthesis.cancel(); } catch {}
+    },
+    toggleScience() {
+      store.set(LEARNING_KEY, learningMode() === 'details' ? 'simple' : 'details');
+      syncDetails();
+    },
     meter(id, {value, max = 100, text, warn = .25}) {
       const el = document.querySelector(`[data-meter="${id}"]`); if (!el) return;
       const f = Math.max(0, Math.min(1, value / max));
@@ -59,15 +77,39 @@ export function buildHud({title, place, meters}) {
       el.classList.toggle('low', f < warn); el.classList.toggle('mid', f >= warn && f < .5);
     },
     timer(text, urgent = false) { const t = $('mx-timer'); t.hidden = !text; t.textContent = text || ''; t.classList.toggle('urgent', urgent); },
-    objective(text) {
+    objective(text, {read = true} = {}) {
       if (text === lastObjective) return; lastObjective = text;
-      $('objective').innerHTML = `<h2>${esc(text)}</h2>`; speak(text);
+      $('objective').innerHTML = `<h2>${esc(text)}</h2>`;
+      if (read) speak(text);
+    },
+    instruction(instruction) {
+      const line = $('mx-instruction'), text = instruction?.text || '';
+      if (text !== line.textContent) {
+        line.textContent = text;
+        if (text) speak(text);
+      }
+      line.hidden = !text;
+      currentPlace = instruction?.place;
+      const target = destinations.find(t => t.id === currentPlace);
+      const label = target ? `Walk to ${target.label.replace(/^[^\p{L}]+/u, '')}` : '';
+      if (label !== nextPlace.textContent) nextPlace.textContent = label;
+      nextPlace.hidden = !target;
+      for (const button of $('locations').children) {
+        const destination = destinations.find(t => t.id === button.dataset.place);
+        button.hidden = destination.id === currentPlace || (destination.visible && !destination.visible());
+      }
     },
     steps(list) {
       const key = JSON.stringify(list); if (key === lastStepsKey) return; lastStepsKey = key;
+      const current = list.findIndex(item => item.now);
+      $('mx-job-count').textContent = current >= 0 ? `Step ${current + 1} of ${list.length}` : 'Mission objective';
       $('mx-steps').innerHTML = list.map(s => `<li class="${s.done ? 'done' : s.now ? 'now' : ''}">${s.done ? '✅' : s.now ? '👉' : '⬜'} ${esc(s.text)}</li>`).join('');
     },
-    notice(text) { $('notice').textContent = text || ''; },
+    notice(text, warning = false) {
+      const notice = $('notice');
+      notice.textContent = text || '';
+      notice.classList.toggle('is-warning', warning);
+    },
     toast(text, kind = 'info') {
       const t = $('mx-toast'); t.textContent = text; t.className = `mx-toast show ${kind}`; clearTimeout(toastTimer);
       toastTimer = setTimeout(() => { t.className = 'mx-toast'; }, 3200); if (kind !== 'quiet') speak(text);
@@ -85,7 +127,20 @@ export function buildHud({title, place, meters}) {
       e.style.left = `${50 + Math.cos(a) * r * 100}%`; e.style.top = `${50 + Math.sin(a) * r * 100}%`; e.style.transform = `translate(-50%,-50%) rotate(${a}rad)`; e.classList.add('show');
     },
     walkButtons(list, onWalk) {
-      $('locations').replaceChildren(...list.map(({id, label}) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = label; b.onclick = () => onWalk(id); return b; }));
+      destinations = list;
+      walk = onWalk;
+      $('locations').replaceChildren(...list.map(({id, label}) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = label;
+        button.dataset.place = id;
+        button.onclick = () => {
+          places.open = false;
+          places.querySelector('summary').focus({preventScroll: true});
+          onWalk(id);
+        };
+        return button;
+      }));
     },
   };
   return hud;

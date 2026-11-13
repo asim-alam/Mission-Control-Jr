@@ -8,9 +8,9 @@ export function createMission({prepSeconds=PREPARATION_SECONDS,stormDrainScale=1
 }
 export function objective(m) {
   if(m.ended)return 'Mission complete';
-  if(m.inside)return m.sealed?'Wait for the storm to pass · then send a message home':'Close the door tight at the console';
+  if(m.inside)return !m.sealed?'Close the door tight':m.insideAge<5?'Wait for the storm to pass':'Send a message home';
   if(m.storm)return 'Go inside! Follow the marker to the door';
-  if(!m.diagnosed)return 'Check the computer inside the base';
+  if(!m.diagnosed)return 'Check the base computer';
   if(m.cleaned.some(v=>!v))return `Clean the solar panels · ${m.cleaned.filter(Boolean).length} of 3 done`;
   if(!m.battery&&!m.installed)return 'Get the spare battery from the rover';
   if(!m.installed)return 'Put the battery in the power box';

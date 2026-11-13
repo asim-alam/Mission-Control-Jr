@@ -812,55 +812,7 @@ body.kid-home #journey-count, body.kid-home .wordmark { white-space: nowrap; }
   line-height: 1.45;
   color: #fff8ee !important;
 }
-
-.kid-section-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-family: var(--kid-display);
-  font-size: 15px;
-  font-weight: 700;
-  letter-spacing: .05em;
-  text-transform: uppercase;
-  color: var(--kid-yellow) !important;
-  margin: 12px 0 6px 0;
-}
-
-.kid-supplies-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 8px;
-  margin-bottom: 12px;
-}
-.kid-supply-pill {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  background: rgba(27, 23, 68, 0.75);
-  border: 1.5px solid #4b3f9e;
-  border-radius: 14px;
-  padding: 8px 10px;
-}
-.kid-supply-pill .pill-icon {
-  font-size: 22px;
-  line-height: 1;
-  flex: none;
-}
-.kid-supply-pill .pill-text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.kid-supply-pill .pill-text b {
-  font-family: var(--kid-display);
-  font-size: 13.5px;
-  color: var(--kid-mint);
-}
-.kid-supply-pill .pill-text span {
-  font-size: 12px;
-  line-height: 1.35;
-  color: var(--kid-soft);
-}
+.kid-mission-intro p + p { margin-top: 6px !important; }
 
 .kid-jobs-list {
   list-style: none !important;
@@ -871,8 +823,9 @@ body.kid-home #journey-count, body.kid-home .wordmark { white-space: nowrap; }
   gap: 6px;
 }
 .kid-jobs-list li {
-  display: flex !important;
-  align-items: flex-start;
+  display: grid !important;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
   gap: 10px;
   background: rgba(39, 32, 99, 0.6);
   border: 1.5px solid #4b3f9e;
@@ -883,7 +836,6 @@ body.kid-home #journey-count, body.kid-home .wordmark { white-space: nowrap; }
   line-height: 1.4;
 }
 .kid-jobs-list .step-num {
-  flex: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -896,6 +848,31 @@ body.kid-home #journey-count, body.kid-home .wordmark { white-space: nowrap; }
   font-size: 12px;
   border-radius: 50%;
   box-shadow: 0 2px 0 #b84f12;
+}
+
+/* Keep the docking actions in view on short screens. */
+#modal .ui-card:has(.kid-docking-brief) {
+  gap: 10px !important;
+  padding: clamp(14px, 3vw, 26px) !important;
+}
+#modal .ui-card:has(.kid-docking-brief) #modal-body {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+#modal .ui-card:has(.kid-docking-brief) #modal-actions {
+  flex-shrink: 0;
+  gap: 8px;
+  margin-top: 0;
+}
+#modal .ui-card:has(.kid-docking-brief) #modal-actions button {
+  padding-inline: 12px !important;
+  font-size: 15px;
+}
+.kid-docking-brief kbd {
+  white-space: nowrap;
+  color: var(--kid-yellow);
+  font-weight: 700;
 }
 
 .kid-controls-bar {
@@ -970,34 +947,36 @@ body.kid-home #journey-count, body.kid-home .wordmark { white-space: nowrap; }
   color: var(--kid-mint);
 }
 
-/* Orbit opening roadmap overlay */
+/* Arrival at Mars title card */
 #opening {
-  top: 8% !important;
-  max-height: 86vh !important;
-  overflow-y: auto !important;
-  width: 560px !important;
-  max-width: 90vw !important;
-  padding: 20px 24px !important;
   background: rgba(18, 15, 46, 0.96) !important;
   border: 2px solid var(--ui-line) !important;
   border-radius: 20px !important;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6) !important;
-  z-index: 10 !important;
 }
 #opening h1 {
-  font-size: clamp(32px, 5vw, 56px) !important;
-  margin: 8px 0 14px 0 !important;
-  letter-spacing: -1px !important;
+  font-size: clamp(32px, 6vw, 48px) !important;
+  margin: 8px 0 14px !important;
 }
-#opening .kid-jobs-list {
-  margin: 10px 0 14px 0;
+#opening .opening-controls {
+  margin-top: 14px;
+  color: var(--kid-soft);
+  font-size: 14px;
 }
-#opening .kid-controls-bar {
-  margin: 12px 0 16px 0;
+#opening .opening-controls summary {
+  width: fit-content;
+  cursor: pointer;
+  text-shadow: 0 1px 3px #05090e;
 }
-#opening .opening-actions {
-  margin-top: 16px !important;
+
+@media (max-height: 520px) {
+  #opening .eyebrow { margin-top: 0; }
+  #opening h1 { font-size: 28px !important; margin-block: 6px 10px !important; }
+  #opening .kid-mission-intro { padding: 8px 12px; margin-bottom: 8px; }
+  #opening .kid-mission-intro p { font-size: 15px !important; }
+  #opening .opening-controls { margin-top: 10px; }
 }
+
 
 /* Docking alignment line and visual target */
 .dock-hud-svg {
@@ -1141,345 +1120,6 @@ body.kid-home #journey-count, body.kid-home .wordmark { white-space: nowrap; }
   color: #3ee6b5;
   border-color: rgba(62, 230, 181, 0.6);
   box-shadow: 0 0 10px rgba(62, 230, 181, 0.3);
-}
-
-/* ==========================================================================
-   Cartoon Teacher Classroom Stage (Post-Docking Interactive Lesson with Sound)
-   ========================================================================== */
-#modal .ui-card:has(.cartoon-teacher-stage) {
-  width: min(740px, 94vw) !important;
-  max-width: 740px !important;
-}
-
-.cartoon-teacher-stage {
-  display: flex;
-  gap: 16px;
-  align-items: stretch;
-}
-@media (max-width: 660px) {
-  .cartoon-teacher-stage {
-    flex-direction: column;
-    align-items: center;
-  }
-}
-
-/* Left Column: Teacher Character & Speech Bubble */
-.teacher-column {
-  width: 175px;
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  background: linear-gradient(180deg, rgba(39, 32, 99, 0.92), rgba(20, 16, 55, 0.96));
-  border: 2px solid rgba(62, 230, 181, 0.5);
-  border-radius: 22px;
-  padding: 14px 10px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
-}
-@media (max-width: 660px) {
-  .teacher-column {
-    width: 100%;
-    flex-direction: row;
-    justify-content: center;
-    gap: 16px;
-    padding: 10px 14px;
-  }
-}
-
-.teacher-avatar-wrap {
-  position: relative;
-  width: 125px;
-  height: 140px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  animation: teacher-zero-g-float 2.8s ease-in-out infinite alternate;
-}
-
-@keyframes teacher-zero-g-float {
-  0% { transform: translateY(0px) rotate(-1deg); }
-  100% { transform: translateY(-7px) rotate(1.5deg); }
-}
-
-.teacher-svg {
-  width: 100%;
-  height: 100%;
-  overflow: visible;
-  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.5));
-}
-
-/* Eye Blink Animation */
-.teacher-svg .teacher-eye {
-  transform-origin: center;
-  animation: teacher-eye-blink 4s infinite;
-}
-@keyframes teacher-eye-blink {
-  0%, 94%, 98%, 100% { transform: scaleY(1); }
-  96% { transform: scaleY(0.08); }
-}
-
-/* Mouth Talking Animation */
-.cartoon-teacher-stage.is-talking .teacher-svg .teacher-mouth {
-  animation: teacher-mouth-talk 0.25s infinite alternate ease-in-out;
-}
-@keyframes teacher-mouth-talk {
-  0% { transform: scaleY(1); }
-  100% { transform: scaleY(2.2) translateY(-1px); }
-}
-
-/* Tassel Sway */
-.teacher-svg .teacher-tassel {
-  transform-origin: 80px 32px;
-  animation: teacher-tassel-sway 2.5s infinite ease-in-out;
-}
-@keyframes teacher-tassel-sway {
-  0%, 100% { transform: rotate(-3deg); }
-  50% { transform: rotate(6deg); }
-}
-
-/* Pointer Star Twinkle */
-.teacher-svg .pointer-star {
-  transform-origin: 152px 70px;
-  animation: pointer-star-twinkle 1.4s infinite alternate ease-in-out;
-}
-@keyframes pointer-star-twinkle {
-  0% { transform: scale(1) rotate(0deg); filter: drop-shadow(0 0 2px #ffd23f); }
-  100% { transform: scale(1.35) rotate(35deg); filter: drop-shadow(0 0 8px #ffd23f); }
-}
-
-/* Waving Hand */
-.teacher-svg .teacher-wave-hand {
-  transform-origin: 38px 146px;
-  animation: teacher-hand-wave 1.8s infinite ease-in-out;
-}
-@keyframes teacher-hand-wave {
-  0%, 100% { transform: rotate(0deg); }
-  50% { transform: rotate(-14deg); }
-}
-
-/* Sound Wave Equalizer under Avatar */
-.teacher-sound-waves {
-  display: flex;
-  gap: 3px;
-  align-items: flex-end;
-  height: 14px;
-  margin-top: 6px;
-}
-.teacher-sound-waves span {
-  width: 3.5px;
-  height: 4px;
-  background: rgba(62, 230, 181, 0.4);
-  border-radius: 3px;
-  transition: height 0.15s ease;
-}
-.cartoon-teacher-stage.is-talking .teacher-sound-waves span {
-  animation: wave-bar-bounce 0.4s infinite alternate ease-in-out;
-}
-.cartoon-teacher-stage.is-talking .teacher-sound-waves span:nth-child(1) { animation-delay: 0.05s; }
-.cartoon-teacher-stage.is-talking .teacher-sound-waves span:nth-child(2) { animation-delay: 0.18s; }
-.cartoon-teacher-stage.is-talking .teacher-sound-waves span:nth-child(3) { animation-delay: 0.28s; }
-.cartoon-teacher-stage.is-talking .teacher-sound-waves span:nth-child(4) { animation-delay: 0.12s; }
-@keyframes wave-bar-bounce {
-  0% { height: 3px; background: var(--kid-mint); }
-  100% { height: 14px; background: var(--kid-yellow); }
-}
-
-.teacher-nameplate {
-  margin-top: 6px;
-}
-.teacher-badge {
-  font-family: var(--kid-display);
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--kid-yellow);
-  letter-spacing: 0.05em;
-  display: block;
-}
-.teacher-nameplate small {
-  font-size: 11px;
-  color: var(--kid-soft);
-}
-
-.teacher-voice-btn {
-  margin-top: 8px;
-  background: rgba(255, 210, 63, 0.18) !important;
-  border: 1.5px solid var(--kid-yellow) !important;
-  color: var(--kid-yellow) !important;
-  font-size: 12px !important;
-  padding: 5px 10px !important;
-  border-radius: 12px !important;
-  min-height: 32px !important;
-  cursor: pointer;
-  transition: all .15s;
-}
-.teacher-voice-btn:hover {
-  background: var(--kid-yellow) !important;
-  color: #120f2e !important;
-  transform: translateY(-1px);
-}
-.teacher-voice-btn.speaking {
-  background: var(--kid-mint) !important;
-  border-color: var(--kid-mint) !important;
-  color: #0d3826 !important;
-  animation: lesson-pulse 1s infinite alternate;
-}
-
-/* Right Column: Holographic Blackboard / Lesson Board */
-.lesson-board-column {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  background: linear-gradient(180deg, #18143d 0%, #120f30 100%);
-  border: 2px solid #5a4cc0;
-  border-radius: 22px;
-  padding: 14px 16px;
-  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.45);
-}
-
-.blackboard-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-bottom: 8px;
-  border-bottom: 1.5px dashed rgba(255, 255, 255, 0.12);
-}
-.blackboard-tag {
-  font-family: var(--kid-display);
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  color: var(--kid-sky);
-}
-.lesson-slide-counter {
-  font-family: var(--kid-display);
-  font-size: 12px;
-  color: var(--kid-soft);
-}
-.lesson-slide-counter b {
-  color: var(--kid-yellow);
-}
-
-/* Blackboard Card Content */
-.blackboard-card {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 10px 0 8px 0;
-}
-.blackboard-icon-title {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.blackboard-icon {
-  font-size: 30px;
-  line-height: 1;
-  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4));
-}
-.blackboard-icon-title h3 {
-  margin: 0 !important;
-  font-family: var(--kid-display);
-  font-size: 19px !important;
-  color: #ffffff !important;
-}
-.blackboard-summary {
-  margin: 0 !important;
-  font-family: var(--kid-body);
-  font-size: 14px !important;
-  color: #dcd6fd !important;
-  line-height: 1.4 !important;
-}
-
-/* Teacher Speech Bubble inside Blackboard */
-.blackboard-quote-box {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  background: rgba(46, 36, 120, 0.65);
-  border-left: 3.5px solid var(--kid-yellow);
-  border-radius: 4px 14px 14px 4px;
-  padding: 8px 12px;
-}
-.blackboard-quote-box .quote-icon {
-  font-size: 18px;
-  line-height: 1;
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-.blackboard-quote-box p {
-  margin: 0 !important;
-  font-family: var(--kid-body);
-  font-size: 13.5px !important;
-  font-weight: 600 !important;
-  color: #fff6da !important;
-  line-height: 1.35 !important;
-}
-
-/* Real NASA Fact Pill inside Blackboard */
-.blackboard-fact-pill {
-  background: rgba(62, 230, 181, 0.12);
-  border: 1px solid rgba(62, 230, 181, 0.35);
-  border-radius: 12px;
-  padding: 6px 12px;
-  font-size: 12px;
-  color: #c9ffea;
-  line-height: 1.35;
-}
-
-/* Blackboard Footer: Dots & Buttons */
-.blackboard-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-top: 10px;
-  border-top: 1.5px dashed rgba(255, 255, 255, 0.12);
-  margin-top: auto;
-}
-.slide-dots {
-  display: flex;
-  gap: 6px;
-}
-.slide-dots button {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  border: 1.5px solid rgba(255, 255, 255, 0.25);
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
-  font-family: var(--kid-display);
-  font-size: 11px;
-  font-weight: 700;
-  display: grid;
-  place-items: center;
-  padding: 0;
-  min-height: 0;
-  cursor: pointer;
-  transition: all .2s;
-}
-.slide-dots button.active {
-  background: var(--kid-yellow) !important;
-  border-color: var(--kid-yellow) !important;
-  color: #120f2e !important;
-  transform: scale(1.18);
-  box-shadow: 0 0 10px rgba(255, 210, 63, 0.7);
-}
-.slide-dots button.done {
-  background: rgba(62, 230, 181, 0.25);
-  border-color: var(--kid-mint);
-  color: var(--kid-mint);
-}
-
-.blackboard-btns {
-  display: flex;
-  gap: 8px;
-}
-.blackboard-btns button {
-  min-height: 36px !important;
-  padding: 6px 14px !important;
-  font-size: 13px !important;
-  border-radius: 14px !important;
 }
 
 /* Kid-Friendly Post-Docking Science Debrief */
@@ -1800,23 +1440,12 @@ body.kid-home #journey-count, body.kid-home .wordmark { white-space: nowrap; }
 
 /* Cadet Flight Lesson HUD Card (Docking) */
 .flight-lesson-card {
-  position: fixed;
-  top: 76px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 500px;
-  max-width: calc(100vw - 32px);
-  background: linear-gradient(180deg, rgba(29, 24, 80, 0.96), rgba(18, 15, 46, 0.96));
-  border: 2px solid var(--kid-sky);
-  border-top: 5px solid var(--kid-yellow);
-  border-radius: 20px;
-  padding: 14px 18px;
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.65), 0 0 24px rgba(76, 201, 255, 0.2);
-  z-index: 35;
+  border-top: 1px solid var(--ui-line);
+  margin-top: 8px;
+  padding-top: 8px;
+  white-space: normal;
   color: var(--kid-ink);
   pointer-events: auto;
-  backdrop-filter: blur(8px);
-  animation: kid-pop-in .3s ease-out;
 }
 
 /* Compact Station Step Card on the Right Side */
@@ -2059,10 +1688,6 @@ body.kid-home #journey-count, body.kid-home .wordmark { white-space: nowrap; }
   color: #ffffff !important;
   box-shadow: 0 0 10px rgba(52, 211, 153, 0.45) !important;
 }
-#mx-details.orbit-hidden,
-#mx-details[hidden] {
-  display: none !important;
-}
 .lesson-top-bar {
   display: flex;
   justify-content: space-between;
@@ -2213,17 +1838,38 @@ body.kid-home #journey-count, body.kid-home .wordmark { white-space: nowrap; }
 .lesson-dots .dot.done {
   background: var(--kid-mint);
 }
-@media (max-width: 900px) {
-  .flight-lesson-card {
-    top: auto;
-    bottom: 84px;
-    left: 16px;
-    right: 16px;
-    width: auto;
-    max-width: none;
-    transform: none;
-  }
+body:has(#space) #objective:has(#flight-lesson:not([hidden])) {
+  max-height: min(52dvh, 370px);
+  overflow-y: auto;
 }
+body:has(#space) #objective:has(#flight-lesson:not([hidden])) > :not(#flight-lesson) {
+  display: none;
+}
+body:has(#space) #flight-lesson:not([hidden]) {
+  border-top: 0;
+  margin-top: 0;
+  padding-top: 0;
+}
+body:has(#space) #flight-lesson .lesson-content h3 { font-size: 15px; }
+body:has(#space) #flight-lesson .lesson-content p { font-size: 12px; margin: 0 0 5px; }
+body:has(#space) #flight-lesson .lesson-top-bar { margin: 0; gap: 3px; }
+body:has(#space) #flight-lesson .lesson-interactive-area { margin: 0 0 4px; }
+body:has(#space) #flight-lesson .lesson-badge-pill { font-size: 9px; white-space: nowrap; }
+body:has(#space) #flight-lesson .lesson-test-btn { font-size: 13px; padding: 4px 9px; }
+body:has(#space) #flight-lesson .lesson-ok-box { padding: 4px 7px; gap: 5px; }
+@media (max-width: 620px) {
+  body:has(#space) #objective { width: min(225px, calc(100vw - 110px)); top: 36px; }
+  body:has(#space) #telemetry { max-width: 104px; }
+  body:has(#space) #telemetry strong { font-size: 12px; }
+  body:has(#space) #telemetry small { display: none; }
+}
+
+@media (max-height: 520px) {
+  body:has(#space) #objective:has(#flight-lesson:not([hidden])) { top: 28px; }
+  body:has(#space) #flight-lesson .lesson-badge-icon { display: none; }
+  body:has(#space) #flight-lesson .lesson-test-btn { box-shadow: none; }
+}
+
 
 /* ==========================================================================
    Station Next-Step Guidance: Waypoint badge & Highlighted Walk Buttons
@@ -2251,7 +1897,7 @@ body.kid-home #journey-count, body.kid-home .wordmark { white-space: nowrap; }
 }
 
 #locations button.is-next-target,
-#navigation button.is-next-target {
+#walk-next button.is-next-target {
   background: linear-gradient(135deg, #205c42 0%, #163d2e 100%) !important;
   border: 2px solid #3ee6b5 !important;
   box-shadow: 0 0 14px rgba(62, 230, 181, 0.65), 0 4px 8px rgba(0, 0, 0, 0.4) !important;
@@ -2262,7 +1908,7 @@ body.kid-home #journey-count, body.kid-home .wordmark { white-space: nowrap; }
 }
 
 #locations button.is-next-target::after,
-#navigation button.is-next-target::after {
+#walk-next button.is-next-target::after {
   content: "NEXT";
   display: inline-block;
   margin-left: 6px;
@@ -2292,111 +1938,83 @@ body.kid-home #journey-count, body.kid-home .wordmark { white-space: nowrap; }
    Kid-Friendly HUD Enhancements: Persistent Walk Dock & High-Legibility Text
    ========================================================================== */
 
-#walk-dock, .walk-dock {
+#walk-dock {
   position: fixed;
-  left: 16px;
-  bottom: 24px;
+  left: 12px;
+  bottom: 22px;
   z-index: 25;
   display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: 6px;
-  max-width: min(560px, calc(100vw - 32px));
-  background: rgba(23, 19, 58, 0.94) !important;
-  border: 2px solid #5a4cc0 !important;
-  border-radius: 20px !important;
-  padding: 10px 14px !important;
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
-  backdrop-filter: blur(10px);
+  max-width: calc(100vw - 24px);
+  padding: 5px;
+  background: rgba(23, 19, 58, .96);
+  border: 1px solid #5a4cc0;
+  border-radius: 13px;
+  box-shadow: 0 6px 20px #0007;
+  pointer-events: auto;
 }
-
-#walk-dock .nav-title, .walk-dock .nav-title {
-  margin: 0 !important;
-  font-family: var(--kid-display) !important;
-  font-size: 12.5px !important;
-  font-weight: 800 !important;
-  letter-spacing: .08em !important;
-  color: var(--kid-yellow) !important;
-}
-
-#navigation {
-  display: flex !important;
-  flex-wrap: wrap !important;
-  gap: 8px !important;
-}
-
-#navigation button {
-  min-height: 42px !important;
-  padding: 6px 14px !important;
-  font-family: var(--kid-display) !important;
-  font-size: 14px !important;
-  font-weight: 700 !important;
-  border-radius: 14px !important;
-  background: var(--kid-panel-2) !important;
-  border: 2px solid #5a4cc0 !important;
-  color: var(--kid-ink) !important;
-  box-shadow: 0 3px 0 #1b154c !important;
-  cursor: pointer;
-  transition: transform .12s, box-shadow .12s, border-color .15s;
-}
-
-#navigation button:hover {
-  transform: translateY(-2px);
-  border-color: var(--kid-yellow) !important;
-}
-
-#navigation button.active {
-  border-color: var(--kid-mint) !important;
-  background: #17594f !important;
-  color: #eafff8 !important;
-}
-
-/* Progressive Briefing Step Cards */
-.kid-first-step-card {
-  background: linear-gradient(135deg, rgba(42, 36, 104, 0.95), rgba(27, 23, 68, 0.95));
-  border: 2px solid var(--kid-mint);
-  border-radius: 18px;
-  padding: 14px 18px;
-  margin: 12px 0;
-  text-align: left;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
-}
-.kid-first-step-card .step-badge {
-  display: inline-block;
-  font-family: var(--kid-display);
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: .08em;
-  color: #0f3a30;
-  background: var(--kid-mint);
-  padding: 3px 10px;
-  border-radius: 999px;
-  margin-bottom: 6px;
-}
-.kid-first-step-card h3 {
-  font-family: var(--kid-display);
-  font-size: 20px;
-  color: #fff8ee;
-  margin: 0 0 6px 0;
-}
-.kid-first-step-card p {
-  font-size: 15px !important;
-  color: #e5e0ff !important;
-  line-height: 1.45;
-  margin: 0 !important;
-}
-
-.kid-tip-pill {
+#walk-next { min-width: 0; }
+#walk-places { flex-shrink: 0; }
+#walk-places summary {
   display: flex;
   align-items: center;
-  gap: 8px;
-  background: rgba(255, 210, 63, 0.14);
-  border: 1.5px solid var(--kid-yellow);
-  border-radius: 14px;
-  padding: 8px 12px;
-  margin: 8px 0 12px 0;
-  font-size: 14px;
-  color: #fff8ee;
-  line-height: 1.4;
+  list-style: none;
+}
+#walk-places summary::-webkit-details-marker { display: none; }
+#walk-places summary::after {
+  content: '▴';
+  margin-left: 5px;
+}
+#walk-places[open] summary::after { content: '▾'; }
+#walk-places summary:focus-visible {
+  outline: 3px solid var(--kid-yellow);
+  outline-offset: 2px;
+}
+#walk-places #navigation {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 6px);
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 6px;
+  width: min(330px, calc(100vw - 24px));
+  max-height: min(35dvh, 230px);
+  min-height: 0;
+  padding: 7px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--kid-panel);
+  border: 1px solid #5a4cc0;
+  border-radius: 13px;
+}
+#walk-places:not([open]) #navigation { display: none; }
+#walk-dock :is(button, summary) {
+  min-height: 44px !important;
+  padding: 4px 9px !important;
+  font: 650 13px/1.2 var(--kid-display) !important;
+  color: var(--kid-ink) !important;
+  background: var(--kid-panel-2) !important;
+  border: 1px solid #5a4cc0 !important;
+  border-radius: 10px !important;
+  cursor: pointer;
+}
+#walk-dock :is(button, summary):hover { border-color: var(--kid-yellow) !important; }
+#walk-dock button.active {
+  border-color: var(--kid-mint) !important;
+  background: #17594f !important;
+}
+#walk-dock #walk-next button.is-next-target {
+  background: #17594f !important;
+  border-color: var(--kid-mint) !important;
+  animation: none !important;
+  box-shadow: none !important;
+}
+#hud.minimal-hud #walk-dock { display: none; }
+@media (max-width: 640px) {
+  #walk-dock { left: 8px; bottom: 12px; }
+  #hud:has(#interaction:not([hidden])) #walk-dock { bottom: calc(35dvh + 18px); }
 }
 
 /* Debrief Victory & Star Ratings */

@@ -17,3 +17,12 @@
 .sx-back{position:fixed;left:50%;top:5.5rem;transform:translateX(-50%);z-index:40;min-height:3rem;font-size:1.05rem}
 @media (max-width:640px){.sx-gauges b{font-size:1.3rem}.sx-tablet-btn{bottom:auto;top:4.6rem;right:.5rem}.sx-tablet-btn button{min-height:2.2rem;font-size:.85rem}.sx-sensors{bottom:.4rem;padding:.45rem .55rem}}
 @media (max-width:520px){.sx-tablet-btn{top:118px;right:8px}.sx-tablet-btn button{min-height:32px;font-size:.72rem;padding:.2rem .5rem}.sx-sensors{bottom:120px;font-size:.78rem}.sx-people-table{font-size:.72rem}}
+
+/* Keep the shelter controls clear of Pip and the watch instructions. */
+@media (min-width: 641px) {
+  .sx-tablet-btn { bottom: 70px; }
+}
+@media (max-width: 640px) {
+  body:has(.sx-sensors:not([hidden])) .mx-job { bottom: auto; top: 160px; }
+  body:has(.sx-sensors:not([hidden])) .sx-sensors { bottom: 68px; max-height: 38dvh; overflow: auto; }
+}

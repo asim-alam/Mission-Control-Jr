@@ -365,7 +365,7 @@ export async function createRelayScene({container, getState, act, onPause, onDri
     if (st.at === 'saddle') {
       if (st.stowed) return seatHit;
       if (st.plan === 'relay' && st.relay === 'rover') return cargoHit;
-      if (st.relay === 'ground' && st.relayAt === 'saddle') { if (!st.legs) return relayHit; const h = relayHops(st, 'hollow'); if (!h.field) return upHit; if (!st.aimed) return dishHit; }
+      if (st.relay === 'ground' && st.relayAt === 'saddle') { if (!st.legs) return relayHit; const h = relayHops(st, 'hollow'); if (!h.field && st.stages < st.scenario.relay.stages) return upHit; if (!st.aimed) return dishHit; }
       return seatHit;
     }
     if (st.coreReady) return coreHit;
@@ -385,7 +385,7 @@ export async function createRelayScene({container, getState, act, onPause, onDri
       const st = s();
       const target = id === 'rover' ? worldOf(seatHit) : id === 'relay' ? worldOf(st.relay === 'crate' ? crate : relay) : id === 'drill' ? worldOf(st.drill === 'ground' ? drill : xMarks[st.earthAsked && st.cores ? 'b' : 'a']) : new THREE.Vector3(7.2, 0, 0);
       const from = new THREE.Vector2(player.position.x - target.x, player.position.z - target.z); const d = Math.max(.01, from.length());
-      player.navigate({x: target.x + from.x / d * 1.8, z: target.z + from.y / d * 1.8}, {x: target.x, z: target.z});
+      return player.navigate({x: target.x + from.x / d * 1.8, z: target.z + from.y / d * 1.8}, {x: target.x, z: target.z});
     },
     teleport(x, z, lookX, lookZ, pitch = -.2) { player.position.set(x, groundHeight(x, z) + 1.62, z); player.yaw = yawToward(lookX - x, lookZ - z); player.pitch = pitch; player.syncCamera(); },
     roverPosition: () => ({x: roverPos.x, z: roverPos.y, yaw: roverYaw}),

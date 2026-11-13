@@ -15,11 +15,11 @@ export function pipTip(chapter,objective){
 }
 
 const css=`
-#pip{position:fixed;left:16px;bottom:96px;z-index:40;display:flex;align-items:flex-end;gap:8px;max-width:min(340px,calc(100vw - 32px));font:500 15px/1.35 system-ui,sans-serif;color:#eef2f5;pointer-events:none}
+#pip{position:fixed;right:16px;bottom:76px;z-index:40;display:flex;flex-direction:row-reverse;align-items:flex-end;gap:8px;max-width:min(340px,calc(100vw - 32px));font:500 15px/1.35 system-ui,sans-serif;color:#eef2f5;pointer-events:none}
 #pip .pip-face{pointer-events:auto;flex:none;width:52px;height:52px;border-radius:50%;border:2px solid #6fe3c8;background:#172431;display:grid;place-items:center;cursor:pointer;padding:0;box-shadow:0 4px 14px #0008;transition:transform .15s ease}
 #pip .pip-face:hover{transform:scale(1.08)}
 #pip .pip-face:focus-visible,#pip button:focus-visible{outline:3px solid #ffc857;outline-offset:2px}
-#pip .pip-bubble{pointer-events:auto;background:#0f1923ee;border:1px solid #2b3b4b;border-radius:14px 14px 14px 4px;padding:10px 12px;box-shadow:0 6px 20px #0009;transition:opacity .3s ease,transform .2s ease}
+#pip .pip-bubble{pointer-events:auto;background:#0f1923ee;border:1px solid #2b3b4b;border-radius:14px 14px 4px 14px;padding:10px 12px;box-shadow:0 6px 20px #0009;transition:opacity .3s ease,transform .2s ease}
 #pip.pip-resting .pip-bubble{opacity:.88}
 #pip.pip-hidden .pip-bubble{display:none}
 #pip .pip-name{font-size:12px;letter-spacing:.08em;color:#6fe3c8;font-weight:700;display:flex;justify-content:space-between;align-items:center;gap:8px}
@@ -28,11 +28,14 @@ const css=`
 #pip .pip-tools{display:flex;gap:6px}
 #pip .pip-tools button{background:#172431;border:1px solid #2b3b4b;color:#eef2f5;border-radius:8px;font-size:13px;padding:2px 8px;cursor:pointer}
 #pip.pip-idle,body:has(#opening:not([hidden])) #pip,body:has(#landing:not([hidden])) #pip,body:has(.ui-scrim:not([hidden])) #pip,body:has(#dialog:not([hidden])) #pip{display:none}
-body:has(#locations) #pip{left:auto;right:16px;flex-direction:row-reverse}body:has(#locations) #pip .pip-bubble{border-radius:14px 14px 4px 14px}
+body:has(#interaction:not([hidden])) #pip{bottom:calc(35dvh + 24px)}
+body:has(#orbital-radio:not([hidden])) #pip{bottom:calc(min(150px,24dvh) + 26px)}
+body:has(.mx-walk) #pip{bottom:10px}
+body:has(.mx-walk) #pip .pip-bubble{position:absolute;bottom:calc(100% + 8px);right:0;width:min(235px,60vw)}
 #pip.pip-pop .pip-face{animation:pip-pop .5s ease}
 @keyframes pip-pop{40%{transform:scale(1.15)}}
 @media (prefers-reduced-motion:reduce){#pip.pip-pop .pip-face{animation:none}}
-@media (max-width:640px){#pip{bottom:76px;font-size:14px}#pip .pip-face{width:44px;height:44px}}
+@media (max-width:640px){#pip{right:10px;font-size:14px}#pip .pip-face{width:44px;height:44px}}
 `;
 const face=`<svg viewBox="0 0 40 40" width="34" height="34" aria-hidden="true"><line x1="20" y1="3" x2="20" y2="9" stroke="#6fe3c8" stroke-width="2"/><circle cx="20" cy="3" r="2.5" fill="#ff9a5c"/><rect x="6" y="9" width="28" height="24" rx="9" fill="#eef2f5"/><circle cx="14.5" cy="20" r="3.4" fill="#0f1923"/><circle cx="25.5" cy="20" r="3.4" fill="#0f1923"/><circle cx="15.5" cy="19" r="1.1" fill="#fff"/><circle cx="26.5" cy="19" r="1.1" fill="#fff"/><path d="M15 26.5q5 4 10 0" stroke="#0f1923" stroke-width="2" fill="none" stroke-linecap="round"/></svg>`;
 
@@ -45,17 +48,17 @@ export function objectiveText(target){
 const REST_AFTER_MS=24000;
 
 /** Start Pip on a chapter page. Returns {say(next,why)} for chapters that want to add a moment. */
-export function startPip(chapter,{objective='objective'}={}){
+export function startPip(chapter,{objective='objective',collapsed=false}={}){
  if(typeof document==='undefined'||document.getElementById('pip'))return {say(){}};
  const style=document.createElement('style');style.textContent=css;document.head.append(style);
  const root=document.createElement('aside');root.id='pip';root.setAttribute('aria-label','Pip the helper robot');
  root.innerHTML=`<button class="pip-face" type="button" aria-label="Show or hide Pip's tip" aria-expanded="true">${face}</button><div class="pip-bubble" role="status" aria-live="polite"><div class="pip-name"><span>PIP · HELPER ROBOT</span><span class="pip-tools"><button type="button" data-read aria-label="Read Pip's tip out loud">🔊 Read</button></span></div><p class="pip-next"></p><p class="pip-why"></p></div>`;
  document.body.append(root);
  const next=root.querySelector('.pip-next'),why=root.querySelector('.pip-why'),toggle=root.querySelector('.pip-face');
- const setHidden=v=>{root.classList.toggle('pip-hidden',v);toggle.setAttribute('aria-expanded',String(!v));store.set(v);};
- setHidden(store.get());
+ const setHidden=v=>{root.classList.toggle('pip-hidden',v);toggle.setAttribute('aria-expanded',String(!v));};
+ setHidden(collapsed || store.get());
  let restTimer=0;const rest=()=>{clearTimeout(restTimer);root.classList.remove('pip-resting');restTimer=setTimeout(()=>root.classList.add('pip-resting'),REST_AFTER_MS);};
- toggle.onclick=()=>{if(root.classList.contains('pip-resting')&&!root.classList.contains('pip-hidden')){rest();return;}setHidden(!root.classList.contains('pip-hidden'));if(!root.classList.contains('pip-hidden'))rest();};
+ toggle.onclick=()=>{if(root.classList.contains('pip-resting')&&!root.classList.contains('pip-hidden')){rest();return;}setHidden(!root.classList.contains('pip-hidden'));store.set(root.classList.contains('pip-hidden'));if(!root.classList.contains('pip-hidden'))rest();};
  root.querySelector('[data-read]').onclick=()=>{try{const s=speechSynthesis;s.cancel();const u=new SpeechSynthesisUtterance(`${next.textContent} ${why.textContent}`);u.rate=.92;u.pitch=1.25;s.speak(u);}catch{}};
  let last='';
  const say=(nextText,whyText)=>{

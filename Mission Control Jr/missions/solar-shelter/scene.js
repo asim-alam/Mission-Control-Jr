@@ -6,7 +6,7 @@ import {missionAsset} from '../shared/assets.js';
 import {makeCrew} from '../shared/crew.js';
 import {planRoute} from '../../navigation.js';
 import {CREW, PEOPLE, SEAT_IDS} from './state.js';
-import {item, rackWater, railPanels, zoneBags, surfaceTransmission, seatTransmission} from './actions.js';
+import {item, rackWater, railPanels, zoneBags, blockingIssues, surfaceTransmission, seatTransmission} from './actions.js';
 
 const R0 = {x: -4.6, z: -1.6};                    // refuge origin in the habitat
 const W = (x, z) => [R0.x + x, R0.z + z];
@@ -24,6 +24,7 @@ export async function createShelterScene({container, getState, act, onPause, onT
     loadModel(missionAsset('stowage-rack')), loadModel(missionAsset('water-rack')), loadModel(missionAsset('water-trolley')), loadModel(missionAsset('vent-duct')),
     ...CREW.map(id => makeCrew(id))]);
   scene.add(hab);
+  player.cameraObjects = [hab, refuge, console_, shelf, trolley];
   world.place3d(refuge, R0.x, 0, R0.z);
   world.place3d(console_, .6, 0, -4.45);
   world.place3d(shelf, 4.2, 0, -3.95);
@@ -240,13 +241,32 @@ export async function createShelterScene({container, getState, act, onPause, onT
     if (!st.mapViewed) return console_;
     if (!st.assist) return crew.elena.model;
     const h = held();
-    if (h?.kind === 'water') return st.rack.built ? rack : null;
-    return null; // no "best spot" hints: the player decides the layout
+    if (h) return h.kind === 'water' && st.rack.built ? rack : null;
+    if (st.checkViewed && blockingIssues(st).length) return doorHit;
+    if (rackWater(st).length && !st.rack.latched) return rack;
+    const panel = st.items.find(i => i.kind === 'poly' && i.at.startsWith('rail:') && !i.fastened);
+    if (panel) return models[panel.id];
+    const zone = ZONES.find(z => zoneBags(st, z).length && !st.zones[z].strapped);
+    if (zone) return zones[zone];
+    const built = st.items.some(i => i.at === 'rack' || i.at.startsWith('rail:') || i.at.startsWith('zone:'));
+    if (!built && st.rack.built) {
+      const water = st.items.find(i => i.kind === 'water' && ['store', 'trolley'].includes(i.at));
+      if (water) return models[water.id];
+    }
+    return built ? doorHit : null;
   };
   world.onFrame(() => world.guide(guideTarget(), .4));
 
   return {world, sync, setCutaway, seatTransmission: seat => seatTransmission(s(), seat),
-    walkTargets: [{id: 'store-water', label: '💧 Water containers', x: .4, z: 3.1}, {id: 'store-bags', label: '🎒 Supply bags', x: 4.2, z: -2.8}, {id: 'store-poly', label: '🧱 Plastic panels', x: 6.1, z: 0},
+    walkTargets: [{id: 'elena', label: 'Elena'}, {id: 'rack', label: 'Water rack', visible: () => s().rack.built}, {id: 'store-water', label: '💧 Water containers', x: .4, z: 3.1}, {id: 'store-bags', label: '🎒 Supply bags', x: 4.2, z: -2.8}, {id: 'store-poly', label: '🧱 Plastic panels', x: 6.1, z: 0},
       {id: 'refuge', label: '🏠 Refuge door', x: R0.x, z: R0.z + 2.2}, {id: 'console', label: '📋 Refuge map', x: .6, z: -3.3}],
-    walk(id) { const t = this.walkTargets.find(w => w.id === id); if (t) player.navigate({x: t.x, z: t.z}, {x: t.x, z: t.z - 1}); }};
+    walk(id) {
+      if (id === 'elena' || id === 'rack' || (id === 'store-water' && s().assist === 'trolley')) {
+        const object = {elena: crew.elena.model, rack, 'store-water': trolley}[id];
+        const target = object.getWorldPosition(new THREE.Vector3());
+        return player.navigate({x: target.x, z: target.z + 1.2}, target);
+      }
+      const t = this.walkTargets.find(w => w.id === id);
+      if (t) return player.navigate({x: t.x, z: t.z}, {x: t.x, z: t.z - 1});
+    }};
 }

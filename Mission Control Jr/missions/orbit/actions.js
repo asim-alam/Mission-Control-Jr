@@ -165,7 +165,7 @@ export function getObjective(s) {
   if (s.phase === 'brief') return 'Arrival at Mars';
   if (s.phase === 'debrief') return s.stoppedEarly ? 'Game stopped. Try again from a safe spot.' : 'See how your landing went';
   if (s.stage === 'descent') return 'Landing on Mars…';
-  if (s.tripped) return 'The breaker tripped! Reset it at the power panel';
+  if (s.tripped) return 'The breaker tripped! Hold E on the yellow handle at the power panel';
   if (!inShadow(s) && minutesToShadow(s) <= 10 && powerUsed(s) > sc.power.shadow) return `Shadow soon! Use ${sc.power.shadow} power units or less`;
   if (s.holding === 'tester') return 'Clip the tester onto the radio rack';
   if (s.holding === 'amp' && !s.fixed) return s.loads.amp ? 'Fix the amplifier: switch off the Amplifier first' : 'Put the spare amplifier in the radio rack';
@@ -177,7 +177,7 @@ export function getObjective(s) {
       }
       return 'Test the radio: press the green button on the rack';
     }
-    if (s.diagnosed) { const p = sc.parts[s.diagnosed]; return s.loads[p.load] ? `Fix the ${p.label}: switch off the ${loadLabel(s, p.load)} first` : `Fix the ${p.label}`; }
+    if (s.diagnosed) { const p = sc.parts[s.diagnosed]; return s.loads[p.load] ? `At Power panel, switch off the ${loadLabel(s, p.load)}` : s.diagnosed === 'amp' ? 'Take the spare amplifier from Spares' : `Use the ${p.label} on the rack and choose the repair`; }
     const off = sc.testNeeds.filter(l => !s.loads[l]);
     if (off.length && !s.tests) {
       if (off.length === sc.testNeeds.length) {
@@ -186,7 +186,7 @@ export function getObjective(s) {
       return `Switch on ${off.map(l => `${sc.loads[l].icon} ${sc.loads[l].label}`).join(', ')}, then test the radio`;
     }
     if (!s.tests) return 'Test the radio: press the green button on the rack';
-    return 'Find what is broken: use the tester, or look closely';
+    return 'Find the broken part: get the tester from Spares, or inspect the parts at the rack';
   }
   if (!s.site) {
     if (!hazardCamReady(s)) {
@@ -197,6 +197,7 @@ export function getObjective(s) {
           ? '⚡ Charge lander at Power Panel: switch OFF 📻 Radio or 📶 Amp first, then switch ON 🔌 Charger (#6)'
           : '⚡ Charge lander at Power Panel: switch ON 🔌 Charger (Switch #6) in sunlight and wait 5s to reach 80%';
       }
+      if (inShadow(s)) return 'The lander charges in sunlight. At Planner, use Wait 10 minutes until the station leaves shadow.';
       const chargeVal = Math.round(s.charge ?? 45);
       const secondsLeft = Math.max(0, Math.ceil((80 - chargeVal) / 7));
       return `⚡ Charging lander: ${chargeVal}% / 80% (Wait ${secondsLeft}s in sunlight for 📷 Hazard Camera)`;

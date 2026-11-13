@@ -2,6 +2,24 @@
 
 Research and working-tree audit dated 13 November 2026. The Mars and Moon outposts are fictional. Real mission histories, observations, calculated ephemerides, and authored training rules have different evidentiary roles.
 
+## How to use this roadmap
+
+Start with the existing-game audit and dataset table to understand what is already available. Use the mission briefs for feature planning, the data contracts for implementation, and the release checks for verification. Proposed durations, equations, scoring criteria and effort estimates are design decisions for this prototype.
+
+| Deliverable | Where to find it |
+| --- | --- |
+| A. Existing Game Audit | [Current architecture and missions](#a-existing-game-audit) |
+| B. Space Mission Research | [Space mission reference catalog](#b-space-mission-reference-catalog) |
+| C. Dataset Evaluation | [Ranked datasets](#c-ranked-dataset-evaluation-and-mapping), [mission-specific links](#mission-by-mission-datasets-and-resource-links) and [data preparation](#i-data-preparation-and-scientific-model-contracts) |
+| D. Mission Redesign Blueprint | [Design overview](#d-mission-redesign-blueprint) and [14 detailed implementation briefs](#h-detailed-mission-implementation-briefs) |
+| E. Game Progression Architecture | [Career and carry](#e-astronaut-career-and-carry) and [competencies and learning evaluation](#j-progression-accessibility-and-learning-evaluation) |
+| F. Technical Integration Architecture | [Integration strategy](#f-technical-integration) and [scientific model contracts](#i-data-preparation-and-scientific-model-contracts) |
+| G. Prioritized Implementation Roadmap | [Phases and estimates](#g-prioritized-implementation-and-validation) and [next delivery packages](#k-delivery-packages-and-release-checks) |
+
+**Current delivery status.** Eleven playable experiences were audited, and three additional missions are proposed. The first implementation added provenance for the Base Boss radiation reference and preserved independently prepared records during normalization. The previous verification run passed 241 tests and the production build, with two Base Boss paths checked in Chrome. Those results describe that implementation run. Full campaign walkthroughs, prefixed deployment acceptance and target-age playtesting remain open.
+
+**First product milestone.** A child completes one outpost scenario, sees how a choice changes a later reserve, and explains the cost of choosing differently. Base Boss provides the shortest existing route to testing that outcome. Its next scientific improvement is explicit accounting for wastewater and recovery losses.
+
 ## A. Existing game audit
 
 This is a static multipage Vite application with JavaScript modules and Three.js. `mission-registry.js` describes the routed chapters, `mission-routes.js` resolves clean paths and legacy links, and `journey-state.js` migrates browser saves and tracks campaigns, attempts, success, mastery, and carry. The newer mission folders use scenario, state, action, scene and UI modules on a shared controller/runtime. Storm, rover and Thirty Sols use earlier implementations. Base Boss has separate regional progress and a three-decision resource drill. The existing save keys, desktop keyboard/mouse controls, 3D scenes, generated GLBs, Pip, subtitles and recorded or browser voices can support the redesign. Cadet increases margins and uses simpler resource presentation. Explorer offers tighter margins. Simple and Details copy are a separate control. Direct routes and practice give judges access to later content.
@@ -17,10 +35,10 @@ This is a static multipage Vite application with JavaScript modules and Three.js
 | `/lunar-sunlight` · Chasing the Sun. Tow and raise a mast, route the cable, track the Sun and serve loads. | Site, mast height, shadows and storage affect continuity. | Long-term LOLA samples are reference context. The fictional 18-day shadow schedule is independent. A second playable site profile would make the distinction tangible. |
 | `/lunar-dust` · Dust Busters. Brush or use an electrostatic rack, filter air and observe airlock interlocks. | Contamination control takes time and power. | Blue Ghost demonstrated dust removal on equipment surfaces. The rack, suit procedure and cleaning rates are authored. Equipment surfaces and the suit should have distinct feedback. |
 | `/lunar-relay` · Over the Hill. Carry a relay, deploy it, drill a core, send a report and return. | Terrain blocks links and field work costs battery and time. | Ridge geometry is authored. The player should compare a blocked direct path with a plausible relay path using the same elevation profile. |
-| `/base-boss` · Be the Base Boss. Drive between bases, deliver supplies, and run a Verdant drill covering air, water, power, food, exposure and an Earth reply. | Combines scheduling, supply chains and competition for the same reserves. | Regional travel currently advances time without a battery meter. The drill models battery separately. The 8,100 µGy radiation figure was a literal in the controller and scales to a 100-point baseline. |
+| `/base-boss` · Be the Base Boss. Drive between bases, deliver supplies, and run a Verdant drill covering air, water, power, food, exposure and an Earth reply. | Combines scheduling, supply chains and competition for the same reserves. | Regional travel currently advances time without a battery meter. The drill models battery separately. The radiation reference now comes from a provenance-linked summary and scales to a fixed 100-point baseline. Recycler output currently has no wastewater input stock. |
 | `/campaign` · Thirty Sols. Allocate and sustain resources across seeded events and review choices. | Small shortfalls compound over a long expedition. | Useful as repeat practice. Its larger HUD and independent rules make it a weaker first experience for ages 7–9. |
 
-Baseline on Node 22.22.1 was 236 passing tests out of 238. The Base Boss region test imports a removed battery reserve and asserts previous route power behavior. The HUD test expects an old Vite middleware function name. These were present before the first science change. The previous release report documents some browser walkthroughs. Current full campaign browser acceptance and target-age learning outcomes still need direct verification.
+Baseline on Node 22.22.1 was 236 passing tests out of 238. At the initial baseline, the Base Boss region test imported a removed battery reserve and asserted previous route power behavior. The HUD test expected an old Vite middleware function name. Both checks were subsequently updated to the current behavior. These were present before the first science change. The previous release report documents some browser walkthroughs. Current full campaign browser acceptance and target-age learning outcomes still need direct verification.
 
 ## B. Space mission reference catalog
 
@@ -50,7 +68,7 @@ Targets are the dates stated by the linked organizations as of the audit. Where 
 
 | Priority and data | Extractable fields, format and cadence | Game integration and scientific limit |
 | --- | --- | --- |
-| 1 · Curiosity RAD / NASA JPL | June 2024 article reports a May 20 event and 8,100 µGy at the rover location. PDS provides instrument products and labels; inspect actual dose columns, integration intervals and quality flags before deriving a time series. Archive products follow releases. | Base Boss and Solar Shelter. Use a dated event summary now. A future PDS profile can drive relative intensity over time. Instrument/location absorbed dose is different from crew dose equivalent and shield performance. [Event report](https://www.jpl.nasa.gov/news/nasa-watches-mars-light-up-during-epic-solar-storm/), [PDS instrument index](https://pds-geosciences.wustl.edu/missions/msl/index.htm). |
+| 1 · Curiosity RAD / NASA JPL | June 2024 article reports a May 20 event and 8,100 µGy at the rover location. PDS provides instrument products and labels; inspect actual dose columns, integration intervals and quality flags before deriving a time series. Archive products follow releases. | Base Boss and Solar Shelter. Use a dated event summary now. A future PDS profile can drive relative intensity over time. Instrument/location absorbed dose is different from crew dose equivalent and shield performance. [Event report](https://www.jpl.nasa.gov/news/nasa-watches-mars-light-up-during-epic-solar-storm/), [RAD archive locator](https://arcnav.psi.edu/urn%3Anasa%3Apds%3Acontext%3Ainstrument%3Arad.msl), [RAD RDR specification](https://pds-ppi.igpp.ucla.edu/data/MSL-M-RAD-3-RDR-V1.0/DOCUMENT/RAD_RDR_SIS.PDF). |
 | 2 · JPL Horizons | Observer quantity 21, UTC epoch, target/observer IDs, ephemeris and one-way light minutes. Text/JSON API, computed on request. Parse marked ephemeris rows and pin epochs. | Earth Delay, Base Boss and Over the Hill. Existing Mars value 11.01438304 min and Moon value 0.02254982 min at the bundled epoch. Double for an approximate symmetric round trip, then add explicit processing and link waits. [API contract](https://ssd.jpl.nasa.gov/doc/horizons.html). |
 | 3 · Jezero HiRISE DTM / Mars Trek | Stereo elevations, grid resolution, projection, datum and no-data labels from the DTM. Trek WMTS provides tiled layers and capabilities. Crop and resample the elevation product offline. Historical imagery is released per product. | Rover and Base Boss. Derive grade from elevation; overlay fictional pads and traction classes. Display the site and any edits. WMTS imagery pixels do not replace an elevation raster. [Jezero DTM](https://hirise.lpl.arizona.edu/dtm/ESP_023524_1985), [Trek services](https://trek.nasa.gov/tiles/). |
 | 4 · Opportunity solar energy | Sol and watt-hours per sol, sparse historical samples. Repository uses team values reported in archived Planetary Society updates. JPL separately documents the decline and operations. Interpolate as a normalized fraction and record time compression. | Before the Storm and Base Boss. The profile changes available solar power. Rover electrical output is specific to its hardware and conditions. [NASA/JPL report](https://www.jpl.nasa.gov/news/opportunity-hunkers-down-during-dust-storm/), [Archived series source](https://www.planetary.org/articles/06-mer-update-planet-encircling-dust-cloud). |
@@ -131,11 +149,11 @@ Reuse `servePower`, `moveWater`, the exposure integrator, message queue, seeded 
 
 ## G. Prioritized implementation and validation
 
-Effort estimates are developer time for one person familiar with the repo. Playtest recruitment and agency review lead time are separate.
+Effort estimates are developer time for one person familiar with the repo. Playtest recruitment lead time is separate.
 
 | Phase and priority | Work | Impact / complexity | Dependencies, data and effort |
 | --- | --- | --- | --- |
-| 1 · P0 | Restore the baseline checks and put the Mars radiation event in the common provenance pipeline. Connect current storm, rover and capstone sources to their actual consumers. | High / low | Existing routes, Base Boss, JPL event summary and archived data. 0.5–1.5 days. |
+| 1 · P0 · implemented | Restore the baseline checks and put the Mars radiation event in the common provenance pipeline. Connect current storm, rover and capstone sources to their actual consumers. | High / low | Existing routes, Base Boss, JPL event summary and archived data. 0.5–1.5 days. |
 | 1 · P0 | Walk through a 5–7 minute route with two meaningfully different outcomes. Check source links, reserve deltas, replay and the age modes. | High / medium | Existing quick demo and capstone. 1–2 days. |
 | 2 · P1 | Add two dated Horizons scenarios and a small RadLab instrument trace. Show observation time, location and units. | High / medium | Horizons and RadLab docs, versioned saves. 2–4 days. |
 | 2 · P1 | Add a second cropped DTM route and a lunar illumination comparison. Expose terrain edits and replay conditions. | High / medium | Jezero HiRISE, LOLA, rover planner. 3–5 days. |
@@ -152,3 +170,299 @@ For acceptance, run the automated suite and a production build, then smoke-test 
 - Data normalization retains the independently prepared Jezero, Opportunity and Veggie anomaly records. Registry-to-provenance checks cover every chapter that declares a source.
 - The route test now checks time, roughness, arrival, cargo and old-save compatibility for the current regional design. The navigation test follows the current middleware name. All 241 tests and the production build passed. Vite reported its large-chunk warning for GLTFLoader.
 - All 14 game and Sources URLs returned HTTP 200 at the preview root. In Chrome, Base Boss showed the source and produced both a ready and a delayed harvest on replay. Complete browser walkthroughs, prefixed deployment acceptance and player observation remain open.
+
+## H. Detailed mission implementation briefs
+
+These briefs expand the redesign in section D into reviewable increments. Session lengths, difficulty, resource margins and scoring suggestions below are design targets. The existing source table provides the scientific references for each brief.
+
+### Arrival at Mars
+
+**Role and learning objective.** The player is the systems engineer aboard a fictional Mars arrival vehicle. They must isolate a fault, protect essential loads and explain the evidence behind a landing choice. Suggested first-play duration is 8–12 minutes.
+
+**Sequence and choices.** Inspect the briefing and load panel, reproduce the radio symptom, choose a diagnostic test, isolate the failed component, verify the repaired link, then compare landing sites. Add an optional instrument task that consumes the same energy available to the radio. A wrong diagnosis spends test energy and time, then provides another clue. A guided reset returns to the last working configuration.
+
+**Variables and feedback.** Track battery Wh, load W, elapsed mission seconds, diagnostic evidence and landing-site criteria. Show the last test result beside the component it concerns. The pre-landing debrief names the evidence used and the optional work deferred. A later DTM-backed site selection can use measured slope while retaining authored vehicle limits.
+
+**Reuse and increment.** Extend `missions/orbit/scenario.js`, `actions.js`, `state.js` and the existing UI and landing cockpit. Add a source-backed landing comparison only after the repair sequence works with two injected faults. Keep orbit navigation and surface descent as clearly identified stages with their own reference frames.
+
+**Acceptance.** The same fault and choices reproduce the same result. A repair succeeds only after the verification step. Optional work consumes delivered energy. A saved attempt resumes with its fault and diagnostic evidence intact.
+
+### Before the Storm
+
+**Role and learning objective.** An outpost engineer must keep essential systems operating through declining solar generation. The player predicts which optional task will reduce the later reserve. Suggested duration is 6–10 minutes.
+
+**Sequence and choices.** Read the power trend, inspect equipment, clean panels or recover a spare, decide between research and reserve, then bring the crew inside. Make each action's energy or time cost visible before confirmation. A dust warning advances the forecast even if the player pursues optional work.
+
+**Variables and feedback.** Preserve original Wh/sol samples in the evidence view. Interpolate a normalized curve for the fictional array. Track generated, served, stored and spilled energy separately. Show a forecast and the actual reserve at storm arrival so the player can test their prediction.
+
+**Reuse and increment.** Use `mission.js`, `demo.js`, `data/opportunity-2018.js` and the existing airlock and crew outcomes. Add a debrief chart for the preparation interval and a replay button that keeps the same forecast.
+
+**Acceptance.** A lower-generation input changes available power under identical actions. Research receives credit only while powered. The ending identifies the actual installed battery and sheltered crew. Every successful plan spends time, energy or an optional science opportunity.
+
+### Tracks in the Dust
+
+**Role and learning objective.** A rover operator balances an interesting field target with the ability to return. The learner explains how slope, surface uncertainty and remaining route length affect a decision. Suggested duration is 10–15 minutes.
+
+**Sequence and choices.** Perform readiness checks, plan a traverse, drive to a parked observation point, inspect an uncertain patch, choose a route, collect evidence and return. Offer a shorter rough route and a longer predictable route. After inspection, allow a reduced science objective that preserves a credible return margin.
+
+**Variables and feedback.** Use DTM elevations and horizontal spacing to derive grade. Track route distance, authored rolling resistance, wheel slip, battery and sample custody. Keep predictions uncertain where surface properties are unknown. Identify the terrain edits around the habitat in the source view.
+
+**Reuse and increment.** Extend `mission2.js`, `rover-controller.js`, `expedition-terrain.js` and the existing field camera. Add return-energy estimates to the existing route choice and compare predicted with actual consumption at debrief.
+
+**Acceptance.** Traversing a longer version of the same surface costs more energy under equivalent driving. A steeper DTM patch changes the grade calculation. The player can choose a shorter science objective and still complete a safe return. Carrying the sample and transferring it are distinct recorded actions.
+
+### A Place to Hide
+
+**Role and learning objective.** A crew member prepares a refuge while balancing work time, material placement and ventilation. The learner explains how shelter timing and coverage affect cumulative exposure. Suggested duration is 8–12 minutes.
+
+**Sequence and choices.** Inspect a warning and the refuge, select vulnerable surfaces, place supplies, check airflow, call the crew and watch the event. Give the player enough information to weigh one more placement against earlier entry. A blocked vent prompts a physical rearrangement.
+
+**Variables and feedback.** Track work minutes, inventory location, vent clearance, seat occupancy and cumulative training exposure. Preserve the source instrument and location beside any real observation. A future archive-driven profile can alter the timing of higher and lower intensity intervals after its timestamps and units are verified.
+
+**Reuse and increment.** Extend `missions/solar-shelter/` and `simulation/exposure.js`. First add a replay comparing identical seat placement with different entry times. Then evaluate a small RAD trace as an additional input.
+
+**Acceptance.** Moving a container changes its location once. An earlier entry reduces accumulated exposure under the same event and shelter. Exposure remains above zero. The same shield arrangement can produce different outcomes when the event profile changes.
+
+### The Greenhouse Promise
+
+**Role and learning objective.** A crop specialist must deliver a fresh supplement while protecting the habitat's essential supplies. The learner identifies which missing input prevented growth. Suggested duration is 8–12 minutes with explicit time compression.
+
+**Sequence and choices.** Inspect an already-growing crop, allocate a light and watering window, diagnose the hose and airflow, then choose a harvest or delayed-harvest plan. Show packed-food supplies alongside the greenhouse objective. Offer a real choice between immediate repair and continued operation with a reduced crop target.
+
+**Variables and feedback.** Keep the OSD-269 photoperiod as the documented protocol. Track delivered light, water, equipment state, growth progress, stress and harvested stock. Plant response and compressed growth rates remain authored. Fan status and actual airflow should provide independently observable clues.
+
+**Reuse and increment.** Extend `missions/greenhouse/`, `simulation/crops.js` and existing crop carry. Add a causal debrief showing the periods in which a limiting input interrupted growth.
+
+**Acceptance.** A powered light without available water cannot advance a fully supported growth interval. Harvest is credited once. A delayed crop can recover through later supported periods. A replay changes one allocation while preserving the starting crop and fault.
+
+### Message to Earth
+
+**Role and learning objective.** The crew's repair lead chooses what can be checked locally while assistance travels between planets. The learner distinguishes outbound travel, Earth work and return travel. Suggested duration is 8–10 minutes.
+
+**Sequence and choices.** Inspect the recycler fault and reserve, send a concise report, perform local tests, then decide whether to replace a part before the answer arrives. A delayed or blocked local link becomes a visible queue state. Receiving the answer provides a testable instruction and a result to compare with the player's diagnosis.
+
+**Variables and feedback.** Track the chosen ephemeris epoch, outbound and return durations, processing delay, packet state, remaining water and test costs. Display both story minutes and the clearly labeled compressed wait. Pause freezes the mission clock consistently.
+
+**Reuse and increment.** Extend `missions/earth-delay/` and `simulation/messages.js`. Add a second dated ephemeris input and a comparison in which an identical local action sequence reaches a different reserve before the reply.
+
+**Acceptance.** A reply cannot be used before arrival. Link loss queues or blocks receipt according to the packet state. Reload preserves departure and arrival times. The debrief identifies water consumed while waiting and the actual benefit of the local test.
+
+### Chasing the Sun
+
+**Role and learning objective.** An outpost power engineer chooses where and how to deploy a solar mast. The learner explains the trade between setup time and reliable generation. Suggested duration is 8–12 minutes.
+
+**Sequence and choices.** Compare two site cards, tow the mast, choose height, connect the cable and select the essential or science load schedule. A modeled shadow interval tests the chosen arrangement. Battery use remains visible during the shadow.
+
+**Variables and feedback.** Separate the published long-term illumination fraction from the authored mission-time visibility function. Track mast height, cable reach, suit time, generation, storage and unmet demand. Show the longest continuous shortfall alongside total generation.
+
+**Reuse and increment.** Extend `missions/lunar-sunlight/` and the existing Moon ground scene. Add a second deterministic shadow profile and record its identifier in the attempt.
+
+**Acceptance.** A site with more total generation can still require storage during a long shadow. Raising the mast spends work time and affects the modeled horizon. A disconnected cable supplies zero power to the base. The debrief identifies both served loads and unmet demand.
+
+### Dust Busters
+
+**Role and learning objective.** An airlock technician limits dust carried into the habitat. The learner explains where the dust went and what the cleaning process cost. Suggested duration is 6–8 minutes.
+
+**Sequence and choices.** Inspect dusty equipment, select brushing, vacuuming or the equipment rack, check the filter, then cycle the airlock. A nearly full filter makes cleanup order matter. The player can repeat an inspection after each action.
+
+**Variables and feedback.** Track dust on each surface, captured dust, cabin transfer, filter capacity, electrical energy and work time. Show removal and redistribution with distinct visual states. Each cleaning method needs a cost and a supported equipment surface.
+
+**Reuse and increment.** Extend `missions/lunar-dust/` and its existing interlocks. Add a compact before/after inventory that explains the result.
+
+**Acceptance.** An action transfers or captures a bounded amount of dust. A full filter affects the next operation. An airlock interruption can be recovered safely. Evidence text identifies the demonstrated EDS surface and the authored cleaning parameters.
+
+### Over the Hill
+
+**Role and learning objective.** A field operator restores a usable relay link before collecting a core. The learner explains whether a missing report is waiting for a path or for signal travel. Suggested duration is 8–12 minutes.
+
+**Sequence and choices.** Survey the blocked path, carry a relay to one of two sites, deploy and test it, decide how much field science to attempt, then return. The high site costs extra travel. The nearer site may leave part of the work area out of view.
+
+**Variables and feedback.** Track relay coordinates and height, terrain profile, line-of-sight result, power, work duration and packet timestamps. A terrain cross-section can show the obstruction and the selected antenna heights.
+
+**Reuse and increment.** Extend `missions/lunar-relay/` and shared message logic. Add an explicit link test before reporting success and a relay battery contribution to the return decision.
+
+**Acceptance.** Moving the relay can change path availability under the same terrain. Sending queues a report while blocked. A completed core remains in custody through return. Safe return with reduced science has a clear debrief.
+
+### Be the Base Boss
+
+**Role and learning objective.** The player coordinates supplies and repairs across the region, then budgets Verdant's reserves. The learner connects one earlier delivery or allocation to a later constraint. Suggested duration is 12–20 minutes, with a 5–7 minute drill option.
+
+**Sequence and choices.** Accept the valve delivery, choose a route, restore water service and enter the drill with a recorded starting condition. The drill progresses through reduced solar power, refuge preparation and delayed Earth support. Debrief the entire causal chain and replay one changed choice.
+
+**Variables and feedback.** Regional travel currently advances mission time. The drill has its own battery, air, clean water, shielding water and crop counters. The proposed bridge should pass an explicit delivery result into a fresh drill. Add wastewater availability, capacity overflow and recovery losses before claiming closed-loop water accounting.
+
+**Reuse and increment.** Extend `missions/base-boss/progress.js`, `outpost-drill.js` and `drill-panel.js`. Keep the current independent drill available for practice while adding a campaign entry that consumes the saved delivery result.
+
+**Acceptance.** Earlier and later delivery can alter the drill's starting resources without creating an unwinnable state. Wastewater is debited when reclaimed. Moving water into shielding preserves inventory. Debrief explanations reconcile with the final balances and the selected sequence.
+
+### Thirty Sols
+
+**Role and learning objective.** A mission commander plans for repeated shortfalls and deferred rewards. The learner identifies the earlier decision that created a later reserve or shortage. Suggested duration is 15–25 minutes with save and resume.
+
+**Sequence and choices.** Choose an initial plan, allocate each sol, handle seeded events, revise priorities and review the whole mission. Introduce one additional system only after its earlier dependency is visible. Preserve reduced-objective recovery.
+
+**Variables and feedback.** Track the existing resources and event history, then expose their causes through three compact groups for Cadet. Crop lead time and equipment maintenance should extend over several turns. Show upcoming commitments so the child can plan beyond the current sol.
+
+**Reuse and increment.** Extend `main.js`, `outpost.js`, `simulation/decisions.js` and `simulation/decision-review.js`. Map each imported data series explicitly to the campaign's turn duration.
+
+**Acceptance.** Replaying one seed reproduces the event order. The full review includes early decisions. An interrupted session resumes on the same turn. Optional science can improve the record only after its required resources are paid.
+
+### Station Shift — proposed
+
+**Role and learning objective.** A junior ISS systems operator schedules research around maintenance, exercise and protected rest. The learner explains one scheduling conflict using task duration and dependencies. Suggested duration is 8–12 minutes.
+
+**Sequence and choices.** Inspect the shift plan, allocate crew time, fix a rack fault, recover the schedule and compare completed work. An optional dosimeter activity asks the player to select and explain a measured interval. Introduce only one unexpected event in the first scenario.
+
+**Variables and feedback.** Use task durations, available crew minutes, essential power and completion prerequisites. Research on rest and exercise informs the schedule's purpose. Gameplay performance consequences use authored labels and bounded task effects.
+
+**Reuse and increment.** Use the orbit scene and shared controller, adding a schedule panel and task dependency state. Begin with fixed tasks before incorporating the small RadLab series.
+
+**Acceptance.** A crew member cannot perform overlapping tasks. A failed prerequisite prevents its dependent task. The player can recover by postponing optional work. The debrief identifies the protected activity and the sacrificed research opportunity.
+
+### Survey Before You Land — proposed
+
+**Role and learning objective.** A robotic scout recommends a lunar landing site using terrain, sunlight and link access. The learner supports a recommendation with at least two observations. Suggested duration is 10–15 minutes.
+
+**Sequence and choices.** Study an overview, select a survey path, collect two site observations, establish a relay and choose which evidence to transmit. A bandwidth or battery limit forces prioritization. Compare the recommendation with the survey evidence.
+
+**Variables and feedback.** Preserve map projection and elevation spacing, and calculate slope and a geometric radio path. Track survey energy, information collected and downlink size. Use long-term illumination as one site attribute and label the simplified short-term model.
+
+**Reuse and increment.** Reuse the lunar rover, relay, maps and sample interactions. Add a small site comparison panel and evidence checklist.
+
+**Acceptance.** Every displayed slope can be traced to its source cells. No-data regions are visibly unknown. A recommendation records both supporting observations and an unresolved limitation. Every site has at least one consequential drawback.
+
+### Oxygen on a Short Power Budget — proposed
+
+**Role and learning objective.** A Mars resource engineer balances oxygen production, storage and other electrical loads. The learner explains why production rate alone does not determine crew endurance. Suggested duration is 8–12 minutes.
+
+**Sequence and choices.** Check tank capacity, run a converter test, observe a falling power forecast, then choose between further production and time-critical science. A full tank or reduced power changes the next useful action. End with a reserve comparison.
+
+**Variables and feedback.** Track oxygen mass, fictional production rate, warm-up energy, operating energy, storage capacity and consumption. MOXIE's published output provides scale context. Future habitat capacity, storage and demand need their own assumptions.
+
+**Reuse and increment.** Extend the shared resource calculations and Base Boss allocation panel with an oxygen ledger. Add the production hardware interaction only after the budget model has two understandable outcomes.
+
+**Acceptance.** Production stops at the tank's available capacity. Startup costs are paid once per restart. An unpowered converter produces zero oxygen. The debrief accounts for generated, consumed and remaining oxygen. [MOXIE mission results, 6 September 2023](https://www.jpl.nasa.gov/news/nasas-oxygen-generating-experiment-moxie-completes-mars-mission/).
+
+## I. Data preparation and scientific model contracts
+
+### Evidence levels in the interface
+
+| Evidence basis | Example already relevant to this game | What the player can infer |
+| --- | --- | --- |
+| Direct observation | A dated instrument reading with units and location | The instrument recorded this value under those conditions. |
+| Derived value | Horizons light time or slope from a DTM | The result follows from a named calculation and its inputs. |
+| Published reference | A Veggie protocol or EDS demonstration report | This procedure or observation informs the mission design. |
+| Authored training model | A shelter transmission factor or compressed crop rate | This is a chosen rule used to make the consequence playable. |
+
+A source link establishes provenance. Demonstrating that data drives gameplay also requires a specific variable and an observable change in an outcome. For example, the Horizons delay changes when the reply is usable. The current 8,100 µGy summary fixes a 100-point baseline in Base Boss. Testing a second radiation scenario requires a separately specified intensity or time profile and a consistent mapping.
+
+### Small, usable extraction packages
+
+| Source | Preparation steps | Small first deliverable | Check before integration |
+| --- | --- | --- | --- |
+| Horizons | Request the selected target, observer, epoch range and quantity 21. Parse between the ephemeris markers and preserve the header. Convert minutes to seconds once. | Two dated rows for Earth–Mars and one Earth–Moon row, with complete request parameters. | Confirm target, observer, UTC epoch, units and positive finite light time. Record the symmetric return-leg approximation. |
+| DONKI | Query a narrow historical interval, select one event ID, retain linked events and analysis revisions. Preserve instrument and observing location. | One event chain with onset timestamps and a source URL per event. | Missing values remain unknown. A revised analysis retains its version. Earth and Mars locations remain explicit. |
+| OSDR | Open the study metadata and file manifest. Select the growth-protocol fields and a small published aggregate or table. | The OSD-269 light schedule and a clearly cited equipment-anomaly note. | Confirm specimen, flight/ground group, unit, protocol and paper association. Treat sample counts and study limitations as part of the record. |
+| HiRISE / LRO | Read the label, projection and no-data value. Crop a bounded window, retain horizontal scale, then produce a rendering grid and separate edited terrain. | One route patch with a small metadata JSON and an edit mask. | Preserve metre scale. Exclude no-data cells from slope calculation. Record smoothing and any vertical exaggeration. |
+| RadLab | Select one instrument with coverage in a short interval. Export timestamps, rate and instrument metadata. Preserve gaps. | One short ISS trace with a valid-data mask. | Check rate units and cadence before integration. Define how gaps appear and exclude unsupported intervals from cumulative totals. |
+| Curiosity RAD | Open the PDS PPI reduced-data archive and its software interface specification. Select a bounded surface interval and inspect its detached labels. | A documented candidate series with detector, dose/rate distinction, time bins and quality handling. | Establish a verified parser and time coverage before using the series. The current article-derived event total remains the implemented reference. |
+| MEDA | Choose the particular sensor product from its manifest and read the associated label. Retain time, unit, quality flags and sensor location. | One short environmental series relevant to a specific mission question. | Atmospheric temperature, opacity and solar output require different interpretations. Select the actual variable needed by the mechanic. |
+
+The RAD reduced-data documentation identifies the archive format and product interpretation. The Horizons manual defines quantity 21 as one-way down-leg light time. [RAD RDR specification](https://pds-ppi.igpp.ucla.edu/data/MSL-M-RAD-3-RDR-V1.0/DOCUMENT/RAD_RDR_SIS.PDF), [Curiosity RAD archive locator](https://arcnav.psi.edu/urn%3Anasa%3Apds%3Acontext%3Ainstrument%3Arad.msl), [Horizons manual](https://ssd.jpl.nasa.gov/horizons/manual.html), [RadLab API](https://visualization.osdr.nasa.gov/radlab/gui/data-api/).
+
+### Proposed calculations and units
+
+The equations below define the proposed teaching models. Hardware efficiencies, reserve thresholds and coefficients must be attached to scenario assumptions before implementation.
+
+| System | Calculation or invariant | Modeling boundary |
+| --- | --- | --- |
+| Electrical energy | Generated Wh = generation W × elapsed hours. Available energy = initial battery + generated energy. Allocate served energy in priority order. Closing battery + served energy + spilled energy = available energy. | The existing helper assumes ideal storage and aggregates within a step. Use steps that resolve generation changes and include charge/discharge limits if they become part of a mission. |
+| Water | Clean + wastewater + shielding + plant-held water + explicit loss remains balanced after transfers and imports. Recovered clean water = processed wastewater × recovery fraction. | Debit wastewater before adding recovered clean water. Track capacity overflow explicitly. The existing Base Boss drill adds fixed recycler output without tracking wastewater availability. |
+| Oxygen | Closing oxygen = initial + produced + imported − consumed − vented. Bound production by energy, run time and tank headroom. | Keep scenario demand and production assumptions visible. Account for water consumed if the chosen system uses electrolysis. |
+| Message timing | Earliest arrival = departure + outbound travel + processing + inbound travel. Delivery can wait for an available receiving link. | Surface routing, contact windows and asymmetric legs can be added separately. Compressed display time uses a single explicit scale. |
+| Terrain | Slope angle = atan(vertical change / horizontal distance). Route grade follows local samples along the traverse. | Elevation constrains geometry. Wheel interaction additionally requires a surface model and vehicle assumptions. |
+| Crop progression | Supported growth increment = elapsed growth fraction × minimum(light support, water support), with both supports bounded between zero and one. | This reproduces a simple limiting-input lesson. Nutrient, temperature and species responses require additional models and evidence. |
+| Training exposure | Increment = authored hazard rate × transmission factor × elapsed mission time. | Choose dimensionless training units for fictional shields. Integrate physical detector rates only in a separate measurement view with consistent physical units. |
+| Geometric radio path | Compare sampled terrain height against the straight segment connecting antenna tops. | Terrain intersection is one cause of blockage. Full RF performance also depends on diffraction, antenna gains, frequency and power. |
+
+**Worked power example.** A fictional battery holds 12 Wh. A 30 W array runs for ten minutes and adds 5 Wh. Essential equipment uses 40 W during that interval and consumes about 6.67 Wh. A 20 W grow light consumes another 3.33 Wh, leaving 7 Wh. Deferring the light leaves about 10.33 Wh and delays the crop's supported period. The difference follows from the shared power budget.
+
+**Worked light-time example.** The bundled Earth–Mars value is 11.01438304 minutes one way at its specified epoch. With symmetric legs and immediate Earth processing, the reply takes about 22.03 mission minutes after departure. If one real second represents one mission minute, the displayed wait is about 22.03 seconds. That compression factor is an interface choice and must be shown consistently.
+
+### Proposed source record additions
+
+Extend the current provenance representation only where a consumer needs the new fields. A compact scenario input should reference a stable source ID, source version, observation interval or epoch, original unit, location, transformation version and normalized file hash. Record publication and retrieval dates separately. Attach the game-specific scale and its purpose to the scenario.
+
+For a manually transcribed article summary, identify the transcription method and retain the article URL and date. Its local checksum verifies the stored summary. Archiving the source document would provide a separate check of the original material. For an API response, hash the original response and keep the selected normalized fields alongside it.
+
+### Failure and refresh behavior
+
+| Condition | Desired behavior |
+| --- | --- |
+| Network unavailable or upstream rate limited | Play the bundled scenario and retain its archive date. Retry refreshes outside the active attempt. |
+| Empty response or missing required field | Reject the candidate input and show the reason in the developer refresh report. |
+| Upstream units or product version change | Require an explicit parser update and regenerate the derived fixture. |
+| A trace contains a gap | Show a gap, and calculate totals only for the intervals the data supports. |
+| A new scenario pack arrives during play | Keep the active attempt pinned to its existing scenario and data version. |
+| A source link moves | Update the locator while retaining the original record ID and archive hash. |
+| Browser storage fails | Keep play available and show a short save-status message. |
+
+## J. Progression, accessibility and learning evaluation
+
+### Competencies and evidence of learning
+
+| Competency | First practice | Later transfer | Evidence in the debrief |
+| --- | --- | --- | --- |
+| Preserve an essential reserve | Arrival and Storm | Base Boss and Thirty Sols | The player names the optional task deferred and the reserve it protected. |
+| Diagnose before replacing | Arrival | Greenhouse and Earth Delay | A recorded test result supports the selected repair. |
+| Plan the return | Rover | Lunar Relay and Survey | The player leaves a credible return margin or reduces the field objective. |
+| Manage exposure over time | Solar Shelter | Base Boss | The player compares entry time and shield placement under the same event. |
+| Respect production lead time | Greenhouse | Thirty Sols | The player plans stored supplies while waiting for a crop. |
+| Act with delayed support | Earth Delay | Base Boss | Local work and Earth messages have distinct timing and costs. |
+| Explain uncertainty | Rover and Survey | Advanced mission selection | The player identifies one unknown and a useful next observation. |
+
+Use successful explanations and recorded actions together. A lucky result alone gives weak evidence of understanding. Existing completion, success and mastery fields can support these distinctions after their meanings are documented consistently across the missions.
+
+### Age and access targets
+
+For Cadet, show a single current objective, a small number of choices and resource status expressed with words, icons and values. Explorer can inspect prediction error, remaining minutes and units. Every consequence should appear beside the affected object or resource. Audio should be replayable with matching captions. Color should be accompanied by a label or shape.
+
+Keep menu pauses, the mission clock and message timing consistent. Avoid requiring fast reading while a critical countdown continues. Retain reduced effects and reduced motion options. Check keyboard reachability, focus after a dialog closes and text at a narrow viewport. The current desktop movement controls need separate validation before mobile play is claimed.
+
+### Formative playtest plan
+
+Use the existing playtest kit for a small initial round covering both age bands. Ask each participant to predict a consequence, make a choice and explain the result without coaching. Record the task, choice, assistance, completion time and exact confusing wording. A second run should change one decision under the same conditions.
+
+Suggested internal targets are that most participants can find the active objective, complete one meaningful choice without adult intervention and explain one resource trade-off afterward. These are product acceptance targets. A small formative sample supports usability revisions and does not establish a general educational effect.
+
+## K. Delivery packages and release checks
+
+### Next three implementation packages
+
+| Package | Scope and affected components | Dependencies and estimate | Reviewable completion |
+| --- | --- | --- | --- |
+| 1. Explain the current capstone | Add decision-linked reserve deltas and a repeatable comparison in Base Boss. Check source wording and seed/version display in its debrief. | Existing drill and provenance. 1–2 developer days. | Two different plans from the same starting state produce correctly explained balances. |
+| 2. Make the water loop conserved | Add bounded wastewater and loss accounting in the drill, then connect the regional valve result to a campaign entry state. | Shared resource helpers, Base Boss progress and save compatibility. 3–5 days. | All water transfers reconcile, repeat actions are harmless, and earlier saved progress can still enter a valid mission. |
+| 3. Make another real input change a decision | Add a second Horizons scenario to Earth Delay and compare the cost of waiting under the same fault. | A verified small ephemeris export and versioned attempt state. 2–3 days. | Distinct source epochs produce distinct reply times and explainable resource outcomes. |
+
+These packages refine the phase estimates in section G and overlap with those tasks. Their effort should not be added a second time to the overall roadmap.
+
+### Release evidence checklist
+
+| Area | Evidence to collect | Completion condition |
+| --- | --- | --- |
+| Data influence | Same seed/actions with two valid inputs | At least one meaningful mission variable or outcome changes as specified. |
+| Scientific attribution | Source view for each integrated input | Instrument or study, date, units, transformation and limitation match the archived record. |
+| Conservation | Decision log and opening/closing ledgers | Generation, transfers, consumption and losses reconcile within a defined numerical tolerance. |
+| Replay and saves | Active reload, completed replay and practice run | The same seed and data version resume consistently, with practice kept out of career records. |
+| Alternate strategies | Successful, reduced-objective and recovery runs | Each has truthful feedback and an accessible next action. |
+| Production routes | Root and prefixed deployment | Direct mission entry, navigation, assets and source links load correctly. |
+| Accessibility | Keyboard, captions, reduced effects and narrow viewport | Controls remain reachable and essential information remains readable. |
+| Learning | Observed prediction, choice and explanation | Findings identify which trade-offs children understand and which need revision. |
+
+### Remaining research decisions
+
+A Mars RAD time series still needs a verified extraction, supported interval and parser. Human-study candidates need an explicit choice of public aggregate and a clear connection to a gameplay question. New terrain patches need a map location and a documented edit policy. The intended length of a classroom session should determine how many missions run before a break.
+
+The next implementation decision should follow the first observed capstone playtest. If children cannot explain the water-versus-growth choice, revise that choice and its feedback before adding more resource systems. If they understand the drill but cannot connect it to their regional delivery, prioritize the campaign-to-drill bridge.
+

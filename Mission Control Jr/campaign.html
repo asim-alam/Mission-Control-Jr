@@ -11,15 +11,15 @@
   <body>
     <div id="game-container" aria-hidden="true"></div>
     <div id="ui">
-      <button id="mute" aria-label="Mute audio" aria-pressed="false">🔊</button>
+      <div class="campaign-controls"><button id="view" type="button" hidden>Third person</button><button id="mute" aria-label="Mute audio" aria-pressed="false">🔊</button></div>
       <div id="title" class="panel center">
         <h1>MISSION CONTROL JR.</h1>
-        <h3>Base Boss · 30 Days at Meridian</h3>
-        <p>Four astronauts. 30 days on Mars. Each day you pick the crew's job, and sometimes something surprising happens. Watch the power, air, water, food, machines and how happy the crew is. Think ahead!</p>
+        <h3>Thirty Sols at Meridian</h3>
+        <p>Lead four astronauts through 30 days on Mars. Choose one crew job each day, respond to surprises, and keep the base and crew healthy.</p>
         <button id="start">Start!</button>
       </div>
       <div id="hud" hidden>
-        <div id="left" class="panel"><div id="sol"></div><div id="resources"></div></div>
+        <div id="left" class="panel"><div id="sol"></div><div id="resources"></div><div id="campaign-guidance" class="mission-guidance mission-guidance-tools" hidden></div></div>
         <div id="right" class="panel"><div id="crew"></div><div id="log" aria-live="polite"></div></div>
         <div id="work" class="panel"></div>
       </div>

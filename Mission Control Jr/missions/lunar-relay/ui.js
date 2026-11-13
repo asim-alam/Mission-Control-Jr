@@ -5,7 +5,7 @@ import {readHistory, pushHistory} from '../shared/runtime.js';
 import {tuneScenario} from '../../simulation/difficulty.js';
 import {lunarRelayScenario} from './scenario.js';
 import {createMission} from './state.js';
-import {applyAction, getObjective, getSteps, getResult, PLANS, NEXT, hasLink, batteryHome, suitLeft} from './actions.js';
+import {applyAction, getObjective, getInstruction, getSteps, getResult, PLANS, NEXT, hasLink, batteryHome, suitLeft} from './actions.js';
 import {createRelayScene} from './scene.js';
 
 const ID = 'lunar-relay';
@@ -19,33 +19,12 @@ function sources(ctx) {
 
 function brief(ctx) {
   const sc = ctx.mission.scenario;
-  ctx.dialog({label: 'MOON · SOUTH POLE · HORIZON BASE', title: 'Over the Hill', body: `
+  ctx.briefing({label: 'MOON · SOUTH POLE · HORIZON BASE', title: 'Over the Hill', body: `
     <div class="kid-mission-intro">
-      <p>⛰️ <b>Shadow Hollow Expedition!</b> Scientists on Earth want soil samples from the sunless crater floor. But driving behind the massive crater ridge blocks all direct radio contact with Horizon Base!</p>
+      <p><b>Jin:</b> “Earth wants a soil core from Shadow Hollow. The ridge will block our radio once you drive down.”</p>
     </div>
-    <div class="kid-section-title">🧰 What You Need This Level</div>
-    <div class="kid-supplies-grid">
-      <div class="kid-supply-pill"><span class="pill-icon">🚙</span><div class="pill-text"><b>Polar Rover</b><span>Heavy-duty electric rover for climbing crater ridges</span></div></div>
-      <div class="kid-supply-pill"><span class="pill-icon">📡</span><div class="pill-text"><b>Relay Antenna Station</b><span>Deploy on the ridge top to bounce radio signals over the hill</span></div></div>
-      <div class="kid-supply-pill"><span class="pill-icon">🔩</span><div class="pill-text"><b>Regolith Core Drill</b><span>Extracts frozen soil samples from permanently shadowed ground</span></div></div>
-      <div class="kid-supply-pill"><span class="pill-icon">🔋</span><div class="pill-text"><b>Battery Return Margin</b><span>Keep enough battery power to climb back over the steep ridge!</span></div></div>
-    </div>
-    <div class="kid-section-title">📋 Your Jobs (Do in order)</div>
-    <ol class="kid-jobs-list">
-      <li><span class="step-num">1</span><b>Drive to Ridge Top:</b> Steer the rover up the saddle between the craters.</li>
-      <li><span class="step-num">2</span><b>Deploy the Radio Relay:</b> Lower the legs, raise the mast, and aim the antenna dish.</li>
-      <li><span class="step-num">3</span><b>Drive Down into Shadow:</b> Head into the hollow while keeping the radio link alive.</li>
-      <li><span class="step-num">4</span><b>Drill Rock Cores:</b> Take soil cores and secure them in the rover sample box.</li>
-      <li><span class="step-num">5</span><b>Drive Home to Horizon Base:</b> Climb back over the hill and park before suit air runs low!</li>
-    </ol>
-    <div class="kid-controls-bar">
-      <span>🎮 <b>Controls:</b></span>
-      <span><kbd>WASD</kbd> / <kbd>Arrows</kbd> Drive &amp; Walk &amp; Turn</span>
-      <span><kbd>E</kbd> Use drill &amp; deploy antenna</span>
-      <span>Drive buttons let you travel safely between stops!</span>
-    </div>
-    <p><b>Jin:</b> “Scientists on Earth want a core of soil from <b>Shadow Hollow</b>. It is on the other side of the big ridge.”</p>
-    <p><b>Luca (on the radio):</b> “Radio goes in straight lines. Once you drive behind the hill, we can’t hear you. A <b>radio relay</b> on the ridge top could pass messages over it.”</p>
+    <p>A relay antenna on the ridge can pass messages between the rover and base. Choose whether to set it up or take the faster route without radio coverage in the hollow.</p>
+    <p>Leave enough <b>battery and suit air</b> to get home with your sample.</p>
     <aside class="mx-detail"><b>More details</b><br>The rover starts at ${sc.batteryStart}% battery and you have ${sc.suitMinutes} minutes of suit air. A message from the Moon reaches Earth in about ${sc.oneWaySeconds} seconds.</aside>`,
     actions: [{label: '▶ Let’s go!', primary: true, run: () => { ctx.act({id: 'begin'}, {quiet: true}); planBoard(ctx); }}, {label: 'Is this real?', run: () => ctx.sourcesDialog(() => brief(ctx))}]});
 }
@@ -122,9 +101,9 @@ runMission({
   id: ID, title: 'Over the Hill', place: 'MISSION CONTROL JR. · MOON SOUTH POLE',
   meters: [{id: 'battery', icon: '🔋', label: 'Rover battery'}, {id: 'suit', icon: '🧑‍🚀', label: 'Suit air'}, {id: 'radio', icon: '📶', label: 'Radio'}],
   create: () => createMission({scenario: tuneScenario(ID, lunarRelayScenario), seed: 42 + readHistory(ID).length}),
-  rules: {applyAction, getObjective, getSteps},
+  rules: {applyAction, getObjective, getInstruction, getSteps},
   scene: ctx => createRelayScene({container: document.getElementById('world'), getState: () => ctx.mission, act: a => ctx.act(a), onPause: () => ctx.pause(), onDrive: () => driveDialog(ctx)}),
-  brief, sources, debrief,
+  brief, sources, debrief, resumePlan: planBoard,
   sampler(ctx) { ctx.act({id: 'begin'}, {quiet: true}); ctx.saveCheckpoint(); },
   hud(ctx) {
     const s = ctx.mission, sc = s.scenario, {hud} = ctx, link = hasLink(s), home = batteryHome(s);

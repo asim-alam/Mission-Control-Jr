@@ -262,14 +262,44 @@ export function getObjective(s) {
   if (s.phase === 'debrief') return s.stoppedEarly ? 'Game stopped. Try again from a safe spot.' : 'See how your refuge worked';
   if (s.stage === 'cover') return 'Wait with the crew for the sensors';
   if (s.stage === 'event') return s.coverLeft > 0 ? 'Everyone is hurrying into the refuge' : 'Watch the outside and refuge sensors';
-  if (s.stage === 'after') return 'All clear! Finish at the refuge screen';
+  if (s.stage === 'after') return 'All clear! Open your report';
   if (!s.mapViewed) return 'Look at the refuge map on the tablet';
   if (!s.assist) return 'Ask Elena for one kind of help';
   const held = s.held && item(s, s.held);
-  if (held) return {water: s.rack.built ? 'Load the water container into the rack' : 'Build the rack frame, then load the water', poly: 'Slide the plastic panel into a rail', bag: 'Stack the supply bag in a stacking spot'}[held.kind];
-  if (s.checkViewed && blockingIssues(s).length) return `Fix the refuge: ${blockingIssues(s)[0].label.toLowerCase()}`;
-  return 'Strengthen the refuge, then run the refuge check';
+  if (held) return {water: s.rack.built ? 'Load the water container into the rack' : 'Put the water down to build the rack', poly: 'Slide the plastic panel into a rail', bag: 'Stack the supply bag in a stacking spot'}[held.kind];
+  if (s.checkViewed && blockingIssues(s).length) return 'Clear the blocked area';
+  if (s.rack.built && !s.items.some(i => i.at === 'rack' || i.at.startsWith('rail:') || i.at.startsWith('zone:'))) return 'Pick up a water container';
+  if (rackWater(s).length && !s.rack.latched) return 'Latch the water rack';
+  if (s.items.some(i => i.kind === 'poly' && i.at.startsWith('rail:') && !i.fastened)) return 'Fasten the loose panel';
+  if (Object.keys(s.zones).some(z => zoneBags(s, z).length && !s.zones[z].strapped)) return 'Strap down the supply bags';
+  return 'Build cover for the crew';
 }
+export function getInstruction(s) {
+  if (s.phase !== 'active') return null;
+  if (s.stage === 'cover') return {text: 'Stay with the crew. The watch starts automatically when the particles rise.'};
+  if (s.stage === 'event') return {text: 'Compare Outside sensor with Refuge sensor. The all-clear appears when the event ends.'};
+  if (s.stage === 'after') return {text: 'Choose See the report to find out what your shelter blocked.'};
+  if (!s.mapViewed) return {place: 'console', text: 'Open Refuge map. Look for higher percentages where more particles get through.'};
+  if (!s.assist) return {place: 'elena', text: 'Use E or tap Elena. Choose help moving water or clearing the air vent.'};
+  const held = s.held && item(s, s.held);
+  if (held?.kind === 'water') return s.rack.built
+    ? {place: 'rack', text: 'Use the water rack to slide the container in.'}
+    : {text: 'Press Q or choose Put item back. Bolt a rack to a wall before carrying water.'};
+  if (held?.kind === 'poly') return {text: 'Choose an open wall or roof rail. Hold E or hold the prompt to slide the panel in.'};
+  if (held?.kind === 'bag') return {text: 'Choose a shelf or stack spot and follow its Use prompt. Keep the doorway and vent clear.'};
+  const issue = s.checkViewed && blockingIssues(s)[0];
+  if (issue) return {place: 'refuge', text: issue.fix};
+  if (rackWater(s).length && !s.rack.latched) return {place: 'rack', text: 'Aim at the rack bars. Hold E or hold the prompt to latch them.'};
+  if (s.items.some(i => i.kind === 'poly' && i.at.startsWith('rail:') && !i.fastened)) return {text: 'Aim at a loose panel. Hold E or hold the prompt to fasten its knobs.'};
+  if (Object.keys(s.zones).some(z => zoneBags(s, z).length && !s.zones[z].strapped)) return {text: 'Aim at a loose bag stack. Hold E or hold the prompt to strap it down.'};
+  if (!s.items.some(i => i.at === 'rack' || i.at.startsWith('rail:') || i.at.startsWith('zone:'))) {
+    return s.rack.built
+      ? {place: 'store-water', text: 'Use a water container from the supply shelf or Elena’s trolley to pick it up.'}
+      : {text: 'Hold E or hold a wall mount’s prompt to bolt on a rack. You can also start with a panel or bag.'};
+  }
+  return {place: 'refuge', text: 'Keep adding cover, or use the refuge door to run the safety check.'};
+}
+
 export function getSteps(s) {
   const water = rackWater(s).length, panels = s.items.filter(i => i.kind === 'poly' && i.at.startsWith('rail:')).length, bags = s.items.filter(i => i.kind === 'bag' && i.at.startsWith('zone:')).length;
   const list = [
@@ -281,7 +311,16 @@ export function getSteps(s) {
     {text: 'Run the refuge check', done: s.stage !== 'prep'},
     {text: 'Wait out the event', done: s.stage === 'after' || s.phase === 'debrief'},
   ];
-  if (s.phase === 'active') { const now = list.find(x => !x.done); if (now) now.now = true; }
+  if (s.phase === 'active') {
+    const build = s.held && item(s, s.held)?.kind;
+    const ready = s.stage !== 'prep';
+    const next = ready ? 6 : !s.mapViewed ? 0 : !s.assist ? 1
+      : s.checkViewed && blockingIssues(s).length ? 5
+        : build ? {water: 2, poly: 3, bag: 4}[build]
+          : rackWater(s).length && !s.rack.latched ? 2
+            : !list[3].done && panels ? 3 : !list[4].done && bags ? 4 : 5;
+    list[next].now = true;
+  }
   return list;
 }
 export const teamExposure = s => PEOPLE.reduce((a, p) => a + s.exposure[p], 0) / PEOPLE.length;

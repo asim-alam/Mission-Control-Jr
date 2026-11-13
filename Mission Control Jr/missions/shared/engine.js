@@ -1,11 +1,12 @@
 // Shared 3D runtime for the six expansion missions.
-// It owns the renderer, lighting presets, first-person player, look-to-use interaction,
+// It owns the renderer, lighting presets, walking camera, look-to-use interaction,
 // carrying, held actions, tweens, guide arrows, cables and particle effects.
 // Game rules live in each mission's actions.js; this file only shows and collects actions.
 import * as THREE from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
 import {Player} from '../../player.js';
+import {makeCrew} from './crew.js';
 import {graphicsProfile} from '../../simulation/graphics.js';
 
 const loader = new GLTFLoader();
@@ -53,7 +54,12 @@ export async function createWorld({container, preset = 'interior', bounds, start
   const camera = new THREE.PerspectiveCamera(62, innerWidth / innerHeight, .04, 2000);
   scene.add(camera);
   const player = new Player(camera, renderer.domElement, () => interaction.use(), onPause, onStep);
-  player.toggleView = () => {}; // first person only: the held item is the "hands"
+  const avatar = await makeCrew('jin', {suitMode: preset === 'moon'});
+  avatar.model.name = 'Player astronaut';
+  avatar.model.visible = false;
+  scene.add(avatar.model);
+  player.thirdPersonDistance = preset === 'moon' ? 3.5 : 1.9;
+  player.eyeHeight = eyeHeight;
   player.bounds = bounds; player.position.set(start.x, eyeHeight, start.z); player.yaw = start.yaw || 0; player.pitch = -.12; player.syncCamera();
 
   // ---- frame loop ----------------------------------------------------------------------
@@ -64,6 +70,14 @@ export async function createWorld({container, preset = 'interior', bounds, start
     const dt = Math.min((now - last) / 1000, .1); last = now; elapsed += dt;
     const moved = player.update(dt);
     for (const fn of [...updaters]) fn(dt, elapsed, moved);
+    avatar.model.visible = player.view === 'third' && player.cameraDistance > .65;
+    if (avatar.model.visible) {
+      avatar.model.position.copy(player.position);
+      avatar.model.position.y -= player.eyeHeight;
+      avatar.model.rotation.y = moved ? player.facing : player.yaw + Math.PI;
+      avatar.mode = moved ? 'walk' : 'idle';
+      avatar.update(dt);
+    }
     renderer.render(scene, camera);
     raf = requestAnimationFrame(frame);
   }
@@ -104,7 +118,10 @@ export async function createWorld({container, preset = 'interior', bounds, start
   }
   function release() { if (held) { scene.attach(held); held = null; } }
   // Small walking bob for the hands.
-  onFrame((dt, t, moved) => { hand.position.y = -.38 + (moved ? Math.sin(t * 9) * .012 : 0); });
+  onFrame((dt, t, moved) => {
+    hand.position.set(.32, (player.view === 'third' ? -.28 : -.38) + (moved ? Math.sin(t * 9) * .012 : 0),
+      player.view === 'third' ? -player.cameraDistance - .55 : -.75);
+  });
 
   // ---- interaction: look (or point) at a registered thing and press E / click -------------
   const raycaster = new THREE.Raycaster(), center = new THREE.Vector2(0, 0), pointer = new THREE.Vector2(), tmp = new THREE.Vector3();
@@ -133,7 +150,7 @@ export async function createWorld({container, preset = 'interior', bounds, start
   }
   function distanceTo(item) { item.object.getWorldPosition(tmp); return Math.hypot(tmp.x - player.position.x, tmp.z - player.position.z); }
   function pick(ndc) {
-    raycaster.setFromCamera(ndc, camera); raycaster.far = 6;
+    raycaster.setFromCamera(ndc, camera); raycaster.far = 6 + player.cameraDistance;
     const targets = [...items.values()].filter(i => i.object.visible && i.enabled()).map(i => i.object);
     for (const hit of raycaster.intersectObjects(targets, true)) {
       let o = hit.object; while (o && !o.userData.interactId) o = o.parent;
@@ -147,7 +164,7 @@ export async function createWorld({container, preset = 'interior', bounds, start
     if (!item.object.visible || !item.enabled()) return Infinity;
     const d = distanceTo(item); if (d > item.range) return Infinity;
     const fwd = new THREE.Vector3(); camera.getWorldDirection(fwd);
-    item.object.getWorldPosition(tmp); tmp.sub(camera.position).setY(0).normalize();
+    item.object.getWorldPosition(tmp); tmp.sub(player.position).setY(0).normalize();
     const facing = tmp.dot(new THREE.Vector3(fwd.x, 0, fwd.z).normalize());
     return facing < .35 ? Infinity : d - facing * 1.5;
   }
@@ -166,16 +183,16 @@ export async function createWorld({container, preset = 'interior', bounds, start
   onFrame((dt, t) => {
     if (!player.enabled) { setFocus(null); return; }
     const aimed = (pointerAim && pick(pointerAim)) || pick(center);
-    const item = holdState && focused && frontScore(focused) < Infinity && (!aimed || aimed === focused) ? focused : aimed || nearestInFront();
+    const item = holdState && focused && frontScore(focused) < Infinity ? focused : aimed || nearestInFront();
     setFocus(item);
     if (focused) { setGlow(focused, .35 + Math.sin(t * 6) * .2); listeners.focus({id: focused.id, label: focused.label(), hold: holdOf(focused) > 0}); }
-    if (!holdState && eDown && focused && holdOf(focused) > 0) holdState = {id: focused.id, start: performance.now()};
+    if (!holdState && eDown && !eCompleted && focused && holdOf(focused) > 0) holdState = {id: focused.id, start: performance.now()};
     if (holdState) {
       if (!focused || focused.id !== holdState.id) { holdState = null; listeners.hold(0); }
       else {
         const p = Math.min(1, (performance.now() - holdState.start) / 1000 / holdOf(focused));
         focused.onHold?.(p, dt); listeners.hold(p);
-        if (p >= 1) { const done = focused; holdState = null; listeners.hold(0); done.onUse(); }
+        if (p >= 1) { const done = focused; holdState = null; if (eDown) eCompleted = true; listeners.hold(0); done.onUse(); }
       }
     }
   });
@@ -187,10 +204,11 @@ export async function createWorld({container, preset = 'interior', bounds, start
     get focused() { return focused?.id || null; },
   };
   // Hold E (or hold the pointer) for held actions.
-  let eDown = false;
+  // One key hold completes one job, even if the next target appears under the same cursor.
+  let eDown = false, eCompleted = false;
   addEventListener('keydown', e => { if (e.code === 'KeyE') eDown = true; });
-  addEventListener('keyup', e => { if (e.code === 'KeyE') { eDown = false; interaction.stopHold(); } });
-  addEventListener('blur', () => { eDown = false; interaction.stopHold(); });
+  addEventListener('keyup', e => { if (e.code === 'KeyE') { eDown = false; eCompleted = false; interaction.stopHold(); } });
+  addEventListener('blur', () => { eDown = false; eCompleted = false; interaction.stopHold(); });
   const canvas = renderer.domElement;
   canvas.addEventListener('pointermove', e => { if (e.pointerType === 'mouse' && !player.drag) { const r = canvas.getBoundingClientRect(); pointer.set((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1); pointerAim = pointer; } });
   canvas.addEventListener('pointerleave', () => { pointerAim = null; });

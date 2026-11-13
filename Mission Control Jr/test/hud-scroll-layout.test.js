@@ -27,11 +27,12 @@ test('Tracks in the Dust compact objective is ordered and never internally scrol
   assert.match(css, /#hud #radio \.radio-top\s*\{[^}]*grid-template-columns/s);
 });
 
-test('Mission 2 shows the complete commander briefing without a disclosure button', () => {
+test('Mission 2 shows the commander briefing and return reserve without a disclosure button', () => {
   const js = read('mission2-demo.js'), css = read('hud-redesign.css');
   const briefing = js.slice(js.indexOf('function showBriefing'), js.indexOf('function referenceArchive'));
   assert.doesNotMatch(briefing, /<details|<summary|Full briefing|More below/);
-  assert.match(briefing, /class="briefing-transcript"><p>Elena Reyes · Commander: Meridian survived the storm/);
+  assert.match(briefing, /class="briefing-transcript">\s*<p><b>Elena Reyes:<\/b>/);
+  assert.match(briefing, /at least <b>\$\{margin\}% battery and \$\{margin\}% air/);
   assert.match(css, /#dialog \.ui-card:has\(\.briefing-transcript\) #dialog-actions\s*\{[^}]*position:\s*sticky/s);
   assert.match(css, /#dialog \.ui-card:has\(\.briefing-transcript\) #dialog-body p\s*\{\s*max-width:\s*none/);
   assert.match(read('hud-presentation.js'), /modal\.querySelector\('\.briefing-transcript'\)/);

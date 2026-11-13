@@ -38,6 +38,27 @@ p { margin: 0; }
   background: #241d18d8;
 }
 .top-tools { display: flex; justify-self: end; gap: .35rem; }
+.base-tools { position: relative; }
+.base-tools summary {
+  list-style: none;
+  cursor: pointer;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: .52rem .7rem;
+}
+.base-tools summary::-webkit-details-marker { display: none; }
+.base-tools[open] { z-index: 10; }
+.base-tools-menu {
+  display: grid;
+  gap: 4px;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  width: 140px;
+  padding: 5px;
+  border-radius: 9px;
+  background: #241d18;
+}
 .home-link { text-decoration: none; color: var(--ink); font-weight: 850; }
 .home-link span { margin-right: .4rem; color: var(--accent); }
 .top-status { display: flex; gap: 1.35rem; align-items: center; }

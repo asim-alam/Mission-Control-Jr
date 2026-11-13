@@ -1,3 +1,5 @@
+import {mountPipLesson, pipLessonOpen} from '../../professor-pip.js';
+import {showCameraView} from '../../player.js';
 import {sites, quests, nearestSite, planRoute, facilities} from './region.js';
 import {newExpedition, arrive, restore, save, questAction, doQuest, lightTime, pingEarth} from './progress.js';
 import {driveManual, driveAssisted} from './driving.js';
@@ -28,6 +30,7 @@ let lastSave = 0;
 let movedSinceSave = false;
 let driveWarning = '';
 let survey = null;
+let cameraView = 'third';
 const motion = {speed: 0, steer: 0, metres: 0};
 const held = new Set();
 const touch = new Set();
@@ -37,7 +40,7 @@ const station = $('station');
 const references = $('references');
 const logDialog = $('log-dialog');
 const drill = mountDrill($('drill-dialog'), run => world?.showDrill(run, state));
-const modalOpen = () => references.open || logDialog.open || drill.open;
+const modalOpen = () => pipLessonOpen() || references.open || logDialog.open || drill.open;
 
 function persist() {
   try { save(state, localStorage); } catch { /* Continue with an in-memory expedition. */ }
@@ -90,6 +93,10 @@ function refreshReadout() {
     : motion.speed < -.35 ? 'REVERSING' : motion.speed > .35 ? 'DRIVING' : 'PARKED';
 }
 
+mountPipLesson($('objective').querySelector('.mission-guidance-tools'), 'extended', () => ({
+  step: state.completed.valve ? 2 : state.active ? 1 : 0,
+  onOpen: () => { held.clear(); touch.clear(); },
+}));
 function updateObjective() {
   const active = state.active && quests[state.active];
   const finished = Object.keys(state.completed).length;
@@ -99,17 +106,33 @@ function updateObjective() {
     ? `${state.cargo ? 'Deliver to' : 'Collect at'} ${sites[state.cargo ? active.to : active.pickup].name}`
     : state.debriefed ? 'Network ready' : allJobsDone() ? 'Report back to Meridian'
       : finished ? `Check in at ${sites[nextBase].name}` : 'Check in with Reyes';
-  let note = active ? (state.cargo ? `Cargo secured: ${active.cargo}.` : active.brief)
+  let note = active ? (state.cargo ? `On board: ${active.cargo}.` : `Pick up: ${active.cargo}.`)
     : state.debriefed ? 'The crews have supplies, a working relay, and a stocked shelter. You can keep exploring.'
       : allJobsDone() ? 'Meet Reyes at the service beacon to give your final report.'
         : finished ? 'Follow the marked route or pick another base on the map.'
           : 'Parked at Meridian? Step outside and walk to the gold beacon.';
+  const target = jobTarget() ?? nextBase;
+  if (target && !state.debriefed) {
+    const site = sites[target];
+    if (trip) note = `Driving to ${sites[trip.destination].name}. The rover will stop at the service area.`;
+    else if (currentSite !== target) note = eva
+      ? 'Follow the blue ring back to the rover. Use Board rover to get in.'
+      : destination === target ? `Follow the route to ${site.name}, or choose Drive there for me.`
+        : `Select ${site.name} on the map to mark the route.`;
+    else if (worldLoading) note = 'Wait for the base to load. Then check in at the service beacon.';
+    else if (!canTalk(target)) note = eva
+      ? 'Walk to the gold service beacon to open the job controls.'
+      : 'Park, choose Step outside, then walk to the gold service beacon.';
+    else if (active) note = `At the service beacon, choose “${state.cargo ? active.deliveryAction : active.pickupAction}”.`;
+    else if (allJobsDone()) note = 'Choose Give the final report at the service beacon.';
+    else if (target === 'verdant' && state.minutes < state.harvestAt) note = 'Choose Wait for the harvest, then accept the food delivery job.';
+    else note = `Accept a job from ${site.contact} at the service beacon.`;
+  }
   if (state.active === 'valve' && state.cargo) {
     const remaining = Math.ceil(state.due - state.minutes);
-    note = remaining > 0 ? `Lights pause in ${remaining} mission min. The service cut is faster.`
-      : 'The grow lights paused. Deliver the valve to restore water and get the next harvest growing.';
+    note += remaining > 0 ? ` Lights pause in ${remaining} min.` : ' The grow lights paused.';
   }
-  $('objective-note').textContent = note;
+  if ($('objective-note').textContent !== note) $('objective-note').textContent = note;
 }
 
 function jobTarget() {
@@ -325,12 +348,14 @@ $('toggle-map').onclick = () => {
   $('toggle-map').textContent = content.hidden ? 'Show map' : 'Hide map';
 };
 function openModal(dialog) {
+  document.querySelector('.base-tools').open = false;
   held.clear();
   touch.clear();
   dialog.showModal();
 }
 $('sources').onclick = () => openModal(references);
 $('start-drill').onclick = () => {
+  document.querySelector('.base-tools').open = false;
   held.clear();
   touch.clear();
   drill.show();
@@ -392,8 +417,20 @@ $('field-log').onclick = () => {
 };
 $('model-notes').href = modelNotes;
 
+function toggleView() {
+  if (!world || modalOpen()) return;
+  cameraView = cameraView === 'first' ? 'third' : 'first';
+  survey = null;
+  showCameraView($('view'), cameraView);
+}
+$('view').onclick = toggleView;
+
 addEventListener('keydown', event => {
   if (modalOpen() || event.altKey || event.metaKey || event.ctrlKey) return;
+  if (event.code === 'KeyV' && !event.repeat) {
+    toggleView();
+    return;
+  }
   if (event.code === 'KeyE' && !event.repeat) {
     toggleEva();
     return;
@@ -484,10 +521,10 @@ function frame(now) {
     const remaining = trip ? {points: [state, ...trip.points.slice(trip.index)]} : plan;
     map.draw(state, remaining, eva);
     refreshReadout();
-    if (state.active === 'valve' && state.cargo) updateObjective();
+    updateObjective();
     lastMap = now;
   }
-  world?.render(state, motion, dt, drill.open ? 'verdant' : survey, eva, currentSite);
+  world?.render(state, motion, dt, drill.open ? 'verdant' : survey, eva, currentSite, cameraView);
   requestAnimationFrame(frame);
 }
 
@@ -505,6 +542,8 @@ import('./world.js').then(({buildWorld}) => buildWorld($('world'))).then(view =>
   if (drill.state) view.showDrill(drill.state, state);
   view.route(plan, destination);
   world = view;
+  $('view').hidden = false;
+  showCameraView($('view'), cameraView);
   $('loading').hidden = true;
 }).catch(error => {
   console.warn('Mars terrain unavailable:', error);

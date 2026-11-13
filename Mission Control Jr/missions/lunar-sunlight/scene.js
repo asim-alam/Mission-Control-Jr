@@ -307,9 +307,14 @@ export async function createSunScene({container, getState, act, onPause, onConso
   return {world, sync, idle: () => syncQueue, timelapse, restoreLights, cartPosition: () => ({x: cartPos.x, z: cartPos.y}), walkTargets,
     walk(id) {
       const t = walkTargets.find(w => w.id === id); if (!t) return;
-      if (id === 'cart') { const h = s().hitched ? null : {x: cartPos.x + Math.sin(cartYaw) * (HITCH + .6), z: cartPos.y + Math.cos(cartYaw) * (HITCH + .6)}; if (h) player.navigate(h, {x: cartPos.x, z: cartPos.y}); return; }
+      if (id === 'cart') { const h = s().hitched ? null : {x: cartPos.x + Math.sin(cartYaw) * (HITCH + .6), z: cartPos.y + Math.cos(cartYaw) * (HITCH + .6)}; return h ? player.navigate(h, {x: cartPos.x, z: cartPos.y}) : false; }
+      if (s().hitched && SITE.pads[id]) {
+        const pad = SITE.pads[id];
+        const approach = new THREE.Vector2(pad.x - cartPos.x, pad.z - cartPos.y).setLength(HITCH);
+        return player.navigate({x: pad.x + approach.x, z: pad.z + approach.y}, pad);
+      }
       const look = id === 'console' ? {x: 6.6, z: -2.4} : id === 'port' ? {x: -.8, z: -2.3} : {x: t.x, z: t.z - 3};
-      player.navigate({x: t.x, z: t.z}, look);
+      return player.navigate({x: t.x, z: t.z}, look);
     },
     /** Test helper: drop the player (and a hitched cart) at a spot. */
     teleport(x, z, yaw = player.yaw) { player.position.set(x, groundHeight(x, z) + 1.62, z); player.yaw = yaw; player.syncCamera(); if (s().hitched) tow(0); },

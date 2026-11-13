@@ -20,11 +20,32 @@ export function task2(m){
   if(m.phase==='briefing')return task(1,'Listen to Elena’s plan','Find out where we are going and the big safety rule.','briefing','Hear the plan',SERVICE.comms);
   if(m.phase==='prep'){
     if(!m.spareCollected)return task(2,'Get the spare battery','Walk to the battery shelf. Take the charged spare for the rover.','spare','Take the spare battery',SERVICE.spare);
-    for(const id of ['battery','wheels','camera','comms'])if(!m.checks[id])return task(2,{battery:'Put the battery in the rover',wheels:m.pinFound?'Fix the loose wheel pin':'Check the wheels',camera:m.cameraFound?'Clean the dusty camera':'Check the camera',comms:'Check suits, tools and radio'}[id],'Walk to the glowing spot. Look closely. Fix anything wrong.','check',id==='battery'?'Put the battery in':id==='wheels'?(m.pinFound?'Push the pin in':'Look at the wheels'):id==='camera'?(m.cameraFound?'Wipe the camera':'Look at the camera'):'Check suits, tools and radio',SERVICE[id]);
+    const checks = {
+      battery: ['Fit the rover battery', 'Walk to the battery bay and choose Put the battery in.', 'Put the battery in'],
+      wheels: m.pinFound ? ['Fix the loose wheel pin', 'Choose Push the pin in at the wheel.', 'Push the pin in']
+        : ['Check the wheels', 'Walk to the marked wheel and choose Look at the wheels.', 'Look at the wheels'],
+      camera: m.cameraFound ? ['Clean the dusty camera', 'Choose Wipe the camera at the rover’s camera mast.', 'Wipe the camera']
+        : ['Check the camera', 'Walk to the marked camera and choose Look at the camera.', 'Look at the camera'],
+      comms: ['Check the expedition gear', 'At the base computer, choose Check suits, tools and radio.', 'Check suits, tools and radio'],
+    };
+    for (const [id, [title, instruction, label]] of Object.entries(checks)) {
+      if (!m.checks[id]) return task(2, title, instruction, 'check', label, SERVICE[id]);
+    }
     if(!m.checks.brakes)return task(2,'Get in the rover','Climb in. Amara rides next to you.','board','Get in the rover (E)',m.vehicle,5);
     return task(3,'Pick a path','Look at three paths. Which one is safest?','plan','Look at the paths',m.vehicle,5);
   }
-  if(m.phase==='test')return task(2,'Test drive: steer and stop',`Press P to let go of the brake. Drive 5 m and turn. Then hold Space to stop and press P. Done: ${Math.min(5,m.vehicle.distance-m.brakeStart).toFixed(1)} of 5 m.`, 'brakeTest','Finish the test drive',HOME,28);
+  if (m.phase === 'test') {
+    const moved = m.vehicle.distance - m.brakeStart >= 5;
+    const turned = m.vehicle.steeringTravel - m.brakeTurn >= .6;
+    const instruction = !m.aboard ? 'Return to the rover and press E to get back in.'
+      : moved && turned && m.vehicle.parking ? 'Choose Finish the test drive.'
+        : m.vehicle.parking ? 'Press P to release the parking brake.'
+          : !moved ? 'Drive forward with W and turn with A or D. Travel at least 5 metres.'
+            : !turned ? 'Turn with A or D while moving.'
+              : Math.abs(m.vehicle.speed) >= .05 ? 'Hold Space until the rover stops.'
+                : 'Press P to set the parking brake.';
+    return task(2, 'Test drive: steer and stop', instruction, 'brakeTest', 'Finish the test drive', HOME, 28);
+  }
   if(m.phase==='planning')return task(3,'Pick a path and say why','Choose a path. Make sure there is battery to get home.','plan','Look at the paths');
   if(m.phase==='outbound'){
     const i=m.reports.findIndex(done=>!done);if(i>=0)return task(4,`Radio stop ${i+1} of 2 · ${i===0?'where are we?':'how is the ground?'}`,'Drive to the marker. Stop, press P, then radio home.','report',`Radio home from stop ${i+1}`,reportStations(m)[i],13);
@@ -40,6 +61,7 @@ export function task2(m){
     if(m.sample)return task(6,'Science done!','Walk back to the rover. Time to head home.','return','Head home',m.vehicle,5);
     return task(6,'Bonus rock or go home?','Your photos are done. Pick up a bonus rock only if there is enough battery.','sample','Think about the bonus rock',{x:42,z:-156},6);
   }
+  if (m.phase === 'postdrive' && m.aboard) return task(7, 'Get out at Meridian', 'Press E or choose Get out. Then walk to the base computer.', 'exit', 'Get out · E');
   if(m.phase==='postdrive')return m.dataTransferred?task(7,'Check everyone is home','At the base computer, check that Jin and Amara are back.','crew','Everyone is home!',SERVICE.comms):task(7,'Send your photos','Get out and walk to the base computer. Send your photos and notes.','transfer','Send photos and notes',SERVICE.comms);
   return task(7,'Drive home','Follow the safe path home. Stop in the base circle and press P.','dock','Park at the base',HOME,13);
 }

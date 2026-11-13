@@ -1,0 +1,257 @@
+.cartoon-teacher-stage {
+  display: flex;
+  gap: 16px;
+  align-items: stretch;
+}
+/* Left Column: Teacher Character & Speech Bubble */
+.teacher-column {
+  width: 175px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  background: linear-gradient(180deg, rgba(39, 32, 99, 0.92), rgba(20, 16, 55, 0.96));
+  border: 2px solid rgba(62, 230, 181, 0.5);
+  border-radius: 22px;
+  padding: 14px 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+.teacher-avatar-wrap {
+  position: relative;
+  width: 125px;
+  height: 140px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: teacher-zero-g-float 2.8s ease-in-out infinite alternate;
+}
+
+@keyframes teacher-zero-g-float {
+  0% { transform: translateY(0px) rotate(-1deg); }
+  100% { transform: translateY(-7px) rotate(1.5deg); }
+}
+
+.teacher-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.5));
+}
+
+/* Eye Blink Animation */
+.teacher-svg .teacher-eye {
+  transform-origin: center;
+  animation: teacher-eye-blink 4s infinite;
+}
+@keyframes teacher-eye-blink {
+  0%, 94%, 98%, 100% { transform: scaleY(1); }
+  96% { transform: scaleY(0.08); }
+}
+
+/* Mouth Talking Animation */
+.cartoon-teacher-stage.is-talking .teacher-svg .teacher-mouth {
+  animation: teacher-mouth-talk 0.25s infinite alternate ease-in-out;
+}
+@keyframes teacher-mouth-talk {
+  0% { transform: scaleY(1); }
+  100% { transform: scaleY(2.2) translateY(-1px); }
+}
+
+/* Tassel Sway */
+.teacher-svg .teacher-tassel {
+  transform-origin: 80px 32px;
+  animation: teacher-tassel-sway 2.5s infinite ease-in-out;
+}
+@keyframes teacher-tassel-sway {
+  0%, 100% { transform: rotate(-3deg); }
+  50% { transform: rotate(6deg); }
+}
+
+/* Pointer Star Twinkle */
+.teacher-svg .pointer-star {
+  transform-origin: 152px 70px;
+  animation: pointer-star-twinkle 1.4s infinite alternate ease-in-out;
+}
+@keyframes pointer-star-twinkle {
+  0% { transform: scale(1) rotate(0deg); filter: drop-shadow(0 0 2px #ffd23f); }
+  100% { transform: scale(1.35) rotate(35deg); filter: drop-shadow(0 0 8px #ffd23f); }
+}
+
+/* Waving Hand */
+.teacher-svg .teacher-wave-hand {
+  transform-origin: 38px 146px;
+  animation: teacher-hand-wave 1.8s infinite ease-in-out;
+}
+@keyframes teacher-hand-wave {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(-14deg); }
+}
+
+/* Sound Wave Equalizer under Avatar */
+.teacher-sound-waves {
+  display: flex;
+  gap: 3px;
+  align-items: flex-end;
+  height: 14px;
+  margin-top: 6px;
+}
+.teacher-sound-waves span {
+  width: 3.5px;
+  height: 4px;
+  background: rgba(62, 230, 181, 0.4);
+  border-radius: 3px;
+  transition: height 0.15s ease;
+}
+.cartoon-teacher-stage.is-talking .teacher-sound-waves span {
+  animation: wave-bar-bounce 0.4s infinite alternate ease-in-out;
+}
+.cartoon-teacher-stage.is-talking .teacher-sound-waves span:nth-child(1) { animation-delay: 0.05s; }
+.cartoon-teacher-stage.is-talking .teacher-sound-waves span:nth-child(2) { animation-delay: 0.18s; }
+.cartoon-teacher-stage.is-talking .teacher-sound-waves span:nth-child(3) { animation-delay: 0.28s; }
+.cartoon-teacher-stage.is-talking .teacher-sound-waves span:nth-child(4) { animation-delay: 0.12s; }
+@keyframes wave-bar-bounce {
+  0% { height: 3px; background: var(--kid-mint); }
+  100% { height: 14px; background: var(--kid-yellow); }
+}
+
+.teacher-nameplate {
+  margin-top: 6px;
+}
+.teacher-badge {
+  font-family: var(--kid-display);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--kid-yellow);
+  letter-spacing: 0.05em;
+  display: block;
+}
+.teacher-nameplate small {
+  font-size: 11px;
+  color: var(--kid-soft);
+}
+
+.teacher-voice-btn {
+  margin-top: 8px;
+  background: rgba(255, 210, 63, 0.18) !important;
+  border: 1.5px solid var(--kid-yellow) !important;
+  color: var(--kid-yellow) !important;
+  font-size: 12px !important;
+  padding: 5px 10px !important;
+  border-radius: 12px !important;
+  min-height: 32px !important;
+  cursor: pointer;
+  transition: all .15s;
+}
+.teacher-voice-btn:hover {
+  background: var(--kid-yellow) !important;
+  color: #120f2e !important;
+  transform: translateY(-1px);
+}
+.cartoon-teacher-stage.is-talking .teacher-voice-btn {
+  background: var(--kid-mint) !important;
+  border-color: var(--kid-mint) !important;
+  color: #0d3826 !important;
+  animation: lesson-pulse 1s infinite alternate;
+}
+
+.pip-classroom {
+  --kid-display: 'Fredoka Variable', system-ui, sans-serif;
+  --kid-body: 'Nunito Variable', system-ui, sans-serif;
+  --kid-yellow: #ffd23f;
+  --kid-mint: #3ee6b5;
+  box-sizing: border-box;
+  width: min(670px, calc(100vw - 24px));
+  max-height: calc(100dvh - 24px);
+  padding: clamp(12px, 3vw, 24px);
+  color: #fff8ee;
+  background: linear-gradient(150deg, #2a2468, #171433);
+  border: 1px solid #6c57cf;
+  border-top: 4px solid #ff9a54;
+  border-radius: 22px;
+  box-shadow: 0 18px 64px #070614aa;
+  font-family: var(--kid-body);
+  overscroll-behavior: contain;
+}
+.pip-classroom::backdrop { background: rgb(9 8 24 / 74%); }
+.pip-classroom .pip-classroom-header,
+.pip-classroom .blackboard-footer,
+.pip-classroom .blackboard-btns { display: flex; align-items: center; gap: 8px; }
+.pip-classroom .pip-classroom-header,
+.pip-classroom .blackboard-footer { justify-content: space-between; }
+.pip-classroom .teacher-badge { margin: 0 0 3px; }
+.pip-classroom h2, .pip-classroom h3 {
+  color: inherit;
+  font: 650 clamp(19px, 4vw, 25px)/1.15 var(--kid-display);
+  margin: 0;
+}
+.pip-classroom .cartoon-teacher-stage { margin: 12px 0; gap: 10px; }
+.pip-classroom .teacher-column { width: 135px; box-sizing: border-box; }
+.pip-classroom .teacher-avatar-wrap { width: 92px; height: 105px; flex-shrink: 0; }
+.pip-classroom .lesson-board-column {
+  flex: 1;
+  align-self: stretch;
+  min-width: 0;
+  padding: 14px;
+  background: #18143d;
+  border: 1px solid #5a4cc0;
+  border-radius: 16px;
+}
+.pip-classroom .blackboard-card { display: grid; gap: 8px; }
+.pip-classroom h3 { font-size: 19px; }
+.pip-classroom .lesson-slide-counter { color: #8edfff; font-size: 12px; font-weight: 800; }
+.pip-classroom .blackboard-summary,
+.pip-classroom .blackboard-fact-pill { margin: 0; font-size: 15px; line-height: 1.4; }
+.pip-classroom .blackboard-fact-pill {
+  background: #123d3d;
+  color: #d1fff0;
+  border-radius: 10px;
+  padding: 8px 10px;
+}
+.pip-classroom button,
+.mission-guidance .pip-lesson-button {
+  margin: 0;
+  font: 650 13px/1.2 'Fredoka Variable', system-ui, sans-serif;
+  min-height: 44px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  color: #fff8ee;
+  background: #2a2468;
+  border: 1px solid #6958bb;
+  cursor: pointer;
+}
+.pip-classroom button:disabled { opacity: .48; cursor: default; }
+.pip-classroom button.primary { color: #291608; background: #ffab65; border-color: #ffc18e; }
+.pip-classroom button:hover:enabled, .mission-guidance .pip-lesson-button:hover { filter: brightness(1.15); }
+.pip-classroom [hidden], .pip-lesson-button[hidden] { display: none !important; }
+
+.mission-guidance-tools, .mx-job-tools {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+.mission-guidance .pip-lesson-button { color: #ffe18e; }
+.mission-guidance .pip-lesson-button::before { content: '↗ '; }
+.mission-guidance { border-left: 3px solid #a98bff; }
+.mx-job .mx-job-heading .mx-eyebrow { color: #ffd98a; }
+.mx-job.mission-guidance { border-color: #6651bc; border-left-color: #a98bff; }
+
+@media (max-width: 600px) {
+  .pip-classroom .cartoon-teacher-stage { flex-direction: column; }
+  .pip-classroom .teacher-column {
+    flex-direction: row;
+    width: 100%;
+    justify-content: flex-start;
+    gap: 9px;
+    padding: 6px 10px;
+    border-radius: 14px;
+  }
+  .pip-classroom .teacher-avatar-wrap { width: 43px; height: 48px; }
+  .pip-classroom .teacher-voice-btn { margin-top: 0; margin-left: auto; }
+  .pip-classroom .lesson-board-column { padding: 10px; }
+  .pip-classroom .blackboard-footer { flex-wrap: wrap; }
+  .pip-classroom .blackboard-summary, .pip-classroom .blackboard-fact-pill { font-size: 14px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pip-classroom *, .pip-classroom *::before, .pip-classroom *::after { animation: none !important; }
+}

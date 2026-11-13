@@ -5,7 +5,7 @@ import {createWorld, loadModel, part} from '../shared/engine.js';
 import {missionAsset} from '../shared/assets.js';
 import {makeCrew} from '../shared/crew.js';
 import {PARTS} from './state.js';
-import {messageProgress, PART_NAMES, knownBad} from './actions.js';
+import {messageProgress, PART_NAMES, knownBad, earthKnows} from './actions.js';
 
 const MODEL = {pump: 'pump-motor', valve: 'check-valve', filter: 'filter-cartridge'};
 const HOLD = {meter: {scale: 2.2, offset: [-.02, -.05, -.1], rotation: [.35, -.25, 0]}, pump: {scale: 1.1, offset: [-.04, -.12, 0], rotation: [0, -.6, 0]},
@@ -27,6 +27,7 @@ export async function createDelayScene({container, getState, act, onPause, onCon
   const [hab, recycler, shelf, panelM, consoleM, tank, meter, elena, luca] = await Promise.all(
     ['hab-service-interior', 'water-recycler', 'parts-shelf', 'utility-panel', 'earth-link-console', 'greenhouse-water-tank', 'multimeter'].map(load).concat([makeCrew('elena'), makeCrew('luca')]));
   scene.add(hab);
+  player.cameraObjects = [hab, recycler, shelf, panelM, consoleM, tank];
   world.place3d(recycler, -1.8, 0, -4.1); world.place3d(shelf, 1.5, 0, -4.15); world.place3d(panelM, -4.4, 0, -4.38);
   world.place3d(consoleM, 3.6, 0, 3.55, Math.PI); world.place3d(tank, -5.8, 0, -3.5);
   for (const x of [-4.5, 0, 4.5]) { const l = new THREE.PointLight(0xfff0dc, 2.6, 9, 1.6); l.position.set(x, 3.4, 0); scene.add(l); }
@@ -225,7 +226,7 @@ export async function createDelayScene({container, getState, act, onPause, onCon
     if (st.message.status === 'arrived' && !st.readAnswer) return consoleM;
     if (st.plan === 'earth' && st.message.status !== 'arrived' && !knownBad(st).length) return st.saveMode ? consoleM : saveSwitch;
     if (st.holding && st.holding !== 'meter') return st.power ? lever : st.panel === 'closed' ? door : sockets[st.holding];
-    const bad = knownBad(st), untested = PARTS.find(p => !st.findings[p]);
+    const bad = knownBad(st), untested = !earthKnows(st) && PARTS.find(p => !st.findings[p]);
     const needsWork = bad.length || (st.plan !== 'earth' && untested);
     if (needsWork) {
       if (st.power) return lever; if (st.panel === 'closed') return door;
@@ -239,5 +240,5 @@ export async function createDelayScene({container, getState, act, onPause, onCon
 
   return {world, sync, idle: () => syncQueue,
     walkTargets: [{id: 'recycler', label: '💧 Recycler', x: -1.8, z: -2.6}, {id: 'shelf', label: '🧰 Spare parts', x: 1.5, z: -2.8}, {id: 'save', label: '🚿 Save water', x: -4.4, z: -3}, {id: 'console', label: '📡 Earth link', x: 3.6, z: 2.3}],
-    walk(id) { const t = this.walkTargets.find(w => w.id === id); if (t) player.navigate({x: t.x, z: t.z}, {x: t.x, z: t.z + (t.z < 0 ? -1 : 1)}); }};
+    walk(id) { const t = this.walkTargets.find(w => w.id === id); if (t) return player.navigate({x: t.x, z: t.z}, {x: t.x, z: t.z + (t.z < 0 ? -1 : 1)}); }};
 }

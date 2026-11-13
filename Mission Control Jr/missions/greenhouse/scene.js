@@ -4,7 +4,7 @@ import {createWorld, loadModel, part} from '../shared/engine.js';
 import {missionAsset} from '../shared/assets.js';
 import {makeCrew} from '../shared/crew.js';
 import {BEDS} from './state.js';
-import {isReady, isFull, moistureState} from './actions.js';
+import {isReady, isFull, moistureState, dryLitBed, bedToDim, noHarvest} from './actions.js';
 
 const BED_X = {a: -4.6, b: -1.1, c: 2.4}, BED_Z = -3.95;
 const CROP_MODEL = {lettuce: 'lettuce-plant', mizuna: 'mizuna-plant', pepper: 'pepper-plant'};
@@ -16,6 +16,7 @@ export async function createGreenhouseScene({container, getState, act, onPause, 
   const load = id => loadModel(missionAsset(id));
   const [hab, consoleM, tank, line, shelf, table, basket, spare, amara] = await Promise.all(['hab-greenhouse-interior', 'farm-console', 'greenhouse-water-tank', 'irrigation-line', 'tool-shelf', 'galley-table', 'harvest-basket', 'spare-hose'].map(load).concat([makeCrew('amara')]));
   scene.add(hab);
+  player.cameraObjects = [hab, consoleM, tank, shelf, table];
   world.place3d(consoleM, 5.7, 0, -4.1); world.place3d(tank, -6.7, 0, 3.9); world.place3d(line, -3, 0, 4.88, Math.PI);
   world.place3d(shelf, 1.3, 0, 4.85, Math.PI); world.place3d(table, 5, 0, 2.3, Math.PI / 2);
   for (const x of [-5, 0, 5]) { const l = new THREE.PointLight(0xfff0dc, 2.6, 9, 1.6); l.position.set(x, 3.6, 0); scene.add(l); }
@@ -108,9 +109,14 @@ export async function createGreenhouseScene({container, getState, act, onPause, 
   }
   world.register({id: 'iso', object: isoValve, range: 2.4, holdSeconds: 1.2, enabled: () => playing(),
     label: () => s().isolationOpen ? 'Close the red valve (stops the water)' : 'Open the red valve', onUse: () => { const was = s().isolationOpen; const r = act({id: 'toggleIsolation'}); if (r.ok) world.tween(.6, t => { isoValve.rotation.z = (was ? t : 1 - t) * Math.PI * 1.5; }); }});
-  world.register({id: 'oldhose', object: oldHose, range: 2.4, enabled: () => playing() && (s().leak === 'leaking' || s().leak === 'isolated'),
+  const hoseHit = new THREE.Mesh(new THREE.BoxGeometry(.96, .22, .25),
+    new THREE.MeshBasicMaterial({transparent: true, opacity: 0, depthWrite: false}));
+  hoseMount.add(hoseHit);
+  world.register({id: 'oldhose', object: hoseHit, range: 2.4, enabled: () => playing() && (s().leak === 'leaking' || s().leak === 'isolated'),
     label: () => 'Unclip the leaking hose', onUse: () => act({id: 'removeHose'})});
-  world.register({id: 'mount', object: hoseMount, range: 2.4, holdSeconds: 1.5, enabled: () => playing() && s().leak === 'hose-off' && s().holding === 'hose',
+  const mountHit = hoseHit.clone();
+  hoseMount.add(mountHit);
+  world.register({id: 'mount', object: mountHit, range: 2.4, holdSeconds: 1.5, enabled: () => playing() && s().leak === 'hose-off' && s().holding === 'hose',
     label: () => 'Fit the new hose and tighten the clamps', onUse: () => act({id: 'fitHose'})});
   world.register({id: 'spare', object: spare, range: 2.4, enabled: () => playing() && s().leak === 'hose-off' && !s().holding, label: () => 'Take the spare hose', onUse: () => act({id: 'takeSpare'})});
   world.register({id: 'basket', object: basket, range: 2.4, enabled: () => playing() && s().basket === 'table' && !s().holding, label: () => 'Pick up the harvest basket', onUse: () => act({id: 'takeBasket'})});
@@ -184,19 +190,22 @@ export async function createGreenhouseScene({container, getState, act, onPause, 
 
   const guideTarget = () => {
     const st = s(); if (st.phase !== 'active' || !st.plan) return null;
-    if (st.holding === 'hose') return hoseMount;
+    if (st.holding === 'hose') return mountHit;
     if (st.leak === 'leaking' || st.leak === 'hose-fitted') return isoValve;
-    if (st.leak === 'isolated') return oldHose;
+    if (st.leak === 'isolated') return hoseHit;
     if (st.leak === 'hose-off') return spare;
     if (!st.airflowChecked || !st.fanRunning) return fanUnit;
+    if (noHarvest(st)) return consoleM;
     if (st.day > st.scenario.growDays) { const ready = BEDS.find(id => isReady(st, id)); if (st.holding !== 'basket') return basket; return ready ? beds[ready].plants[0].model : table; }
-    const dry = BEDS.find(id => !st.beds[id].harvested && st.beds[id].light !== 'off' && moistureState(st, id) === 'dry');
-    return dry ? beds[dry].valve : consoleM;
+    const dim = bedToDim(st); if (dim) return beds[dim].lever;
+    const dry = st.tankL > 0 && dryLitBed(st);
+    if (dry) return beds[dry].valve;
+    return BEDS.every(id => st.beds[id].light === 'off') ? null : consoleM;
   };
   world.onFrame(() => world.guide(guideTarget(), .3));
 
   return {world, nightfall, celebrate,
     walkTargets: [{id: 'fan', label: '🌀 Air vent', x: -6.1, z: -2.65}, {id: 'a', label: '🥬 Lettuce bed', x: BED_X.a, z: -2.6}, {id: 'b', label: '🌿 Mizuna bed', x: BED_X.b, z: -2.6}, {id: 'c', label: '🌶️ Pepper bed', x: BED_X.c, z: -2.6},
       {id: 'line', label: '🚰 Water pipe', x: -3, z: 3.4}, {id: 'shelf', label: '🧰 Tool shelf', x: 1.3, z: 3.5}, {id: 'table', label: '🍽️ Table', x: 3.6, z: 2.3}, {id: 'console', label: '📺 Console', x: 5.7, z: -2.7}],
-    walk(id) { const t = this.walkTargets.find(w => w.id === id); if (t) player.navigate({x: t.x, z: t.z}, {x: t.x, z: t.z + (t.z < 0 ? -1 : 1)}); }};
+    walk(id) { const t = this.walkTargets.find(w => w.id === id); if (t) return player.navigate({x: t.x, z: t.z}, {x: t.x, z: t.z + (t.z < 0 ? -1 : 1)}); }};
 }

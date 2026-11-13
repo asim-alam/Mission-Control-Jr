@@ -27,6 +27,7 @@ export async function createDustScene({container, getState, act, onPause}) {
     ...['moon-airlock', 'moon-suit', 'eva-helmet', 'tool-bag', 'moon-boots', 'dust-brush', 'filter-cartridge', 'filter-cartridge', 'filter-cartridge'].map(load),
     makeCrew('amara', {suitMode: true}), makeCrew('amara')]);
   scene.add(room);
+  player.cameraObjects = [room];
   const gear = {suit, helmet, bag, boots};
 
   // Lights: cool ceiling strips plus a warm lamp over the bench.
@@ -247,16 +248,22 @@ export async function createDustScene({container, getState, act, onPause}) {
   const guideTarget = () => {
     const st = s(); if (st.phase !== 'active' || !st.plan) return null;
     if (st.outer === 'open') return outerHit;
-    if (!st.pressurized) return cycleBtn;
-    if (st.hand === 'filter') return filterDoor;
-    if (st.edsItem) return edsSwitch;
-    const dirty = dirtyItems(st);
+    if (!st.pressurized) return cycleHit;
+    if (st.hand === 'filter') return filterHit;
+    const sc = st.scenario, canVacuum = st.power >= sc.tools.vacuum.power;
+    if (st.edsItem && st.power >= sc.tools.eds.power) return edsSwitchHit;
+    const dirty = dirtyItems(st).filter(id => id !== st.edsItem);
+    if (!dirty.length && st.edsItem) return innerHit;
     if (dirty.length) {
+      if (st.hand === 'nozzle' && !canVacuum) return brushHit;
       if (st.hand) return gearHit[dirty[0]];
-      if (st.plan === 'mix') { const e = dirty.find(id => st.scenario.items[id].eds); if (e) return gearHit[e]; }
-      return st.plan === 'vacuum' || (st.plan === 'mix' && st.power >= st.scenario.tools.vacuum.power) ? vac : brushHolder;
+      if (st.plan === 'mix' && st.power >= sc.tools.eds.power) { const e = dirty.find(id => sc.items[id].eds); if (e) return gearHit[e]; }
+      return st.plan !== 'brush' && canVacuum ? nozzleHit : brushHit;
     }
-    if (st.airDust > st.scenario.airSafe) return st.filterLoad >= st.scenario.filterCap ? (st.spares > 0 ? lockerDoor : innerHit) : cycleBtn;
+    if (st.airDust > sc.airSafe && st.power >= sc.scrub.power) {
+      if (st.filterLoad < sc.filterCap) return cycleHit;
+      if (st.spares) return st.hand ? (st.hand === 'nozzle' ? nozzleHit : brushHit) : lockerHit;
+    }
     return innerHit;
   };
   world.onFrame(() => world.guide(guideTarget(), .25));
@@ -270,7 +277,7 @@ export async function createDustScene({container, getState, act, onPause}) {
     {id: 'inner', label: '🚪 Inside hatch', x: 1.9, z: .2, look: {x: 2.8, z: 0}},
   ];
   return {world, sync, idle: () => syncQueue, walkTargets,
-    walk(id) { const t = walkTargets.find(w => w.id === id); if (t) player.navigate({x: t.x, z: t.z}, t.look); },
+    walk(id) { const t = walkTargets.find(w => w.id === id); if (t) return player.navigate({x: t.x, z: t.z}, t.look); },
     teleport(x, z, lookX, lookZ, pitch = -.2) { player.position.set(x, 1.62, z); if (lookX !== undefined) player.yaw = Math.atan2(-(lookX - x), -(lookZ - z)); player.pitch = pitch; player.syncCamera(); },
   };
 }

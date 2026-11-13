@@ -1,3 +1,4 @@
+import {mountPipLesson, openPipLesson, pipLessonOpen} from './professor-pip.js';
 import {startPip} from './companion.js';startPip('storm');
 import * as THREE from 'three';
 const sampleMode=new URLSearchParams(location.search).get('sampler')==='1';
@@ -8,7 +9,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DEMO_ASSETS } from './demo-assets.js';
 import { createMission, act, advance, objective, PREPARATION_SECONDS } from './mission.js';
 import { chapterTuning } from './simulation/difficulty.js';
-import { Player } from './player.js';
+import { Player, showCameraView } from './player.js';
 import { MissionAudio } from './demo-audio.js';
 import lines from './dialogue-lines.json';
 import { installHudPresentation } from './hud-presentation.js';
@@ -40,8 +41,7 @@ const audio=new MissionAudio((id,line)=> {
 },()=>{$('radio').hidden=true;});
 const player=new Player(camera,renderer.domElement,()=>interact(),()=>togglePause(),()=>audio.effect('step'),renderView);
 function renderView() {
-  const third=player.view==='third';$('view').textContent=`View: ${third?'Third':'First'} person`;
-  $('view').setAttribute('aria-pressed',String(third));
+  showCameraView($('view'), player.view);
 }
 let audioBeforeJourney=false;connectChapter('storm',value=>{if(value){audioBeforeJourney=!!audio.paused;player.release();player.route=[];player.enabled=false;audio.pause(true);audio.context?.suspend();}else{audio.context?.resume().catch(()=>{});audio.pause(audioBeforeJourney);}});
 const loader=new GLTFLoader(),textures=new THREE.TextureLoader();
@@ -113,24 +113,24 @@ function showDialog(title,html,actions,eyebrow='MERIDIAN CONTROL') {
 }
 function closeDialog() {$('dialog').hidden=true;$('hud').inert=false;player.enabled=mission.started&&!mission.ended&&!transition;audio.pause(false);}
 function togglePause() {
-  if(!mission.started||mission.ended)return;
+  if(pipLessonOpen()||!mission.started||mission.ended)return;
   if(!$('dialog').hidden){closeDialog();return;}
-  showDialog('Paused',`<p>The clock is stopped. Take your time. Nothing changes while this is open.</p>
+  showDialog('Paused',`<p>The mission clock is stopped.</p>
     ${Object.entries(audio.volumes).map(([name,value])=>`<label>${name[0].toUpperCase()+name.slice(1)} volume <input aria-label="${name} volume" type="range" min="0" max="1" step="0.05" value="${value}" data-volume="${name}"></label>`).join('')}
     <label><span>Mute all audio</span><input id="master-mute" type="checkbox" ${audio.muted?'checked':''}></label>
     <label><span>Reduce motion and particles</span><input id="reduce-motion" type="checkbox" ${reducedMotion?'checked':''}></label>
-    <p><strong>How to play:</strong> WASD or arrow keys to walk. Drag to look around. Press E to use things. V changes the camera. T shows your to-do list. Escape pauses.</p>`,[
+    <p><b>Move:</b> WASD or arrows. <b>Look:</b> Drag. <b>Use:</b> E. <b>Change view:</b> V. <b>To-do:</b> T.</p>`,[
     {label:'Keep playing',run:closeDialog},{label:'Start over',run:()=>startMission()}]);
   $('dialog-body').querySelectorAll('[data-volume]').forEach(input=>input.oninput=()=>audio.settings({[input.dataset.volume]:Number(input.value)}));
   $('master-mute').onchange=e=>audio.setMuted(e.target.checked);$('reduce-motion').onchange=e=>{reducedMotion=e.target.checked;};
 }
 let reducedMotion=false;
-$('pause').onclick=togglePause;$('look').onclick=()=>player.capture();
-$('tasks-toggle').onclick=toggleTasks;$('tasks-toggle-card').onclick=toggleTasks;
+$('pause').onclick=togglePause;
+$('tasks-toggle-card').onclick=toggleTasks;
 function toggleTasks(force) {
   const panel=$('mission-panel'),expanded=force??!panel.classList.contains('expanded');
   panel.classList.toggle('expanded',expanded);
-  $('tasks-toggle').setAttribute('aria-expanded',String(expanded));
+
   $('tasks-toggle-card').setAttribute('aria-expanded',String(expanded));
   scheduleTasksCollapse();
 }
@@ -141,7 +141,7 @@ $('view').onclick=()=>{if(player.enabled)player.toggleView();};
 $('skip-voice').onclick=()=>audio.skip();$('replay-voice').onclick=()=>audio.replay();
 $('journal').onclick=()=>showDialog('Mission journal',`<p>Your next job: <strong>${objective(mission)}</strong></p>${mission.log.map(text=>`<p>• ${text}</p>`).join('')}${journal.map(entry=>`<div class="journal-entry"><b>${entry.speaker}</b><p>${entry.text}</p></div>`).join('')}`,[{label:'Back to the mission',run:closeDialog}], 'WHAT HAPPENED SO FAR');
 addEventListener('keydown',e=>{if(e.code==='KeyJ'&&player.enabled)$('journal').click();if(e.code==='KeyT'&&player.enabled)toggleTasks();});
-installHudPresentation({hud:$('hud'),toolbar:document.querySelector('#topbar .toolbar'),onHelp:()=>{if(player.enabled)togglePause();},onJourney:openJourney});
+installHudPresentation({hud:$('hud'),toolbar:document.querySelector('#topbar .toolbar'),onHelp:()=>{if(player.enabled)togglePause();},onJourney:openJourney,menuItems:['journal']});
 
 function navigateTo(s) {
   if(!player.enabled||job)return;
@@ -151,18 +151,29 @@ function navigateTo(s) {
   renderNavigation();renderInteraction();
 }
 function getNextTargetStationId() {
-  return mission.inside ? 'room-console' : !mission.diagnosed ? 'terminal' : mission.cleaned.some(done => !done) ? `solar${mission.cleaned.findIndex(done => !done)}` : !mission.battery && !mission.installed ? 'rover' : !mission.installed || !mission.repaired ? 'junction' : !mission.allocation ? 'terminal' : 'airlock';
+  return mission.inside ? 'room-console' : mission.storm ? 'airlock' : !mission.diagnosed ? 'terminal' : mission.cleaned.some(done => !done) ? `solar${mission.cleaned.findIndex(done => !done)}` : !mission.battery && !mission.installed ? 'rover' : !mission.installed || !mission.repaired ? 'junction' : !mission.allocation ? 'terminal' : 'airlock';
 }
 function renderNavigation() {
   const available=stations.filter(s=>s.parent.visible);
   const targetId=getNextTargetStationId();
-  $('navigation').replaceChildren(...available.map(s=>{
-    const b=button(s.title,()=>navigateTo(s));
-    b.setAttribute('aria-label',`Walk to ${s.title}`);
-    b.classList.toggle('active',s===selected);
-    if(s.id===targetId&&!mission.ended)b.classList.add('is-next-target');
+  const places = $('walk-places');
+  const next = available.find(station => station.id === targetId && !mission.ended);
+  const destination = station => {
+    const b = button(station.title, () => {
+      const closePlaces = places.open;
+      places.open = false;
+      navigateTo(station);
+      (closePlaces ? places.querySelector('summary') : $('walk-next').firstElementChild)?.focus();
+    });
+    b.setAttribute('aria-label', `Walk to ${station.title}`);
+    b.classList.toggle('active', station === selected);
     return b;
-  }));
+  };
+  const shortcut = next && destination(next);
+  if (shortcut) { shortcut.dataset.station = next.id; shortcut.classList.add('is-next-target'); }
+  $('walk-next').replaceChildren(...(shortcut ? [shortcut] : []));
+  $('walk-next').hidden = !shortcut;
+  $('navigation').replaceChildren(...available.filter(station => station !== next).map(destination));
 }
 const reachRay=new THREE.Raycaster();
 function nearby(s) {
@@ -182,7 +193,7 @@ function perform(type,value) {
   if(type==='enter')enterShelter();
   if(type==='seal')airlock.getObjectByName('door_left').position.x=-.5;
   if(mission.ended)showEnding();
-  updateVisuals();renderMission();renderInteraction();
+  renderNavigation();updateVisuals();renderMission();renderInteraction();
 }
 function startCleaning(index) {
   if(job)return;
@@ -256,15 +267,30 @@ function renderInteraction(force=false) {
   $('target-description').textContent=description;$('action-buttons').replaceChildren(...buttons);
   $('job-track').hidden=!job;$('action-help').textContent=!near?'Walk closer, or tap this place in the walk-to list.':job?'Brushing… Stay next to the panel.':'Press E or tap a button above.';
 }
+mountPipLesson($('mission-panel').querySelector('.mission-guidance-tools'), 'storm', () => ({
+  step: mission.repaired || mission.inside ? 2 : mission.diagnosed ? 1 : 0,
+  onOpen: () => { player.enabled = false; player.release(); audio.pause(true); },
+  onClose: () => audio.pause(journeyPaused || !$('dialog').hidden),
+}));
 function renderMission() {
   $('objective').textContent=objective(mission);
   const time=Math.max(0,Math.ceil((mission.prepSeconds??PREPARATION_SECONDS)-mission.elapsed));
-  const sun=`Sunlight ${Math.round((mission.sunlight??1)*100)}%`;$('forecast').textContent=mission.inside?(mission.sealed?'Door sealed · waiting for the storm to pass':'You are inside · close the door'):mission.storm?`THE STORM IS HERE · Go inside! · ${sun}`:`Storm arrives in ${Math.floor(time/60)}:${String(time%60).padStart(2,'0')} · ${sun}`;
+  const sun=`Sunlight ${Math.round((mission.sunlight??1)*100)}%`;$('forecast').textContent=mission.inside?(mission.sealed?'Crew inside · door sealed':'Crew inside · door open'):mission.storm?`THE STORM IS HERE · Go inside! · ${sun}`:`Storm arrives in ${Math.floor(time/60)}:${String(time%60).padStart(2,'0')} · ${sun}`;
   $('minimal-forecast').textContent=$('forecast').textContent;
   const tasks=[['Check computer',mission.diagnosed],['Clean panels '+mission.cleaned.filter(Boolean).length+'/3',mission.cleaned.every(Boolean)],['Get battery',mission.battery||mission.installed],['Fix power',mission.repaired],['Air or science?',!!mission.allocation],['Close the door',mission.sealed]];
-  const firstOpen=tasks.findIndex(([,done])=>!done);$('mission-step').textContent=`JOB ${firstOpen<0?6:firstOpen+1} OF 6`;
-  const nextId=mission.inside?'room-console':!mission.diagnosed?'terminal':mission.cleaned.some(done=>!done)?`solar${mission.cleaned.findIndex(done=>!done)}`:!mission.battery&&!mission.installed?'rover':!mission.installed||!mission.repaired?'junction':!mission.allocation?'terminal':'airlock';
-  const nextTarget=stations.find(s=>s.id===nextId);$('next-action').textContent=mission.ended?'Mission finished!':nextTarget?`${nextTarget.title} · ${Math.round(distance(nextTarget))} m · press E`:'Go inside';
+  const firstOpen = tasks.findIndex(([, done]) => !done);
+  $('mission-step').textContent = mission.inside || mission.storm ? 'SHELTER' : `JOB ${firstOpen + 1} OF 6`;
+  const nextId = getNextTargetStationId(), nextTarget = stations.find(s => s.id === nextId);
+  const instructions = {
+    terminal: mission.diagnosed ? 'At Base computer, choose Air or science?' : 'Walk to Base computer. Press E or choose Check the computer.',
+    rover: mission.bayOpen ? 'At Rover hatch, choose Take the battery.' : 'Walk to Rover hatch and choose Open the hatch.',
+    junction: mission.installed ? 'Tap Plug 1, 2 and 3 until they show 1, 2 and 3. Then choose Connect.' : 'At Power box, choose Put the battery in.',
+    airlock: 'Use Base door and choose Go inside.',
+    'room-console': !mission.sealed ? 'At Door console, choose Close the door.'
+      : mission.insideAge < 5 ? 'Stay inside. Send message home unlocks when it’s safe.' : 'At Door console, choose Send message home.',
+  };
+  $('next-action').textContent = mission.ended ? '' : instructions[nextId] || `Walk to ${nextTarget?.title}. Choose Clean the panel and stay nearby.`;
+  if ($('walk-next').firstElementChild?.dataset.station !== nextId) renderNavigation();
   const completeCount=tasks.filter(([,done])=>done).length;$('mission-panel').style.setProperty('--mission-progress',`${completeCount/tasks.length*100}%`);
   const vital=(icon,label,value,essential=false)=>{const n=Math.round(value),state=n<20?'danger':n<40?'warning':'healthy';return `<span class="vital-chip ${essential?'vital-essential':''}" data-state="${state}" role="img" aria-label="${label} ${n} percent" title="${label} ${n}%"><span class="vital-icon" aria-hidden="true">${icon}</span><b>${n}%</b><i style="width:${n}%"></i></span>`;};
   $('vitals').innerHTML=vital('⚡','Power',mission.resources.power,true)+vital('O₂','Oxygen',mission.resources.oxygen)+vital('♡','Morale',mission.resources.morale)+'<span class="vital-chip" role="img" aria-label="Four crew members safe" title="Crew 4 of 4"><span class="vital-icon" aria-hidden="true">♙</span><b>4/4</b><i style="width:100%"></i></span>';
@@ -301,24 +327,12 @@ function startMission() {
   audio.say('intro');
   showDialog('A dust storm is coming!',`
     <div class="kid-mission-intro">
-      <p>🚨 <b>Emergency on Mars!</b> A giant dust storm is blowing in fast. You are <b>Jin</b>, the outpost engineer. Follow the glowing light beams, get our solar power ready, and bring the crew safely inside before the storm hits!</p>
+      <p>You’re <b>Jin</b>, Meridian’s engineer. Dust can block sunlight and cut the base’s solar power. Get the base ready and bring the crew inside before the storm hits.</p>
     </div>
-    <div class="kid-first-step-card">
-      <div class="step-badge">👉 STEP 1 OF 6</div>
-      <h3>Check the Base Computer</h3>
-      <p>Walk to the glowing computer terminal to diagnose our power and begin preparations.</p>
-    </div>
-    <div class="kid-tip-pill">
-      💡 <b>Astronaut Tip:</b> Follow the glowing <b>green light beam</b> in 3D or tap the <b>[Base computer NEXT]</b> button!
-    </div>
-    <div class="kid-controls-bar">
-      <span>🎮 <b>Controls:</b></span>
-      <span><kbd>WASD</kbd> Walk</span>
-      <span><kbd>Drag</kbd> Look</span>
-      <span><kbd>E</kbd> Use</span>
-      <span><kbd>V</kbd> Camera</span>
-      <span>Tap buttons to walk automatically!</span>
-    </div>`,[{label:'🚀 Let’s go!',run:closeDialog}], 'MARS DAY 12');
+    <p><b>First job:</b> Follow the green beacon to the base computer and check what needs fixing. You can also use the <b>Base computer</b> walk button.</p>`,[
+    {label:'Start mission',run:closeDialog},
+    {label:'Pip’s lesson',run:()=>openPipLesson('storm',{finishLabel:'Back to briefing'})},
+  ], 'MARS DAY 12');
 }
 function showEnding() {
   if(endingShown)return;endingShown=true;job=null;toolObject.visible=false;player.release();audio.say(mission.outcome,true);
@@ -429,7 +443,7 @@ try {
 const timer=new THREE.Timer();timer.connect(document);let uiClock=0,alarmClock=0,brushClock=0;
 renderer.setAnimationLoop(time=> {
   timer.update(time);const dt=Math.min(timer.getDelta(),.05);clock+=dt;
-  const paused=journeyPaused||!$('dialog').hidden||document.hidden||!!transition;
+  const paused=pipLessonOpen()||journeyPaused||!$('dialog').hidden||document.hidden||!!transition;
   if(transition&&$('dialog').hidden&&!document.hidden&&!journeyPaused){
     transition.elapsed+=dt;const openness=Math.min(1,transition.elapsed/.85);
     airlock.getObjectByName('door_left').position.x=-.5-openness;

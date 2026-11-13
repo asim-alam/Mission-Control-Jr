@@ -122,18 +122,50 @@ export function getObjective(s) {
   if (s.outer === 'open') return 'Shut the outside hatch: hold E on the orange wheel';
   if (!s.pressurized) return 'Fill the airlock with air: press the green button';
   if (s.hand === 'filter') return 'Swap the air filter: hold E on the filter door';
-  if (s.edsItem) return 'Flip the EDS switch to zap the dust';
+  if (s.edsItem && s.power >= sc.tools.eds.power) return 'Flip the EDS switch to zap the dust';
   const dirty = dirtyItems(s);
   if (dirty.length) {
-    if (s.hand) return `Clean the ${itemName(s, dirty[0])}: hold E on it`;
-    return s.plan === 'mix' && dirty.some(id => sc.items[id].eds) ? 'Put dusty gear on the EDS plate, or grab a tool' : s.plan === 'vacuum' ? 'Grab the vacuum hose on the bench' : 'Grab the brush on the bench';
+    if (s.hand === 'nozzle' && s.power < sc.tools.vacuum.power) return 'Switch to the brush';
+    if (s.hand && dirty.some(id => id !== s.edsItem)) return `Clean the ${itemName(s, dirty.find(id => id !== s.edsItem))}: hold E on it`;
+    if (s.edsItem && dirty.length === 1) return 'The dust plate is out of power';
+    return s.plan === 'mix' && s.power >= sc.tools.eds.power && dirty.some(id => sc.items[id].eds) ? 'Put dusty gear on the EDS plate, or grab a tool' : s.plan !== 'brush' && s.power >= sc.tools.vacuum.power ? 'Grab the vacuum hose on the bench' : 'Grab the brush on the bench';
   }
   if (s.airDust > sc.airSafe) {
-    if (s.filterLoad >= sc.filterCap) return s.spares > 0 ? 'The filter is full! Get a new one from the locker' : 'No filters left. Open the inside hatch when ready';
+    if (s.power < sc.scrub.power) return 'Too little power to clean the air';
+    if (s.filterLoad >= sc.filterCap) {
+      if (!s.spares) return 'No filters left. Open the inside hatch when ready';
+      return s.hand ? 'Put your cleaning tool back on the bench' : 'The filter is full! Get a new one from the locker';
+    }
     return 'Clean the air: press the green button';
   }
   return 'All clean! Open the inside hatch: hold E on the green wheel';
 }
+export function getInstruction(s) {
+  if (s.phase !== 'active') return null;
+  if (!s.plan) return {text: 'Choose a tool plan for getting dust off the gear.'};
+  if (s.outer === 'open') return {place: 'outer', text: 'Aim at the orange wheel. Hold E or hold the prompt until the hatch closes.'};
+  if (!s.pressurized) return {place: 'air', text: 'Press E or tap the green air button to fill the airlock.'};
+  if (s.hand === 'filter') return {place: 'filter', text: 'Aim at the filter door. Hold E or hold the prompt to fit the new filter.'};
+  if (s.edsItem && s.power >= s.scenario.tools.eds.power) return {text: 'Press E or tap the electric dust plate’s switch to lift dust off the gear.'};
+  if (s.edsItem && dirtyItems(s).every(id => id === s.edsItem)) return {place: 'inner', text: 'The dust plate is out of power. The hatch opens from the green wheel, but dusty gear can let dust into the base.'};
+  const dirty = dirtyItems(s);
+  const vacuumPower = s.scenario.tools.vacuum.power;
+  if (dirty.length) {
+    if (s.hand === 'nozzle' && s.power < vacuumPower) return {place: 'bench', text: 'The vacuum is out of power. Pick up the brush from the bench.'};
+    if (s.hand) return {place: 'gear', text: 'Aim at the marked gear. Hold E or hold the prompt until cleaning finishes.'};
+    if (s.plan === 'mix' && s.power >= s.scenario.tools.eds.power && dirty.some(id => s.scenario.items[id].eds)) return {place: 'gear', text: 'Use the marked gear with empty hands to set it on the electric dust plate.'};
+    return {place: 'bench', text: s.plan !== 'brush' && s.power >= vacuumPower ? 'Use the vacuum hose on the bench to pick it up.' : 'Use the brush on the bench. It works without power.'};
+  }
+  if (s.airDust > s.scenario.airSafe) {
+    if (s.power < s.scenario.scrub.power || (s.filterLoad >= s.scenario.filterCap && !s.spares)) return {place: 'inner', text: 'You cannot run the fan again. The inner hatch is the way in, but some dust may follow you.'};
+    if (s.filterLoad >= s.scenario.filterCap) return s.hand
+      ? {place: 'bench', text: 'Use the tool you’re holding at the bench to put it back. Then take a filter.'}
+      : {place: 'filter', text: 'Use the spare-filter locker beside the filter door to take a new one.'};
+    return {place: 'air', text: 'Use the green air button to run the fan. Watch the Dust in the air meter.'};
+  }
+  return {place: 'inner', text: 'Aim at the green wheel. Hold E or hold the prompt to open the inside hatch.'};
+}
+
 export function getSteps(s) {
   const list = [
     {text: 'Pick a plan', done: !!s.plan},

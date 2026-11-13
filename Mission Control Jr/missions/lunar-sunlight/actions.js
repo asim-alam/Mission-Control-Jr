@@ -133,6 +133,22 @@ export function getObjective(s) {
   if (!s.savePlan) return 'Pick a power plan at the base console';
   return `Watch ${s.scenario.window.days} days go by at the base console`;
 }
+export function getInstruction(s) {
+  if (s.phase !== 'active') return null;
+  if (!s.plan) return {text: 'Pick a pad from the map. Compare its sunlight and distance from the base.'};
+  if (s.plug === 'hand') return {place: 'port', text: 'Carry the plug to the base power port. Hold E or hold the prompt to connect it.'};
+  if (!s.legs) {
+    if (!s.hitched) return {place: 'cart', text: 'At the front of the cart, use the tow handle with E or a tap.'};
+    if (s.cart !== s.plan) return {place: s.plan, text: 'Walk with WASD or choose the highlighted pad. The cart follows behind you.'};
+    return {text: 'Aim at the cart’s leg lever. Hold E or hold the prompt to lower the supports.'};
+  }
+  if (s.stages < 1) return {place: 'cart', text: 'Aim at the green ▲ on the cart. Hold E or hold the prompt to raise the mast one stage.'};
+  if (!s.wings) return {place: 'cart', text: 'Hold E or hold the prompt on the wing handle to unfold the panels. Raise the mast first if you want it higher.'};
+  if (s.plug === 'reel') return {place: 'cart', text: 'Use the plug at the cable reel on the cart to pick it up.'};
+  if (!s.tracker) return {place: 'cart', text: 'Use the Sun tracker screen on the cart with E or a tap.'};
+  return {place: 'console', text: s.savePlan ? 'Choose Watch days on the console to see what your setup powers.' : 'Open the base console and choose how the crew should use power in shadow.'};
+}
+
 export function getSteps(s) {
   const list = [
     {text: 'Pick a pad', done: !!s.plan},

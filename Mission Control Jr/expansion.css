@@ -35,6 +35,11 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .mx-meter.low { border-color: var(--mx-bad); }
 
 .mx-job { position: fixed; top: 84px; right: 16px; width: 300px; padding: 12px 16px; border-radius: 20px; background: var(--mx-panel); border: 2px solid var(--mx-line); z-index: 2; }
+.mx-job[hidden], .mx-steps[hidden] { display: none; }
+.mx-job-heading { display: flex; align-items: center; gap: 6px; }
+.mx-job-heading .mx-eyebrow { margin-right: auto; }
+.mx-job-heading button { padding: 3px 8px; font-size: .78rem; min-height: 32px; }
+.mx-job:has(.mx-steps:not([hidden])) { max-height: min(45dvh, 360px); overflow: auto; }
 .mx-job h2 { margin: 4px 0 6px; font: 600 1.15rem/1.25 'Fredoka Variable', system-ui; }
 .mx-steps { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 3px; font-size: .86rem; color: var(--mx-soft); }
 .mx-steps li.done { color: #9ff0d3; } .mx-steps li.now { color: #fff; font-weight: 800; }
@@ -98,7 +103,6 @@ body.mx-details-on .mx-detail { display: block; }
   .mx-meters { top: 76px; left: 8px; width: 190px; gap: 5px; }
   .mx-meter { padding: 5px 8px; } .mx-meter-icon { font-size: 1.1rem; }
   .mx-job { top: auto; bottom: 150px; right: 8px; width: min(300px, 55vw); padding: 8px 12px; }
-  .mx-steps { display: none; }
   .mx-walk { left: 8px; bottom: 8px; right: 8px; max-width: none; padding: 6px 10px; }
   .mx-keys { display: none; }
   .mx-top { padding: 8px; } .mx-title h1 { font-size: 1.05rem; } .mx-actions button { font-size: .78rem; padding: .3rem .55rem; }
@@ -113,7 +117,7 @@ body.mx-details-on .mx-detail { display: block; }
   .mx-timer { top: 84px; max-width: calc(100vw - 16px); font-size: .78rem; padding: 4px 10px; text-align: center; }
   .mx-meters { top: 118px; width: 148px; gap: 4px; }
   .mx-meter { padding: 3px 6px; } .mx-meter-label { font-size: .62rem; } .mx-meter-value { font-size: .72rem; } .mx-meter-icon { font-size: .9rem; }
-  .mx-job { bottom: 64px; right: 8px; left: 8px; width: auto; padding: 6px 10px; } .mx-job h2 { font-size: .95rem; } .mx-eyebrow { font-size: .6rem; }
+  .mx-job { bottom: 64px; right: 8px; width: min(280px, calc(100vw - 16px)); padding: 6px 10px; } .mx-job h2 { font-size: .95rem; } .mx-eyebrow { font-size: .6rem; }
   .mx-walk { padding: 4px 6px; border-radius: 14px; } .mx-walk .mx-eyebrow { display: none; }
   .mx-walk #locations { display: flex; flex-wrap: nowrap; overflow-x: auto; gap: 4px; margin-top: 0; } .mx-walk #locations button { white-space: nowrap; flex: none; font-size: .75rem; min-height: 36px; }
   .mx-prompt { bottom: 150px; } .mx-toast { left: 8px; right: 8px; max-width: none; translate: none; font-size: .85rem; }
@@ -122,3 +126,25 @@ body.mx-details-on .mx-detail { display: block; }
   #dialog .card { max-height: calc(100dvh - 24px); overflow: auto; padding: 14px; }
 }
 @media (prefers-reduced-motion: reduce) { .mx-timer.urgent { animation: none; } .mx-bar i { transition: none; } }
+
+/* Keep the current action in view and open the full checklist on demand. */
+.mx-instruction { margin: 4px 0 8px; color: var(--mx-soft); font-size: .88rem; line-height: 1.35; }
+.mx-instruction[hidden], .mx-walk button[hidden], #mx-details[hidden] { display: none; }
+.mx-notice { color: #9ff0d3; max-height: 4.3em; overflow: auto; }
+.mx-notice.is-warning { color: #ffe7a8; }
+.mx-job:has(#mx-details:not([hidden])) { max-height: min(50dvh, 360px); overflow: auto; }
+.mx-walk { display: flex; align-items: center; gap: 8px; right: auto; padding: 5px 8px; }
+.mx-walk summary { cursor: pointer; padding: 10px 8px; font-weight: 800; }
+.mx-walk #locations { position: absolute; left: 0; bottom: calc(100% + 8px); width: min(420px, calc(100vw - 16px)); max-height: 32dvh; overflow: auto; display: flex; flex-wrap: wrap; background: var(--mx-panel); border: 2px solid var(--mx-line); border-radius: 16px; padding: 8px; }
+.mx-walk #mx-next-place { padding: 5px 10px; font-size: .85rem; min-height: 44px; }
+.mx-walk details:not([open]) #locations { display: none; }
+.mx-prompt { max-width: calc(100% - 16px); width: max-content; bottom: 83px; }
+.mx-prompt button { text-align: left; line-height: 1.2; }
+.mx-prompt kbd { flex: none; }
+@media (max-width: 860px) {
+  .mx-job { top: auto; bottom: 124px; right: 8px; width: min(300px, calc(100vw - 16px)); }
+  .mx-job .mx-keys { display: block; }
+  .mx-prompt button { font-size: .92rem; padding: 7px 10px; }
+  .mx-prompt { bottom: 66px; max-width: calc(100% - 114px); }
+  body:has(.mx-walk details[open]) .mx-walk { z-index: 5; }
+}
