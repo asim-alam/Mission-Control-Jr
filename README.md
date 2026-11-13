@@ -5,7 +5,7 @@ power failure, clean three collectors, recover a rover battery, align the relay,
 choose your reserve allocation, then shelter with the four-person crew.
 The mission has three endings based on preparation and shelter decisions.
 
-![Mission Control Jr. Homepage](Mission Control Jr/screenshots/homePage.png)
+![Mission Control Jr. Homepage](<Mission Control Jr/screenshots/homePage.png>)
 
 ## Run from Windows Terminal / PowerShell
 
