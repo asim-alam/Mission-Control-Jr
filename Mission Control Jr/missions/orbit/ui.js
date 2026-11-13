@@ -1614,9 +1614,10 @@ function brief(ctx) {
   const legacy = readLegacyOrbit();
   const note = legacy && !legacy.complete ? '<p class="mx-last">We found a game from the old version of this mission. Your journey map is kept, but this new mission starts from the beginning.</p>' : '';
   ctx.briefing({
-    label: 'MARS DAY 11 · ASTERIA ORBITER',
+    label: 'DESTINATION: ASTERIA STATION · DISTANCE: 225M KM · MARS DAY 11',
     title: 'Arrival at Mars',
     body: `${note}
+    <p class="mission-destination-tag">📍 <b>Destination:</b> Mars Orbit (Asteria) · 🚀 <b>Distance:</b> 225,000,000 km from Earth (300 km orbit)</p>
     <div class="kid-mission-intro">
       <p><b>Commander Elena:</b> “Nice docking, Jin. Our radio to Meridian Base is quiet. Find the faulty part so we can get the landing beacon working again.”</p>
     </div>
@@ -1768,7 +1769,7 @@ function debrief(ctx) {
 }
 
 runMission({
-  id: ID, schema: ORBIT_SCHEMA, migrate: () => null, title: 'Arrival at Mars', place: 'MISSION CONTROL JR. · MARS DAY 11 · IN ORBIT',
+  id: ID, schema: ORBIT_SCHEMA, migrate: () => null, title: 'Arrival at Mars', place: 'MISSION CONTROL JR. · MARS ORBIT · 225M KM FROM EARTH',
   meters: [{id: 'power', icon: '⚡', label: 'Power used'}, {id: 'charge', icon: '🔋', label: 'Lander charge'}],
   create: () => createMission({scenario: tuneScenario(ID, arrivalScenario)}),
   rules: {applyAction, getObjective, getSteps},

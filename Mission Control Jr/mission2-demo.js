@@ -84,6 +84,7 @@ function showBriefing(){
   const batteryNote=['survived','evacuated'].includes(m.campaignOutcome)
     ? '<p>The rover battery is low after the storm. Watch your return forecast closely.</p>' : '';
   showDialog('Elena: bring the evidence home.',`
+    <p class="mission-destination-tag">📍 <b>Destination:</b> Jezero Crater · Kestrel Ridge · 🚀 <b>Distance:</b> 4.8 km Rover Drive (225M km from Earth)</p>
     <div class="briefing-transcript">
       <p><b>Elena Reyes:</b> “Jin, take Amara to Kestrel Ridge. Photograph the rock layers and bring everyone home safely.”</p>
       <p>Start with the rover inspection and driving test, then pick a route. If the ground looks strange, stop and check it.</p>
@@ -105,7 +106,7 @@ function showBriefing(){
     [
       {label:'Get the rover ready',run:()=>{run('acceptBrief');closeDialog();}},
       {label:'Pip’s lesson',run:()=>openPipLesson('rover',{finishLabel:'Back to briefing'})},
-    ],'MARS DAY 16 · TODAY’S PLAN');
+    ],'DESTINATION: KESTREL RIDGE · DISTANCE: 4.8 KM DRIVE · MARS DAY 16');
 }
 function referenceArchive(index=0){if(m.aboard||(distance(player.position,SERVICE.comms)>3&&distance(player.position,ROVER_PAD)>6)){toast('Walk to the base computer or the robot rover pad to see the models.');return;}showDialog('Mars model room',`<p>Drag to spin a model. Use the wheel to zoom.</p><div id="reference-tabs" class="reference-tabs"></div><div id="reference-stage" class="reference-stage"></div><div id="reference-credit"></div>`,[{label:'Back to the trip',run:closeDialog}],'MERIDIAN / INTERACTIVE 3D ARCHIVE');
   const choose=async index=>{disposeReference?.();disposeReference=null;const generation=++referenceGeneration,ref=REFERENCES[index];$('reference-credit').innerHTML=`<strong>${ref.name}</strong><p>${ref.caption}</p><p><a href="${ref.source}" target="_blank" rel="noopener">${ref.author} · source model</a> / <a href="${ref.licenseUrl}" target="_blank" rel="noopener">${ref.license}</a></p><p class="fine-print">Display derivative: textures recompressed, geometry statically batched; concept rover presentation floor removed. Original creator/source/license retained. Full details: ASSET-REFERENCES.md.</p>`;try{const cleanup=await showReference($('reference-stage'),index,()=>generation===referenceGeneration&&!$('dialog').hidden);if(generation===referenceGeneration)disposeReference=cleanup;else cleanup();}catch(e){if(generation===referenceGeneration)$('reference-stage').textContent=`This model did not load. Your game is fine.`;}};

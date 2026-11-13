@@ -21,7 +21,8 @@ function sources(ctx) {
 
 function brief(ctx) {
   const sc = ctx.mission.scenario;
-  ctx.briefing({label: 'MOON · SOUTH POLE · HORIZON BASE', title: 'Chasing the Sun', body: `
+  ctx.briefing({label: 'DESTINATION: SHACKLETON RIM · DISTANCE: 384,400 KM · MOON SOUTH POLE', title: 'Chasing the Sun', body: `
+    <p class="mission-destination-tag">📍 <b>Destination:</b> Moon South Pole (Shackleton) · 🚀 <b>Distance:</b> 384,400 km from Earth (450 m solar tow)</p>
     <div class="kid-mission-intro">
       <p><b>Elena:</b> “The Sun skims low along the lunar horizon here, so crater rims cast enormous shadows! Let’s deploy our solar mast above the shadows to catch eternal light!”</p>
     </div>
@@ -115,7 +116,7 @@ function debrief(ctx) {
 }
 
 runMission({
-  id: ID, title: 'Chasing the Sun', place: 'MISSION CONTROL JR. · MOON SOUTH POLE',
+  id: ID, title: 'Chasing the Sun', place: 'MISSION CONTROL JR. · MOON SOUTH POLE · 384,400 KM FROM EARTH',
   meters: [{id: 'suit', icon: '🧑‍🚀', label: 'Suit air'}, {id: 'battery', icon: '🔋', label: 'Base battery'}, {id: 'cable', icon: '🔌', label: 'Cable'}],
   create: () => createMission({scenario: tuneScenario(ID, lunarSunScenario), seed: 42 + readHistory(ID).length}),
   rules: {applyAction, getObjective, getInstruction, getSteps},

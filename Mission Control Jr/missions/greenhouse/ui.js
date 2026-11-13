@@ -21,7 +21,8 @@ function sources(ctx) {
 }
 function brief(ctx) {
   const rested = ctx.mission.crewRested ? '<p>After the Sun storm, the crew is rested and ready to farm.</p>' : '';
-  ctx.briefing({label: 'MARS DAYS 32–34 · THE GREENHOUSE', title: 'A birthday promise', body: `${rested}
+  ctx.briefing({label: 'DESTINATION: VERDANT BIO-DOME · DISTANCE: 225M KM · MARS DAYS 32–34', title: 'A birthday promise', body: `${rested}
+    <p class="mission-destination-tag">📍 <b>Destination:</b> Verdant Bio-Dome · 🚀 <b>Distance:</b> 225,000,000 km from Earth</p>
     <div class="kid-mission-intro">
       <p><b>Amara:</b> “It’s Elena’s birthday in three days. I promised her a fresh salad. Can you help me care for the crops and prepare a feast?”</p>
     </div>
@@ -105,7 +106,7 @@ function debrief(ctx) {
 
 runMission({
   id: ID, schema: GREENHOUSE_SAVE_SCHEMA, migrate: migrateGreenhouseState,
-  title: 'The Greenhouse Promise', place: 'MISSION CONTROL JR. · MARS DAYS 32–34', carryFrom: 'solar-shelter',
+  title: 'The Greenhouse Promise', place: 'MISSION CONTROL JR. · VERDANT BIO-DOME · 225M KM FROM EARTH', carryFrom: 'solar-shelter',
   meters: [{id: 'power', icon: '⚡', label: 'Light power today'}, {id: 'battery', icon: '🔋', label: 'Battery'}, {id: 'water', icon: '💧', label: 'Water tank'}],
   create: carry => createMission({scenario: tuneScenario(ID, greenhouseScenario), initialCarry: carry}),
   rules: {applyAction, getObjective, getInstruction, getSteps},

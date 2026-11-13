@@ -20,7 +20,8 @@ function sources(ctx) {
 }
 function brief(ctx) {
   const sc = ctx.mission.scenario, carry = ctx.mission.carryL;
-  ctx.briefing({label: `MARS DAY ${sc.sol} · ALARM!`, title: 'The water machine broke!', body: `
+  ctx.briefing({label: `DESTINATION: MERIDIAN COMMS HUB · DISTANCE: 225M KM · MARS DAY ${sc.sol}`, title: 'The water machine broke!', body: `
+    <p class="mission-destination-tag">📍 <b>Destination:</b> Meridian Comms Hub · 🚀 <b>Distance:</b> 225,000,000 km from Earth (14–20 light min)</p>
     <div class="kid-mission-intro">
       <p><b>Luca:</b> “Our water recycler stopped! We only have <b>${ctx.mission.waterL.toFixed(0)} L</b> left${carry ? `, including ${carry.toFixed(0)} L saved in the greenhouse` : ''}. We need clean water to survive!”</p>
     </div>
@@ -103,7 +104,7 @@ function debrief(ctx) {
 }
 
 runMission({
-  id: ID, title: 'Message to Earth', place: 'MISSION CONTROL JR. · MARS DAY 35', carryFrom: 'greenhouse',
+  id: ID, title: 'Message to Earth', place: 'MISSION CONTROL JR. · MERIDIAN COMMS HUB · 225M KM TO EARTH', carryFrom: 'greenhouse',
   meters: [{id: 'water', icon: '💧', label: 'Water left'}, {id: 'earth', icon: '📡', label: 'Earth’s answer'}, {id: 'spares', icon: '🔧', label: 'Spare parts'}],
   create: carry => createMission({scenario: tuneScenario(ID, delayScenario), initialCarry: carry, seed: 42 + readHistory(ID).length}),
   rules: {applyAction, getObjective, getInstruction, getSteps, advance: (m, dt) => advanceMission(m, dt)},

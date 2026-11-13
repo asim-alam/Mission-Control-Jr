@@ -20,7 +20,8 @@ function sources(ctx) {
 
 function brief(ctx) {
   const sc = ctx.mission.scenario;
-  ctx.briefing({label: 'MOON · SOUTH POLE · HORIZON BASE', title: 'Over the Hill', body: `
+  ctx.briefing({label: 'DESTINATION: SADDLE RIDGE · DISTANCE: 384,400 KM · MOON SOUTH POLE', title: 'Over the Hill', body: `
+    <p class="mission-destination-tag">📍 <b>Destination:</b> Saddle Ridge & Hollow · 🚀 <b>Distance:</b> 384,400 km from Earth (1.2 km rover trip)</p>
     <div class="kid-mission-intro">
       <p><b>Jin:</b> “Earth scientists requested a deep core soil sample from Shadow Hollow. But once you drive over the ridge and into the crater, the hills will completely block our radio signal!”</p>
     </div>
@@ -110,7 +111,7 @@ function debrief(ctx) {
 }
 
 runMission({
-  id: ID, title: 'Over the Hill', place: 'MISSION CONTROL JR. · MOON SOUTH POLE',
+  id: ID, title: 'Over the Hill', place: 'MISSION CONTROL JR. · MOON SOUTH POLE · 384,400 KM FROM EARTH',
   meters: [{id: 'battery', icon: '🔋', label: 'Rover battery'}, {id: 'suit', icon: '🧑‍🚀', label: 'Suit air'}, {id: 'radio', icon: '📶', label: 'Radio'}],
   create: () => createMission({scenario: tuneScenario(ID, lunarRelayScenario), seed: 42 + readHistory(ID).length}),
   rules: {applyAction, getObjective, getInstruction, getSteps},

@@ -52,7 +52,8 @@ function brief(ctx) {
     actions: [{label: '▶ Watch the 30-second explainer', primary: true, run: () => explainer(ctx)}, {label: 'Skip to the alert', run: () => alertCard(ctx)}, {label: 'Mission science', run: () => ctx.sourcesDialog(() => brief(ctx))}]});
 }
 function alertCard(ctx) {
-  ctx.briefing({label: 'SPACE WEATHER ALERT · TO ALL CREW', title: 'Particle warning', body: `
+  ctx.briefing({label: 'DESTINATION: MERIDIAN REFUGE · DISTANCE: 225M KM · MARS DAY 18', title: 'Particle warning', body: `
+    <p class="mission-destination-tag">📍 <b>Destination:</b> Meridian Storm Refuge · 🚀 <b>Distance:</b> 225,000,000 km from Earth</p>
     <div class="kid-mission-intro">
       <p><b>Elena:</b> “An eruption on the Sun may send energetic particles our way. ${ctx.mission.scenario.forecastText} We need a safer place for all five of us.”</p>
     </div>
@@ -217,7 +218,7 @@ function retry(ctx) {
 }
 
 runMission({
-  id: ID, schema: SHELTER_SCHEMA, title: 'A Place to Hide', place: 'MISSION CONTROL JR. · MARS DAY 18', carryFrom: 'storm',
+  id: ID, schema: SHELTER_SCHEMA, title: 'A Place to Hide', place: 'MISSION CONTROL JR. · MERIDIAN REFUGE · 225M KM FROM EARTH', carryFrom: 'storm',
   migrate: old => migrateSave(old, tuneScenario(ID, shelterScenario)),
   meters: [{id: 'time', icon: '⏱', label: 'Work time used'}, {id: 'shield', icon: '🛡️', label: 'Refuge estimate'}, {id: 'dose', icon: '📈', label: 'Team exposure'}],
   create: carry => createMission({scenario: tuneScenario(ID, shelterScenario), initialCarry: carry}),

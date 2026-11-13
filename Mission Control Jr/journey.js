@@ -186,6 +186,10 @@ function render(){
         ${statusPill}
       </div>
       <h2>${chapter.title}</h2>
+      <div class="chapter-location-row" aria-label="Destination and distance">
+        <span class="chapter-dest-badge" title="Destination">📍 ${chapter.destination || 'Expedition Site'}</span>
+        <span class="chapter-dist-badge" title="Distance">🚀 ${chapter.distance || 'Deep Space'}</span>
+      </div>
       <p>${chapter.description}</p>
       <button type="button" class="chapter-play-btn ${isNext ? 'primary' : ''}">
         ${done ? '↻ Replay' : isNext ? '▶ Play Up Next!' : '▶ Practice'}
@@ -220,6 +224,10 @@ function render(){
         <span class="chapter-star" style="background:var(--kid-yellow); color:#2b1d00">👑 Apex</span>
       </div>
       <h2>Be the Base Boss</h2>
+      <div class="chapter-location-row" aria-label="Destination and distance">
+        <span class="chapter-dest-badge" title="Destination">📍 Meridian Regional Network</span>
+        <span class="chapter-dist-badge" title="Distance">🚀 15 km Circuit · 225M km</span>
+      </div>
       <p>Drive the rover, work outside in your spacesuit, and help the bases keep their water, food, and radio links running.</p>
       <button type="button" class="boss-btn primary">Start expedition ▶</button>
     `;

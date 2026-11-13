@@ -453,6 +453,7 @@ function startMission() {
   if(sampleMode){showDialog('Practice: the big choice',`<p>The panels and battery are already fixed here. Walk to the computer. Choose: extra air or the experiment? Then bring the crew inside.</p><p>WASD or arrows to walk. Drag to look. E to use things. Practice does not change your journey.</p>`,[{label:'Start practice',run:closeDialog}],'PRACTICE');return;}
   audio.say('intro');
   showDialog('A dust storm is coming!',`
+    <p class="mission-destination-tag">📍 <b>Destination:</b> Meridian Base Outpost · 🚀 <b>Distance:</b> 225,000,000 km from Earth</p>
     <div class="kid-mission-intro">
       <p>👨‍🚀 <b>Elena:</b> “Welcome to Meridian Base, Jin! A massive Mars dust storm is blowing in, and it's about to blot out the Sun. We need your engineering skills to secure the base before the dust hits!”</p>
     </div>
@@ -471,7 +472,7 @@ function startMission() {
     <p>🌟 <i>Mission Control will guide you and alert you as you finish each job!</i></p>`,[
     {label:'Start mission',run:closeDialog},
     {label:'Pip’s lesson',run:()=>openPipLesson('storm',{finishLabel:'Back to briefing'})},
-  ], 'MARS DAY 12');
+  ], 'DESTINATION: MERIDIAN OUTPOST · DISTANCE: 225M KM · MARS DAY 12');
 }
 function showEnding() {
   if(endingShown)return;endingShown=true;job=null;toolObject.visible=false;player.release();audio.say(mission.outcome,true);

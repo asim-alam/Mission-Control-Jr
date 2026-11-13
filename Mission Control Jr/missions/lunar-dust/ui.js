@@ -20,7 +20,8 @@ function sources(ctx) {
 
 function brief(ctx) {
   const sc = ctx.mission.scenario;
-  ctx.briefing({label: 'MOON · HORIZON BASE AIRLOCK', title: 'Dust Busters', body: `
+  ctx.briefing({label: 'DESTINATION: HORIZON AIRLOCK · DISTANCE: 384,400 KM · MOON BASE', title: 'Dust Busters', body: `
+    <p class="mission-destination-tag">📍 <b>Destination:</b> Horizon Base Airlock · 🚀 <b>Distance:</b> 384,400 km from Earth (15 m chamber)</p>
     <div class="kid-mission-intro">
       <p><b>Luca:</b> “Leave your dusty moon gear in the airlock! Moon regolith is like tiny jagged glass shards — it clings to everything, can scratch visors, and makes the crew cough.”</p>
     </div>
@@ -89,7 +90,7 @@ function debrief(ctx) {
 }
 
 runMission({
-  id: ID, title: 'Dust Busters', place: 'MISSION CONTROL JR. · MOON BASE AIRLOCK',
+  id: ID, title: 'Dust Busters', place: 'MISSION CONTROL JR. · MOON BASE AIRLOCK · 384,400 KM FROM EARTH',
   meters: [{id: 'power', icon: '⚡', label: 'Power'}, {id: 'air', icon: '🌫️', label: 'Dust in the air'}, {id: 'filter', icon: '🌬️', label: 'Filter'}],
   create: () => createMission({scenario: tuneScenario(ID, lunarDustScenario), seed: 42 + readHistory(ID).length}),
   rules: {applyAction, getObjective, getInstruction, getSteps},
