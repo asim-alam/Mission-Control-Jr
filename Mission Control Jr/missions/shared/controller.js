@@ -227,6 +227,41 @@ function showStepAlertShared(title, text, nextTip, icon = '🎉', onOpenLesson =
         }
         spec.hud(ctx);
       }
+      // Dynamic distance of destination for every small task
+      const guideInfo = world.guideInfo?.();
+      const currentInst = ctx.busy ? null : spec.rules.getInstruction?.(ctx.mission);
+      const targetStationId = currentInst?.place;
+      const targetObj = targetStationId && ctx.view?.walkTargets ? ctx.view.walkTargets.find(w => w.id === targetStationId) : null;
+      let destName = targetObj ? targetObj.label.replace(/^[^\p{L}]+/u, '') : null;
+      let destDist = null;
+      if (guideInfo && guideInfo.distance != null) {
+        destDist = guideInfo.distance;
+        if (!destName && guideInfo.target?.name) {
+          destName = guideInfo.target.name.replace(/[-_]/g, ' ');
+        }
+      } else if (targetObj) {
+        const tx = targetObj.x ?? targetObj.point?.x;
+        const tz = targetObj.z ?? targetObj.point?.z;
+        if (tx != null && tz != null) {
+          destDist = Math.hypot(world.player.position.x - tx, world.player.position.z - tz);
+        }
+      }
+      const placeDists = {};
+      if (ctx.view?.walkTargets) {
+        for (const wt of ctx.view.walkTargets) {
+          const wx = wt.x ?? wt.point?.x;
+          const wz = wt.z ?? wt.point?.z;
+          if (wx != null && wz != null) {
+            placeDists[wt.id] = Math.hypot(world.player.position.x - wx, world.player.position.z - wz);
+          }
+        }
+      }
+      hud.updateDistanceTracker?.({
+        destination: destName,
+        distance: destDist,
+        ready: destDist != null && destDist < 2.5,
+        places: placeDists,
+      });
       hud.edge(world.guideScreen()); persist(ctx.mission); ctx.setControls();
     });
     if (saved.migrated) hud.toast(ctx.mission.notice || 'Your saved game was updated to the new version.', 'quiet');

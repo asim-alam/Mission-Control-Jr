@@ -159,18 +159,30 @@ function renderNavigation() {
   const places = $('walk-places');
   const next = available.find(station => station.id === targetId && !mission.ended);
   const destination = station => {
-    const b = button(station.title, () => {
+    const d = distance(station);
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.innerHTML = `<span>${station.title}</span> <b class="place-dist-chip">${d.toFixed(1)} m</b>`;
+    b.onclick = () => {
       const closePlaces = places.open;
       places.open = false;
       navigateTo(station);
       (closePlaces ? places.querySelector('summary') : $('walk-next').firstElementChild)?.focus();
-    });
+    };
     b.setAttribute('aria-label', `Walk to ${station.title}`);
     b.classList.toggle('active', station === selected);
     return b;
   };
-  const shortcut = next && destination(next);
-  if (shortcut) { shortcut.dataset.station = next.id; shortcut.classList.add('is-next-target'); }
+  let shortcut = null;
+  if (next) {
+    const d = distance(next);
+    shortcut = document.createElement('button');
+    shortcut.type = 'button';
+    shortcut.dataset.station = next.id;
+    shortcut.className = 'is-next-target';
+    shortcut.textContent = d < 2.5 ? `At ${next.title} · In reach` : `Walk to ${next.title} · ${d.toFixed(1)} m`;
+    shortcut.onclick = () => navigateTo(next);
+  }
   $('walk-next').replaceChildren(...(shortcut ? [shortcut] : []));
   $('walk-next').hidden = !shortcut;
   $('navigation').replaceChildren(...available.filter(station => station !== next).map(destination));
@@ -408,6 +420,20 @@ function renderMission() {
   }
 
   const nextId = getNextTargetStationId(), nextTarget = stations.find(s => s.id === nextId);
+  const nextDist = nextTarget ? distance(nextTarget) : null;
+  const tracker = $('storm-distance-tracker');
+  if (tracker) {
+    if (nextTarget && nextDist != null && !mission.ended) {
+      tracker.hidden = false;
+      $('storm-dest-badge').textContent = `📍 ${nextTarget.title}`;
+      const isReady = nextDist < 2.5;
+      $('storm-dist-badge').textContent = isReady ? `🚀 ${nextDist.toFixed(1)} m · In reach! ✨` : `🚀 ${nextDist.toFixed(1)} m away`;
+      $('storm-dist-badge').classList.toggle('ready', isReady);
+    } else {
+      tracker.hidden = true;
+    }
+  }
+
   const instructions = {
     terminal: mission.diagnosed ? 'At Base computer, choose Air or science?' : 'Walk to Base computer. Press E or choose Check the computer.',
     rover: mission.bayOpen ? 'At Rover hatch, choose Take the battery.' : 'Walk to Rover hatch and choose Open the hatch.',
@@ -416,12 +442,33 @@ function renderMission() {
     'room-console': !mission.sealed ? 'At Door console, choose Close the door.'
       : mission.insideAge < 5 ? 'Stay inside. Send message home unlocks when it’s safe.' : 'At Door console, choose Send message home.',
   };
-  $('next-action').textContent = mission.ended ? '' : instructions[nextId] || `Walk to ${nextTarget?.title}. Choose Clean the panel and stay nearby.`;
+  const baseInstruction = instructions[nextId] || `Walk to ${nextTarget?.title}. Choose Clean the panel and stay nearby.`;
+  $('next-action').textContent = mission.ended ? '' : `${baseInstruction}${nextDist != null ? ` (${nextDist.toFixed(1)} m away)` : ''}`;
   if ($('walk-next').firstElementChild?.dataset.station !== nextId) renderNavigation();
   const completeCount=tasks.filter(([,done])=>done).length;$('mission-panel').style.setProperty('--mission-progress',`${completeCount/tasks.length*100}%`);
   const vital=(icon,label,value,essential=false)=>{const n=Math.round(value),state=n<20?'danger':n<40?'warning':'healthy';return `<span class="vital-chip ${essential?'vital-essential':''}" data-state="${state}" role="img" aria-label="${label} ${n} percent" title="${label} ${n}%"><span class="vital-icon" aria-hidden="true">${icon}</span><b>${n}%</b><i style="width:${n}%"></i></span>`;};
   $('vitals').innerHTML=vital('⚡','Power',mission.resources.power,true)+vital('O₂','Oxygen',mission.resources.oxygen)+vital('♡','Morale',mission.resources.morale)+'<span class="vital-chip" role="img" aria-label="Four crew members safe" title="Crew 4 of 4"><span class="vital-icon" aria-hidden="true">♙</span><b>4/4</b><i style="width:100%"></i></span>';
-  $('tasks').innerHTML=tasks.map(([name,done])=>`<div class="${done?'done':''}">${done?'✓':'○'} ${name}</div>`).join('');
+  
+  const taskTargetId = [
+    'terminal',
+    mission.cleaned[0] ? (mission.cleaned[1] ? 'solar2' : 'solar1') : 'solar0',
+    'rover',
+    'junction',
+    'terminal',
+    mission.inside ? 'room-console' : 'airlock'
+  ];
+  $('tasks').innerHTML=tasks.map(([name,done], i)=>{
+    const isCurrent = !done && i === firstOpen;
+    let distTag = '';
+    if (isCurrent) {
+      const st = stations.find(s => s.id === taskTargetId[i]);
+      const d = st ? distance(st) : null;
+      if (d != null) {
+        distTag = `<span class="task-distance-pill ${d < 2.5 ? 'ready' : ''}">📍 ${d < 2.5 ? 'In reach!' : d.toFixed(1) + ' m'}</span>`;
+      }
+    }
+    return `<div class="${done?'done':isCurrent?'current':''}">${done?'✓':'○'} <span>${name}</span> ${distTag}</div>`;
+  }).join('');
   $('inventory').textContent=mission.battery?'🎒 Backpack: 🧹 Dust Brush + 🔋 Rover Battery':mission.installed?'🎒 Backpack: 🧹 Dust Brush (Battery in box ✓)':'🎒 Backpack: 🧹 Dust Brush';
 }
 function enterShelter() {
@@ -677,6 +724,6 @@ renderer.setAnimationLoop(time=> {
   if(mission.storm&&!mission.inside&&!paused&&!mission.ended){alarmClock+=dt;if(alarmClock>12){audio.effect('alarm');alarmClock=0;}}
   if(avatar&&!mission.started)avatar.visible=false;
   audio.update(mission.started?player.position:camera.position,mission.started?player.yaw:camera.rotation.y,weather,mission.inside);
-  uiClock+=dt;if(uiClock>.25&&mission.started){renderMission();renderInteraction();if(selected)$('target-kind').textContent=`${selected.kind} / ${distance(selected).toFixed(1)} M`;uiClock=0;}
+  uiClock+=dt;if(uiClock>.1&&mission.started){renderMission();renderInteraction();if(selected)$('target-kind').textContent=`${selected.kind} / ${distance(selected).toFixed(1)} M`;uiClock=0;}
   renderer.render(scene,camera);
 });

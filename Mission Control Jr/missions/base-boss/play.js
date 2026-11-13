@@ -137,6 +137,22 @@ function updateObjective() {
     note += remaining > 0 ? ` Lights pause in ${remaining} min.` : ' The grow lights paused.';
   }
   if ($('objective-note').textContent !== note) $('objective-note').textContent = note;
+  const row = $('boss-distance-row');
+  if (row) {
+    if (target && sites[target] && !state.debriefed) {
+      row.hidden = false;
+      const px = eva ? eva.x : state.x, pz = eva ? eva.z : state.z;
+      const d = Math.hypot(px - sites[target].x, pz - sites[target].z);
+      $('boss-dest-name').textContent = `📍 ${sites[target].name}`;
+      const isReady = d < (eva ? 5 : 20);
+      $('boss-dist-value').textContent = isReady
+        ? (eva ? `🚀 ${Math.round(d)} m · In reach!` : '🚀 Arrived at site!')
+        : (d >= 100 ? `🚀 ${(d/100).toFixed(2)} km away` : `🚀 ${Math.round(d * 10)} m away`);
+      $('boss-dist-value').classList.toggle('ready', isReady);
+    } else {
+      row.hidden = true;
+    }
+  }
 }
 
 function jobTarget() {

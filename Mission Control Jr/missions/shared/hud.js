@@ -35,6 +35,10 @@ export function buildHud({title, place, meters}) {
       </div>
     </div>
     <div id="objective"><h2>Loading…</h2></div>
+    <div class="mx-task-distance-row" id="mx-task-distance-row" aria-live="polite" hidden>
+      <span class="mx-task-dest-badge" id="mx-task-dest-name">📍 Destination</span>
+      <span class="mx-task-dist-badge" id="mx-task-dist-value">🚀 — m</span>
+    </div>
     <p class="mx-instruction" id="mx-instruction" aria-live="polite" hidden></p>
     <div id="mx-details" hidden>
       <ol class="mx-steps" id="mx-steps"></ol>
@@ -105,7 +109,51 @@ export function buildHud({title, place, meters}) {
       const key = JSON.stringify(list); if (key === lastStepsKey) return; lastStepsKey = key;
       const current = list.findIndex(item => item.now);
       $('mx-job-count').textContent = current >= 0 ? `Step ${current + 1} of ${list.length}` : 'Mission objective';
-      $('mx-steps').innerHTML = list.map(s => `<li class="${s.done ? 'done' : s.now ? 'now' : ''}">${s.done ? '✅' : s.now ? '👉' : '⬜'} ${esc(s.text)}</li>`).join('');
+      $('mx-steps').innerHTML = list.map(s => `<li class="${s.done ? 'done' : s.now ? 'now' : ''}">${s.done ? '✅' : s.now ? '👉' : '⬜'} <span>${esc(s.text)}</span>${s.now ? ' <span class="step-live-distance-badge" id="step-live-dist"></span>' : ''}</li>`).join('');
+    },
+    updateDistanceTracker({destination, distance, ready = false, places = null} = {}) {
+      const row = $('mx-task-distance-row');
+      if (row) {
+        if (!destination && distance == null) {
+          row.hidden = true;
+        } else {
+          row.hidden = false;
+          const nameEl = $('mx-task-dest-name');
+          const distEl = $('mx-task-dist-value');
+          if (nameEl && destination) nameEl.textContent = `📍 ${destination}`;
+          if (distEl && distance != null) {
+            distEl.textContent = ready ? `🚀 ${distance.toFixed(1)} m · In reach! ✨` : `🚀 ${distance.toFixed(1)} m away`;
+            distEl.classList.toggle('ready', Boolean(ready));
+          }
+        }
+      }
+      const stepDist = $('step-live-dist');
+      if (stepDist) {
+        if (distance != null) {
+          stepDist.textContent = ready ? '📍 In reach!' : `📍 ${distance.toFixed(1)} m`;
+          stepDist.classList.toggle('ready', Boolean(ready));
+          stepDist.hidden = false;
+        } else {
+          stepDist.hidden = true;
+        }
+      }
+      if (nextPlace && !nextPlace.hidden && currentPlace && distance != null) {
+        const target = destinations.find(t => t.id === currentPlace);
+        if (target) {
+          const cleanName = target.label.replace(/^[^\p{L}]+/u, '');
+          nextPlace.textContent = ready ? `At ${cleanName} · In reach` : `Walk to ${cleanName} · ${distance.toFixed(1)} m`;
+        }
+      }
+      if (places && $('locations')) {
+        for (const button of $('locations').children) {
+          const pDist = places[button.dataset.place];
+          if (pDist != null) {
+            const destObj = destinations.find(t => t.id === button.dataset.place);
+            const baseLabel = destObj ? destObj.label : button.dataset.place;
+            button.innerHTML = `<span>${esc(baseLabel)}</span> <b class="place-dist-chip">${pDist.toFixed(1)} m</b>`;
+          }
+        }
+      }
     },
     notice(text, warning = false) {
       const notice = $('notice');

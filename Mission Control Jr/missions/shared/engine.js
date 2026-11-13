@@ -262,6 +262,11 @@ export async function createWorld({container, preset = 'interior', bounds, start
     const v = arrow.position.clone().project(camera);
     const behind = v.z > 1; return {x: (v.x + 1) / 2, y: (1 - v.y) / 2, behind, onScreen: !behind && Math.abs(v.x) < .92 && Math.abs(v.y) < .92};
   }
+  function guideInfo() {
+    if (!guideTarget) return null;
+    const dist = Math.hypot(arrow.position.x - player.position.x, arrow.position.z - player.position.z);
+    return {target: guideTarget, position: arrow.position, distance: dist, screen: guideScreen()};
+  }
 
   // ---- cables: a sagging tube between two moving points ----------------------------------
   function cable({from, to, color = 0xffb02e, radius = .025, sag = .35, segments = 24}) {
@@ -320,7 +325,7 @@ export async function createWorld({container, preset = 'interior', bounds, start
   }
 
   return {renderer, scene, camera, player, key, hemi, profile, onFrame, tween, hold, place, release, get held() { return held; }, hand,
-    register, interaction, guide, guideScreen, cable, particles, sign, place3d, loadModel, dispose};
+    register, interaction, guide, guideScreen, guideInfo, cable, particles, sign, place3d, loadModel, dispose};
 }
 
 /** Find a named node in a loaded model, or throw a clear error during development. */

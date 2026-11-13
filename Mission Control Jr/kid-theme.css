@@ -3464,6 +3464,101 @@ body:has(#space) #flight-lesson .lesson-ok-box { padding: 4px 7px; gap: 5px; }
   }
 }
 
+/* ==========================================================================
+   DYNAMIC DESTINATION & DISTANCE TRACKING FOR EVERY MISSION TASK
+   ========================================================================== */
+.mx-task-distance-row,
+.mission-distance-tracker,
+.base-boss-distance-row {
+  display: flex !important;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 6px 0 8px;
+}
+.mx-task-dest-badge,
+.task-dest-badge,
+.boss-dest-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(76, 201, 255, 0.16);
+  border: 1px solid rgba(76, 201, 255, 0.45);
+  color: var(--kid-sky);
+  font-family: var(--kid-display);
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+}
+.mx-task-dist-badge,
+.task-dist-badge,
+.boss-dist-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 210, 63, 0.16);
+  border: 1px solid rgba(255, 210, 63, 0.45);
+  color: var(--kid-yellow);
+  font-family: var(--kid-display);
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+  transition: all 0.15s ease;
+}
+.mx-task-dist-badge.ready,
+.task-dist-badge.ready,
+.boss-dist-badge.ready {
+  background: rgba(62, 230, 181, 0.25) !important;
+  border-color: rgba(62, 230, 181, 0.7) !important;
+  color: var(--kid-mint) !important;
+  animation: pulse-ready 1.5s infinite alternate ease-in-out;
+}
+@keyframes pulse-ready {
+  from { transform: scale(1); filter: brightness(1); }
+  to { transform: scale(1.04); filter: brightness(1.2); }
+}
+
+/* Inline live distance tags on task items */
+.step-live-distance-badge,
+.task-distance-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: rgba(255, 210, 63, 0.2);
+  border: 1px solid rgba(255, 210, 63, 0.5);
+  color: var(--kid-yellow);
+  font-family: var(--kid-display);
+  font-size: 11px;
+  font-weight: 800;
+  padding: 1px 7px;
+  border-radius: 999px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+.step-live-distance-badge.ready,
+.task-distance-pill.ready {
+  background: rgba(62, 230, 181, 0.28) !important;
+  border-color: rgba(62, 230, 181, 0.7) !important;
+  color: var(--kid-mint) !important;
+}
+
+/* Places list distance indicator chip */
+.place-dist-chip {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.14);
+  color: var(--kid-soft);
+  font-family: var(--kid-display);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 999px;
+  margin-left: auto;
+}
+
 
 
 

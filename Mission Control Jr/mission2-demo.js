@@ -240,7 +240,9 @@ function renderActions(){
   $('target-title').textContent=task.title;$('target-description').textContent=task.instruction;
   const driveTest=m.phase==='test'&&m.aboard,testReady=v.distance-m.brakeStart>=5&&v.steeringTravel-m.brakeTurn>=.6&&v.parking&&Math.abs(v.speed)<.05;$('drive-coach').hidden=!driveTest;$('drive-coach').textContent=driveTest?`1 Release P → 2 Drive ${Math.min(5,v.distance-m.brakeStart).toFixed(1)}/5 m · steer ${v.steeringTravel-m.brakeTurn>=.6?'✓':'left/right'} → 3 Space stop → 4 P park → 5 Done!`:'';
   const next=targetWaypoint(),bearing=((Math.atan2(next.x-v.x,-(next.z-v.z))*180/Math.PI)%360+360)%360;
-  $('task-distance').textContent=m.aboard&&['outbound','return'].includes(m.phase)?`Next marker ${Math.round(distance(v,next))} m · ${Math.round(bearing)}° bearing${near?' · action in range':''}`:task.target?`${Math.round(distance(actor,task.target))} m · ${near?'ready to interact':'follow the orange marker'}`:'Time to choose';
+  const distVal = m.aboard&&['outbound','return'].includes(m.phase)?Math.round(distance(v,next)):task.target?Math.round(distance(actor,task.target)):null;
+  const destName = m.aboard&&['outbound','return'].includes(m.phase)?(m.phase==='return'?'Meridian Outpost':'Kestrel Ridge Waypoint'):task.title;
+  $('task-distance').textContent=distVal!=null?`📍 ${destName} · 🚀 ${distVal} m${m.aboard?` (${Math.round(bearing)}°)`:''}${near?' · Ready! ✨':''}`:'Time to choose';
   $('inspect-exhibit').hidden=m.aboard||!exhibits||distance(player.position,ROVER_PAD)>6;
   const key=[task.action,task.label,near,m.aboard,nearVehicle(),v.parking,m.phase,m.sample,m.checks.brakes,m.dataTransferred,testReady,distance(player.position,SERVICE.comms)<3].join('|');if(key===actionKey)return;actionKey=key;
   const actions=[],panel=[],allChecks=['battery','wheels','camera','comms'].every(id=>m.checks[id]);
@@ -476,7 +478,12 @@ function renderHud(){
     marker.style.top=`${(-pos.y*.5+.5)*innerHeight}px`;
   }
   else marker.hidden=true;
-  $('tasks').innerHTML=[['Hear the plan',m.briefAccepted],['Get ready + driving test',Object.values(m.checks).every(Boolean)],['Pick a path',!!m.route],['Two radio stops',m.reports.every(Boolean)],['Look at the strange ground',!!m.detour],['Rock photos',m.scienceComplete],['Drive home safe',m.returned]].map(([text,done],i)=>`<div class="${done?'done':current.stage===i+1?'current':''}">${done?'✓':String(i+1).padStart(2,'0')} ${text}</div>`).join('');
+  const taskDistText = Math.round(distanceTo) + ' m';
+  $('tasks').innerHTML=[['Hear the plan',m.briefAccepted],['Get ready + driving test',Object.values(m.checks).every(Boolean)],['Pick a path',!!m.route],['Two radio stops',m.reports.every(Boolean)],['Look at the strange ground',!!m.detour],['Rock photos',m.scienceComplete],['Drive home safe',m.returned]].map(([text,done],i)=>{
+    const isCurrent = current.stage === i + 1;
+    const distPill = isCurrent ? ` <span class="task-distance-pill">📍 ${taskDistText}</span>` : '';
+    return `<div class="${done?'done':isCurrent?'current':''}">${done?'✓':String(i+1).padStart(2,'0')} <span>${text}</span>${distPill}</div>`;
+  }).join('');
   $('inventory').textContent=m.sample?'🎒 Backpack: 📸 Camera + 🪨 Rock Sample':m.checks.battery?'🎒 Backpack: 📸 Camera + 🔧 Tools':'🎒 Carrying: 🔋 Rover Battery';
   $('hud').classList.toggle('foot',!m.aboard);$('speed').textContent=(Math.abs(v.speed)*(1-v.slip)*3.6).toFixed(1);$('heading').textContent=`${String(Math.round(heading)).padStart(3,'0')}° · COMPASS`;
   $('surface').textContent=surface==='loose'?'⚠️ SOFT RED SAND · SLOW DOWN':`🟢 ${surface.toUpperCase()} GROUND`;
