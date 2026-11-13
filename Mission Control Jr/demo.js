@@ -153,6 +153,36 @@ function navigateTo(s) {
 function getNextTargetStationId() {
   return mission.inside ? 'room-console' : mission.storm ? 'airlock' : !mission.diagnosed ? 'terminal' : mission.cleaned.some(done => !done) ? `solar${mission.cleaned.findIndex(done => !done)}` : !mission.battery && !mission.installed ? 'rover' : !mission.installed || !mission.repaired ? 'junction' : !mission.allocation ? 'terminal' : 'airlock';
 }
+function relativeToStation(st) {
+  if (!st || !player?.position) return null;
+  const targetPt = st.point || st;
+  const dx = targetPt.x - player.position.x;
+  const dz = targetPt.z - player.position.z;
+  const total = Math.hypot(dx, dz);
+  const yaw = player.yaw || 0;
+  const forward = -dx * Math.sin(yaw) - dz * Math.cos(yaw);
+  const right = dx * Math.cos(yaw) - dz * Math.sin(yaw);
+
+  const fbDist = Math.abs(forward);
+  const lrDist = Math.abs(right);
+  const fbWord = forward >= 0 ? 'Forward' : 'Backward';
+  const fbArrow = forward >= 0 ? '⬆️' : '⬇️';
+  const lrWord = right >= 0 ? 'Right' : 'Left';
+  const lrArrow = right >= 0 ? '➡️' : '⬅️';
+
+  const ready = total < 2.5;
+  let summary = '';
+  if (ready) {
+    summary = '✨ In reach!';
+  } else {
+    const parts = [];
+    if (fbDist >= 0.5) parts.push(`${fbArrow} ${fbWord} ${fbDist.toFixed(1)} m`);
+    if (lrDist >= 0.5) parts.push(`${lrArrow} ${lrWord} ${lrDist.toFixed(1)} m`);
+    summary = parts.join(' · ') || `${total.toFixed(1)} m`;
+  }
+  return { total, forward, right, fbWord, fbDist, lrWord, lrDist, summary, ready };
+}
+
 function renderNavigation() {
   const available=stations.filter(s=>s.parent.visible);
   const targetId=getNextTargetStationId();
@@ -160,9 +190,10 @@ function renderNavigation() {
   const next = available.find(station => station.id === targetId && !mission.ended);
   const destination = station => {
     const d = distance(station);
+    const r = relativeToStation(station);
     const b = document.createElement('button');
     b.type = 'button';
-    b.innerHTML = `<span>${station.title}</span> <b class="place-dist-chip">${d.toFixed(1)} m</b>`;
+    b.innerHTML = `<span>${station.title}</span> <b class="place-dist-chip">${r ? r.summary : d.toFixed(1) + ' m'}</b>`;
     b.onclick = () => {
       const closePlaces = places.open;
       places.open = false;
@@ -176,11 +207,12 @@ function renderNavigation() {
   let shortcut = null;
   if (next) {
     const d = distance(next);
+    const r = relativeToStation(next);
     shortcut = document.createElement('button');
     shortcut.type = 'button';
     shortcut.dataset.station = next.id;
     shortcut.className = 'is-next-target';
-    shortcut.textContent = d < 2.5 ? `At ${next.title} · In reach` : `Walk to ${next.title} · ${d.toFixed(1)} m`;
+    shortcut.textContent = d < 2.5 ? `At ${next.title} · In reach` : `Walk to ${next.title} · ${r ? r.summary : d.toFixed(1) + ' m'}`;
     shortcut.onclick = () => navigateTo(next);
   }
   $('walk-next').replaceChildren(...(shortcut ? [shortcut] : []));
@@ -421,13 +453,16 @@ function renderMission() {
 
   const nextId = getNextTargetStationId(), nextTarget = stations.find(s => s.id === nextId);
   const nextDist = nextTarget ? distance(nextTarget) : null;
+  const nextRel = nextTarget ? relativeToStation(nextTarget) : null;
   const tracker = $('storm-distance-tracker');
   if (tracker) {
     if (nextTarget && nextDist != null && !mission.ended) {
       tracker.hidden = false;
       $('storm-dest-badge').textContent = `📍 ${nextTarget.title}`;
       const isReady = nextDist < 2.5;
-      $('storm-dist-badge').textContent = isReady ? `🚀 ${nextDist.toFixed(1)} m · In reach! ✨` : `🚀 ${nextDist.toFixed(1)} m away`;
+      $('storm-dist-badge').textContent = isReady
+        ? `🚀 In reach! ✨ (${nextDist.toFixed(1)} m)`
+        : `🚀 ${nextRel ? nextRel.summary : nextDist.toFixed(1) + ' m'} (${nextDist.toFixed(1)} m total)`;
       $('storm-dist-badge').classList.toggle('ready', isReady);
     } else {
       tracker.hidden = true;
@@ -463,8 +498,9 @@ function renderMission() {
     if (isCurrent) {
       const st = stations.find(s => s.id === taskTargetId[i]);
       const d = st ? distance(st) : null;
+      const r = st ? relativeToStation(st) : null;
       if (d != null) {
-        distTag = `<span class="task-distance-pill ${d < 2.5 ? 'ready' : ''}">📍 ${d < 2.5 ? 'In reach!' : d.toFixed(1) + ' m'}</span>`;
+        distTag = `<span class="task-distance-pill ${d < 2.5 ? 'ready' : ''}">📍 ${d < 2.5 ? 'In reach!' : (r ? r.summary : d.toFixed(1) + ' m')}</span>`;
       }
     }
     return `<div class="${done?'done':isCurrent?'current':''}">${done?'✓':'○'} <span>${name}</span> ${distTag}</div>`;

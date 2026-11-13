@@ -1,6 +1,7 @@
 // Page controller shared by the expansion missions: HUD, Pip, saving, pause, retry, prompts.
 // Each mission supplies its rules (pure functions), its 3D scene and its story/debrief screens.
 import {buildHud, dialog, closeDialog, dialogOpen, narration} from './hud.js';
+import {relativeNavigation} from './engine.js';
 import {mountPipLesson, openPipLesson, pipLessonOpen} from '../../professor-pip.js';
 import {pipLessonStep} from '../../professor-pip-lessons.js';
 import {showCameraView} from '../../player.js';
@@ -234,6 +235,7 @@ function showStepAlertShared(title, text, nextTip, icon = '🎉', onOpenLesson =
       const targetObj = targetStationId && ctx.view?.walkTargets ? ctx.view.walkTargets.find(w => w.id === targetStationId) : null;
       let destName = targetObj ? targetObj.label.replace(/^[^\p{L}]+/u, '') : null;
       let destDist = null;
+      let relNav = guideInfo?.relative;
       if (guideInfo && guideInfo.distance != null) {
         destDist = guideInfo.distance;
         if (!destName && guideInfo.target?.name) {
@@ -244,6 +246,7 @@ function showStepAlertShared(title, text, nextTip, icon = '🎉', onOpenLesson =
         const tz = targetObj.z ?? targetObj.point?.z;
         if (tx != null && tz != null) {
           destDist = Math.hypot(world.player.position.x - tx, world.player.position.z - tz);
+          relNav = relativeNavigation(world.player.position, world.player.yaw, {x: tx, z: tz});
         }
       }
       const placeDists = {};
@@ -259,6 +262,7 @@ function showStepAlertShared(title, text, nextTip, icon = '🎉', onOpenLesson =
       hud.updateDistanceTracker?.({
         destination: destName,
         distance: destDist,
+        relative: relNav,
         ready: destDist != null && destDist < 2.5,
         places: placeDists,
       });

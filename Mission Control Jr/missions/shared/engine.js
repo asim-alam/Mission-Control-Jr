@@ -265,7 +265,8 @@ export async function createWorld({container, preset = 'interior', bounds, start
   function guideInfo() {
     if (!guideTarget) return null;
     const dist = Math.hypot(arrow.position.x - player.position.x, arrow.position.z - player.position.z);
-    return {target: guideTarget, position: arrow.position, distance: dist, screen: guideScreen()};
+    const rel = relativeNavigation(player.position, player.yaw, arrow.position);
+    return {target: guideTarget, position: arrow.position, distance: dist, relative: rel, screen: guideScreen()};
   }
 
   // ---- cables: a sagging tube between two moving points ----------------------------------
@@ -336,4 +337,47 @@ export function tint(object, color, emissive = null, intensity = 1) {
 }
 export function setOpacity(object, opacity) {
   object.traverse(o => { if (!o.isMesh) return; o.material.transparent = opacity < 1; o.material.opacity = opacity; o.material.depthWrite = opacity >= .99; });
+}
+
+/** Compute left/right and backward/forward relative navigation vector from player to target */
+export function relativeNavigation(playerPos, playerYaw, targetPos) {
+  if (!playerPos || !targetPos) return null;
+  const dx = targetPos.x - playerPos.x;
+  const dz = targetPos.z - playerPos.z;
+  const total = Math.hypot(dx, dz);
+  const yaw = playerYaw || 0;
+  const forward = -dx * Math.sin(yaw) - dz * Math.cos(yaw);
+  const right = dx * Math.cos(yaw) - dz * Math.sin(yaw);
+
+  const fbDist = Math.abs(forward);
+  const lrDist = Math.abs(right);
+  const fbWord = forward >= 0 ? 'Forward' : 'Backward';
+  const fbArrow = forward >= 0 ? '⬆️' : '⬇️';
+  const lrWord = right >= 0 ? 'Right' : 'Left';
+  const lrArrow = right >= 0 ? '➡️' : '⬅️';
+
+  const ready = total <= 2.2;
+  let summary = '';
+  if (ready) {
+    summary = '✨ In reach!';
+  } else {
+    const parts = [];
+    if (fbDist >= 0.5) parts.push(`${fbArrow} ${fbWord} ${fbDist.toFixed(1)} m`);
+    if (lrDist >= 0.5) parts.push(`${lrArrow} ${lrWord} ${lrDist.toFixed(1)} m`);
+    summary = parts.join(' · ') || `${total.toFixed(1)} m`;
+  }
+
+  return {
+    total,
+    forward,
+    right,
+    fbWord,
+    fbArrow,
+    fbDist,
+    lrWord,
+    lrArrow,
+    lrDist,
+    summary,
+    ready
+  };
 }

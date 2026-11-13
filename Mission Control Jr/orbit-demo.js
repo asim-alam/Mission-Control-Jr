@@ -546,7 +546,24 @@ if(dockedExteriorView){$('progress').replaceChildren();for(const [i,text]of ['01
   if(m.phase==='docking'){const d=m.dock;if(dockReady(d)){$('task-instruction').innerHTML='<b>🎉 All lined up and slow!</b> Press <b>E</b> or click <b>Dock</b> below to lock onto Asteria.';}else{const items=[];if(d.x>.35)items.push(`⬅️ <b>Hold A</b> to move <b>${d.x.toFixed(1)} m Left</b> (~${Math.max(1,Math.round(d.x/0.75))} sec)`);else if(d.x<-.35)items.push(`➡️ <b>Hold D</b> to move <b>${Math.abs(d.x).toFixed(1)} m Right</b> (~${Math.max(1,Math.round(Math.abs(d.x)/0.75))} sec)`);else items.push('✅ <b>Left/Right:</b> Centered');if(d.y>.35)items.push(`⬇️ <b>Hold F</b> to move <b>${d.y.toFixed(1)} m Down</b> (~${Math.max(1,Math.round(d.y/0.6))} sec)`);else if(d.y<-.35)items.push(`⬆️ <b>Hold R</b> to move <b>${Math.abs(d.y).toFixed(1)} m Up</b> (~${Math.max(1,Math.round(Math.abs(d.y)/0.6))} sec)`);else items.push('✅ <b>Up/Down:</b> Level');if(Math.abs(d.speed)>.205)items.push(`🛑 <b>Press Space</b> to brake below 0.2 m/s (currently <b>${d.speed.toFixed(2)} m/s</b>)`);else if(d.distance>2)items.push(`🚀 <b>Tap W</b> to fly closer (currently <b>${d.distance.toFixed(1)} m</b>, need under 2 m)`);$('task-instruction').innerHTML=items.map(s=>`<div>• ${s}</div>`).join('');}}else{$('task-instruction').textContent=task.instruction;}
   $('task-instruction').hidden=false;$('action').textContent=task.label||'';$('action').hidden=!task.action;$('guide').hidden=m.phase!=='station';$('assist').hidden=m.phase!=='docking'||dockReady(m.dock);$('assist').textContent=autodock?'Docking help is on':'Help me dock';$('skip').hidden=m.phase!=='descent';
   if($('lesson-btn')) $('lesson-btn').hidden = m.phase!=='docking'||lessonActive||autodock;
-  const distance=task.target?Math.hypot(player.position.x-task.target.x,player.position.z-task.target.z):0;$('distance').textContent=task.target?`📍 Next Stop: ${task.place||'Lander door'} · ${distance.toFixed(1)} m away ${distance<=2.5?'· [Press E to use]':'· [Click "Show me the way" to walk]'}`:m.phase==='docking'?(dockReady(m.dock)?'✅ All lined up and slow! Press E to dock.':autodock?'Docking help is steering and braking. Wait for the green crosshair.':Math.abs(m.dock.speed)>.205?'⚠️ Too fast! Tap Space to brake below 0.2 m/s.':(m.dock.distance>2?'Press W to approach Asteria station · Keep speed below 0.2 m/s':'Line up crosshair with station · Press E when ready')):m.phase==='overview'?'Look at Mars below · Click "Start flying" to fly toward Asteria station':m.phase==='craft'?'BUCKLED IN · FINAL LANDER CHECKS':'';$('action').disabled=m.phase==='station'?distance>2.5:m.phase==='docking'?!dockReady(m.dock):false;
+  const distance=task.target?Math.hypot(player.position.x-task.target.x,player.position.z-task.target.z):0;
+  let relNavText = '';
+  if (task.target && m.phase === 'station') {
+    const dx = task.target.x - player.position.x;
+    const dz = task.target.z - player.position.z;
+    const yaw = player.yaw || 0;
+    const fwd = -dx * Math.sin(yaw) - dz * Math.cos(yaw);
+    const rgt = dx * Math.cos(yaw) - dz * Math.sin(yaw);
+    const fbWord = fwd >= 0 ? 'Forward' : 'Backward';
+    const fbArrow = fwd >= 0 ? '⬆️' : '⬇️';
+    const lrWord = rgt >= 0 ? 'Right' : 'Left';
+    const lrArrow = rgt >= 0 ? '➡️' : '⬅️';
+    const parts = [];
+    if (Math.abs(fwd) >= 0.5) parts.push(`${fbArrow} ${fbWord} ${Math.abs(fwd).toFixed(1)} m`);
+    if (Math.abs(rgt) >= 0.5) parts.push(`${lrArrow} ${lrWord} ${Math.abs(rgt).toFixed(1)} m`);
+    relNavText = parts.join(' · ') || `${distance.toFixed(1)} m`;
+  }
+  $('distance').textContent=task.target?`📍 Next Stop: ${task.place||'Lander door'} · ${distance<=2.5 ? '✨ In reach!' : `${relNavText} (${distance.toFixed(1)} m)`} ${distance<=2.5?'· [Press E to use]':'· [Click "Show me the way" to walk]'}`:m.phase==='docking'?(dockReady(m.dock)?'✅ All lined up and slow! Press E to dock.':autodock?'Docking help is steering and braking. Wait for the green crosshair.':Math.abs(m.dock.speed)>.205?'⚠️ Too fast! Tap Space to brake below 0.2 m/s.':(m.dock.distance>2?'Press W to approach Asteria station · Keep speed below 0.2 m/s':'Line up crosshair with station · Press E when ready')):m.phase==='overview'?'Look at Mars below · Click "Start flying" to fly toward Asteria station':m.phase==='craft'?'BUCKLED IN · FINAL LANDER CHECKS':'';$('action').disabled=m.phase==='station'?distance>2.5:m.phase==='docking'?!dockReady(m.dock):false;
   $('location').textContent=m.phase==='station'?'ASTERIA SPACE STATION':m.phase==='docking'?'DOCKING':m.phase==='craft'?'LANDER · GETTING READY':'FLYING AROUND MARS';$('readout').textContent=m.phase==='docking'?`${m.dock.distance.toFixed(1)} m to port  /  ${m.dock.speed.toFixed(2)} m/s (MAX 0.20)`:m.phase==='station'?`RADIO ${m.checks.verify?'WORKING':m.checks.isolate&&!m.checks.verify?'POWER OFF':'BROKEN'}`:m.phase==='craft'?`CHECKS ${Number(m.checks.guidance)+Number(m.checks.propulsion)} / 2`:'ASTERIA / MARS';
   const is2mReady=m.phase==='docking'&&m.dock.distance<=2.05&&dockReady(m.dock);
   const isSlowAlert=m.phase==='docking'&&((m.dock.distance<=10.5&&Math.abs(m.dock.speed)>.205)||performance.now()<slowAlertUntil);

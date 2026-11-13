@@ -111,7 +111,7 @@ export function buildHud({title, place, meters}) {
       $('mx-job-count').textContent = current >= 0 ? `Step ${current + 1} of ${list.length}` : 'Mission objective';
       $('mx-steps').innerHTML = list.map(s => `<li class="${s.done ? 'done' : s.now ? 'now' : ''}">${s.done ? '✅' : s.now ? '👉' : '⬜'} <span>${esc(s.text)}</span>${s.now ? ' <span class="step-live-distance-badge" id="step-live-dist"></span>' : ''}</li>`).join('');
     },
-    updateDistanceTracker({destination, distance, ready = false, places = null} = {}) {
+    updateDistanceTracker({destination, distance, relative = null, ready = false, places = null} = {}) {
       const row = $('mx-task-distance-row');
       if (row) {
         if (!destination && distance == null) {
@@ -122,7 +122,14 @@ export function buildHud({title, place, meters}) {
           const distEl = $('mx-task-dist-value');
           if (nameEl && destination) nameEl.textContent = `📍 ${destination}`;
           if (distEl && distance != null) {
-            distEl.textContent = ready ? `🚀 ${distance.toFixed(1)} m · In reach! ✨` : `🚀 ${distance.toFixed(1)} m away`;
+            const relText = relative?.summary;
+            if (ready) {
+              distEl.textContent = `🚀 In reach! ✨ (${distance.toFixed(1)} m)`;
+            } else if (relText) {
+              distEl.textContent = `🚀 ${relText} · (${distance.toFixed(1)} m total)`;
+            } else {
+              distEl.textContent = `🚀 ${distance.toFixed(1)} m away`;
+            }
             distEl.classList.toggle('ready', Boolean(ready));
           }
         }
@@ -130,7 +137,8 @@ export function buildHud({title, place, meters}) {
       const stepDist = $('step-live-dist');
       if (stepDist) {
         if (distance != null) {
-          stepDist.textContent = ready ? '📍 In reach!' : `📍 ${distance.toFixed(1)} m`;
+          const relText = relative?.summary;
+          stepDist.textContent = ready ? '📍 In reach!' : (relText ? `📍 ${relText}` : `📍 ${distance.toFixed(1)} m`);
           stepDist.classList.toggle('ready', Boolean(ready));
           stepDist.hidden = false;
         } else {
@@ -141,7 +149,8 @@ export function buildHud({title, place, meters}) {
         const target = destinations.find(t => t.id === currentPlace);
         if (target) {
           const cleanName = target.label.replace(/^[^\p{L}]+/u, '');
-          nextPlace.textContent = ready ? `At ${cleanName} · In reach` : `Walk to ${cleanName} · ${distance.toFixed(1)} m`;
+          const relText = relative?.summary;
+          nextPlace.textContent = ready ? `At ${cleanName} · In reach` : `Walk to ${cleanName} · ${relText || distance.toFixed(1) + ' m'}`;
         }
       }
       if (places && $('locations')) {
