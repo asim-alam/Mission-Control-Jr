@@ -78,7 +78,7 @@ function run(type,value){
   if(result.ok&&beforeAboard&&!m.aboard){const side=m.vehicle.heading+Math.PI/2;const x=m.vehicle.x+Math.cos(side)*3,z=m.vehicle.z-Math.sin(side)*3;if(blocked(x,z)){m.aboard=true;m.driving=true;toast('Something is in the way. Park on clear, firm ground.');}else{player.position.copy(groundPoint(x,z,1.68));player.yaw=m.vehicle.heading-Math.PI/2;player.pitch=-.12;player.view=view;}}
   setInput();renderActions();if(m.ended)showEnding();return result;
 }
-function start(){audio.start();$('landing').hidden=true;$('hud').hidden=false;$('mission-panel').hidden=false;toggleTasks(false);$('controls').classList.remove('controls-faded');setTimeout(()=>{if(m.started)$('controls').classList.add('controls-faded');},30000);run('start');showBriefing();setInput();renderActions();}
+function start(){audio.start();completedRoverSteps.clear();$('landing').hidden=true;$('hud').hidden=false;$('mission-panel').hidden=false;toggleTasks(false);$('controls').classList.remove('controls-faded');setTimeout(()=>{if(m.started)$('controls').classList.add('controls-faded');},30000);run('start');showBriefing();setInput();renderActions();}
 function showBriefing(){
   const margin=m.returnReserve||20;
   const batteryNote=['survived','evacuated'].includes(m.campaignOutcome)
@@ -89,7 +89,19 @@ function showBriefing(){
       <p>Start with the rover inspection and driving test, then pick a route. If the ground looks strange, stop and check it.</p>
       <p>Take a wide shot of both rock layers and a close-up with the ruler for scale. The photos show the layers. On their own, they can’t tell you how the layers formed.</p>
     </div>
-    <p class="reserve-rule">Aim to get home with at least <b>${margin}% battery and ${margin}% air</b>. Picking up a rock is optional.</p>${batteryNote}`,
+    <div class="mission-brief-steps">
+      <p>📋 <b>Rover Mission Checklist:</b></p>
+      <ul>
+        <li>🔍 <b>1. Pre-Drive Check:</b> Inspect battery, 6 wheels, camera, and antenna.</li>
+        <li>🏎️ <b>2. Test Drive:</b> Release parking brake (P), drive 5m, steer, and brake (Space).</li>
+        <li>🗺️ <b>3. Plan Your Route:</b> Choose a safe path across Jezero Crater.</li>
+        <li>📸 <b>4. Science Photos:</b> Take wide and close-up photos at Kestrel Ridge.</li>
+        <li>🏠 <b>5. Drive Home & Plug In:</b> Return to base with reserve power and recharge!</li>
+      </ul>
+    </div>
+    <p>🎮 <b>Driving Controls:</b> <kbd>W</kbd> / <kbd>S</kbd> drive forward/reverse, <kbd>A</kbd> / <kbd>D</kbd> steer, <kbd>Space</kbd> brake, <kbd>P</kbd> parking brake, <kbd>E</kbd> board/exit, <kbd>Shift</kbd> eco mode.</p>
+    <p class="reserve-rule">Aim to get home with at least <b>${margin}% battery and ${margin}% air</b>. Picking up a rock is optional.</p>${batteryNote}
+    <p>🌟 <i>Mission Control will guide your steering and alert you as you finish each task!</i></p>`,
     [
       {label:'Get the rover ready',run:()=>{run('acceptBrief');closeDialog();}},
       {label:'Pip’s lesson',run:()=>openPipLesson('rover',{finishLabel:'Back to briefing'})},
@@ -200,6 +212,126 @@ mountPipLesson($('mission-panel').querySelector('.mission-guidance-tools'), 'rov
   onOpen: () => { clearInput(); setInput(); audio.pause(true); },
   onClose: () => { setInput(); audio.pause(journeyPaused || !$('dialog').hidden); },
 }));
+const MISSION_STEP_MESSAGES_ROVER = [
+  {
+    key: 'battery_collected',
+    title: 'Rover Battery Retrieved!',
+    icon: '🔋',
+    check: m => m.spareCollected,
+    msg: 'You collected the charged rover battery from the shelf.',
+    nextTip: 'Walk to the rover battery bay at the back and install it!'
+  },
+  {
+    key: 'battery_fitted',
+    title: 'Rover Battery Installed!',
+    icon: '⚡',
+    check: m => m.checks.battery,
+    msg: 'Battery fitted securely in the rover.',
+    nextTip: 'Check the marked front wheel for loose pins!'
+  },
+  {
+    key: 'wheel_pin',
+    title: 'Wheel Pin Secured!',
+    icon: '🛞',
+    check: m => m.checks.wheels,
+    msg: 'Wheel pin pushed in tight! Rover steering ready.',
+    nextTip: 'Walk to the camera mast and wipe off Mars dust!'
+  },
+  {
+    key: 'camera_cleaned',
+    title: 'Camera Lenses Cleaned!',
+    icon: '📸',
+    check: m => m.checks.camera,
+    msg: 'Camera mast wiped and clear for Jezero science.',
+    nextTip: 'Check suits, tools and radio at the base computer!'
+  },
+  {
+    key: 'comms_checked',
+    title: 'Expedition Gear Verified!',
+    icon: '📡',
+    check: m => m.checks.comms,
+    msg: 'Suits, tools and radio link all confirmed ready.',
+    nextTip: 'Climb into the rover to begin your test drive!'
+  },
+  {
+    key: 'test_drive_done',
+    title: 'Rover Test Drive Passed!',
+    icon: '🚙',
+    check: m => m.checks.brakes,
+    msg: 'Steering, drive, and parking brake all working smoothly.',
+    nextTip: 'Pick your path on the expedition map!'
+  },
+  {
+    key: 'route_chosen',
+    title: 'Expedition Path Selected!',
+    icon: '🗺️',
+    check: m => !!m.route,
+    msg: m => `You picked the ${m.route === 'wash' ? 'Valley Wash' : m.route === 'rim' ? 'Ridge Way' : 'Direct Route'}!`,
+    nextTip: 'Follow the orange waypoint toward Jezero Crater!'
+  },
+  {
+    key: 'science_done',
+    title: 'Rock Photos & Sample Acquired!',
+    icon: '📸',
+    check: m => m.scienceComplete,
+    msg: 'Field photography complete and layered rock sample safely packed.',
+    nextTip: 'Drive back to Meridian Base, watching your battery reserve!'
+  },
+  {
+    key: 'back_at_base',
+    title: 'Safely Back at Meridian Base!',
+    icon: '🏠',
+    check: m => m.phase === 'home',
+    msg: 'Crew and rover made it back safe with supplies to spare!',
+    nextTip: 'Park in the rover bay and plug in the base charger!'
+  }
+];
+
+let completedRoverSteps = new Set();
+let stepAlertElRover = null;
+let stepAlertTimerRover = null;
+
+function showStepCompletionAlertRover(step, m) {
+  if (!stepAlertElRover) {
+    stepAlertElRover = document.createElement('div');
+    stepAlertElRover.id = 'mission-step-alert';
+    stepAlertElRover.className = 'mission-step-alert-card';
+    stepAlertElRover.setAttribute('role', 'alert');
+    stepAlertElRover.setAttribute('aria-live', 'assertive');
+    stepAlertElRover.innerHTML = `
+      <span class="step-alert-icon" id="rover-alert-icon">🎉</span>
+      <div class="step-alert-body">
+        <strong id="rover-alert-title"></strong>
+        <p id="rover-alert-msg"></p>
+        <span class="step-alert-next" id="rover-alert-next"></span>
+      </div>
+      <button type="button" class="step-alert-dismiss" aria-label="Dismiss alert">✕</button>
+    `;
+    document.body.appendChild(stepAlertElRover);
+    stepAlertElRover.querySelector('.step-alert-dismiss').onclick = () => {
+      stepAlertElRover.hidden = true;
+    };
+  }
+
+  const msgText = typeof step.msg === 'function' ? step.msg(m) : step.msg;
+  stepAlertElRover.querySelector('#rover-alert-icon').textContent = step.icon;
+  stepAlertElRover.querySelector('#rover-alert-title').textContent = `${step.title} ✅`;
+  stepAlertElRover.querySelector('#rover-alert-msg').textContent = msgText;
+  stepAlertElRover.querySelector('#rover-alert-next').textContent = `👉 Next: ${step.nextTip}`;
+
+  stepAlertElRover.hidden = false;
+  clearTimeout(stepAlertTimerRover);
+  stepAlertTimerRover = setTimeout(() => {
+    if (stepAlertElRover) stepAlertElRover.hidden = true;
+  }, 7500);
+
+  try {
+    const textToSpeak = `${step.title}. ${msgText}. Next: ${step.nextTip}`;
+    const u = new SpeechSynthesisUtterance(textToSpeak);
+    speechSynthesis.speak(u);
+  } catch {}
+}
+
 function renderHud(){
   const v=m.vehicle,f=forecast(m),t=targetWaypoint(),surface=surfaceAt(v.x,v.z),heading=((90-v.heading*180/Math.PI)%360+360)%360;
   const task = task2(m);
@@ -213,6 +345,18 @@ function renderHud(){
   const vital=(icon,label,value,essential=false,max=100)=>{const n=Math.max(0,Math.min(100,Math.round(value/max*100))),state=n<20?'danger':n<40?'warning':'healthy';return `<span class="vital-chip ${essential?'vital-essential':''}" data-state="${state}" role="img" aria-label="${label} ${Math.round(value)}" title="${label}: ${Math.round(value)}"><span class="vital-icon" aria-hidden="true">${icon}</span><b>${Math.round(value)}</b><i style="width:${n}%"></i></span>`;};
   $('vitals').innerHTML=vital('⚡','Rover battery',m.battery,true)+vital('O₂','Suit air',m.oxygen)+vital('♙','Everyone here',2,true,2)+vital('⌂','Battery left at home',Math.max(0,f.battery),true)+vital('↩','Air left at home',Math.max(0,f.oxygen),true);
   const current=task2(m);$('stage-count').textContent=`${current.stage} / 8`;$('objective-progress').value=current.stage-1;
+
+  if (m.started && !m.ended && !sampleMode) {
+    for (const step of MISSION_STEP_MESSAGES_ROVER) {
+      if (!completedRoverSteps.has(step.key) && step.check(m)) {
+        completedRoverSteps.add(step.key);
+        showStepCompletionAlertRover(step, m);
+        toast(`🎉 ${step.title} · ${step.nextTip}`);
+        break;
+      }
+    }
+  }
+
   const marker=$('objective-marker'),target=m.aboard?t:current.target;
   if(target){
     const refPos=m.aboard?m.vehicle:player.position;
@@ -226,14 +370,18 @@ function renderHud(){
   }
   else marker.hidden=true;
   $('tasks').innerHTML=[['Hear the plan',m.briefAccepted],['Get ready + driving test',Object.values(m.checks).every(Boolean)],['Pick a path',!!m.route],['Two radio stops',m.reports.every(Boolean)],['Look at the strange ground',!!m.detour],['Rock photos',m.scienceComplete],['Drive home safe',m.returned]].map(([text,done],i)=>`<div class="${done?'done':current.stage===i+1?'current':''}">${done?'✓':String(i+1).padStart(2,'0')} ${text}</div>`).join('');
-  $('inventory').textContent=m.sample?'CAMERA · ROCK IN A BAG':m.checks.battery?'CAMERA · TOOLS':'SPARE BATTERY · READY TO PUT IN';
-  $('hud').classList.toggle('foot',!m.aboard);$('speed').textContent=(Math.abs(v.speed)*(1-v.slip)*3.6).toFixed(1);$('heading').textContent=`${String(Math.round(heading)).padStart(3,'0')}° · HEADING`;$('surface').textContent=surface==='loose'?'UNCERTAIN / SOFT MATERIAL':`${surface.toUpperCase()} GROUND`;$('traction').textContent=`SLOPE ${slopeAt(v.x,v.z).toFixed(1)}° · SLIP ${Math.round(v.slip*100)}%`;$('gear').textContent=v.parking?'PARKING BRAKE SET':v.speed<-.05?'REVERSE':'DRIVE · SPACE TO BRAKE';$('eco').classList.toggle('active',m.eco);$('eco').textContent=`Eco: ${m.eco?'On':'Off'} · Shift`;showCameraView($('view'), view);
-  if(!m.aboard)$('gear').textContent='ON FOOT · BOARD ROVER TO DRIVE';
-  $('parking-toggle').textContent=v.parking?'Brake off · P':'Park · P';$('parking-toggle').classList.toggle('brake-set',v.parking);$('parking-toggle').setAttribute('aria-pressed',String(v.parking));
+  $('inventory').textContent=m.sample?'🎒 Backpack: 📸 Camera + 🪨 Rock Sample':m.checks.battery?'🎒 Backpack: 📸 Camera + 🔧 Tools':'🎒 Carrying: 🔋 Rover Battery';
+  $('hud').classList.toggle('foot',!m.aboard);$('speed').textContent=(Math.abs(v.speed)*(1-v.slip)*3.6).toFixed(1);$('heading').textContent=`${String(Math.round(heading)).padStart(3,'0')}° · COMPASS`;
+  $('surface').textContent=surface==='loose'?'⚠️ SOFT RED SAND · SLOW DOWN':`🟢 ${surface.toUpperCase()} GROUND`;
+  $('traction').textContent=surface==='loose'?'⚠️ Wheels slipping! Tap reverse or steer to firm ground':'🟢 Grip 100% · Firm solid rock';
+  $('gear').textContent=v.parking?'🅿️ PARKED (PRESS P TO DRIVE)':v.speed<-.05?'⏪ REVERSING':'⏩ DRIVE · SPACE TO BRAKE';
+  $('eco').classList.toggle('active',m.eco);$('eco').textContent=`Eco Battery: ${m.eco?'On 🌱':'Off'} · Shift`;showCameraView($('view'), view);
+  if(!m.aboard)$('gear').textContent='🚶 ON FOOT · GET IN ROVER TO DRIVE (E)';
+  $('parking-toggle').textContent=v.parking?'🅿️ Brake Off · P':'🅿️ Park · P';$('parking-toggle').classList.toggle('brake-set',v.parking);$('parking-toggle').setAttribute('aria-pressed',String(v.parking));
   const bearing=((Math.atan2(t.x-v.x,-(t.z-v.z))*180/Math.PI)%360+360)%360;
   $('waypoint').textContent=m.route?`${m.phase==='return'?'HOMEWARD WASH':'NEXT WAYPOINT'} · ${Math.round(distance(v,t))} m · ${Math.round(bearing)}° bearing · local ${Math.round(v.x)}, ${Math.round(v.z)}`:'MERIDIAN SERVICE APRON';
   for(const b of beacons){const chosen=b.id===m.route;b.light.visible=!m.route||chosen;b.light.material.color.setHex(chosen?0xf5bb78:0x9dc8b7);b.light.material.emissive.setHex(chosen?0x9c6030:0x21463b);b.light.scale.setScalar(chosen&&b.index===m.waypoint?1.5:1);}
-  $('controls').innerHTML=m.aboard?'WASD / ARROWS <b>DRIVE</b> · SPACE <b>BRAKE</b> · P <b>PARK</b> · E <b>EXIT</b> · V <b>VIEW</b> · SHIFT <b>ECO</b> · M <b>MAP</b> · ESC <b>PAUSE</b><span>Brake to a stop, then release/reapply S to reverse. Both crew wear suits in this unpressurized rover.</span>':'WASD / ARROWS <b>WALK</b> · ⬅️/➡️ <b>TURN VIEW</b> · DRAG <b>LOOK</b> · E <b>USE</b> · V <b>VIEW</b> · ESC <b>PAUSE</b><span>Walk close to things to use them. Amara waits by the rover.</span>';
+  $('controls').innerHTML=m.aboard?'🚗 WASD <b>DRIVE</b> · SPACE <b>BRAKE</b> · P <b>PARK</b> · E <b>EXIT</b> · V <b>CAMERA</b> · SHIFT <b>ECO</b> · M <b>MAP</b><span>Brake to a stop, then press S to reverse. Keep at least 20% battery for home!</span>':'🚶 WASD <b>WALK</b> · ⬅️/➡️ <b>TURN VIEW</b> · DRAG <b>LOOK</b> · E <b>USE</b> · V <b>VIEW</b> · ESC <b>PAUSE</b><span>Walk close to marked places and press E. Amara is ready!</span>';
   drawMap($('minimap'));renderActions();
 }
 function toggleView(){if(photo){toast('Close the camera first.');return;}player.toggleView();orbitYaw=0;clearInput();}

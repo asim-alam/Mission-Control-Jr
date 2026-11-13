@@ -850,6 +850,34 @@ body.kid-home #journey-count, body.kid-home .wordmark { white-space: nowrap; }
 }
 .kid-mission-intro p + p { margin-top: 6px !important; }
 
+.mission-brief-steps {
+  background: rgba(30, 25, 75, 0.7);
+  border: 1.5px solid #4a3e9c;
+  border-radius: 16px;
+  padding: 10px 14px;
+  margin: 10px 0;
+}
+.mission-brief-steps p {
+  margin: 0 0 6px 0 !important;
+  color: var(--kid-yellow) !important;
+  font-family: var(--kid-display);
+  font-size: 15px !important;
+  font-weight: 700;
+}
+.mission-brief-steps ul {
+  list-style: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.mission-brief-steps li {
+  font-size: 14px !important;
+  color: #f1edff !important;
+  line-height: 1.35;
+}
+
 .kid-jobs-list {
   list-style: none !important;
   padding: 0 !important;

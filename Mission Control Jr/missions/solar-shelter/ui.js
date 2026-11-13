@@ -55,8 +55,19 @@ function alertCard(ctx) {
     <div class="kid-mission-intro">
       <p><b>Elena:</b> “An eruption on the Sun may send energetic particles our way. ${ctx.mission.scenario.forecastText} We need a safer place for all five of us.”</p>
     </div>
-    <p>Open the refuge tablet first. Use water bags, panels, and cargo to shield the seats where the crew will wait.</p>
-    <p><b>Keep the door, vent, and drinking water tap clear.</b></p>`,
+    <div class="mission-brief-steps">
+      <p>📋 <b>Shelter Construction Checklist:</b></p>
+      <ul>
+        <li>📱 <b>1. Refuge Tablet:</b> Check the map to see where radiation leaks in.</li>
+        <li>🤝 <b>2. Elena’s Help:</b> Choose her assignment (moving heavy water or clearing airflow).</li>
+        <li>💧 <b>3. Water Rack:</b> Bolt the rack frame to the wall and slide water containers in.</li>
+        <li>🧱 <b>4. Plastic Panels:</b> Slide dense polyethylene panels into rails and fasten tight.</li>
+        <li>🎒 <b>5. Supply Bags:</b> Stack cargo bags in designated zones and strap them down.</li>
+        <li>🚪 <b>6. Refuge Check:</b> Ensure door, air vent, and drinking tap are clear, then shelter!</li>
+      </ul>
+    </div>
+    <p>🎮 <b>Controls:</b> WASD or Arrow keys to walk, Drag to look, <b>E</b> to pick up, place, or fasten items.</p>
+    <p>🌟 <i>Stay calm, Cadet! Water and hydrogen block space particles. Mission Control will alert you at every step!</i></p>`,
     actions: [{label: '▶ Let’s get to work', primary: true, run: () => { ctx.act({id: 'begin'}, {quiet: true}); ctx.saveCheckpoint(); ctx.close(); }}, {label: '☀️ Replay the explainer', run: () => explainer(ctx)}]});
 }
 

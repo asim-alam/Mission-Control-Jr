@@ -21,10 +21,20 @@ function brief(ctx) {
   const sc = ctx.mission.scenario;
   ctx.briefing({label: 'MOON · SOUTH POLE · HORIZON BASE', title: 'Over the Hill', body: `
     <div class="kid-mission-intro">
-      <p><b>Jin:</b> “Earth wants a soil core from Shadow Hollow. The ridge will block our radio once you drive down.”</p>
+      <p><b>Jin:</b> “Earth scientists requested a deep core soil sample from Shadow Hollow. But once you drive over the ridge and into the crater, the hills will completely block our radio signal!”</p>
     </div>
-    <p>A relay antenna on the ridge can pass messages between the rover and base. Choose whether to set it up or take the faster route without radio coverage in the hollow.</p>
-    <p>Leave enough <b>battery and suit air</b> to get home with your sample.</p>
+    <div class="mission-brief-steps">
+      <p>📋 <b>Expedition Checklist:</b></p>
+      <ul>
+        <li>🗺️ <b>1. Trip Plan:</b> Choose whether to deploy a radio relay antenna on the ridge or drive directly into the hollow.</li>
+        <li>📡 <b>2. Deploy Relay:</b> Set up the tripod radio dish atop Saddle Ridge so you can talk to base from anywhere.</li>
+        <li>🚙 <b>3. Drive into Shadow Hollow:</b> Navigate down the crater slopes while watching your battery reserves.</li>
+        <li>🧪 <b>4. Drill Core Sample:</b> Take the drill off the rover, extract the lunar regolith sample, and stow it securely.</li>
+        <li>🏠 <b>5. Return Safely:</b> Drive back to Horizon Base with plenty of battery and suit oxygen to spare!</li>
+      </ul>
+    </div>
+    <p>🎮 <b>Controls:</b> WASD / Arrows to drive, Space to brake, <b>E</b> to get out, grab the drill, or deploy the relay antenna.</p>
+    <p>🌟 <i>Watch your battery and air meters closely! Mission Control will alert you at every step!</i></p>
     <aside class="mx-detail"><b>More details</b><br>The rover starts at ${sc.batteryStart}% battery and you have ${sc.suitMinutes} minutes of suit air. A message from the Moon reaches Earth in about ${sc.oneWaySeconds} seconds.</aside>`,
     actions: [{label: '▶ Let’s go!', primary: true, run: () => { ctx.act({id: 'begin'}, {quiet: true}); planBoard(ctx); }}, {label: 'Is this real?', run: () => ctx.sourcesDialog(() => brief(ctx))}]});
 }

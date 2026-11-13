@@ -22,10 +22,20 @@ function brief(ctx) {
   const sc = ctx.mission.scenario;
   ctx.briefing({label: 'MOON · SOUTH POLE · HORIZON BASE', title: 'Chasing the Sun', body: `
     <div class="kid-mission-intro">
-      <p><b>Elena:</b> “The Sun stays low here, so even a small hill can put our panels in shadow. Let’s get a solar mast above it.”</p>
+      <p><b>Elena:</b> “The Sun skims low along the lunar horizon here, so crater rims cast enormous shadows! Let’s deploy our solar mast above the shadows to catch eternal light!”</p>
     </div>
-    <p>Pick a pad for the cart. Set the supports before raising the mast, then plug the solar panels into Horizon Base.</p>
-    <p>You’ll see how your choice affects the power available to heat the base and run experiments.</p>
+    <div class="mission-brief-steps">
+      <p>📋 <b>Solar Mast Checklist:</b></p>
+      <ul>
+        <li>🛒 <b>1. Pad Position:</b> Pick where to set up the mobile cart (flat ground or high ridge).</li>
+        <li>🦾 <b>2. Stabilizer Legs:</b> Lower the 4 stabilizer support legs before raising the mast.</li>
+        <li>☀️ <b>3. Raise Mast & Wings:</b> Telescope the mast into the sunlight and open the solar wings!</li>
+        <li>🔌 <b>4. Plug In:</b> Run the power cable from the mast cart into Horizon Base.</li>
+        <li>🔬 <b>5. Sun Tracker & Power Plan:</b> Turn on Sun tracking and balance science experiments with base heat during shadows.</li>
+      </ul>
+    </div>
+    <p>🎮 <b>Controls:</b> WASD / Arrows to walk, Drag to look, <b>E</b> to tow the cart, set legs, crank the mast, and connect cables.</p>
+    <p>🌟 <i>Mission Control will alert you and cheer you on as each step is completed!</i></p>
     <aside class="mx-detail"><b>More details</b><br>The panel makes ${sc.panelKW} kW in sunlight. The base needs ${sc.essentialKW} kW to stay warm, and science uses ${sc.scienceKW} kW more. The battery holds ${sc.batteryKWh} kWh.</aside>`,
     actions: [{label: '▶ Let’s go!', primary: true, run: () => { ctx.act({id: 'begin'}, {quiet: true}); planBoard(ctx); }}, {label: 'Is this real?', run: () => ctx.sourcesDialog(() => brief(ctx))}]});
 }

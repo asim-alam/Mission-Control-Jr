@@ -254,12 +254,16 @@ function renderInteraction(force=false) {
     description=mission.installed||mission.battery?'You have the spare battery.':'The spare battery is in the back of the rover.';
     action(mission.bayOpen?'Take the battery':'Open the hatch',interact,mission.battery||mission.installed);
   } else if(s.id==='junction') {
-    description=!mission.installed?'Put the battery in. Then turn the plugs.':mission.repaired?'The power is working!':'Click each plug until they show 1, 2, 3. Then press connect.';
-    if(!mission.installed)action('Put the battery in',interact);
+    description=!mission.installed?'⚡ Put the spare battery in first. Then match the plugs!':mission.repaired?'🎉 Power is on and working!':'🧩 Match the numbers: turn plugs to 1, 2, and 3. Then press Connect!';
+    if(!mission.installed)action('🔋 Put the battery in',interact);
     else if(!mission.repaired) {
-      for(let i=0;i<3;i++)action(`Plug ${i+1} shows ${mission.connector[i]}`,()=>perform('rotate',i));
-      action('Connect',()=>perform('connect'));
-    }else action('Power is on',()=>{},true);
+      for(let i=0;i<3;i++){
+        const target=i+1, current=mission.connector[i], match=current===target;
+        action(match ? `Plug ${i+1}: [ ${current} ] ✓` : `Plug ${i+1}: [ ${current} ] ↻ (needs ${target})`,()=>perform('rotate',i));
+      }
+      const allMatch=mission.connector.every((v,i)=>v===i+1);
+      action(allMatch ? '⚡ Connect Power! 🚀' : 'Connect',()=>perform('connect'),!allMatch);
+    }else action('⚡ Power is on!',()=>{},true);
   } else if(s.id==='airlock'){description='Go inside the base. Jobs you skip will make the storm harder.';action('Go inside',interact);}
   else if(s.id==='room-console'){description=mission.sealed?'Everyone is here. Send a message home when the storm passes.':'Count the crew and close the door tight.';action(mission.sealed?'Send message home':'Close the door',interact,mission.sealed&&mission.insideAge<5);}
   else if(s.id==='water'){description='Our drinking water. It also blocks radiation near the beds.';action('Look at the water',interact);}
@@ -272,14 +276,128 @@ mountPipLesson($('mission-panel').querySelector('.mission-guidance-tools'), 'sto
   onOpen: () => { player.enabled = false; player.release(); audio.pause(true); },
   onClose: () => audio.pause(journeyPaused || !$('dialog').hidden),
 }));
+const MISSION_STEP_MESSAGES_STORM = [
+  {
+    num: 1,
+    title: 'Base Diagnostics Done!',
+    icon: '💻',
+    doneCheck: m => m.diagnosed,
+    msg: 'Good job! Computer shows 3 solar panels are dusty and losing power.',
+    nextTip: 'Walk to the solar panels and clean all 3 with your brush!'
+  },
+  {
+    num: 2,
+    title: 'All 3 Solar Panels Cleaned!',
+    icon: '🧹',
+    doneCheck: m => m.cleaned.every(Boolean),
+    msg: 'Panels are spotless and generating solar power again! Now we need the backup battery.',
+    nextTip: 'Walk to the Rover hatch to get the spare battery!'
+  },
+  {
+    num: 3,
+    title: 'Spare Battery Retrieved!',
+    icon: '🔋',
+    doneCheck: m => m.battery || m.installed,
+    msg: 'You have the heavy backup battery in your backpack!',
+    nextTip: 'Walk to the Power Box (Junction) to install and match plugs!'
+  },
+  {
+    num: 4,
+    title: 'Backup Power Connected!',
+    icon: '⚡',
+    doneCheck: m => m.repaired,
+    msg: 'Plugs matched 1, 2, 3! Backup power circuit is live!',
+    nextTip: 'Return to the Base Computer to decide: Extra Air or Science?'
+  },
+  {
+    num: 5,
+    title: 'Power Allocation Decided!',
+    icon: '🚀',
+    doneCheck: m => !!m.allocation,
+    msg: 'Your storm plan is set! The dust storm is almost here!',
+    nextTip: 'Go to the Base Door (Airlock) and head inside!'
+  },
+  {
+    num: 6,
+    title: 'Base Door Sealed!',
+    icon: '🚪',
+    doneCheck: m => m.sealed,
+    msg: 'Airlock locked tight! All four friends safe inside!',
+    nextTip: 'Use the door console to send a safe-and-sound report home!'
+  }
+];
+
+let completedStormSteps = new Set();
+let stepAlertElStorm = null;
+let stepAlertTimerStorm = null;
+
+function showStepCompletionAlertStorm(step) {
+  if (!stepAlertElStorm) {
+    stepAlertElStorm = document.createElement('div');
+    stepAlertElStorm.id = 'mission-step-alert';
+    stepAlertElStorm.className = 'mission-step-alert-card';
+    stepAlertElStorm.setAttribute('role', 'alert');
+    stepAlertElStorm.setAttribute('aria-live', 'assertive');
+    stepAlertElStorm.innerHTML = `
+      <span class="step-alert-icon" id="storm-alert-icon">🎉</span>
+      <div class="step-alert-body">
+        <strong id="storm-alert-title"></strong>
+        <p id="storm-alert-msg"></p>
+        <span class="step-alert-next" id="storm-alert-next"></span>
+      </div>
+      <button type="button" class="step-alert-dismiss" aria-label="Dismiss alert">✕</button>
+    `;
+    document.body.appendChild(stepAlertElStorm);
+    stepAlertElStorm.querySelector('.step-alert-dismiss').onclick = () => {
+      stepAlertElStorm.hidden = true;
+    };
+  }
+
+  stepAlertElStorm.querySelector('#storm-alert-icon').textContent = step.icon;
+  stepAlertElStorm.querySelector('#storm-alert-title').textContent = `JOB ${step.num} COMPLETE: ${step.title} ✅`;
+  stepAlertElStorm.querySelector('#storm-alert-msg').textContent = step.msg;
+  stepAlertElStorm.querySelector('#storm-alert-next').textContent = `👉 Next: ${step.nextTip}`;
+
+  stepAlertElStorm.hidden = false;
+  clearTimeout(stepAlertTimerStorm);
+  stepAlertTimerStorm = setTimeout(() => {
+    if (stepAlertElStorm) stepAlertElStorm.hidden = true;
+  }, 7500);
+
+  try {
+    const textToSpeak = `Job ${step.num} complete! ${step.title}. ${step.msg}. Next: ${step.nextTip}`;
+    const u = new SpeechSynthesisUtterance(textToSpeak);
+    speechSynthesis.speak(u);
+  } catch {}
+}
+
 function renderMission() {
   $('objective').textContent=objective(mission);
   const time=Math.max(0,Math.ceil((mission.prepSeconds??PREPARATION_SECONDS)-mission.elapsed));
   const sun=`Sunlight ${Math.round((mission.sunlight??1)*100)}%`;$('forecast').textContent=mission.inside?(mission.sealed?'Crew inside · door sealed':'Crew inside · door open'):mission.storm?`THE STORM IS HERE · Go inside! · ${sun}`:`Storm arrives in ${Math.floor(time/60)}:${String(time%60).padStart(2,'0')} · ${sun}`;
   $('minimal-forecast').textContent=$('forecast').textContent;
-  const tasks=[['Check computer',mission.diagnosed],['Clean panels '+mission.cleaned.filter(Boolean).length+'/3',mission.cleaned.every(Boolean)],['Get battery',mission.battery||mission.installed],['Fix power',mission.repaired],['Air or science?',!!mission.allocation],['Close the door',mission.sealed]];
+  const tasks=[
+    ['1. Check base computer',mission.diagnosed],
+    ['2. Clean 3 solar panels ('+mission.cleaned.filter(Boolean).length+'/3)',mission.cleaned.every(Boolean)],
+    ['3. Get battery from rover',mission.battery||mission.installed],
+    ['4. Fix power box & match plugs',mission.repaired],
+    ['5. Air or science choice',!!mission.allocation],
+    ['6. Close base door tight',mission.sealed]
+  ];
   const firstOpen = tasks.findIndex(([, done]) => !done);
   $('mission-step').textContent = mission.inside || mission.storm ? 'SHELTER' : `JOB ${firstOpen + 1} OF 6`;
+
+  if (mission.started && !mission.ended && !sampleMode) {
+    for (const step of MISSION_STEP_MESSAGES_STORM) {
+      if (!completedStormSteps.has(step.num) && step.doneCheck(mission)) {
+        completedStormSteps.add(step.num);
+        showStepCompletionAlertStorm(step);
+        toast(`🎉 Job ${step.num} done! · ${step.nextTip}`);
+        break;
+      }
+    }
+  }
+
   const nextId = getNextTargetStationId(), nextTarget = stations.find(s => s.id === nextId);
   const instructions = {
     terminal: mission.diagnosed ? 'At Base computer, choose Air or science?' : 'Walk to Base computer. Press E or choose Check the computer.',
@@ -295,7 +413,7 @@ function renderMission() {
   const vital=(icon,label,value,essential=false)=>{const n=Math.round(value),state=n<20?'danger':n<40?'warning':'healthy';return `<span class="vital-chip ${essential?'vital-essential':''}" data-state="${state}" role="img" aria-label="${label} ${n} percent" title="${label} ${n}%"><span class="vital-icon" aria-hidden="true">${icon}</span><b>${n}%</b><i style="width:${n}%"></i></span>`;};
   $('vitals').innerHTML=vital('⚡','Power',mission.resources.power,true)+vital('O₂','Oxygen',mission.resources.oxygen)+vital('♡','Morale',mission.resources.morale)+'<span class="vital-chip" role="img" aria-label="Four crew members safe" title="Crew 4 of 4"><span class="vital-icon" aria-hidden="true">♙</span><b>4/4</b><i style="width:100%"></i></span>';
   $('tasks').innerHTML=tasks.map(([name,done])=>`<div class="${done?'done':''}">${done?'✓':'○'} ${name}</div>`).join('');
-  $('inventory').textContent=mission.battery?'INVENTORY / RESERVE BATTERY + EVA BRUSH':mission.installed?'EQUIPPED / EVA BRUSH · BATTERY INSTALLED':'EQUIPPED / EVA CLEANING BRUSH';
+  $('inventory').textContent=mission.battery?'🎒 Backpack: 🧹 Dust Brush + 🔋 Rover Battery':mission.installed?'🎒 Backpack: 🧹 Dust Brush (Battery in box ✓)':'🎒 Backpack: 🧹 Dust Brush';
 }
 function enterShelter() {
   job=null;transition={elapsed:0};player.release();player.enabled=false;audio.effect('door');toast('The door is opening. Going inside…');
@@ -316,7 +434,7 @@ function updateVisuals() {
   habitatLamp.intensity=mission.repaired?12:1.5;
 }
 function startMission() {
-  if(!ready)return;closeDialog();audio.stop();audio.start();mission=createMission(chapterTuning('storm'));act(mission,'start');if(sampleMode){act(mission,'diagnose');for(let i=0;i<3;i++)act(mission,'clean',i);for(const id of ['openBay','battery','install'])act(mission,id);for(let i=0;i<3;i++)for(let turn=0;turn<=i;turn++)act(mission,'rotate',i);act(mission,'connect');}
+  if(!ready)return;closeDialog();audio.stop();audio.start();completedStormSteps.clear();mission=createMission(chapterTuning('storm'));act(mission,'start');if(sampleMode){act(mission,'diagnose');for(let i=0;i<3;i++)act(mission,'clean',i);for(const id of ['openBay','battery','install'])act(mission,id);for(let i=0;i<3;i++)for(let turn=0;turn<=i;turn++)act(mission,'rotate',i);act(mission,'connect');}
   journal.length=0;endingShown=false;job=null;transition=null;selected=null;lastInteractionKey='';alarmClock=0;brushClock=0;player.reset();player.bounds={minX:-18,maxX:18,minZ:-18,maxZ:18};player.obstacles=outsideObstacles;
   exterior.visible=true;interior.visible=false;$('landing').hidden=true;$('hud').hidden=false;
   toggleTasks(false);$('controls').classList.remove('controls-faded');setTimeout(()=>{if(mission.started)$('controls').classList.add('controls-faded');},30000);
@@ -327,9 +445,21 @@ function startMission() {
   audio.say('intro');
   showDialog('A dust storm is coming!',`
     <div class="kid-mission-intro">
-      <p>You’re <b>Jin</b>, Meridian’s engineer. Dust can block sunlight and cut the base’s solar power. Get the base ready and bring the crew inside before the storm hits.</p>
+      <p>👨‍🚀 <b>Elena:</b> “Welcome to Meridian Base, Jin! A massive Mars dust storm is blowing in, and it's about to blot out the Sun. We need your engineering skills to secure the base before the dust hits!”</p>
     </div>
-    <p><b>First job:</b> Follow the green beacon to the base computer and check what needs fixing. You can also use the <b>Base computer</b> walk button.</p>`,[
+    <div class="mission-brief-steps">
+      <p>📋 <b>Your Storm Checklist:</b></p>
+      <ul>
+        <li>💻 <b>1. Base Computer:</b> Run diagnostics to see what needs fixing.</li>
+        <li>🧹 <b>2. Solar Panels:</b> Brush red dust off all 3 solar arrays outside.</li>
+        <li>🔋 <b>3. Rover Battery:</b> Retrieve the spare battery from the rover hatch.</li>
+        <li>⚡ <b>4. Power Junction:</b> Install the battery and match the 3 plugs to restore power.</li>
+        <li>💨 <b>5. Life Support:</b> Choose between extra oxygen reserves or Amara’s experiment.</li>
+        <li>🚪 <b>6. Airlock Seal:</b> Get inside, count all 4 crew members, and lock the storm door!</li>
+      </ul>
+    </div>
+    <p>🎮 <b>Controls:</b> WASD or Arrow keys to walk, Drag to look around, <b>E</b> to interact (or tap the action buttons).</p>
+    <p>🌟 <i>Mission Control will guide you and alert you as you finish each job!</i></p>`,[
     {label:'Start mission',run:closeDialog},
     {label:'Pip’s lesson',run:()=>openPipLesson('storm',{finishLabel:'Back to briefing'})},
   ], 'MARS DAY 12');

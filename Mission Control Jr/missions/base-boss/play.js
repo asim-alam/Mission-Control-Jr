@@ -39,8 +39,9 @@ const map = regionalMap($('map'), $('map-sites'), id => setDestination(id));
 const station = $('station');
 const references = $('references');
 const logDialog = $('log-dialog');
+const welcomeDialog = $('welcome-dialog');
 const drill = mountDrill($('drill-dialog'), run => world?.showDrill(run, state));
-const modalOpen = () => pipLessonOpen() || references.open || logDialog.open || drill.open;
+const modalOpen = () => pipLessonOpen() || references?.open || logDialog?.open || drill?.open || welcomeDialog?.open;
 
 function persist() {
   try { save(state, localStorage); } catch { /* Continue with an in-memory expedition. */ }
@@ -199,11 +200,61 @@ function element(tag, text, className) {
   return el;
 }
 
+function showBaseBossAlert(title, text, nextTip, icon = '🎉') {
+  const existing = document.querySelector('.mission-step-alert-card');
+  if (existing) existing.remove();
+  const card = document.createElement('div');
+  card.className = 'mission-step-alert-card';
+  card.innerHTML = `
+    <div class="step-alert-icon">${icon}</div>
+    <div class="step-alert-body">
+      <strong>${title}</strong>
+      <p>${text}</p>
+      ${nextTip ? `<div class="step-alert-next">👉 Next: ${nextTip}</div>` : ''}
+    </div>
+    <button type="button" class="step-alert-dismiss" aria-label="Dismiss">✕</button>
+  `;
+  card.querySelector('.step-alert-dismiss').onclick = () => card.remove();
+  document.body.appendChild(card);
+  setTimeout(() => { if (card.parentNode) card.remove(); }, 8000);
+  try {
+    if ('speechSynthesis' in window && !window.speechSynthesis.speaking) {
+      const utter = new SpeechSynthesisUtterance(`${title}. ${text}. Next: ${nextTip}`);
+      utter.rate = 1.05;
+      utter.pitch = 1.1;
+      window.speechSynthesis.speak(utter);
+    }
+  } catch (e) {}
+}
+
 function performJob(id, site, from) {
   if (!canTalk(site)) return;
   const action = doQuest(state, id, site);
   if (!action) return;
   note(state.log);
+  const job = quests[id];
+  if (action === 'deliver') {
+    showBaseBossAlert(
+      `JOB DELIVERED: ${job?.title || 'Expedition Job'}! ✅`,
+      state.log,
+      allJobsDone() ? 'Drive back to Meridian Base and report to Elena Reyes!' : 'Check your map for the next outpost in need!',
+      '📦'
+    );
+  } else if (action === 'pickup') {
+    showBaseBossAlert(
+      `CARGO SECURED: ${job?.cargo || 'Equipment'}! 🎒`,
+      state.log,
+      `Deliver cargo to ${sites[job.to]?.name || 'the base'}!`,
+      '⚡'
+    );
+  } else if (action === 'accept') {
+    showBaseBossAlert(
+      `NEW JOB ACCEPTED: ${job?.title || 'Mission'}! 📋`,
+      state.log,
+      `Drive to ${sites[job.pickup]?.name || 'the base'} to collect cargo!`,
+      '🗺️'
+    );
+  }
   updateObjective();
   setDestination(jobTarget() ?? nextJobSite());
   world?.updateProgress(state);
@@ -554,4 +605,14 @@ import('./world.js').then(({buildWorld}) => buildWorld($('world'))).then(view =>
   atBeacon = canTalk(currentSite);
   renderStation();
   refreshReadout();
+  if (state.visited.length <= 1 && Object.keys(state.completed).length === 0 && !sessionStorage.getItem('base-boss-welcomed')) {
+    setTimeout(() => {
+      if (welcomeDialog) openModal(welcomeDialog);
+    }, 400);
+  }
+  $('welcome-start')?.addEventListener('click', () => {
+    sessionStorage.setItem('base-boss-welcomed', 'true');
+    welcomeDialog?.close();
+    $('station')?.querySelector('button')?.focus();
+  });
 });

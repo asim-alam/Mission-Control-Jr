@@ -79,8 +79,8 @@ export async function runMission(spec) {
       ]});
     },
     saveCheckpoint() { ctx.checkpoint = snapshot(ctx.mission); },
-    retry(after) { hud.notice(''); ctx.mission = restore(ctx.checkpoint); report.reset(); ctx.view.sync?.({animate: false}); after(); },
-    restart() { hud.notice(''); clearSaved(spec.id); ctx.mission = ctx.fresh(); report.reset(); ctx.view.sync?.({animate: false}); spec.brief(ctx); },
+    retry(after) { hud.notice(''); completedSharedSteps.clear(); ctx.mission = restore(ctx.checkpoint); report.reset(); ctx.view.sync?.({animate: false}); after(); },
+    restart() { hud.notice(''); completedSharedSteps.clear(); clearSaved(spec.id); ctx.mission = ctx.fresh(); report.reset(); ctx.view.sync?.({animate: false}); spec.brief(ctx); },
     sourcesDialog(back) { dialog({title: 'Where this comes from', body: spec.sources(ctx), actions: [{label: '← Back', run: back}]}); },
     pause() {
       if (dialogOpen() || pipLessonOpen() || ctx.mission.phase !== 'active' || ctx.busy) return;
@@ -123,6 +123,49 @@ export async function runMission(spec) {
       if (moving === false) hud.notice('The way is blocked. Walk around the equipment with WASD.', true);
       else if (!spec.rules.getInstruction) hud.toast('Walking… press E when you get there.', 'quiet');
     });
+let completedSharedSteps = new Set();
+let stepAlertElShared = null;
+let stepAlertTimerShared = null;
+
+function showStepAlertShared(title, text, nextTip, icon = '🎉') {
+  if (!stepAlertElShared) {
+    stepAlertElShared = document.createElement('div');
+    stepAlertElShared.id = 'mission-step-alert';
+    stepAlertElShared.className = 'mission-step-alert-card';
+    stepAlertElShared.setAttribute('role', 'alert');
+    stepAlertElShared.setAttribute('aria-live', 'assertive');
+    stepAlertElShared.innerHTML = `
+      <span class="step-alert-icon" id="shared-step-alert-icon">🎉</span>
+      <div class="step-alert-body">
+        <strong id="shared-step-alert-title"></strong>
+        <p id="shared-step-alert-msg"></p>
+        <span class="step-alert-next" id="shared-step-alert-next"></span>
+      </div>
+      <button type="button" class="step-alert-dismiss" aria-label="Dismiss alert">✕</button>
+    `;
+    document.body.appendChild(stepAlertElShared);
+    stepAlertElShared.querySelector('.step-alert-dismiss').onclick = () => {
+      stepAlertElShared.hidden = true;
+    };
+  }
+  stepAlertElShared.querySelector('#shared-step-alert-icon').textContent = icon;
+  stepAlertElShared.querySelector('#shared-step-alert-title').textContent = title;
+  stepAlertElShared.querySelector('#shared-step-alert-msg').textContent = text;
+  stepAlertElShared.querySelector('#shared-step-alert-next').textContent = nextTip ? `👉 Next: ${nextTip}` : '';
+  stepAlertElShared.hidden = false;
+  clearTimeout(stepAlertTimerShared);
+  stepAlertTimerShared = setTimeout(() => {
+    if (stepAlertElShared) stepAlertElShared.hidden = true;
+  }, 7500);
+
+  if (narration()) {
+    try {
+      const u = new SpeechSynthesisUtterance(`${title}. ${text}. ${nextTip ? 'Next: ' + nextTip : ''}`);
+      speechSynthesis.speak(u);
+    } catch {}
+  }
+}
+
     world.onFrame(dt => {
       if (ctx.playing()) spec.rules.advance?.(ctx.mission, dt, ctx);
       hudClock += dt;
@@ -130,7 +173,35 @@ export async function runMission(spec) {
         hudClock = 0; const m = ctx.mission;
         hud.objective(spec.rules.getObjective(m), {read: !spec.rules.getInstruction});
         if (spec.rules.getInstruction) hud.instruction(ctx.busy ? {text: 'Watch the scene. The next instruction will appear when it ends.'} : spec.rules.getInstruction?.(m));
-        hud.steps(spec.rules.getSteps(m));
+        const stepsList = spec.rules.getSteps(m);
+        hud.steps(stepsList);
+        if (ctx.playing() && spec.id !== 'orbit' && !sampleMode) {
+          for (let i = 0; i < stepsList.length; i++) {
+            if (stepsList[i].done && !completedSharedSteps.has(i)) {
+              completedSharedSteps.add(i);
+              const nextStep = stepsList.slice(i + 1).find(s => !s.done);
+              const nextTip = nextStep ? nextStep.text : 'Mission objective accomplished!';
+              const stepNum = i + 1;
+              const text = stepsList[i].text;
+              const icon = text.includes('harvest') || text.includes('plants') || text.includes('dinner') ? '🥗'
+                : text.includes('water') || text.includes('leak') ? '💧'
+                : text.includes('Earth') || text.includes('Message') || text.includes('relay') ? '📡'
+                : text.includes('dust') || text.includes('clean') || text.includes('Vacuum') || text.includes('Brush') ? '🧹'
+                : text.includes('Sun') || text.includes('solar') || text.includes('light') || text.includes('mast') ? '☀️'
+                : text.includes('power') || text.includes('battery') ? '⚡'
+                : text.includes('plan') ? '📋'
+                : '🎉';
+              showStepAlertShared(
+                `STEP ${stepNum} COMPLETE: ${text}! ✅`,
+                `Great work, Cadet! Step ${stepNum} accomplished.`,
+                nextTip,
+                icon
+              );
+              hud.toast(`🎉 Step ${stepNum} done! Next: ${nextTip}`, 'info');
+              break;
+            }
+          }
+        }
         if (m.notice) {
           if (spec.rules.getInstruction) hud.notice(m.notice, true);
           else hud.toast(m.notice, 'warn');

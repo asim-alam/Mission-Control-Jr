@@ -21,10 +21,20 @@ function brief(ctx) {
   const sc = ctx.mission.scenario;
   ctx.briefing({label: 'MOON · HORIZON BASE AIRLOCK', title: 'Dust Busters', body: `
     <div class="kid-mission-intro">
-      <p><b>Luca:</b> “Leave your dusty gear in the airlock. Moon dust can scratch a visor and make the crew cough.”</p>
+      <p><b>Luca:</b> “Leave your dusty moon gear in the airlock! Moon regolith is like tiny jagged glass shards — it clings to everything, can scratch visors, and makes the crew cough.”</p>
     </div>
-    <p>Pick a cleaning plan for your suit, helmet, and gear. You have <b>${sc.powerUnits} power units</b> and <b>${sc.spareFilters} spare filter${sc.spareFilters === 1 ? '' : 's'}</b>.</p>
-    <p>Clear the dust from the air and wait for the safe reading before opening the inner hatch.</p>
+    <div class="mission-brief-steps">
+      <p>📋 <b>Airlock Decontamination Checklist:</b></p>
+      <ul>
+        <li>📋 <b>1. Cleaning Plan:</b> Choose your starting strategy (hand brush, vacuum, or electric shield).</li>
+        <li>🪖 <b>2. Protect the Visor:</b> Use the gentle EDS electric plate or vacuum on the helmet so it doesn’t scratch!</li>
+        <li>🥾 <b>3. Clean Suit & Boots:</b> Brush heavy regolith off your spacesuit fabric, gloves, and boots.</li>
+        <li>🌀 <b>4. Air Scrubber & Filters:</b> Turn on the air vacuum to scrub dust from the room, and swap clogged filters when full.</li>
+        <li>🚪 <b>5. Safe Entry:</b> Wait until the air purity meter shows SAFE before opening the inner hatch to the base!</li>
+      </ul>
+    </div>
+    <p>🎮 <b>Controls:</b> WASD / Arrows to walk, Drag to look, <b>E</b> to swap cleaning tools and scrub contaminated gear.</p>
+    <p>🌟 <i>Take your time and clean thoroughly. Mission Control will alert you at every milestone!</i></p>
     <aside class="mx-detail"><b>More details</b><br>You have ${sc.powerUnits} power units and ${sc.spareFilters} spare filter${sc.spareFilters === 1 ? '' : 's'}. The vacuum uses ${sc.tools.vacuum.power} power each time, the EDS ${sc.tools.eds.power}, the air fan ${sc.scrub.power}.</aside>`,
     actions: [{label: '▶ Let’s bust some dust!', primary: true, run: () => { ctx.act({id: 'begin'}, {quiet: true}); planBoard(ctx); }}, {label: 'Is this real?', run: () => ctx.sourcesDialog(() => brief(ctx))}]});
 }

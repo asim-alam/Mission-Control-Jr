@@ -21,10 +21,20 @@ function brief(ctx) {
   const sc = ctx.mission.scenario, carry = ctx.mission.carryL;
   ctx.briefing({label: `MARS DAY ${sc.sol} · ALARM!`, title: 'The water machine broke!', body: `
     <div class="kid-mission-intro">
-      <p><b>Luca:</b> “Our water recycler stopped. We have <b>${ctx.mission.waterL.toFixed(0)} L</b> left${carry ? `, including ${carry.toFixed(0)} L saved in the greenhouse` : ''}. Switch on Save Water while we work out what broke.”</p>
+      <p><b>Luca:</b> “Our water recycler stopped! We only have <b>${ctx.mission.waterL.toFixed(0)} L</b> left${carry ? `, including ${carry.toFixed(0)} L saved in the greenhouse` : ''}. We need clean water to survive!”</p>
     </div>
-    <p>Decide whether to test it yourself, call Earth, or do both. Each radio message takes about <b>${(sc.oneWaySeconds / 60).toFixed(0)} minutes</b> to reach Earth. The reply takes just as long to come back.</p>
-    <p><b>Before you open the panel, switch off the breaker.</b></p>
+    <div class="mission-brief-steps">
+      <p>📋 <b>Water Recycler Repair Checklist:</b></p>
+      <ul>
+        <li>🚰 <b>1. Save Water Mode:</b> Switch on Save Water immediately on the console to conserve every drop.</li>
+        <li>⚡ <b>2. Safety First:</b> Switch OFF the power breaker before touching any electrical parts!</li>
+        <li>🔬 <b>3. Test Components:</b> Use the multimeter probe to test the pump, valve, and filters.</li>
+        <li>📡 <b>4. Radio Earth:</b> Send your findings to Mission Control on Earth and wait out the real light-speed delay.</li>
+        <li>🔧 <b>5. Swap Spares:</b> Replace the broken parts with good spares from the storage shelf and restart!</li>
+      </ul>
+    </div>
+    <p>🎮 <b>Controls:</b> WASD / Arrows to walk, Drag to look, <b>E</b> to test parts, swap spares, and flip switches.</p>
+    <p>⏱️ <i>Remember: Radio waves travel at light speed! A message to Earth takes about ${(sc.oneWaySeconds / 60).toFixed(0)} minutes each way.</i></p>
     <aside class="mx-detail"><b>More details</b><br>Time runs ${sc.timeScale}× faster here: one real second is ${sc.timeScale} mission seconds. The crew uses ${sc.waterUseLPerMin} L of water a minute, or ${sc.saveUseLPerMin} L in save mode.</aside>`,
     actions: [{label: '▶ Let’s fix it!', primary: true, run: () => { ctx.act({id: 'begin'}, {quiet: true}); planBoard(ctx); }}, {label: 'Is this real?', run: () => ctx.sourcesDialog(() => brief(ctx))}]});
 }
