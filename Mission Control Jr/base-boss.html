@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#26231e">
+  <title>Base Boss · The Meridian Network</title>
+  <link rel="stylesheet" href="./base-boss.css">
+</head>
+<body>
+  <main class="expedition">
+    <canvas id="world" aria-label="Third-person view of the Mars expedition" tabindex="-1"></canvas>
+    <header class="topbar">
+      <a href="./" class="home-link" aria-label="Back to Mission Control Jr."><span aria-hidden="true">←</span> Mission Control Jr.</a>
+      <div class="top-status">
+        <span>MISSION TIME <strong id="mission-time">0m</strong></span>
+      </div>
+      <div class="top-tools">
+        <button id="start-drill" class="utility" type="button">Training drill</button>
+        <button id="field-log" class="utility" type="button">Field log</button>
+        <button id="sources" class="utility" type="button">NASA sources</button>
+      </div>
+    </header>
+
+    <section class="operations" aria-labelledby="regional-title">
+      <div class="expedition-title">
+        <p>BASE BOSS</p>
+        <h1 id="regional-title">The Meridian<br>Network</h1>
+      </div>
+      <div id="objective" class="panel objective">
+        <span class="panel-label" id="objective-label">OPEN EXPEDITION</span>
+        <strong id="objective-title">Take command at Meridian</strong>
+        <p id="objective-note">Park at a base, then step outside to meet the crew.</p>
+      </div>
+      <section id="station" class="panel station" aria-label="Nearby base"></section>
+    </section>
+
+    <aside class="panel atlas" aria-label="Rover navigation">
+      <div class="map-header">
+        <div><span class="panel-label">MARS SURFACE</span><h2>Meridian Basin</h2></div>
+        <button id="toggle-map" class="utility map-toggle" type="button" aria-expanded="true" aria-controls="map-content">Hide map</button>
+      </div>
+      <div id="map-content">
+        <div class="map">
+          <canvas id="map" width="608" height="480" aria-hidden="true"></canvas>
+          <div id="map-sites"></div>
+          <span class="north" aria-hidden="true">N ↑</span>
+        </div>
+        <div class="route-controls">
+          <div id="route-summary" aria-live="polite">Choose a base on the map.</div>
+          <div class="route-options" aria-label="Route priority">
+            <button id="fast-route" type="button" aria-pressed="true">Fastest</button>
+            <button id="eco-route" type="button" aria-pressed="false">Smoothest</button>
+          </div>
+          <button id="autopilot" type="button" class="primary" disabled>Drive there for me</button>
+        </div>
+      </div>
+    </aside>
+
+    <footer class="drive-panel">
+      <div class="panel drive-status">
+        <div><span class="panel-label" id="rover-mode">PARKED</span><strong id="rover-speed">0 km/h</strong></div>
+        <div class="key-hint"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or arrows <span>·</span> <kbd id="drive-key">Space</kbd> <span id="drive-key-label">brake</span></div>
+        <div class="drive-tools">
+          <button id="eva" class="utility primary" type="button" aria-keyshortcuts="E" disabled>Step outside</button>
+          <button id="survey" class="utility" type="button" aria-pressed="false" disabled>Survey base</button>
+        </div>
+      </div>
+      <div class="touch-drive" aria-label="Touch movement controls">
+        <button type="button" data-drive="left" aria-label="Turn left">←</button>
+        <button type="button" data-drive="forward" aria-label="Move forward">↑</button>
+        <button type="button" data-drive="back" aria-label="Move backward">↓</button>
+        <button type="button" data-drive="right" aria-label="Turn right">→</button>
+      </div>
+    </footer>
+    <div id="toast" class="panel toast" role="status"></div>
+    <p id="loading" class="panel loading" role="status">Preparing the Mars terrain…</p>
+  </main>
+
+  <dialog id="drill-dialog" class="panel drill" aria-labelledby="drill-title">
+    <form method="dialog"><button type="submit" class="utility close" aria-label="Close outpost drill">✕</button></form>
+    <div class="drill-name">VERDANT OUTPOST · TRAINING SCENARIO</div>
+    <div id="drill-content"></div>
+  </dialog>
+
+  <dialog id="log-dialog" class="panel reference-panel" aria-labelledby="log-title">
+    <form method="dialog"><button type="submit" class="utility close" aria-label="Close field log">✕</button></form>
+    <span class="panel-label">MERIDIAN OPERATIONS</span>
+    <h2 id="log-title">Field log</h2>
+    <div id="log-content"></div>
+  </dialog>
+
+  <dialog id="references" class="panel reference-panel" aria-labelledby="reference-title">
+    <form method="dialog"><button type="submit" class="utility close" aria-label="Close NASA sources">✕</button></form>
+    <span class="panel-label">FLIGHT RECORDS &amp; CONCEPTS</span>
+    <h2 id="reference-title">NASA sources</h2>
+    <p>Meridian is a fictional expedition. The game uses adapted Jezero terrain, published hardware concepts and archived NASA observations. Travel and resource numbers are scaled for play.</p>
+    <ul>
+      <li><a href="https://www.spaceappschallenge.org/2026/challenges/junior-astronaut-mission-trainer/" target="_blank" rel="noopener">Space Apps Challenge · Junior Astronaut Mission Trainer</a></li>
+      <li><a href="https://www.nasa.gov/reference/environmental-control-and-life-support-systems-eclss/" target="_blank" rel="noopener">NASA · Space station life support</a></li>
+      <li><a href="https://ntrs.nasa.gov/citations/20180006797" target="_blank" rel="noopener">NASA · Modular Mars surface habitats</a></li>
+      <li><a href="https://www.nasa.gov/wp-content/uploads/2015/09/373665main_nasa-sp-2009-566.pdf" target="_blank" rel="noopener">DRA 5.0 · habitat and rover concepts</a></li>
+      <li><a href="https://ntrs.nasa.gov/citations/20220001816" target="_blank" rel="noopener">HEOMD-415 · surface logistics and traverses</a></li>
+      <li><a href="https://hirise.lpl.arizona.edu/dtm/ESP_023524_1985" target="_blank" rel="noopener">HiRISE · Jezero elevation data</a></li>
+      <li><a href="https://www.jpl.nasa.gov/images/pia22737-mars-climate-sounder-studies-2018-dust-storm/" target="_blank" rel="noopener">Mars Climate Sounder · 2018 dust storm</a></li>
+      <li><a href="https://ssd.jpl.nasa.gov/horizons/" target="_blank" rel="noopener">JPL Horizons · Earth–Mars light time</a></li>
+      <li><a href="https://osdr.nasa.gov/bio/repo/data/studies/OSD-269" target="_blank" rel="noopener">OSD-269 · growing lettuce on the ISS</a></li>
+      <li><a href="https://science.nasa.gov/resource/curiosity-sees-specks-caused-by-2024-solar-storm-while-recording-a-wind-gust-on-mars/" target="_blank" rel="noopener">Curiosity RAD · May 2024 solar storm</a></li>
+    </ul>
+    <p><a id="model-notes" download="BASE-BOSS-MODEL-REFERENCES.md">Download model reference notes</a></p>
+    <p><a href="./campaign">Play the original Thirty Sols management simulator</a></p>
+  </dialog>
+  <script type="module" src="./missions/base-boss/play.js"></script>
+</body>
+</html>

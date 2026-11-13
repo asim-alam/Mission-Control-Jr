@@ -1,6 +1,7 @@
 // Builds every expansion-mission GLB from the editable sources in scripts/expansion-models/.
 // Usage: npm run models:expansion            (all models)
 //        npm run models:expansion -- water-wall-bag   (one model)
+//        npm run models:expansion -- base-boss        (Base Boss kit)
 import {mkdir, readFile, writeFile} from 'node:fs/promises';
 import * as THREE from 'three';
 import {GLTFExporter} from 'three/addons/exporters/GLTFExporter.js';
@@ -12,6 +13,7 @@ import * as repair from './expansion-models/repair.mjs';
 import * as lunar from './expansion-models/lunar.mjs';
 import * as refuge from './expansion-models/refuge.mjs';
 import * as marsOps from './expansion-models/mars-ops.mjs';
+import * as baseBoss from './expansion-models/base-boss.mjs';
 
 globalThis.FileReader ??= class { readAsArrayBuffer(blob) { blob.arrayBuffer().then(v => { this.result = v; this.onloadend?.(); }).catch(e => { this.error = e; this.onerror?.(e); }); } };
 
@@ -23,16 +25,16 @@ export const DESIGNS = {
   'storm-shelter': hab.stormShelter, 'water-wall-bag': hab.waterBag, 'poly-shield-panel': hab.polyPanel,
   'cargo-shield-stack': hab.cargoStack, 'space-weather-console': hab.weatherConsole, 'stowage-rack': hab.stowageRack,
   'drinking-water-station': hab.waterStation, 'crew-member': hab.crewMember,
-  ...refuge.DESIGNS, ...marsOps.DESIGNS, ...farm.DESIGNS, ...repair.DESIGNS, ...lunar.DESIGNS,
+  ...refuge.DESIGNS, ...marsOps.DESIGNS, ...farm.DESIGNS, ...repair.DESIGNS, ...lunar.DESIGNS, ...baseBoss.DESIGNS,
 };
 
 const target = process.argv[2];
-if (target && !DESIGNS[target]) throw Error(`Unknown model: ${target}`);
+const selection = target === 'base-boss' ? baseBoss.DESIGNS : target ? {[target]: DESIGNS[target]} : DESIGNS;
+if (target && !Object.hasOwn(DESIGNS, target) && target !== 'base-boss') throw Error(`Unknown model: ${target}`);
 const out = new URL('../assets/models/expansion/', import.meta.url);
 await mkdir(out, {recursive: true});
 const report = [];
-for (const [id, make] of Object.entries(DESIGNS)) {
-  if (target && id !== target) continue;
+for (const [id, make] of Object.entries(selection)) {
   const object = finalize(make());
   object.updateMatrixWorld(true);
   const size = new THREE.Box3().setFromObject(object).getSize(new THREE.Vector3());

@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {createHash} from 'node:crypto';
+import {MISSIONS} from '../mission-registry.js';
 import {validateSource} from '../simulation/provenance.js';
 const base=new URL('../public/data/',import.meta.url);
 test('archived NASA source records retain valid hashes and normalized values',()=>{
@@ -9,6 +10,13 @@ test('archived NASA source records retain valid hashes and normalized values',()
   const normalized=JSON.parse(readFileSync(new URL('normalized.json',base)));
   assert.deepEqual(JSON.parse(readFileSync(new URL('../data/normalized.json',import.meta.url))),normalized);
   for(const source of sources){assert.ok(validateSource(source));if(source.rawFile){const bytes=readFileSync(new URL(source.rawFile.replace('data/',''),base));assert.equal(createHash('sha256').update(bytes).digest('hex'),source.sha256);}}
+  for(const mission of MISSIONS){
+    for(const id of mission.sourceIds){
+      assert.ok(sources.some(source=>source.id===id&&source.usedBy.includes(mission.id)),`${mission.id} → ${id}`);
+    }
+  }
+  const curiosity=JSON.parse(readFileSync(new URL('raw/curiosity-rad-2024-05-20.json',base)));
+  assert.deepEqual(normalized.curiosityRad,curiosity);
   const sep=JSON.parse(readFileSync(new URL('raw/donki-sep-2024-05.json',base))).find(e=>e.sepID===normalized.sep.id);
   assert.equal(sep.eventTime,normalized.sep.eventTime);
   const text=readFileSync(new URL('raw/horizons-mars-earth-2026-11.txt',base),'utf8');

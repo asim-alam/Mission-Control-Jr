@@ -11,5 +11,5 @@ test('sampler snapshots start at real decisions without pre-awarded completion',
  const moon=samplerSnapshot('lunar-sunlight');assert.equal(moon.plan,null);assert.equal(moon.cart,'base');
 });
 test('sampler URLs preserve practice mode below a subdirectory',()=>{
- const url=journeyUrl('https://example.org/app/index.html','greenhouse',{sampler:true});assert.equal(url.href,'https://example.org/app/index.html?mission=greenhouse&sampler=1');assert.equal(missionFromUrl(url.href,missionById),'greenhouse');
+ const url=journeyUrl('https://example.org/app/index.html','greenhouse',{sampler:true});assert.equal(url.href,'https://example.org/app/greenhouse?sampler=1');assert.equal(missionFromUrl(url.href,missionById),'greenhouse');
 });

@@ -16,8 +16,8 @@ test('connected expedition advances through arrival, storm and rover and retains
   assert.equal(nextStoryChapter(state,'moon'),'lunar-sunlight');finishChapter(state,'lunar-sunlight',{outcome:'complete'});assert.equal(nextStoryChapter(state,'moon'),'lunar-dust');assert.equal(storyComplete(state,'moon'),false);
 });
 test('mission links preserve a static subdirectory and recognize old direct routes',()=>{
- const url=journeyUrl('https://example.org/mission-control/index.html','lunar-dust');assert.equal(url.href,'https://example.org/mission-control/index.html?mission=lunar-dust');
- assert.equal(missionFromUrl(url.href,missionById),'lunar-dust');assert.equal(missionFromUrl('https://example.org/mission-control/storm',missionById),'storm');assert.equal(missionFromUrl('https://example.org/mission-control/index.html#strom',missionById),'storm');
+ const url=journeyUrl('https://example.org/mission-control/index.html','lunar-dust');assert.equal(url.href,'https://example.org/mission-control/lunar-dust');
+ assert.equal(missionFromUrl(url.href,missionById),'lunar-dust');assert.equal(missionFromUrl('https://example.org/mission-control/storm',missionById),'storm');assert.equal(missionFromUrl('https://example.org/mission-control/base-boss',missionById),'extended');assert.equal(missionFromUrl('https://example.org/mission-control/index.html#strom',missionById),'storm');
  for(const mission of MISSIONS){assert.equal(missionFromUrl(`https://example.org/mission-control/${mission.id}`,missionById),mission.id);assert.ok(Array.isArray(mission.prerequisites));assert.ok(Array.isArray(mission.learningTags));assert.ok(Array.isArray(mission.sourceIds));assert.ok(mission.assetBundle);}
 });
 test('chapter practice never marks earlier chapters complete and progress survives storage round trip',()=>{

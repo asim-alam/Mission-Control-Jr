@@ -64,8 +64,8 @@ const PIP_MESSAGE_SETS = {
     "Drive to the crest, aim the dish at Horizon base, and drill a core sample!"
   ],
   extended: [
-    "You conquered every mission! Ready to take charge as Base Boss for 30 Mars days?",
-    "Commander Jin: Balance power, food, water, and crew tasks to keep the base thriving!"
+    "Ready to take command? The crews around Meridian Basin need your help.",
+    "Take the rover between bases, then step outside to work with the crew."
   ],
   done: [
     "All missions completed! You are an official Junior Astronaut Commander!",
@@ -209,17 +209,15 @@ function render(){
     bossCard.className='chapter boss-card';
     bossCard.innerHTML=`
       <div class="chapter-head">
-        <span class="chapter-icon boss-icon" aria-hidden="true">👑</span>
+        <button type="button" class="chapter-icon boss-icon" aria-label="Play Be the Base Boss">👑</button>
         <div class="chapter-meta">
-          <span class="chapter-step-badge" style="color:var(--kid-yellow)">COMMAND SIMULATION</span>
-          <span class="chapter-sol-text">30 MARS DAYS</span>
+          <span class="chapter-step-badge" style="color:var(--kid-yellow)">MARS EXPEDITION</span>
         </div>
         <span class="chapter-star" style="background:var(--kid-yellow); color:#2b1d00">👑 Apex</span>
       </div>
       <h2>Be the Base Boss</h2>
-      <p>Take charge of Meridian Base for a full month! Balance food, solar power, water recycler and jobs.</p>
-      <button type="button" class="boss-btn primary">Run the Base ▶</button>
-      <div class="chapter-status" style="color:var(--kid-yellow)">Open for certified Commanders</div>
+      <p>Drive the rover, work outside in your spacesuit, and help the bases keep their water, food, and radio links running.</p>
+      <button type="button" class="boss-btn primary">Start expedition ▶</button>
     `;
     const launchBoss=()=>{
       toggleMissionMap(false);
@@ -262,11 +260,15 @@ const kidDay=sol=>/LUNAR/i.test(sol)?'Moon base':sol.replace(/^SOLS?/i,'Day');
 function clearPresentation(){document.body.classList.remove('minimal-hud','photo-mode');}
 const chapterPath=(id,sampler=false)=>journeyUrl(location.href,id,{sampler}).href;
 
-function toggleMissionMap(open){
+function toggleMissionMap(open,{syncPath=false}={}){
   const map=$('mission-map');
   if(!map)return;
   const show=open!=null?Boolean(open):map.hidden;
   map.hidden=!show;
+  if(syncPath){
+    const next=show?new URL('./mission-map',location.href).href:journeyUrl(location.href).href;
+    if(location.href!==next)history.pushState(null,'',next);
+  }
   document.body.classList.toggle('map-open',show);
   const mapContent=$('header-map-content');
   if(mapContent)mapContent.hidden=!show;
@@ -289,6 +291,12 @@ function toggleMissionMap(open){
 function launch(id,{updatePath=true,sampler=false}={}){
   const chapter=chapterById(id);
   if(!chapter?.available)return;
+  if(id==='extended'){
+    const url=chapterPath(id);
+    if(updatePath)location.assign(url);
+    else location.replace(url);
+    return;
+  }
   stopHomeScene();
   stopPipTypewriter();
   $('home-scene').hidden=true;
@@ -326,10 +334,11 @@ function resume(){
   $('journey').hidden=true;$('transition').hidden=true;frame.hidden=false;hold(false);frame.focus();
 }
 
-const transitions={storm:{tag:'DAY 12 · AT THE BASE',title:'The base needs you!',copy:'Jin landed at Meridian base. The next day, the radio you fixed brings bad news: a big dust storm is coming! Get the power ready and keep the crew safe.'},rover:{tag:'DAY 16 · ROVER TIME',title:'Time to explore!',copy:'The storm is over! Now Jin drives the rover and Amara does the science. Take photos of the rocks, then bring everyone home.'},extended:{tag:'BONUS GAME · 30 DAYS',title:'You are the boss now!',copy:'You learned to fly, get ready and explore. Now run the whole base: give out jobs and watch the food, water and power.'}};
+const transitions={storm:{tag:'DAY 12 · AT THE BASE',title:'The base needs you!',copy:'Jin landed at Meridian base. The next day, the radio you fixed brings bad news: a big dust storm is coming! Get the power ready and keep the crew safe.'},rover:{tag:'DAY 16 · ROVER TIME',title:'Time to explore!',copy:'The storm is over! Now Jin drives the rover and Amara does the science. Take photos of the rocks, then bring everyone home.'}};
 
 function requestChapter(id,replay=false){
   if(!chapterById(id))return;
+  if(id==='extended'){launch(id);return;}
   if(active===id){
     if(replay)launch(id);else resume();
     return;
@@ -359,15 +368,15 @@ $('sampler-close').onclick=()=>{ $('sampler').hidden=true; $('sampler-start').fo
 if($('sampler-close-top')) $('sampler-close-top').onclick=()=>{ $('sampler').hidden=true; $('sampler-start').focus(); };
 document.querySelectorAll('[data-sample]').forEach(button=>button.onclick=()=>launch(button.dataset.sample,{sampler:true}));
 
-$('open-map')?.addEventListener('click',()=>toggleMissionMap(true));
-$('header-map-back')?.addEventListener('click',()=>toggleMissionMap(false));
-$('map-close-btn')?.addEventListener('click',()=>toggleMissionMap(false));
+$('open-map')?.addEventListener('click',()=>toggleMissionMap(true,{syncPath:true}));
+$('header-map-back')?.addEventListener('click',()=>toggleMissionMap(false,{syncPath:true}));
+$('map-close-btn')?.addEventListener('click',()=>toggleMissionMap(false,{syncPath:true}));
 
 $('journey-button').onclick=()=>{
   if(!$('journey').hidden && active){
     resume();
   } else if(!$('journey').hidden){
-    toggleMissionMap();
+    toggleMissionMap(undefined,{syncPath:true});
   } else {
     menu();
   }
@@ -397,7 +406,7 @@ const BADGES = [
   {id: 'lunar-sunlight', icon: '☀️', title: 'Sun Chaser', desc: 'Raised the high-ridge solar mast on the Moon.'},
   {id: 'lunar-dust', icon: '🧹', title: 'Dust Buster', desc: 'Protected Horizon Base from abrasive lunar dust.'},
   {id: 'lunar-relay', icon: '📻', title: 'Crater Relay', desc: 'Overcame terrain blockage with radio relay.'},
-  {id: 'extended', icon: '👑', title: 'Base Commander', desc: 'Commanded Meridian Outpost for a full 30 days.'}
+  {id: 'extended', icon: '👑', title: 'Base Commander', desc: 'Completed the Meridian Basin expedition.'}
 ];
 
 function toggleBadges(open) {
@@ -444,7 +453,7 @@ if ($('journey-count')) {
 window.addEventListener('keydown',e=>{
   if(e.key==='Escape'){
     if($('settings-dialog')&&!$('settings-dialog').hidden)$('settings-dialog').hidden=true;
-    if($('mission-map')&&!$('mission-map').hidden)toggleMissionMap(false);
+    if($('mission-map')&&!$('mission-map').hidden)toggleMissionMap(false,{syncPath:true});
     if($('sampler')&&!$('sampler').hidden)$('sampler').hidden=true;
     if($('badges-dialog')&&!$('badges-dialog').hidden)toggleBadges(false);
   }
@@ -512,11 +521,18 @@ window.addEventListener('message',event=>{
   if(data.type==='menu')menu();
 });
 
+function isMissionMapLocation(){
+  const url=new URL(location.href);
+  return url.pathname.replace(/\/+$/,'').endsWith('/mission-map')||url.searchParams.get('view')==='mission-map';
+}
 function chapterFromLocation(){return missionFromUrl(location.href,id=>chapterById(id)?.available);}
 window.addEventListener('popstate',()=>{
   const id=chapterFromLocation();
   if(id)launch(id,{updatePath:false,sampler:new URL(location.href).searchParams.get('sampler')==='1'});
-  else menu({updatePath:false});
+  else {
+    menu({updatePath:false});
+    if(isMissionMapLocation())toggleMissionMap(true);
+  }
 });
 
 document.querySelectorAll('[data-campaign]').forEach(button=>button.onclick=()=>{state.selectedCampaign=button.dataset.campaign;persist();render();});
@@ -525,4 +541,7 @@ render();
 persist();
 const requested=chapterFromLocation();
 if(requested)launch(requested,{updatePath:false,sampler:new URL(location.href).searchParams.get('sampler')==='1'});
-else startHomeScene();
+else {
+  startHomeScene();
+  if(isMissionMapLocation())toggleMissionMap(true);
+}

@@ -49,7 +49,8 @@
       "Select 2026-Nov-14 00:00 row; convert minutes to seconds in the scenario."
     ],
     "usedBy": [
-      "earth-delay"
+      "earth-delay",
+      "extended"
     ],
     "limitation": "Center-to-center down-leg light time approximates both directions; Earth processing time is authored."
   },
@@ -76,7 +77,8 @@
       "Extract a 16:8 light:dark protocol value; convert hours to seconds."
     ],
     "usedBy": [
-      "greenhouse"
+      "greenhouse",
+      "extended"
     ],
     "limitation": "ISS lettuce study; fictional Mars yield, water, energy, stress and growth rates are not measured by this record."
   },
@@ -227,7 +229,8 @@
       "Flattened near the outpost pad; one authored rim mound added for the Rim track."
     ],
     "usedBy": [
-      "expedition"
+      "rover",
+      "extended"
     ],
     "limitation": "Real terrain shape for a fictional outpost. The small window is somewhere inside the crater, not a specific rover spot. Routes, hazards and rocks are authored."
   },
@@ -255,7 +258,8 @@
       "Five days of real decline are squeezed into the storm chapter's preparation time."
     ],
     "usedBy": [
-      "storm"
+      "storm",
+      "extended"
     ],
     "limitation": "Shape of a real power drop, compressed in time. Base power numbers in the game are simplified percentages, not rover engineering data."
   },
@@ -284,5 +288,31 @@
       "greenhouse"
     ],
     "limitation": "ISS experiment context only. The fictional Mars fan reset, leaf-surface moisture index, stress response and outcomes are authored training rules, not measured NASA values."
+  },
+  {
+    "id": "curiosity-rad-2024-05-20",
+    "basisKind": "reference",
+    "title": "Curiosity RAD and the 20 May 2024 solar particle event",
+    "agency": "NASA/JPL",
+    "sourceUrl": "https://www.jpl.nasa.gov/news/nasa-watches-mars-light-up-during-epic-solar-storm/",
+    "recordId": "curiosity-rad-2024-05-20",
+    "version": "2024-06-10",
+    "observationTime": "2024-05-20",
+    "location": "Mars surface at Curiosity",
+    "units": {
+      "reportedAbsorbedDose": "microgray"
+    },
+    "qualityNotes": [
+      "Manually transcribed from a dated NASA/JPL event summary. This record does not contain raw RAD telemetry."
+    ],
+    "rawFile": "data/raw/curiosity-rad-2024-05-20.json",
+    "sha256": "f89da4e83bb5a5548549dd0ea25a1746ae15704472682c25f0aaea266e9c7c80",
+    "transforms": [
+      "Divide the reported absorbed dose by 81 µGy per training point to set the outdoor baseline."
+    ],
+    "usedBy": [
+      "extended"
+    ],
+    "limitation": "The detector reference is specific to one event at Curiosity. Base Boss shelter factors and exposure points are authored and do not estimate astronaut dose."
   }
 ]

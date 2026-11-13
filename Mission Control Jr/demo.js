@@ -351,7 +351,7 @@ function showEnding() {
       <p><b>💡 Your Astronaut Skill:</b> When unexpected storms strike in space, teamwork and prioritizing life support first is what keeps everyone alive!</p>
     </div>`,[
     {label:`Next mission · ${evacuated?'Rover rescue drive':'Tracks in the Dust'}`,run:()=>goToChapter('rover')},
-    {label:'↺ Play again',run:startMission},{label:'👑 30-day Mars base game',run:()=>goToChapter('extended')},
+    {label:'↺ Play again',run:startMission},{label:'👑 Be the Base Boss',run:()=>goToChapter('extended')},
     {label:'🗺️ Back to mission map',run:openJourney}
   ], 'HOW DID IT GO?');
   audio.pause(false);

@@ -80,8 +80,8 @@ test('chapter navigation supports static entry paths and removes the left shadow
   assert.match(js, /function resume\(\).*frame\.hidden=false/s);
   assert.doesNotMatch(js, /replaceState\(null,'',`#\$\{id\}`\)/);
   assert.match(bridge, /location\.href=routeFor\(id\)/);
-  assert.match(vite, /configureServer\(server\).*server\.middlewares\.use\(rewriteChapterRoutes\)/s);
-  assert.match(vite, /configurePreviewServer\(server\).*server\.middlewares\.use\(rewriteChapterRoutes\)/s);
+  assert.match(vite, /configureServer\(server\).*server\.middlewares\.use\(rewriteMissionRoutes\)/s);
+  assert.match(vite, /configurePreviewServer\(server\).*server\.middlewares\.use\(rewriteMissionRoutes\)/s);
   assert.match(vite, /fileName:\s*'_redirects'/);
   assert.match(storm, /<h1>BEFORE<br><span>THE STORM<\/span>/);
   assert.match(css, /body:has\(#space\) #opening \{ background: transparent !important; \}/);

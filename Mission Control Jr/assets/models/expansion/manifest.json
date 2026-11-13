@@ -1258,5 +1258,190 @@
   ],
   "errors": 0,
   "warnings": 0
+ },
+ {
+  "id": "base-boss-habitat",
+  "bytes": 1497380,
+  "triangles": 49316,
+  "draws": 17,
+  "materials": 17,
+  "boundsMeters": [
+   15.591,
+   9.927,
+   18.416
+  ],
+  "interactionNodes": [
+   "site_status"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "base-boss-verdant",
+  "bytes": 1151128,
+  "triangles": 38600,
+  "draws": 20,
+  "materials": 20,
+  "boundsMeters": [
+   15.198,
+   4.229,
+   14.516
+  ],
+  "interactionNodes": [
+   "recycler_mount",
+   "service_indicator",
+   "grow_lights"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "base-boss-forge",
+  "bytes": 263100,
+  "triangles": 7948,
+  "draws": 9,
+  "materials": 9,
+  "boundsMeters": [
+   8.603,
+   4.095,
+   9.628
+  ],
+  "interactionNodes": [],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "base-boss-kestrel",
+  "bytes": 431460,
+  "triangles": 12284,
+  "draws": 22,
+  "materials": 18,
+  "boundsMeters": [
+   9.103,
+   6.43,
+   5.18
+  ],
+  "interactionNodes": [
+   "dish_azimuth",
+   "relay_status"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "base-boss-pathfinder",
+  "bytes": 485956,
+  "triangles": 16212,
+  "draws": 11,
+  "materials": 11,
+  "boundsMeters": [
+   7.412,
+   4.742,
+   9.199
+  ],
+  "interactionNodes": [
+   "shelter_status",
+   "sample_bay"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "base-boss-power-annex",
+  "bytes": 56080,
+  "triangles": 860,
+  "draws": 8,
+  "materials": 5,
+  "boundsMeters": [
+   7.183,
+   2.12,
+   2.48
+  ],
+  "interactionNodes": [],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "base-boss-landing-cache",
+  "bytes": 48008,
+  "triangles": 936,
+  "draws": 8,
+  "materials": 8,
+  "boundsMeters": [
+   5,
+   3.775,
+   4.2
+  ],
+  "interactionNodes": [
+   "cache_slot_a",
+   "cache_slot_b",
+   "locator_light"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "base-boss-valve-crate",
+  "bytes": 64796,
+  "triangles": 1884,
+  "draws": 6,
+  "materials": 5,
+  "boundsMeters": [
+   0.86,
+   0.506,
+   0.682
+  ],
+  "interactionNodes": [
+   "crate_lid",
+   "carry_grip",
+   "valve_stowage"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "base-boss-utility-rover",
+  "bytes": 432852,
+  "triangles": 9376,
+  "draws": 42,
+  "materials": 11,
+  "boundsMeters": [
+   3.21,
+   3.289,
+   5.285
+  ],
+  "interactionNodes": [
+   "steer_left",
+   "steer_right",
+   "wheel_fl",
+   "wheel_fr",
+   "wheel_ml",
+   "wheel_mr",
+   "wheel_rl",
+   "wheel_rr",
+   "cargo_slot_a",
+   "cargo_slot_b",
+   "charge_port"
+  ],
+  "errors": 0,
+  "warnings": 0
+ },
+ {
+  "id": "base-boss-charge-post",
+  "bytes": 45984,
+  "triangles": 1364,
+  "draws": 6,
+  "materials": 6,
+  "boundsMeters": [
+   1.171,
+   1.455,
+   0.815
+  ],
+  "interactionNodes": [
+   "charge_handle",
+   "charge_status"
+  ],
+  "errors": 0,
+  "warnings": 0
  }
 ]

@@ -124,7 +124,7 @@ window.addEventListener('resize', () => {
 
 // ---------- Audio ----------
 let muted = false;
-connectChapter('extended',value=>setMuted(value||muted));
+if (window.parent !== window) connectChapter('extended',value=>setMuted(value||muted));
 addEventListener('pagehide',()=>{disposeAudio();renderer.setAnimationLoop(null);renderer.dispose();});
 document.getElementById('mute').onclick = () => {
   muted = !muted;
