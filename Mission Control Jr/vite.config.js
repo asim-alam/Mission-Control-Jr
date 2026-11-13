@@ -67,9 +67,9 @@ function cleanChapterRoutes() {
           '/campaign /campaign.html 200',
           '/mission-map/ /mission-map 301',
           '/mission-map /index.html?view=mission-map 200',
-          ...MISSIONS.map(mission=>`/index.html?mission=${mission.id} /${mission.path} 301`),
-          '/index.html?view=mission-map /mission-map 301',
-          '/index.html / 301',
+          ...MISSIONS.map(mission=>`/index.html?mission=${mission.id} /${mission.path} 301!`),
+          '/index.html?view=mission-map /mission-map 301!',
+          '/index.html / 301!',
           '/extended /base-boss 301',
         ].join('\n')+'\n',
       });
