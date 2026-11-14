@@ -1,7 +1,7 @@
 // 3D view of "A Place to Hide" (v3): a Mars habitat with a partly prepared refuge.
 // Water goes into a rack, plastic panels slide into rails and get fastened, supply bags are stacked and strapped.
 import * as THREE from 'three';
-import {createWorld, loadModel, part, setOpacity} from '../shared/engine.js';
+import {createWorld, loadModel, part, setOpacity, relativeNavigation} from '../shared/engine.js';
 import {missionAsset} from '../shared/assets.js';
 import {makeCrew} from '../shared/crew.js';
 import {isBlocked, planRoute} from '../../navigation.js';
@@ -298,7 +298,8 @@ export async function createShelterScene({container, getState, act, onPause, onT
     pos.y += markerY;
     pos.project(world.camera);
     const screen = {x: (pos.x + 1) / 2, y: (1 - pos.y) / 2, onScreen: pos.z < 1};
-    const label = `◆ ${current.marker} · ${Math.ceil(distance)} m`;
+    const rel = relativeNavigation(player.position, player.yaw, target);
+    const label = `◆ ${current.marker} · ${rel ? rel.summary : Math.ceil(distance) + ' m'}`;
     if (guide.textContent !== label) guide.textContent = label;
     const visible = screen?.onScreen && screen.y > .13 && screen.y < .78 && screen.x > .20 && screen.x < .76;
     guide.classList.toggle('sx-target-in-world', !!visible);

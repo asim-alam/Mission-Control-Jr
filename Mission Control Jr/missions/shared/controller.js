@@ -249,6 +249,31 @@ function showStepAlertShared(title, text, nextTip, icon = '🎉', onOpenLesson =
           relNav = relativeNavigation(world.player.position, world.player.yaw, {x: tx, z: tz});
         }
       }
+      if (!destName && currentInst?.marker) {
+        destName = currentInst.marker;
+      }
+      if (!destName && currentInst?.place) {
+        destName = currentInst.place.replace(/[-_]/g, ' ');
+      }
+      if (!destName && ctx.view?.walkTargets?.length && (guideInfo?.position || guideInfo?.target?.position)) {
+        const gPos = guideInfo.position || guideInfo.target.position;
+        let bestDist = Infinity;
+        let bestTarget = null;
+        for (const wt of ctx.view.walkTargets) {
+          const wx = wt.x ?? wt.point?.x;
+          const wz = wt.z ?? wt.point?.z;
+          if (wx != null && wz != null) {
+            const d = Math.hypot(gPos.x - wx, gPos.z - wz);
+            if (d < bestDist && d < 4.5) {
+              bestDist = d;
+              bestTarget = wt;
+            }
+          }
+        }
+        if (bestTarget) {
+          destName = bestTarget.label.replace(/^[^\p{L}]+/u, '');
+        }
+      }
       const placeDists = {};
       if (ctx.view?.walkTargets) {
         for (const wt of ctx.view.walkTargets) {

@@ -285,6 +285,8 @@ function renderActions(){
   const destName = m.aboard&&['outbound','return'].includes(m.phase)?(m.phase==='return'?'Meridian Outpost':'Kestrel Ridge Waypoint'):task.title;
   const rel = targetObj ? relativeToTargetRover(targetObj) : null;
   $('task-distance').textContent=distVal!=null?`📍 ${destName} · 🚀 ${rel ? rel.summary : distVal + ' m'} (${distVal} m)${m.aboard?` · ${Math.round(bearing)}°`:''}${near?' · Ready! ✨':''}`:'Time to choose';
+  $('task-distance').classList.toggle('ready', Boolean(near));
+  $('task-distance').classList.toggle('is-tracking', distVal != null);
   $('inspect-exhibit').hidden=m.aboard||!exhibits||distance(player.position,ROVER_PAD)>6;
   const key=[task.action,task.label,near,m.aboard,nearVehicle(),v.parking,m.phase,m.sample,m.checks.brakes,m.dataTransferred,testReady,distance(player.position,SERVICE.comms)<3].join('|');if(key===actionKey)return;actionKey=key;
   const actions=[],panel=[],allChecks=['battery','wheels','camera','comms'].every(id=>m.checks[id]);
