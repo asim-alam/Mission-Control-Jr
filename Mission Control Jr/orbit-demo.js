@@ -559,11 +559,39 @@ if(dockedExteriorView){$('progress').replaceChildren();for(const [i,text]of ['01
     const lrWord = rgt >= 0 ? 'Right' : 'Left';
     const lrArrow = rgt >= 0 ? '➡️' : '⬅️';
     const parts = [];
-    if (Math.abs(fwd) >= 0.5) parts.push(`${fbArrow} ${fbWord} ${Math.abs(fwd).toFixed(1)} m`);
-    if (Math.abs(rgt) >= 0.5) parts.push(`${lrArrow} ${lrWord} ${Math.abs(rgt).toFixed(1)} m`);
+    if (Math.abs(fwd) >= 0.2) parts.push(`${fbArrow} ${fbWord} ${Math.abs(fwd).toFixed(1)} m`);
+    if (Math.abs(rgt) >= 0.2) parts.push(`${lrArrow} ${lrWord} ${Math.abs(rgt).toFixed(1)} m`);
     relNavText = parts.join(' · ') || `${distance.toFixed(1)} m`;
   }
-  $('distance').textContent=task.target?`📍 Next Stop: ${task.place||'Lander door'} · ${distance<=2.5 ? '✨ In reach!' : `${relNavText} (${distance.toFixed(1)} m)`} ${distance<=2.5?'· [Press E to use]':'· [Click "Show me the way" to walk]'}`:m.phase==='docking'?(dockReady(m.dock)?'✅ All lined up and slow! Press E to dock.':autodock?'Docking help is steering and braking. Wait for the green crosshair.':Math.abs(m.dock.speed)>.205?'⚠️ Too fast! Tap Space to brake below 0.2 m/s.':(m.dock.distance>2?'Press W to approach Asteria station · Keep speed below 0.2 m/s':'Line up crosshair with station · Press E when ready')):m.phase==='overview'?'Look at Mars below · Click "Start flying" to fly toward Asteria station':m.phase==='craft'?'BUCKLED IN · FINAL LANDER CHECKS':'';$('action').disabled=m.phase==='station'?distance>2.5:m.phase==='docking'?!dockReady(m.dock):false;
+  let dockRelText = '';
+  if (m.phase === 'docking') {
+    const d = m.dock;
+    const parts = [];
+    parts.push(`🚀 ${d.distance.toFixed(1)} m to port`);
+    if (d.x > 0.2) parts.push(`⬅️ Left ${d.x.toFixed(1)} m`);
+    else if (d.x < -0.2) parts.push(`➡️ Right ${Math.abs(d.x).toFixed(1)} m`);
+    else parts.push('🎯 L/R Centered');
+    if (d.y > 0.2) parts.push(`⬇️ Down ${d.y.toFixed(1)} m`);
+    else if (d.y < -0.2) parts.push(`⬆️ Up ${Math.abs(d.y).toFixed(1)} m`);
+    else parts.push('🎯 U/D Centered');
+    dockRelText = parts.join(' · ');
+  }
+  $('distance').textContent = (task.target && m.phase === 'station')
+    ? `📍 Next Stop: ${task.place||'Lander door'} · ${distance<=2.5 ? '✨ In reach!' : `${relNavText} (${distance.toFixed(1)} m)`} ${distance<=2.5?'· [Press E to use]':'· [Click "Show me the way" to walk]'}`
+    : m.phase === 'docking'
+    ? (dockReady(m.dock)
+      ? '✅ All lined up and slow! Press E to dock.'
+      : autodock
+      ? `Docking help steering · ${dockRelText}`
+      : Math.abs(m.dock.speed) > 0.205
+      ? `⚠️ Too fast (${m.dock.speed.toFixed(2)} m/s)! Tap Space to brake · ${dockRelText}`
+      : `🎯 Asteria Dock · ${dockRelText}`)
+    : m.phase === 'overview'
+    ? 'Look at Mars below · Click "Start flying" to fly toward Asteria station'
+    : m.phase === 'craft'
+    ? 'BUCKLED IN · FINAL LANDER CHECKS'
+    : '';
+  $('action').disabled=m.phase==='station'?distance>2.5:m.phase==='docking'?!dockReady(m.dock):false;
   const is2mReady=m.phase==='docking'&&m.dock.distance<=2.05&&dockReady(m.dock);
   $('distance').classList.toggle('ready', (m.phase === 'station' && distance <= 2.5) || is2mReady);
   $('distance').classList.toggle('is-tracking', !!task.target || m.phase === 'docking');
@@ -687,7 +715,7 @@ function frame(now){frameId=requestAnimationFrame(frame);const dt=document.hidde
         alertEl.hidden = true;
       }
     }
-  }else{const alertEl=$('dock-slow-alert');if(alertEl)alertEl.hidden=true;}if(m.phase==='station'){player.enabled=true;const moved=player.update(dt*.72);if(moved&&$('objective').classList.contains('expanded')){$('objective').classList.remove('expanded');details=false;$('details').setAttribute('aria-expanded','false');clearTimeout(detailsCollapseTimer);}avatar.position.set(player.position.x,0,player.position.z);avatar.rotation.y=player.facing;if(walk&&idle){walk.setEffectiveWeight(moved?1:0);idle.setEffectiveWeight(moved?0:1);}}mixer?.update(dt);if(m.complete)complete();}
+  }else{const alertEl=$('dock-slow-alert');if(alertEl)alertEl.hidden=true;}if(m.phase==='station'){player.enabled=true;const moved=player.update(dt*.72);if(moved){renderHud();if($('objective').classList.contains('expanded')){$('objective').classList.remove('expanded');details=false;$('details').setAttribute('aria-expanded','false');clearTimeout(detailsCollapseTimer);}}avatar.position.set(player.position.x,0,player.position.z);avatar.rotation.y=player.facing;if(walk&&idle){walk.setEffectiveWeight(moved?1:0);idle.setEffectiveWeight(moved?0:1);}}mixer?.update(dt);if(m.complete)complete();}
   const inside=started&&m.phase==='station'&&!dockingSceneActive&&!dockedExteriorView;station.interior.visible=inside;station.exterior.visible=!inside;shuttle.visible=!inside&&!['descent','complete'].includes(m.phase);avatar&&(avatar.visible=inside&&player.view==='third'&&player.cameraDistance>1.55);player.enabled=live&&inside;audio.paused=paused||journeyPaused||document.hidden;radio.pause(audio.paused);audio.update(!started?'orbit':inside?'station':['craft','descent','complete'].includes(m.phase)?'flight':'orbit');env?.setOverview(!inside&&overview);
   if(m.phase!==lastPhase){lastPhase=m.phase;keys.clear();player.release();player.route=[];camera.fov=52;camera.updateProjectionMatrix();if(m.phase==='station'){player.syncCamera();}if(m.phase==='craft')overview=false;renderHud();}
   if(!inside){const d=m.dock,flyby=!started||m.phase==='overview';station.exterior.position.set(0,2.2,0);if(flyby){const offset=env.orbitOffset.clone().applyAxisAngle(new T.Vector3(0,1,0),reduced?0:orbitalAge*.0015);station.exterior.position.copy(env.planet.position).add(offset);}if(dockingSceneActive){}else if(dockedExteriorView){shuttle.position.set(0,2.2,25.07);const lookAtTarget=new T.Vector3(0,2.2,21.0);camera.position.set(lookAtTarget.x+Math.sin(overviewYaw)*craftZoom,lookAtTarget.y+Math.sin(overviewPitch)*craftZoom*.6+1.2,lookAtTarget.z+Math.cos(overviewYaw)*craftZoom);camera.lookAt(lookAtTarget);}else if(!started||m.phase==='overview'||overview&&m.phase!=='descent'){shuttle.position.set(d.x+station.exterior.position.x,station.exterior.position.y+d.y,26.2+d.distance+station.exterior.position.z);const center=env.overviewTarget,angle=overviewYaw+.3;camera.position.set(center.x+Math.sin(angle)*overviewDistance,center.y+Math.sin(overviewPitch)*overviewDistance*.7,center.z+Math.cos(angle)*overviewDistance);camera.lookAt(center);}else if(m.phase==='descent'){const t=Math.min(1,m.descent/16),target=env.planet.position.clone(),dir=new T.Vector3(-.5,.48,1).normalize();camera.position.copy(target).addScaledVector(dir,env.radius*(1.75-(reduced?0:t)*.735));camera.lookAt(target);$('descent-label').hidden=false;$('descent-phase').textContent=t<.24?'DEORBIT BURN':t<.55?'ENTERING THE AIR':t<.85?'ROCKETS ON · LANDING':'TOUCHDOWN / MERIDIAN';}else{shuttle.position.set(d.x+station.exterior.position.x,station.exterior.position.y+d.y,26.2+d.distance+station.exterior.position.z);const target=shuttle.position.clone().add(new T.Vector3(0,0,-3));camera.position.copy(shuttle.position).add(new T.Vector3(Math.sin(overviewYaw)*craftZoom*.75,craftZoom*.36+overviewPitch*3,craftZoom));camera.lookAt(target);}}
@@ -816,7 +844,7 @@ function frame(now){frameId=requestAnimationFrame(frame);const dt=document.hidde
     }
   }
   const task=orbitalTask(m);marker.visible=inside&&!!task.target;if(marker.visible){marker.position.set(task.target.x,.025,task.target.z);const point=new T.Vector3(task.target.x,2.15,task.target.z).project(camera);$('marker').hidden=point.z<0||point.z>1||Math.abs(point.x)>.88||Math.abs(point.y)>.8;$('marker').style.left=`${(point.x*.5+.5)*innerWidth}px`;$('marker').style.top=`${(-point.y*.5+.5)*innerHeight}px`;$('marker-name').textContent=(task.place||'TRANSFER').toUpperCase();}else $('marker').hidden=true;
-  if(live&&now-lastSave>2500){save();lastSave=now;}if(started&&now-lastHud>180){renderHud();lastHud=now;}renderer.render(scene,camera);
+  if(live&&now-lastSave>2500){save();lastSave=now;}if(started&&(now-lastHud>100||(m.phase==='docking'&&(keys.size||autodock)))){renderHud();lastHud=now;}renderer.render(scene,camera);
 }
 async function load(){try{env=await createOrbitalEnvironment(scene,new GLTFLoader());ready=true;$('begin').disabled=false;$('loading').hidden=true;try{$('resume').hidden=!restoreOrbit();}catch{}frameId=requestAnimationFrame(frame);}catch(error){console.error(error);$('loading').textContent='Something did not load. Please reload the page.';}}
 load();

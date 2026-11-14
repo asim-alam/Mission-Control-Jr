@@ -49,9 +49,9 @@ export function buildHud({title, place, meters}) {
   <div class="mx-crosshair" aria-hidden="true"></div>
   <div class="mx-edge" id="mx-edge" aria-hidden="true">➤</div>
   <div class="mx-prompt" id="mx-prompt" hidden><button type="button" id="mx-use"><kbd>E</kbd><span id="mx-use-label"></span><i class="mx-hold" id="mx-hold"></i></button></div>
-  <section class="mx-walk" aria-label="Walk to a place">
-    <button id="mx-next-place" type="button" hidden></button>
-    <details id="mx-places"><summary>Places</summary><div id="locations"></div></details>
+  <section class="mx-walk" id="walk-dock" aria-label="Walk to a place">
+    <div id="walk-next"><button id="mx-next-place" type="button" class="is-next-target" hidden></button></div>
+    <details id="walk-places"><summary>🚀 Places to Go (Tap to Walk)</summary><div id="locations"></div></details>
   </section>
   <div class="mx-toast" id="mx-toast" role="status" aria-live="polite"></div>
   <div id="dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title" hidden><div class="card"><p class="eyebrow" id="dialog-label"></p><h2 id="dialog-title"></h2><div id="dialog-body"></div><div id="dialog-actions"></div></div></div>`);
@@ -62,9 +62,16 @@ export function buildHud({title, place, meters}) {
     details.setAttribute('aria-expanded', String(!steps.hidden));
   };
   syncDetails();
-  const nextPlace = $('mx-next-place'), places = $('mx-places');
-  let destinations = [], walk = () => {}, currentPlace;
-  nextPlace.onclick = () => walk(currentPlace);
+  const nextPlace = $('mx-next-place'), places = $('walk-places');
+  let destinations = [], walk = () => {}, currentPlace, worldInteraction = null;
+  let lastReady = false;
+  nextPlace.onclick = () => {
+    if (lastReady && worldInteraction) {
+      worldInteraction.use();
+    } else if (currentPlace) {
+      walk(currentPlace);
+    }
+  };
   let toastTimer = 0, lastObjective = '', lastStepsKey = '';
   const hud = {
     toggleNarration() {
@@ -88,6 +95,9 @@ export function buildHud({title, place, meters}) {
       $('objective').innerHTML = `<h2>${esc(text)}</h2>`;
       if (read) speak(text);
     },
+    setInteraction(interaction) {
+      worldInteraction = interaction;
+    },
     instruction(instruction) {
       const line = $('mx-instruction'), text = instruction?.text || '';
       if (text !== line.textContent) {
@@ -95,14 +105,15 @@ export function buildHud({title, place, meters}) {
         if (text) speak(text);
       }
       line.hidden = !text;
-      currentPlace = instruction?.place;
+      if (instruction?.place) currentPlace = instruction.place;
       const target = destinations.find(t => t.id === currentPlace);
       const label = target ? `Walk to ${(instruction.marker || target.label).replace(/^[^\p{L}]+/u, '')}` : '';
-      if (label !== nextPlace.textContent) nextPlace.textContent = label;
-      nextPlace.hidden = !target;
+      if (label && label !== nextPlace.textContent) nextPlace.textContent = label;
+      nextPlace.hidden = !target && !currentPlace;
+      if ($('walk-next')) $('walk-next').hidden = nextPlace.hidden;
       for (const button of $('locations').children) {
         const destination = destinations.find(t => t.id === button.dataset.place);
-        button.hidden = destination.id === currentPlace || (destination.visible && !destination.visible());
+        button.hidden = destination && destination.id === currentPlace;
       }
     },
     steps(list) {
@@ -111,7 +122,9 @@ export function buildHud({title, place, meters}) {
       $('mx-job-count').textContent = current >= 0 ? `Step ${current + 1} of ${list.length}` : 'Mission objective';
       $('mx-steps').innerHTML = list.map(s => `<li class="${s.done ? 'done' : s.now ? 'now' : ''}">${s.done ? '✅' : s.now ? '👉' : '⬜'} <span>${esc(s.text)}</span>${s.now ? ' <span class="step-live-distance-badge" id="step-live-dist"></span>' : ''}</li>`).join('');
     },
-    updateDistanceTracker({destination, distance, relative = null, ready = false, places = null} = {}) {
+    updateDistanceTracker({destination, distance, relative = null, ready = false, places: placeDistances = null, targetId = null} = {}) {
+      const isReady = Boolean(ready || (distance != null && distance < 2.5));
+      lastReady = isReady;
       const row = $('mx-task-distance-row');
       if (row) {
         if (!destination && distance == null) {
@@ -123,14 +136,14 @@ export function buildHud({title, place, meters}) {
           if (nameEl && destination) nameEl.textContent = `📍 ${destination}`;
           if (distEl && distance != null) {
             const relText = relative?.summary;
-            if (ready) {
+            if (isReady) {
               distEl.textContent = `🚀 In reach! ✨ (${distance.toFixed(1)} m)`;
             } else if (relText) {
               distEl.textContent = `🚀 ${relText} · (${distance.toFixed(1)} m total)`;
             } else {
               distEl.textContent = `🚀 ${distance.toFixed(1)} m away`;
             }
-            distEl.classList.toggle('ready', Boolean(ready));
+            distEl.classList.toggle('ready', isReady);
           }
         }
       }
@@ -138,24 +151,33 @@ export function buildHud({title, place, meters}) {
       if (stepDist) {
         if (distance != null) {
           const relText = relative?.summary;
-          stepDist.textContent = ready ? '📍 In reach!' : (relText ? `📍 ${relText}` : `📍 ${distance.toFixed(1)} m`);
-          stepDist.classList.toggle('ready', Boolean(ready));
+          stepDist.textContent = isReady ? '📍 In reach!' : (relText ? `📍 ${relText}` : `📍 ${distance.toFixed(1)} m`);
+          stepDist.classList.toggle('ready', isReady);
           stepDist.hidden = false;
         } else {
           stepDist.hidden = true;
         }
       }
-      if (nextPlace && !nextPlace.hidden && currentPlace && distance != null) {
-        const target = destinations.find(t => t.id === currentPlace);
-        if (target) {
-          const cleanName = target.label.replace(/^[^\p{L}]+/u, '');
-          const relText = relative?.summary;
-          nextPlace.textContent = ready ? `At ${cleanName} · In reach` : `Walk to ${cleanName} · ${relText || distance.toFixed(1) + ' m'}`;
-        }
+      if (targetId && !currentPlace) {
+        currentPlace = targetId;
       }
-      if (places && $('locations')) {
+      if (nextPlace && distance != null) {
+        const target = currentPlace ? destinations.find(t => t.id === currentPlace) : null;
+        const cleanName = (destination || (target ? target.label.replace(/^[^\p{L}]+/u, '') : 'Objective')).trim();
+        const relText = relative?.summary;
+        const text = isReady
+          ? `At ${cleanName} · In reach`
+          : `Walk to ${cleanName} · ${relText || distance.toFixed(1) + ' m'}`;
+        if (nextPlace.textContent !== text) {
+          nextPlace.textContent = text;
+        }
+        nextPlace.classList.add('is-next-target');
+        nextPlace.hidden = false;
+        if ($('walk-next')) $('walk-next').hidden = false;
+      }
+      if (placeDistances && $('locations')) {
         for (const button of $('locations').children) {
-          const pDist = places[button.dataset.place];
+          const pDist = placeDistances[button.dataset.place];
           if (pDist != null) {
             const destObj = destinations.find(t => t.id === button.dataset.place);
             const baseLabel = destObj ? destObj.label : button.dataset.place;

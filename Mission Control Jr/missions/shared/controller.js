@@ -124,6 +124,7 @@ export async function runMission(spec) {
     viewButton.hidden = false;
     mountPipLesson(document.querySelector('.mx-job-tools'), spec.id, lessonOptions);
     world.interaction.on('focus', f => hud.prompt(f)); world.interaction.on('hold', p => hud.hold(p));
+    hud.setInteraction?.(world.interaction);
     const use = $('mx-use');
     use.onclick = e => { if (e.detail === 0) world.interaction.use(); }; // keyboard activation
     use.onpointerdown = () => world.interaction.use(); use.onpointerup = () => world.interaction.stopHold(); use.onpointerleave = () => world.interaction.stopHold();
@@ -285,6 +286,7 @@ function showStepAlertShared(title, text, nextTip, icon = '🎉', onOpenLesson =
         }
       }
       hud.updateDistanceTracker?.({
+        targetId: targetStationId || bestTarget?.id,
         destination: destName,
         distance: destDist,
         relative: relNav,

@@ -132,20 +132,20 @@ function calculateRelativeTelemetry(player, target) {
 
   let fbText = '';
   let fbArrow = '⬆️';
-  if (Math.abs(forwardDist) < 0.4) {
+  if (Math.abs(forwardDist) < 0.2) {
     fbArrow = '🎯';
     fbText = 'Aligned Center';
   } else if (forwardDist > 0) {
     fbArrow = '⬆️';
-    fbText = `${forwardDist.toFixed(1)} m Ahead`;
+    fbText = `${forwardDist.toFixed(1)} m Forward`;
   } else {
     fbArrow = '⬇️';
-    fbText = `${Math.abs(forwardDist).toFixed(1)} m Back`;
+    fbText = `${Math.abs(forwardDist).toFixed(1)} m Backward`;
   }
 
   let lrText = '';
   let lrArrow = '➡️';
-  if (Math.abs(rightDist) < 0.4) {
+  if (Math.abs(rightDist) < 0.2) {
     lrArrow = '🎯';
     lrText = 'Aligned Center';
   } else if (rightDist > 0) {

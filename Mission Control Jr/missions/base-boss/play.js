@@ -156,15 +156,16 @@ function updateObjective() {
       const lrWord = rightDist >= 0 ? 'Right' : 'Left';
       const lrArrow = rightDist >= 0 ? '➡️' : '⬅️';
       const parts = [];
-      if (fbDist >= 1) parts.push(`${fbArrow} ${fbWord} ${Math.round(fbDist * (eva ? 1 : 10))} m`);
-      if (lrDist >= 1) parts.push(`${lrArrow} ${lrWord} ${Math.round(lrDist * (eva ? 1 : 10))} m`);
-      const relSummary = parts.join(' · ') || (d >= 100 ? `${(d/100).toFixed(1)} km` : `${Math.round(d * 10)} m`);
+      const threshold = eva ? 0.2 : 1;
+      if (fbDist >= threshold) parts.push(`${fbArrow} ${fbWord} ${eva ? fbDist.toFixed(1) : Math.round(fbDist * 10)} m`);
+      if (lrDist >= threshold) parts.push(`${lrArrow} ${lrWord} ${eva ? lrDist.toFixed(1) : Math.round(lrDist * 10)} m`);
+      const relSummary = parts.join(' · ') || (eva ? `${d.toFixed(1)} m` : d >= 100 ? `${(d/100).toFixed(1)} km` : `${Math.round(d * 10)} m`);
 
       $('boss-dest-name').textContent = `📍 ${sites[target].name}`;
       const isReady = d < (eva ? 5 : 20);
       $('boss-dist-value').textContent = isReady
-        ? (eva ? `🚀 In reach! ✨ (${Math.round(d)} m)` : '🚀 Arrived at site!')
-        : `🚀 ${relSummary} (${d >= 100 ? (d/100).toFixed(2) + ' km' : Math.round(d * 10) + ' m'})`;
+        ? (eva ? `🚀 In reach! ✨ (${d.toFixed(1)} m)` : '🚀 Arrived at site!')
+        : `🚀 ${relSummary} (${eva ? d.toFixed(1) + ' m' : d >= 100 ? (d/100).toFixed(2) + ' km' : Math.round(d * 10) + ' m'})`;
       $('boss-dist-value').classList.toggle('ready', isReady);
     } else {
       row.hidden = true;

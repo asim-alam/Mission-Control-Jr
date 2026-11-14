@@ -362,8 +362,8 @@ export function relativeNavigation(playerPos, playerYaw, targetPos) {
     summary = '✨ In reach!';
   } else {
     const parts = [];
-    if (fbDist >= 0.5) parts.push(`${fbArrow} ${fbWord} ${fbDist.toFixed(1)} m`);
-    if (lrDist >= 0.5) parts.push(`${lrArrow} ${lrWord} ${lrDist.toFixed(1)} m`);
+    if (fbDist >= 0.2) parts.push(`${fbArrow} ${fbWord} ${fbDist.toFixed(1)} m`);
+    if (lrDist >= 0.2) parts.push(`${lrArrow} ${lrWord} ${lrDist.toFixed(1)} m`);
     summary = parts.join(' · ') || `${total.toFixed(1)} m`;
   }
 
