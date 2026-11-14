@@ -240,9 +240,11 @@ function render(){
     $('chapters').append(bossCard);
   }
 
+  renderPlaceMap();
+
   requestAnimationFrame(()=>{
     if($('mission-map') && !$('mission-map').hidden){
-      scrollToActiveMission();
+      if(currentMapView === 'cards') scrollToActiveMission();
     }
   });
 }
@@ -290,7 +292,420 @@ const kidDay=sol=>/LUNAR/i.test(sol)?'Moon base':sol.replace(/^SOLS?/i,'Day');
 function clearPresentation(){document.body.classList.remove('minimal-hud','photo-mode');}
 const chapterPath=(id,sampler=false)=>journeyUrl(location.href,id,{sampler}).href;
 
-function toggleMissionMap(open,{syncPath=false}={}){
+let currentMapView = 'place-map';
+let selectedPlaceId = null;
+
+const MARS_PLACES = [
+  { id: 'orbit', num: '01', x: 480, y: 88, name: 'Mars Orbit (Asteria)', sub: '300 km orbit · Sol 11', badge: 'SPACE' },
+  { id: 'storm', num: '02', x: 480, y: 255, name: 'Meridian Base Outpost', sub: '80 m apron · Sol 12', badge: 'BASE' },
+  { id: 'rover', num: '03', x: 190, y: 390, name: 'Jezero · Kestrel Ridge', sub: '4.8 km Rover Drive · Sol 16', badge: 'EXPEDITION' },
+  { id: 'solar-shelter', num: '04', x: 480, y: 430, name: 'Meridian Storm Refuge', sub: '12 m refuge bay · Sol 18', badge: 'SHELTER' },
+  { id: 'greenhouse', num: '05', x: 750, y: 425, name: 'Verdant Bio-Dome', sub: '25 m crop beds · Sols 32–34', badge: 'HYDROPONICS' },
+  { id: 'earth-delay', num: '06', x: 770, y: 240, name: 'Meridian Comms Hub', sub: '14–20 light min · Sol 35', badge: 'RADIO LINK' },
+  { id: 'extended', num: 'Apex', x: 480, y: 575, name: 'Meridian Regional Network', sub: '15 km Circuit · 6 Bases', badge: 'NETWORK' }
+];
+
+const MOON_PLACES = [
+  { id: 'lunar-sunlight', num: '01', x: 260, y: 340, name: 'Moon South Pole (Shackleton)', sub: '450 m solar tow · Peak of Light', badge: 'SOLAR' },
+  { id: 'lunar-dust', num: '02', x: 500, y: 430, name: 'Horizon Base Airlock', sub: '15 m airlock chamber · Dust Zap', badge: 'AIRLOCK' },
+  { id: 'lunar-relay', num: '03', x: 740, y: 300, name: 'Saddle Ridge & Hollow', sub: '1.2 km rover trip · Radio Relay', badge: 'RELAY' }
+];
+
+function generateMarsMapSvg(chapters, next, state, selectedId) {
+  const nodes = MARS_PLACES.map(p => {
+    const isDone = state.completed.includes(p.id);
+    const isNext = next === p.id;
+    const isSelected = selectedId === p.id;
+    const look = CHAPTER_LOOK[p.id] || {icon: '🚀', color: '#ff9a5c'};
+    return `
+      <g class="place-node${isNext ? ' active-pin' : ''}${isDone ? ' done-pin' : ''}${isSelected ? ' selected' : ''}"
+         data-id="${p.id}" tabindex="0" role="button" aria-label="${p.name} · ${p.sub}"
+         aria-pressed="${isSelected}">
+        ${isNext ? `<circle class="pulse-ring" cx="${p.x}" cy="${p.y}" r="28" stroke="${look.color}" fill="none"/>` : ''}
+        <circle class="node-shadow" cx="${p.x}" cy="${p.y + 4}" r="27" fill="rgba(0,0,0,0.5)"/>
+        <circle class="node-circle" cx="${p.x}" cy="${p.y}" r="26" fill="#1b1744" stroke="${look.color}" stroke-width="3.5"/>
+        <text class="node-emoji" x="${p.x}" y="${p.y + 7}" text-anchor="middle" font-size="22">${look.icon}</text>
+        <g class="node-status-badge" transform="translate(${p.x + 18}, ${p.y - 18})">
+          ${isDone ? `<circle r="11" fill="#ffd23f" stroke="#120f2e" stroke-width="2"/><text y="4" text-anchor="middle" font-size="12">⭐</text>` : (isNext ? `<circle r="11" fill="#ff5d73" stroke="#ffffff" stroke-width="2"/><text y="4" text-anchor="middle" font-size="11">🚀</text>` : `<circle r="9" fill="#272063" stroke="#4b3f9e" stroke-width="1.5"/><text y="3" text-anchor="middle" font-size="9.5">🔓</text>`)}
+        </g>
+        <g class="place-banner" transform="translate(${p.x - 90}, ${p.y + 32})">
+          <rect width="180" height="42" rx="8" class="banner-bg"/>
+          <text x="90" y="14" text-anchor="middle" class="banner-step">${p.badge} · ${p.num === 'Apex' ? 'Apex Mission' : `Mission ${p.num}`}</text>
+          <text x="90" y="27" text-anchor="middle" class="banner-name">${p.name}</text>
+          <text x="90" y="38" text-anchor="middle" class="banner-sub">${p.sub}</text>
+        </g>
+      </g>
+    `;
+  }).join('');
+
+  return `
+    <svg viewBox="0 0 960 660" class="game-place-map-svg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Mars Expedition Game Place Map">
+      <defs>
+        <linearGradient id="mars-sky" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#060412"/>
+          <stop offset="50%" stop-color="#140b26"/>
+          <stop offset="100%" stop-color="#2c111e"/>
+        </linearGradient>
+        <linearGradient id="mars-ground" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#34151a"/>
+          <stop offset="40%" stop-color="#481c20"/>
+          <stop offset="100%" stop-color="#240f13"/>
+        </linearGradient>
+        <radialGradient id="jezero-gradient" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#552427"/>
+          <stop offset="70%" stop-color="#3e1a1e"/>
+          <stop offset="100%" stop-color="#2b1115"/>
+        </radialGradient>
+        <radialGradient id="meridian-gradient" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#4a2024"/>
+          <stop offset="80%" stop-color="#35171b"/>
+          <stop offset="100%" stop-color="#220e12"/>
+        </radialGradient>
+        <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="3.5" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+
+      <!-- Background: Deep Space & Atmosphere -->
+      <rect width="960" height="660" fill="url(#mars-sky)"/>
+
+      <!-- Starfield in Space -->
+      <g class="stars" fill="#ffffff">
+        <circle cx="75" cy="40" r="1.5" opacity="0.8"/>
+        <circle cx="160" cy="85" r="1.2" opacity="0.6"/>
+        <circle cx="280" cy="35" r="2" opacity="0.9"/>
+        <circle cx="390" cy="70" r="1" opacity="0.5"/>
+        <circle cx="580" cy="45" r="1.8" opacity="0.7"/>
+        <circle cx="690" cy="80" r="1.4" opacity="0.6"/>
+        <circle cx="820" cy="30" r="2.2" opacity="0.9"/>
+        <circle cx="910" cy="75" r="1.2" opacity="0.7"/>
+        <circle cx="120" cy="130" r="1.5" opacity="0.7"/>
+        <circle cx="230" cy="115" r="1" opacity="0.5"/>
+        <circle cx="730" cy="135" r="1.6" opacity="0.8"/>
+        <circle cx="870" cy="120" r="1.2" opacity="0.6"/>
+      </g>
+
+      <!-- Mars Curved Atmosphere Horizon Limb -->
+      <path d="M 0,165 Q 480,188 960,165 L 960,660 L 0,660 Z" fill="url(#mars-ground)"/>
+      <path d="M 0,165 Q 480,188 960,165" stroke="#ff8a3d" stroke-width="4" fill="none" opacity="0.75" filter="url(#glow)"/>
+      <path d="M 0,165 Q 480,188 960,165" stroke="#ffb057" stroke-width="1.5" fill="none" opacity="0.9"/>
+
+      <!-- Topography: Jezero Crater & River Delta (West) -->
+      <ellipse cx="190" cy="390" rx="100" ry="58" fill="url(#jezero-gradient)" stroke="#663133" stroke-width="2.5" opacity="0.9"/>
+      <ellipse cx="190" cy="390" rx="72" ry="40" fill="none" stroke="#7a3a3c" stroke-width="1.5" stroke-dasharray="4,4" opacity="0.6"/>
+      <path d="M 120,360 Q 155,375 190,385" stroke="#944747" stroke-width="4" fill="none" stroke-linecap="round" opacity="0.5"/>
+      <text x="190" y="340" text-anchor="middle" class="map-label">JEZERO CRATER · RIVER DELTA</text>
+
+      <!-- Topography: Meridian Planum Basin (Center) -->
+      <ellipse cx="480" cy="350" rx="170" ry="110" fill="url(#meridian-gradient)" stroke="#5e292d" stroke-width="2" stroke-dasharray="6,4" opacity="0.8"/>
+      <text x="480" y="305" text-anchor="middle" class="map-label">MERIDIAN BASIN · EXPEDITION HUB</text>
+
+      <!-- Deep Space Uplink Beam to Earth -->
+      <g class="comms-beam" opacity="0.85">
+        <path d="M 770,240 L 890,70" stroke="#a78bfa" stroke-width="2" stroke-dasharray="4,5" filter="url(#glow)"/>
+        <path d="M 830,150 A 30 30 0 0 0 855,120" stroke="#c4b5fd" stroke-width="2" fill="none"/>
+        <path d="M 845,130 A 50 50 0 0 0 885,90" stroke="#c4b5fd" stroke-width="1.8" fill="none"/>
+        <text x="890" y="60" text-anchor="middle" class="beam-tag">Earth Link (14–20 Light-Min) ↗</text>
+      </g>
+
+      <!-- Connecting Expedition Routes -->
+      <g class="map-routes">
+        <!-- Orbit Descent Path -->
+        <path class="route-line descent" d="M 480,88 L 480,255" stroke="#4cc9ff" stroke-width="3" filter="url(#glow)"/>
+        <text x="495" y="172" class="route-tag">300 km Descent</text>
+
+        <!-- Meridian to Jezero Rover Traverse -->
+        <path class="route-line rover-track" d="M 480,255 Q 320,285 190,390" stroke="#ff5d73" stroke-width="3.5" filter="url(#glow)"/>
+        <text x="315" y="315" class="route-tag">4.8 km Rover Drive</text>
+
+        <!-- Meridian to Storm Refuge -->
+        <path class="route-line corridor" d="M 480,255 L 480,430" stroke="#ffd23f" stroke-width="3.5" filter="url(#glow)"/>
+        <text x="495" y="348" class="route-tag">12 m Refuge Bay</text>
+
+        <!-- Storm Refuge to Bio-Dome -->
+        <path class="route-line tunnel" d="M 480,430 L 750,425" stroke="#3ee6b5" stroke-width="3.5" filter="url(#glow)"/>
+        <text x="615" y="415" class="route-tag">25 m Crop Beds</text>
+
+        <!-- Bio-Dome to Comms Hub -->
+        <path class="route-line comms-link" d="M 750,425 L 770,240" stroke="#a78bfa" stroke-width="3" filter="url(#glow)"/>
+        <text x="785" y="340" class="route-tag">Data Link</text>
+
+        <!-- Meridian Regional Circuit -->
+        <path class="route-line network-loop" d="M 480,430 C 480,490 310,520 480,575 C 650,520 480,490 480,430" stroke="#ffd23f" stroke-width="3" stroke-dasharray="6,6" filter="url(#glow)"/>
+        <text x="480" y="525" text-anchor="middle" class="route-tag">15 km Regional Circuit</text>
+      </g>
+
+      <!-- Place Waypoint Nodes -->
+      <g class="map-nodes">
+        ${nodes}
+      </g>
+    </svg>
+  `;
+}
+
+function generateMoonMapSvg(chapters, next, state, selectedId) {
+  const nodes = MOON_PLACES.map(p => {
+    const isDone = state.completed.includes(p.id);
+    const isNext = next === p.id;
+    const isSelected = selectedId === p.id;
+    const look = CHAPTER_LOOK[p.id] || {icon: '🚀', color: '#ff9a5c'};
+    return `
+      <g class="place-node${isNext ? ' active-pin' : ''}${isDone ? ' done-pin' : ''}${isSelected ? ' selected' : ''}"
+         data-id="${p.id}" tabindex="0" role="button" aria-label="${p.name} · ${p.sub}"
+         aria-pressed="${isSelected}">
+        ${isNext ? `<circle class="pulse-ring" cx="${p.x}" cy="${p.y}" r="28" stroke="${look.color}" fill="none"/>` : ''}
+        <circle class="node-shadow" cx="${p.x}" cy="${p.y + 4}" r="27" fill="rgba(0,0,0,0.5)"/>
+        <circle class="node-circle" cx="${p.x}" cy="${p.y}" r="26" fill="#1b1744" stroke="${look.color}" stroke-width="3.5"/>
+        <text class="node-emoji" x="${p.x}" y="${p.y + 7}" text-anchor="middle" font-size="22">${look.icon}</text>
+        <g class="node-status-badge" transform="translate(${p.x + 18}, ${p.y - 18})">
+          ${isDone ? `<circle r="11" fill="#ffd23f" stroke="#120f2e" stroke-width="2"/><text y="4" text-anchor="middle" font-size="12">⭐</text>` : (isNext ? `<circle r="11" fill="#ff5d73" stroke="#ffffff" stroke-width="2"/><text y="4" text-anchor="middle" font-size="11">🚀</text>` : `<circle r="9" fill="#272063" stroke="#4b3f9e" stroke-width="1.5"/><text y="3" text-anchor="middle" font-size="9.5">🔓</text>`)}
+        </g>
+        <g class="place-banner" transform="translate(${p.x - 90}, ${p.y + 32})">
+          <rect width="180" height="42" rx="8" class="banner-bg"/>
+          <text x="90" y="14" text-anchor="middle" class="banner-step">${p.badge} · Mission ${p.num}</text>
+          <text x="90" y="27" text-anchor="middle" class="banner-name">${p.name}</text>
+          <text x="90" y="38" text-anchor="middle" class="banner-sub">${p.sub}</text>
+        </g>
+      </g>
+    `;
+  }).join('');
+
+  return `
+    <svg viewBox="0 0 960 660" class="game-place-map-svg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Moon Expedition Game Place Map">
+      <defs>
+        <linearGradient id="moon-sky" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#020208"/>
+          <stop offset="60%" stop-color="#080814"/>
+          <stop offset="100%" stop-color="#121224"/>
+        </linearGradient>
+        <linearGradient id="moon-ground" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#22232a"/>
+          <stop offset="40%" stop-color="#2e303a"/>
+          <stop offset="100%" stop-color="#181920"/>
+        </linearGradient>
+        <radialGradient id="shackleton-shadow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#050508"/>
+          <stop offset="85%" stop-color="#0a0a10"/>
+          <stop offset="100%" stop-color="#252630"/>
+        </radialGradient>
+        <filter id="moon-glow" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="3.5" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+
+      <!-- Background: Deep Space Void -->
+      <rect width="960" height="660" fill="url(#moon-sky)"/>
+
+      <!-- Starfield in Space -->
+      <g class="stars" fill="#ffffff">
+        <circle cx="80" cy="50" r="1.5" opacity="0.9"/>
+        <circle cx="180" cy="90" r="1.2" opacity="0.7"/>
+        <circle cx="320" cy="40" r="2" opacity="0.95"/>
+        <circle cx="450" cy="75" r="1" opacity="0.6"/>
+        <circle cx="590" cy="50" r="1.8" opacity="0.8"/>
+        <circle cx="700" cy="85" r="1.4" opacity="0.7"/>
+        <circle cx="140" cy="140" r="1.5" opacity="0.8"/>
+      </g>
+
+      <!-- Earth Floating in Black Sky -->
+      <g class="earth-globe" transform="translate(820, 105)">
+        <circle cx="0" cy="0" r="44" fill="#1b4d89" filter="url(#moon-glow)" opacity="0.9"/>
+        <circle cx="0" cy="0" r="42" fill="#2d6cb5"/>
+        <ellipse cx="-10" cy="-6" rx="18" ry="22" fill="#48b884" opacity="0.8"/>
+        <ellipse cx="14" cy="8" rx="16" ry="18" fill="#48b884" opacity="0.8"/>
+        <path d="M -28,-14 Q 0,-20 28,-12 Q 10,0 -20,-4 Z" fill="#ffffff" opacity="0.6"/>
+        <path d="M -22,12 Q 4,8 26,18 Q 8,24 -16,20 Z" fill="#ffffff" opacity="0.55"/>
+        <text x="0" y="62" text-anchor="middle" class="beam-tag">Earth · 384,400 km Away</text>
+      </g>
+
+      <!-- Lunar Surface Horizon -->
+      <path d="M 0,210 Q 480,230 960,210 L 960,660 L 0,660 Z" fill="url(#moon-ground)"/>
+      <path d="M 0,210 Q 480,230 960,210" stroke="#d5d8e6" stroke-width="2.5" fill="none" opacity="0.6"/>
+
+      <!-- Shackleton Crater Rim (Permanent Shadow + Peak of Light) -->
+      <ellipse cx="260" cy="340" rx="120" ry="65" fill="url(#shackleton-shadow)" stroke="#454756" stroke-width="2.5"/>
+      <path d="M 210,295 Q 260,280 310,295" stroke="#ffd23f" stroke-width="4.5" fill="none" filter="url(#moon-glow)"/>
+      <text x="260" y="275" text-anchor="middle" class="map-label">SHACKLETON CRATER · PEAK OF LIGHT</text>
+
+      <!-- Saddle Ridge Feature -->
+      <ellipse cx="740" cy="300" rx="100" ry="50" fill="#1e1f28" stroke="#484a5a" stroke-width="2" stroke-dasharray="5,4"/>
+      <text x="740" y="240" text-anchor="middle" class="map-label">SADDLE RIDGE &amp; HOLLOW</text>
+
+      <!-- Horizon Base Airlock Pad -->
+      <rect x="420" y="390" width="160" height="90" rx="12" fill="#1a1b24" stroke="#5a5d72" stroke-width="2" opacity="0.8"/>
+      <text x="500" y="380" text-anchor="middle" class="map-label">HORIZON BASE SITE</text>
+
+      <!-- Connecting Lunar Routes -->
+      <g class="map-routes">
+        <path class="route-line moon-track" d="M 260,340 Q 380,410 500,430" stroke="#ffd23f" stroke-width="3.5" filter="url(#moon-glow)"/>
+        <text x="370" y="375" class="route-tag">450 m Solar Tow Track</text>
+
+        <path class="route-line moon-track" d="M 500,430 Q 620,400 740,300" stroke="#4cc9ff" stroke-width="3.5" filter="url(#moon-glow)"/>
+        <text x="625" y="360" class="route-tag">1.2 km Rover Trip</text>
+
+        <path class="route-line laser-beam" d="M 740,300 L 500,430" stroke="#c4b5fd" stroke-width="2" stroke-dasharray="4,6" filter="url(#moon-glow)"/>
+        <text x="620" y="420" class="route-tag">Radio Relay Beam</text>
+      </g>
+
+      <!-- Place Waypoint Nodes -->
+      <g class="map-nodes">
+        ${nodes}
+      </g>
+    </svg>
+  `;
+}
+
+function renderPlaceMap() {
+  const viewport = $('place-map-viewport');
+  const inspector = $('place-inspector-card');
+  if (!viewport || !inspector) return;
+
+  const campaign = state.selectedCampaign;
+  const chapters = missionsFor(campaign);
+  const next = nextStoryChapter(state, campaign);
+  const complete = storyComplete(state, campaign);
+
+  const places = campaign === 'mars' ? MARS_PLACES : MOON_PLACES;
+  if (!selectedPlaceId || !places.some(p => p.id === selectedPlaceId)) {
+    selectedPlaceId = next || (complete ? (campaign === 'mars' ? 'extended' : places[places.length - 1].id) : places[0].id);
+  }
+
+  const svg = campaign === 'mars'
+    ? generateMarsMapSvg(chapters, next, state, selectedPlaceId)
+    : generateMoonMapSvg(chapters, next, state, selectedPlaceId);
+
+  viewport.innerHTML = svg;
+
+  viewport.querySelectorAll('.place-node').forEach(node => {
+    const id = node.dataset.id;
+    const select = () => {
+      selectedPlaceId = id;
+      viewport.querySelectorAll('.place-node').forEach(n => {
+        const isSel = n.dataset.id === id;
+        n.classList.toggle('selected', isSel);
+        n.setAttribute('aria-pressed', String(isSel));
+      });
+      renderInspector(id, campaign, next, state);
+    };
+    node.onclick = select;
+    node.onkeydown = e => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        select();
+      }
+    };
+    node.ondblclick = () => {
+      select();
+      const done = state.completed.includes(id);
+      toggleMissionMap(false);
+      requestChapter(id, done);
+    };
+  });
+
+  renderInspector(selectedPlaceId, campaign, next, state);
+}
+
+function renderInspector(id, campaign, next, state) {
+  const inspector = $('place-inspector-card');
+  if (!inspector) return;
+
+  let chapter = chapterById(id);
+  if (id === 'extended') {
+    chapter = {
+      id: 'extended',
+      number: 'Apex',
+      title: 'Be the Base Boss',
+      destination: 'Meridian Regional Network',
+      distance: '15 km Circuit · 225M km',
+      sol: 'MERIDIAN BASIN',
+      description: 'Drive the rover between outposts, work outside in your spacesuit, and help the crews keep water, food, and radio links running.'
+    };
+  }
+  if (!chapter) {
+    inspector.hidden = true;
+    return;
+  }
+
+  const done = state.completed.includes(id);
+  const isNext = next === id;
+  const record = state.records[id];
+  const look = CHAPTER_LOOK[id] || {icon: '🚀', color: '#ff9a5c'};
+  const stepLabel = Number(chapter.number) ? `Mission ${Number(chapter.number)}` : (chapter.number || 'Special');
+  const statusBadge = done
+    ? `<span class="inspector-status-pill done">⭐ Finished${record?.mastered ? ' · Mastered' : ''}${record?.score != null ? ` · ${record.score}/100` : ''}</span>`
+    : (isNext ? `<span class="inspector-status-pill next">🚀 Recommended Up Next</span>` : `<span class="inspector-status-pill open">🔓 Open to Play</span>`);
+
+  inspector.hidden = false;
+  inspector.innerHTML = `
+    <div class="inspector-header">
+      <div class="inspector-icon" style="--chapter-color: ${look.color}" aria-hidden="true">${look.icon}</div>
+      <div class="inspector-titles">
+        <div class="inspector-meta">
+          <span class="inspector-step">${stepLabel}</span>
+          <span class="inspector-sol">${kidDay(chapter.sol)}</span>
+        </div>
+        <h3 class="inspector-title">${chapter.title}</h3>
+      </div>
+      <button type="button" class="inspector-close-btn" id="inspector-close" aria-label="Close inspector">✕</button>
+    </div>
+    <div class="inspector-pills">
+      <span class="inspector-dest" title="Destination">📍 ${chapter.destination || 'Expedition Site'}</span>
+      <span class="inspector-dist" title="Distance">🚀 ${chapter.distance || chapter.localDistance || 'Deep Space'}</span>
+      ${statusBadge}
+    </div>
+    <p class="inspector-desc">${chapter.description}</p>
+    <div class="inspector-actions">
+      <button type="button" class="inspector-launch-btn ${isNext ? 'primary' : ''}" id="inspector-play">
+        ${done ? '↻ Replay Mission' : (isNext ? '▶ Play Up Next!' : '▶ Practice Mission')}
+      </button>
+      <span class="inspector-hint">${done ? `${completionStatus(record)}${record?.assisted ? ' · with help' : ''}` : (isNext ? 'Follow the story forward' : 'Explore any time')}</span>
+    </div>
+  `;
+
+  const launchMission = () => {
+    toggleMissionMap(false);
+    requestChapter(id, done);
+  };
+  const playBtn = $('inspector-play');
+  if (playBtn) playBtn.onclick = launchMission;
+  const closeBtn = $('inspector-close');
+  if (closeBtn) closeBtn.onclick = () => { inspector.hidden = true; };
+}
+
+function setMapView(mode) {
+  currentMapView = mode;
+  const tabPlace = $('tab-place-map');
+  const tabCards = $('tab-card-list');
+  const placeView = $('expedition-place-map');
+  const cardsView = $('mission-map-scroller');
+  if (tabPlace) {
+    tabPlace.classList.toggle('active', mode === 'place-map');
+    tabPlace.setAttribute('aria-selected', String(mode === 'place-map'));
+  }
+  if (tabCards) {
+    tabCards.classList.toggle('active', mode === 'cards');
+    tabCards.setAttribute('aria-selected', String(mode === 'cards'));
+  }
+  if (placeView) placeView.hidden = mode !== 'place-map';
+  if (cardsView) cardsView.hidden = mode !== 'cards';
+  if (mode === 'place-map') {
+    renderPlaceMap();
+  } else {
+    requestAnimationFrame(() => {
+      scrollToActiveMission({ smooth: false });
+    });
+  }
+}
+
+function toggleMissionMap(open,{syncPath=false, view='place-map'}={}){
   const map=$('mission-map');
   if(!map)return;
   const show=open!=null?Boolean(open):map.hidden;
@@ -309,14 +724,7 @@ function toggleMissionMap(open,{syncPath=false}={}){
     jBtn.textContent=show?'✕ Close':'🗺️ Mission Map';
   }
   if(show){
-    const scrollEl=document.querySelector('.mission-map-scroll');
-    if(scrollEl)scrollEl.focus?.({preventScroll:true});
-    requestAnimationFrame(()=>{
-      scrollToActiveMission({ smooth: false });
-    });
-    setTimeout(()=>{
-      scrollToActiveMission({ smooth: false });
-    }, 60);
+    setMapView(view || currentMapView);
   }
 }
 
@@ -549,6 +957,11 @@ window.addEventListener('message',event=>{
   }
   if(data?.source!=='mission-control-jr')return;
   if(data.type==='menu'){menu();return;}
+  if(data.type==='map'){
+    menu({updatePath:false});
+    toggleMissionMap(true,{syncPath:true,view:'place-map'});
+    return;
+  }
   if(data.chapter!==active)return;
   if(data.type==='ready'){$('loading-scene').hidden=true;hold(!$('journey').hidden||!$('transition').hidden);}
   if(data.type==='complete'&&!activeSampler){finishChapter(state,active,data.result);persist();render();}
@@ -578,6 +991,9 @@ document.querySelectorAll('[data-campaign]').forEach(button=>button.onclick=()=>
     if(scrollEl) scrollEl.scrollTo({top: 0, behavior: 'instant'});
   }
 });
+
+$('tab-place-map')?.addEventListener('click', () => setMapView('place-map'));
+$('tab-card-list')?.addEventListener('click', () => setMapView('cards'));
 
 render();
 persist();

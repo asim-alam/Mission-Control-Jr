@@ -477,6 +477,351 @@ body.kid-home .mission-map-deck {
   padding: 0 !important;
   box-sizing: border-box !important;
   overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* ------------------------------------------------------------------ */
+/* EXPEDITION MAP: GAME PLACE MAP & CARDS VIEW SWITCHER              */
+/* ------------------------------------------------------------------ */
+body.kid-home .map-view-switcher {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: rgba(14, 11, 36, 0.9);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 2px solid rgba(75, 63, 158, 0.4);
+  z-index: 25;
+  flex-shrink: 0;
+}
+body.kid-home .map-view-tab {
+  padding: 8px 20px;
+  font-family: var(--kid-display);
+  font-size: 15px;
+  font-weight: 700;
+  border-radius: 999px;
+  background: rgba(27, 23, 68, 0.9);
+  color: var(--kid-soft);
+  border: 2px solid #4b3f9e;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px rgba(0, 0, 0, 0.35);
+}
+body.kid-home .map-view-tab:hover {
+  filter: brightness(1.1);
+  translate: 0 -2px;
+  border-color: #806cf7;
+  color: #ffffff;
+}
+body.kid-home .map-view-tab.active {
+  background: linear-gradient(180deg, #ffb057, var(--kid-orange)) !important;
+  color: #2b1300 !important;
+  border-color: var(--kid-yellow) !important;
+  box-shadow: 0 4px #b84f12, 0 8px 20px rgba(255, 138, 61, 0.45) !important;
+}
+
+/* Graphical Expedition Game Place Map View */
+body.kid-home .expedition-place-map {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+body.kid-home .expedition-place-map[hidden] {
+  display: none !important;
+}
+body.kid-home .place-map-viewport {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 8px 12px 140px;
+  box-sizing: border-box;
+}
+body.kid-home .game-place-map-svg {
+  width: 100%;
+  height: 100%;
+  max-height: calc(100dvh - 160px);
+  object-fit: contain;
+  user-select: none;
+  filter: drop-shadow(0 10px 28px rgba(0, 0, 0, 0.6));
+}
+
+/* SVG interactive nodes */
+body.kid-home .place-node {
+  cursor: pointer;
+  outline: none;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+body.kid-home .place-node:hover,
+body.kid-home .place-node:focus-visible {
+  transform: scale(1.08);
+}
+body.kid-home .place-node.selected {
+  transform: scale(1.12);
+}
+body.kid-home .place-node.selected .node-circle {
+  stroke-width: 5px !important;
+  stroke: var(--kid-yellow) !important;
+  filter: drop-shadow(0 0 16px var(--kid-yellow));
+}
+body.kid-home .place-node.active-pin .node-circle {
+  animation: active-glow 2s infinite alternate ease-in-out;
+}
+@keyframes active-glow {
+  0% { filter: drop-shadow(0 0 6px #ff8a3d); }
+  100% { filter: drop-shadow(0 0 18px #ffd23f); }
+}
+
+body.kid-home .pulse-ring {
+  animation: place-radar 2.4s infinite cubic-bezier(0.2, 0.8, 0.4, 1);
+  transform-origin: center;
+  pointer-events: none;
+}
+@keyframes place-radar {
+  0% { r: 26px; opacity: 0.95; stroke-width: 4px; }
+  100% { r: 62px; opacity: 0; stroke-width: 1px; }
+}
+
+body.kid-home .route-line {
+  fill: none;
+  stroke-linecap: round;
+  stroke-dasharray: 7, 7;
+  animation: route-stream 20s linear infinite;
+}
+@keyframes route-stream {
+  to { stroke-dashoffset: -140; }
+}
+body.kid-home .route-tag {
+  font-family: var(--kid-display);
+  font-size: 11px;
+  font-weight: 800;
+  fill: #ffd23f;
+  letter-spacing: 0.05em;
+  paint-order: stroke;
+  stroke: #120f2e;
+  stroke-width: 3.5px;
+  stroke-linejoin: round;
+}
+body.kid-home .map-label {
+  font-family: var(--kid-display);
+  font-size: 11px;
+  font-weight: 800;
+  fill: #d3ad7999;
+  letter-spacing: 0.12em;
+}
+body.kid-home .beam-tag {
+  font-family: var(--kid-display);
+  font-size: 10px;
+  font-weight: 800;
+  fill: #c4b5fd;
+  letter-spacing: 0.05em;
+  paint-order: stroke;
+  stroke: #120f2e;
+  stroke-width: 3px;
+}
+body.kid-home .banner-bg {
+  fill: rgba(18, 15, 46, 0.94);
+  stroke: rgba(255, 255, 255, 0.28);
+  stroke-width: 1.5px;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.6));
+}
+body.kid-home .banner-step {
+  font-family: var(--kid-display);
+  font-size: 9.5px;
+  font-weight: 800;
+  fill: var(--kid-yellow);
+  letter-spacing: 0.06em;
+}
+body.kid-home .banner-name {
+  font-family: var(--kid-display);
+  font-size: 12px;
+  font-weight: 700;
+  fill: #ffffff;
+}
+body.kid-home .banner-sub {
+  font-family: var(--kid-body);
+  font-size: 10px;
+  fill: var(--kid-soft);
+  font-weight: 600;
+}
+
+/* Place Inspector Card at bottom */
+body.kid-home .place-inspector-card {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(680px, calc(100% - 32px));
+  background: rgba(27, 23, 68, 0.96);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 2px solid #806cf7;
+  border-radius: 20px;
+  padding: 16px 22px;
+  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.75), 0 0 24px rgba(128, 108, 247, 0.4);
+  z-index: 30;
+  box-sizing: border-box;
+  animation: inspector-pop 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes inspector-pop {
+  from { opacity: 0; transform: translate(-50%, 18px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+body.kid-home .place-inspector-card[hidden] {
+  display: none !important;
+}
+body.kid-home .inspector-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+body.kid-home .inspector-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(18, 15, 46, 0.9);
+  border: 2.5px solid var(--chapter-color, #ff8a3d);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  flex-shrink: 0;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+}
+body.kid-home .inspector-titles {
+  flex: 1;
+}
+body.kid-home .inspector-meta {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 2px;
+}
+body.kid-home .inspector-step {
+  font-family: var(--kid-display);
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--kid-yellow);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+body.kid-home .inspector-sol {
+  font-size: 11px;
+  color: var(--kid-soft);
+  font-weight: 600;
+}
+body.kid-home .inspector-title {
+  font-family: var(--kid-display);
+  font-size: 20px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+  line-height: 1.2;
+}
+body.kid-home .inspector-close-btn {
+  background: rgba(75, 63, 158, 0.3);
+  border: 1px solid rgba(128, 108, 247, 0.5);
+  color: var(--kid-soft);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+body.kid-home .inspector-close-btn:hover {
+  background: rgba(255, 93, 115, 0.3);
+  color: #ffffff;
+  border-color: #ff5d73;
+}
+body.kid-home .inspector-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0 8px;
+}
+body.kid-home .inspector-dest,
+body.kid-home .inspector-dist,
+body.kid-home .inspector-status-pill {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+}
+body.kid-home .inspector-dest {
+  background: rgba(76, 201, 255, 0.15);
+  color: #8be0ff;
+  border: 1px solid rgba(76, 201, 255, 0.4);
+}
+body.kid-home .inspector-dist {
+  background: rgba(255, 210, 63, 0.15);
+  color: var(--kid-yellow);
+  border: 1px solid rgba(255, 210, 63, 0.4);
+}
+body.kid-home .inspector-status-pill.done {
+  background: rgba(62, 230, 181, 0.18);
+  color: var(--kid-mint);
+  border: 1px solid rgba(62, 230, 181, 0.5);
+}
+body.kid-home .inspector-status-pill.next {
+  background: rgba(255, 138, 61, 0.2);
+  color: var(--kid-orange);
+  border: 1px solid rgba(255, 138, 61, 0.5);
+}
+body.kid-home .inspector-status-pill.open {
+  background: rgba(167, 139, 250, 0.18);
+  color: var(--kid-violet);
+  border: 1px solid rgba(167, 139, 250, 0.4);
+}
+body.kid-home .inspector-desc {
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: #f1edff;
+  margin: 6px 0 12px;
+}
+body.kid-home .inspector-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+body.kid-home .inspector-launch-btn {
+  font-family: var(--kid-display);
+  font-size: 15px;
+  padding: 9px 24px;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+body.kid-home .inspector-hint {
+  font-size: 12px;
+  color: var(--kid-soft);
+  font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  body.kid-home .map-view-switcher { padding: 8px 12px; gap: 8px; }
+  body.kid-home .map-view-tab { font-size: 13px; padding: 6px 14px; }
+  body.kid-home .place-map-viewport { padding: 4px 6px 180px; }
+  body.kid-home .place-inspector-card { bottom: 10px; padding: 12px 14px; width: calc(100% - 16px); }
+  body.kid-home .inspector-title { font-size: 16px; }
+  body.kid-home .inspector-desc { font-size: 12px; margin: 4px 0 8px; }
+  body.kid-home .inspector-launch-btn { font-size: 13px; padding: 7px 16px; }
 }
 
 /* Scrollable Map View for all Mission Cards */
