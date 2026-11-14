@@ -406,8 +406,36 @@ export async function createRelayScene({container, getState, act, onPause, onDri
   };
   world.onFrame(() => world.guide(guideTarget(), .45));
 
+  const getTargetPos = id => {
+    try {
+      if (id === 'hatch') return {x: 7.2, z: 0};
+      const st = s();
+      if (!st) return null;
+      if (id === 'rover') {
+        const v = new THREE.Vector3();
+        rover.getWorldPosition(v);
+        return {x: v.x, z: v.z};
+      }
+      if (id === 'relay') {
+        const relaySpot = st.scenario?.stops?.[st.at]?.relaySpot;
+        if (relaySpot) return {x: relaySpot.x, z: relaySpot.z};
+        const v = new THREE.Vector3();
+        (st.relay === 'crate' ? crate : relay).getWorldPosition(v);
+        return {x: v.x, z: v.z};
+      }
+      if (id === 'drill') {
+        const v = new THREE.Vector3();
+        (st.drill === 'ground' ? drill : xMarks[st.earthAsked && st.cores ? 'b' : 'a']).getWorldPosition(v);
+        return {x: v.x, z: v.z};
+      }
+    } catch {}
+    return null;
+  };
   const walkTargets = [
-    {id: 'rover', label: '🚙 Rover'}, {id: 'relay', label: '📡 Relay / setup ring'}, {id: 'drill', label: '🔩 Drill / X'}, {id: 'hatch', label: '🚪 Base hatch'},
+    {id: 'rover', label: '🚙 Rover', get x() { return getTargetPos('rover')?.x ?? null; }, get z() { return getTargetPos('rover')?.z ?? null; }},
+    {id: 'relay', label: '📡 Relay / setup ring', get x() { return getTargetPos('relay')?.x ?? null; }, get z() { return getTargetPos('relay')?.z ?? null; }},
+    {id: 'drill', label: '🔩 Drill / X', get x() { return getTargetPos('drill')?.x ?? null; }, get z() { return getTargetPos('drill')?.z ?? null; }},
+    {id: 'hatch', label: '🚪 Base hatch', x: 7.2, z: 0},
   ];
   const worldOf = o => { const v = new THREE.Vector3(); o.getWorldPosition(v); return v; };
   return {world, sync, idle: () => syncQueue, drive, walkTargets, NEXT,

@@ -299,7 +299,7 @@ export async function createSunScene({container, getState, act, onPause, onConso
 
   const walkTargets = [
     {id: 'console', label: '🖥️ Base console', x: 7.6, z: -3.6},
-    {id: 'cart', label: '☀️ Solar cart', x: 0, z: 0},
+    {id: 'cart', label: '☀️ Solar cart', get x() { return cartPos.x; }, get z() { return cartPos.y; }},
     {id: 'port', label: '🔌 Power port', x: -.8, z: -3.6},
     {id: 'near', label: '🏠 Near pad', x: SITE.pads.near.x, z: SITE.pads.near.z + 3},
     {id: 'ridge', label: '⛰️ Ridge pad', x: SITE.pads.ridge.x, z: SITE.pads.ridge.z + 3},

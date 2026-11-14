@@ -314,13 +314,38 @@ export async function createShelterScene({container, getState, act, onPause, onT
     {id: 'store-bags', label: 'Supply bags', find: st => st.items.find(i => i.kind === 'bag' && i.at === 'store')},
     {id: 'store-poly', label: 'Plastic panels', find: st => st.items.find(i => i.kind === 'poly' && i.at === 'store')},
   ];
-  const labelFor = (id, label) => ({id, label, visible: () => targets.get(id)?.enabled()});
+  const targetPos = id => {
+    const t = targets.get(id);
+    if (!t?.object) return null;
+    const v = new THREE.Vector3();
+    t.object.getWorldPosition(v);
+    return v;
+  };
+  const labelFor = (id, label) => ({
+    id, label,
+    visible: () => targets.get(id)?.enabled(),
+    get x() { return targetPos(id)?.x ?? null; },
+    get z() { return targetPos(id)?.z ?? null; }
+  });
   return {world, sync, setCutaway, seatTransmission: seat => seatTransmission(s(), seat),
     walkTargets: [labelFor('tablet', 'refuge tablet'), labelFor('elena', 'Elena'), labelFor('check', 'refuge door'),
-      labelFor('rack', 'water rack'), ...landmarks.map(l => ({id: l.id, label: l.label, visible: () => prep() && !held() && !!l.find(s())})),
+      labelFor('rack', 'water rack'), ...landmarks.map(l => ({
+        id: l.id, label: l.label,
+        visible: () => prep() && !held() && !!l.find(s()),
+        get x() {
+          const it = l.find(s());
+          return it ? targetPos(`item:${it.id}`)?.x ?? null : null;
+        },
+        get z() {
+          const it = l.find(s());
+          return it ? targetPos(`item:${it.id}`)?.z ?? null : null;
+        }
+      })),
       // The current target gets its own shortcut even when it isn't a general landmark.
       ...[...targets.keys()].filter(id => !['tablet', 'elena', 'check', 'rack'].includes(id)).map(id => ({
         id, label: id.startsWith('mount:') ? 'wall mount' : 'marked spot', visible: () => false,
+        get x() { return targetPos(id)?.x ?? null; },
+        get z() { return targetPos(id)?.z ?? null; }
       }))],
     walk(id) {
       const landmark = landmarks.find(l => l.id === id);

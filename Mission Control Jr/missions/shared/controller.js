@@ -237,6 +237,7 @@ function showStepAlertShared(title, text, nextTip, icon = '🎉', onOpenLesson =
       let destName = targetObj ? targetObj.label.replace(/^[^\p{L}]+/u, '') : null;
       let destDist = null;
       let relNav = guideInfo?.relative;
+      let bestTarget = targetObj || null;
       if (guideInfo && guideInfo.distance != null) {
         destDist = guideInfo.distance;
         if (!destName && guideInfo.target?.name) {
@@ -259,7 +260,6 @@ function showStepAlertShared(title, text, nextTip, icon = '🎉', onOpenLesson =
       if (!destName && ctx.view?.walkTargets?.length && (guideInfo?.position || guideInfo?.target?.position)) {
         const gPos = guideInfo.position || guideInfo.target.position;
         let bestDist = Infinity;
-        let bestTarget = null;
         for (const wt of ctx.view.walkTargets) {
           const wx = wt.x ?? wt.point?.x;
           const wz = wt.z ?? wt.point?.z;

@@ -70,7 +70,13 @@ export async function createWorld({container, preset = 'interior', bounds, start
     if (!alive) return;
     const dt = Math.min((now - last) / 1000, .1); last = now; elapsed += dt;
     const moved = player.update(dt);
-    for (const fn of [...updaters]) fn(dt, elapsed, moved);
+    for (const fn of [...updaters]) {
+      try {
+        fn(dt, elapsed, moved);
+      } catch (err) {
+        console.error('onFrame updater error:', err);
+      }
+    }
     avatar.model.visible = player.view === 'third' && player.cameraDistance > .65;
     if (avatar.model.visible) {
       avatar.model.position.copy(player.position);

@@ -161,19 +161,24 @@ export function buildHud({title, place, meters}) {
       if (targetId && !currentPlace) {
         currentPlace = targetId;
       }
-      if (nextPlace && distance != null) {
-        const target = currentPlace ? destinations.find(t => t.id === currentPlace) : null;
-        const cleanName = (destination || (target ? target.label.replace(/^[^\p{L}]+/u, '') : 'Objective')).trim();
-        const relText = relative?.summary;
-        const text = isReady
-          ? `At ${cleanName} · In reach`
-          : `Walk to ${cleanName} · ${relText || distance.toFixed(1) + ' m'}`;
-        if (nextPlace.textContent !== text) {
-          nextPlace.textContent = text;
+      if (nextPlace) {
+        if (destination || currentPlace) {
+          const target = currentPlace ? destinations.find(t => t.id === currentPlace) : null;
+          const cleanName = (destination || (target ? target.label.replace(/^[^\p{L}]+/u, '') : 'Objective')).trim();
+          const relText = relative?.summary;
+          const text = distance != null
+            ? (isReady ? `At ${cleanName} · In reach` : `Walk to ${cleanName} · ${relText || distance.toFixed(1) + ' m'}`)
+            : `Walk to ${cleanName}`;
+          if (nextPlace.textContent !== text) {
+            nextPlace.textContent = text;
+          }
+          nextPlace.classList.add('is-next-target');
+          nextPlace.hidden = false;
+          if ($('walk-next')) $('walk-next').hidden = false;
+        } else {
+          nextPlace.hidden = true;
+          if ($('walk-next')) $('walk-next').hidden = true;
         }
-        nextPlace.classList.add('is-next-target');
-        nextPlace.hidden = false;
-        if ($('walk-next')) $('walk-next').hidden = false;
       }
       if (placeDistances && $('locations')) {
         for (const button of $('locations').children) {
