@@ -266,11 +266,11 @@ function relativeToTargetRover(target) {
     summary = '✨ In reach!';
   } else {
     const parts = [];
-    const fbVal = m.aboard || fbDist >= 10 ? `${Math.round(fbDist)} m` : `${fbDist.toFixed(1)} m`;
-    const lrVal = m.aboard || lrDist >= 10 ? `${Math.round(lrDist)} m` : `${lrDist.toFixed(1)} m`;
-    if (fbDist >= 0.5) parts.push(`${fbArrow} ${fbWord} ${fbVal}`);
-    if (lrDist >= 0.5) parts.push(`${lrArrow} ${lrWord} ${lrVal}`);
-    summary = parts.join(' · ') || (m.aboard ? `${Math.round(total)} m` : `${total.toFixed(1)} m`);
+    const fbVal = m.aboard && fbDist >= 30 ? `${Math.round(fbDist)} m` : `${fbDist.toFixed(1)} m`;
+    const lrVal = m.aboard && lrDist >= 30 ? `${Math.round(lrDist)} m` : `${lrDist.toFixed(1)} m`;
+    if (fbDist >= 0.2) parts.push(`${fbArrow} ${fbWord} ${fbVal}`);
+    if (lrDist >= 0.2) parts.push(`${lrArrow} ${lrWord} ${lrVal}`);
+    summary = parts.join(' · ') || (m.aboard && total >= 30 ? `${Math.round(total)} m` : `${total.toFixed(1)} m`);
   }
   return { total, forward: forwardDist, right: rightDist, fbWord, lrWord, summary, ready };
 }
@@ -437,10 +437,11 @@ function renderActions(){
   const driveTest=m.phase==='test'&&m.aboard,testReady=v.distance-m.brakeStart>=5&&v.steeringTravel-m.brakeTurn>=.6&&v.parking&&Math.abs(v.speed)<.05;$('drive-coach').hidden=!driveTest;$('drive-coach').textContent=driveTest?`1 Release P → 2 Drive ${Math.min(5,v.distance-m.brakeStart).toFixed(1)}/5 m · steer ${v.steeringTravel-m.brakeTurn>=.6?'✓':'left/right'} → 3 Space stop → 4 P park → 5 Done!`:'';
   const next=targetWaypoint(),bearing=((Math.atan2(next.x-v.x,-(next.z-v.z))*180/Math.PI)%360+360)%360;
   const targetObj = m.aboard&&['outbound','return'].includes(m.phase)?next:task.target;
-  const distVal = m.aboard&&['outbound','return'].includes(m.phase)?Math.round(distance(v,next)):task.target?Math.round(distance(actor,task.target)):null;
+  const rawDist = targetObj ? distance(actor, targetObj) : null;
+  const distVal = rawDist != null ? (m.aboard && rawDist >= 30 ? Math.round(rawDist) : rawDist.toFixed(1)) : null;
   const destName = m.aboard&&['outbound','return'].includes(m.phase)?(m.phase==='return'?'Meridian Outpost':(m.phase==='outbound'&&!m.reports[0]?'Radio Stop 1':!m.reports[1]?'Radio Stop 2':!m.hazard?'Cracked Ground':'Kestrel Ridge')):task.title;
   const rel = targetObj ? relativeToTargetRover(targetObj) : null;
-  const isNear = near || (distVal != null && distVal <= (task.radius || (m.aboard ? 13 : 2.5)));
+  const isNear = near || (rawDist != null && rawDist <= (task.radius || (m.aboard ? 13 : 2.5)));
   const distText = distVal!=null?`📍 ${destName} · 🚀 ${rel ? rel.summary : distVal + ' m'} (${distVal} m)${m.aboard?` · 🧭 ${Math.round(bearing)}°`:''}${isNear?' · Ready! ✨':''}`:'Time to choose';
   $('task-distance').textContent=distText;
   $('task-distance').classList.toggle('ready', Boolean(isNear));
@@ -470,11 +471,20 @@ function renderActions(){
 
   renderNavigationRover();
 
+  const liveWalkBtn = $('action-buttons')?.querySelector('button[data-walk="true"]');
+  if (liveWalkBtn) {
+    liveWalkBtn.textContent = `Walk to ${task.title} · ${rel ? rel.summary : distVal + ' m'}`;
+  }
+
   $('inspect-exhibit').hidden=m.aboard||!exhibits||distance(player.position,ROVER_PAD)>6;
   const key=[task.action,task.label,near,m.aboard,nearVehicle(),v.parking,m.phase,m.sample,m.checks.brakes,m.dataTransferred,testReady,distance(player.position,SERVICE.comms)<3].join('|');if(key===actionKey)return;actionKey=key;
   const actions=[],panel=[],allChecks=['battery','wheels','camera','comms'].every(id=>m.checks[id]);
   if(task.action)actions.push(button(task.label,()=>performTask(task),!near||(driveTest&&!testReady)));
-  if(!m.aboard&&task.target&&!near&&['prep','postdrive','science','briefing'].includes(m.phase))actions.push(button(`Walk to ${task.title} · ${rel ? rel.summary : distVal + ' m'}`,()=>{const target=task.target===m.vehicle?{x:m.vehicle.x+Math.sin(m.vehicle.heading)*3,z:m.vehicle.z+Math.cos(m.vehicle.heading)*3}:task.target;const found=player.navigate(groundPoint(target.x,target.z,1.68),groundPoint(task.target.x,task.target.z));toast(found?'Jin is walking to the station. WASD / arrows take over at any time.':'The approach is blocked. Use WASD / arrows to move around the equipment.');}));
+  if(!m.aboard&&task.target&&!near&&['prep','postdrive','science','briefing'].includes(m.phase)){
+    const wb = button(`Walk to ${task.title} · ${rel ? rel.summary : distVal + ' m'}`,()=>{const target=task.target===m.vehicle?{x:m.vehicle.x+Math.sin(m.vehicle.heading)*3,z:m.vehicle.z+Math.cos(m.vehicle.heading)*3}:task.target;const found=player.navigate(groundPoint(target.x,target.z,1.68),groundPoint(task.target.x,task.target.z));toast(found?'Jin is walking to the station. WASD / arrows take over at any time.':'The approach is blocked. Use WASD / arrows to move around the equipment.');});
+    wb.dataset.walk = 'true';
+    actions.push(wb);
+  }
   if(!m.aboard&&allChecks&&task.action!=='board')actions.push(button('Drive Rover Two · board (E)',()=>requireNear(()=>run('board')),!nearVehicle()));
   if(m.aboard&&task.action!=='exit')panel.push(button('Exit rover · E',()=>run('exit'),!v.parking));
   if(['outbound','science'].includes(m.phase))panel.push(button(m.scienceComplete?'Return with required records':'Review / abort & return',()=>run('return')));
@@ -704,7 +714,8 @@ function renderHud(){
     marker.hidden=!visible;
     const currentRel = relativeToTargetRover(target);
     const isNearTarget = distanceTo <= (current.radius || (m.aboard ? 13 : 2.5));
-    marker.textContent=`🎯 ${m.aboard?(m.phase==='return'?'Drive Home':current.title):current.title} · ${isNearTarget ? '✨ In reach!' : (currentRel ? currentRel.summary : Math.round(distanceTo) + ' m')}`;
+    const distStr = m.aboard && distanceTo >= 30 ? `${Math.round(distanceTo)} m` : `${distanceTo.toFixed(1)} m`;
+    marker.textContent=`🎯 ${m.aboard?(m.phase==='return'?'Drive Home':current.title):current.title} · ${isNearTarget ? '✨ In reach!' : (currentRel ? currentRel.summary : distStr)}`;
     marker.classList.toggle('ready', isNearTarget);
     marker.style.left=`${(pos.x*.5+.5)*innerWidth}px`;
     marker.style.top=`${(-pos.y*.5+.5)*innerHeight}px`;
@@ -712,7 +723,8 @@ function renderHud(){
   else marker.hidden=true;
   const currentRel = target ? relativeToTargetRover(target) : null;
   const isNearTarget = target ? distance(m.aboard ? m.vehicle : player.position, target) <= (current.radius || (m.aboard ? 13 : 2.5)) : false;
-  const taskDistText = isNearTarget ? 'In reach!' : (currentRel ? currentRel.summary : Math.round(distanceTo) + ' m');
+  const distStr = distanceTo != null ? (m.aboard && distanceTo >= 30 ? `${Math.round(distanceTo)} m` : `${distanceTo.toFixed(1)} m`) : '';
+  const taskDistText = isNearTarget ? 'In reach!' : (currentRel ? currentRel.summary : distStr);
   $('tasks').innerHTML=[['Hear the plan',m.briefAccepted],['Get ready + driving test',Object.values(m.checks).every(Boolean)],['Pick a path',!!m.route],['Two radio stops',m.reports.every(Boolean)],['Look at the strange ground',!!m.detour],['Rock photos',m.scienceComplete],['Drive home safe',m.returned]].map(([text,done],i)=>{
     const isCurrent = current.stage === i + 1;
     const distPill = isCurrent ? ` <span class="task-distance-pill ${isNearTarget ? 'ready' : ''}">📍 ${taskDistText}</span>` : '';
@@ -803,8 +815,36 @@ function loop(now){
   const active=!pipLessonOpen()&&m.started&&!m.ended&&$('dialog').hidden;setInput();if(photo)player.enabled=active&&!m.aboard;
   if(active){
     if(m.aboard&&Math.abs(m.vehicle.speed)>.12&&$('mission-panel').classList.contains('expanded'))toggleTasks(false);
-    if(m.aboard){accumulator+=dt;while(accumulator>=1/60){const input={throttle:Number(keys.has('KeyW')||keys.has('ArrowUp'))-Number(keys.has('KeyS')||keys.has('ArrowDown')),steer:Number(keys.has('KeyA')||keys.has('ArrowLeft'))-Number(keys.has('KeyD')||keys.has('ArrowRight')),brake:keys.has('Space'),eco:m.eco};const telemetry=stepRover(m.vehicle,input,1/60);advance2(m,1/60,telemetry);roverWheelTurns+=m.vehicle.wheelSpeed/60/.49;if(telemetry.collision)toast('Bump! Stop, then back up slowly.');accumulator-=1/60;if(m.ended)break;}}
-    else{accumulator=0;const moved=player.update(dt*.48,false);if(moved&&$('mission-panel').classList.contains('expanded'))toggleTasks(false);player.position.y=heightAt(player.position.x,player.position.z)+1.68;player.syncCamera();walkingAvatar.position.copy(player.position).y-=1.68;walkingAvatar.rotation.y=player.facing;walkingClips.Walk?.setEffectiveWeight(moved?1:0);walkingClips.Idle?.setEffectiveWeight(moved?0:1);if(moved)walkingClips.Walk?.play();else walkingClips.Idle?.play();advance2(m,dt,{metres:0,surface:'firm',poweredSlip:false,speed:0,collision:false});}
+    if(m.aboard){
+      accumulator+=dt;
+      let roverMoved=false;
+      while(accumulator>=1/60){
+        const input={throttle:Number(keys.has('KeyW')||keys.has('ArrowUp'))-Number(keys.has('KeyS')||keys.has('ArrowDown')),steer:Number(keys.has('KeyA')||keys.has('ArrowLeft'))-Number(keys.has('KeyD')||keys.has('ArrowRight')),brake:keys.has('Space'),eco:m.eco};
+        const telemetry=stepRover(m.vehicle,input,1/60);
+        advance2(m,1/60,telemetry);
+        roverWheelTurns+=m.vehicle.wheelSpeed/60/.49;
+        if(telemetry.collision)toast('Bump! Stop, then back up slowly.');
+        accumulator-=1/60;
+        if(Math.abs(m.vehicle.speed)>0.01||Math.abs(m.vehicle.steeringTravel)>0.01)roverMoved=true;
+        if(m.ended)break;
+      }
+      if(roverMoved)renderActions();
+    }
+    else{
+      accumulator=0;
+      const turning=player.keys.has('ArrowLeft')||player.keys.has('ArrowRight');
+      const moved=player.update(dt*.48,false);
+      if(moved&&$('mission-panel').classList.contains('expanded'))toggleTasks(false);
+      player.position.y=heightAt(player.position.x,player.position.z)+1.68;
+      player.syncCamera();
+      walkingAvatar.position.copy(player.position).y-=1.68;
+      walkingAvatar.rotation.y=player.facing;
+      walkingClips.Walk?.setEffectiveWeight(moved?1:0);
+      walkingClips.Idle?.setEffectiveWeight(moved?0:1);
+      if(moved)walkingClips.Walk?.play();else walkingClips.Idle?.play();
+      advance2(m,dt,{metres:0,surface:'firm',poweredSlip:false,speed:0,collision:false});
+      if(moved||turning)renderActions();
+    }
     walkingMixer?.update(dt);mixers.forEach(x=>x.update(dt));
     if(m.phase==='outbound'&&m.vehicle.z< -55&&!hazeSaid){hazeSaid=true;audio.say('haze');}
     if(m.phase==='outbound'&&distance(m.vehicle,HAZARD)<28&&!hazardSaid){hazardSaid=true;audio.say('hazard',true);toast('Strange ground ahead! Stop, press P, and take a look.');}

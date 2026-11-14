@@ -176,8 +176,8 @@ function relativeToStation(st) {
     summary = '✨ In reach!';
   } else {
     const parts = [];
-    if (fbDist >= 0.5) parts.push(`${fbArrow} ${fbWord} ${fbDist.toFixed(1)} m`);
-    if (lrDist >= 0.5) parts.push(`${lrArrow} ${lrWord} ${lrDist.toFixed(1)} m`);
+    if (fbDist >= 0.2) parts.push(`${fbArrow} ${fbWord} ${fbDist.toFixed(1)} m`);
+    if (lrDist >= 0.2) parts.push(`${lrArrow} ${lrWord} ${lrDist.toFixed(1)} m`);
     summary = parts.join(' · ') || `${total.toFixed(1)} m`;
   }
   return { total, forward, right, fbWord, fbDist, lrWord, lrDist, summary, ready };
@@ -193,6 +193,7 @@ function renderNavigation() {
     const r = relativeToStation(station);
     const b = document.createElement('button');
     b.type = 'button';
+    b.dataset.station = station.id;
     b.innerHTML = `<span>${station.title}</span> <b class="place-dist-chip">${r ? r.summary : d.toFixed(1) + ' m'}</b>`;
     b.onclick = () => {
       const closePlaces = places.open;
@@ -208,16 +209,54 @@ function renderNavigation() {
   if (next) {
     const d = distance(next);
     const r = relativeToStation(next);
-    shortcut = document.createElement('button');
-    shortcut.type = 'button';
-    shortcut.dataset.station = next.id;
-    shortcut.className = 'is-next-target';
-    shortcut.textContent = d < 2.5 ? `At ${next.title} · In reach` : `Walk to ${next.title} · ${r ? r.summary : d.toFixed(1) + ' m'}`;
-    shortcut.onclick = () => navigateTo(next);
+    const isReady = d < 2.5;
+    const text = isReady ? `At ${next.title} · In reach` : `Walk to ${next.title} · ${r ? r.summary : d.toFixed(1) + ' m'}`;
+    const existing = $('walk-next').firstElementChild;
+    if (existing && existing.dataset.station === next.id) {
+      if (existing.textContent !== text) existing.textContent = text;
+      shortcut = existing;
+    } else {
+      shortcut = document.createElement('button');
+      shortcut.type = 'button';
+      shortcut.dataset.station = next.id;
+      shortcut.className = 'is-next-target';
+      shortcut.textContent = text;
+      shortcut.onclick = () => {
+        const curDist = distance(next);
+        if (curDist < 2.5) interact();
+        else navigateTo(next);
+      };
+      $('walk-next').replaceChildren(shortcut);
+    }
+  } else {
+    $('walk-next').replaceChildren();
   }
-  $('walk-next').replaceChildren(...(shortcut ? [shortcut] : []));
   $('walk-next').hidden = !shortcut;
-  $('navigation').replaceChildren(...available.filter(station => station !== next).map(destination));
+
+  const otherStations = available.filter(station => station !== next);
+  const navEl = $('navigation');
+  if (navEl) {
+    const currentNavIds = Array.from(navEl.children).map(b => b.dataset.station).join(',');
+    const newNavIds = otherStations.map(s => s.id).join(',');
+    if (currentNavIds === newNavIds) {
+      if (places && places.open) {
+        otherStations.forEach((station, i) => {
+          const btn = navEl.children[i];
+          if (btn) {
+            const chip = btn.querySelector('.place-dist-chip');
+            if (chip) {
+              const d = distance(station);
+              const r = relativeToStation(station);
+              const chipText = r ? r.summary : `${d.toFixed(1)} m`;
+              if (chip.textContent !== chipText) chip.textContent = chipText;
+            }
+          }
+        });
+      }
+    } else {
+      navEl.replaceChildren(...otherStations.map(destination));
+    }
+  }
 }
 const reachRay=new THREE.Raycaster();
 function nearby(s) {
@@ -479,7 +518,7 @@ function renderMission() {
   };
   const baseInstruction = instructions[nextId] || `Walk to ${nextTarget?.title}. Choose Clean the panel and stay nearby.`;
   $('next-action').textContent = mission.ended ? '' : `${baseInstruction}${nextDist != null ? ` (${nextDist.toFixed(1)} m away)` : ''}`;
-  if ($('walk-next').firstElementChild?.dataset.station !== nextId) renderNavigation();
+  renderNavigation();
   const completeCount=tasks.filter(([,done])=>done).length;$('mission-panel').style.setProperty('--mission-progress',`${completeCount/tasks.length*100}%`);
   const vital=(icon,label,value,essential=false)=>{const n=Math.round(value),state=n<20?'danger':n<40?'warning':'healthy';return `<span class="vital-chip ${essential?'vital-essential':''}" data-state="${state}" role="img" aria-label="${label} ${n} percent" title="${label} ${n}%"><span class="vital-icon" aria-hidden="true">${icon}</span><b>${n}%</b><i style="width:${n}%"></i></span>`;};
   $('vitals').innerHTML=vital('⚡','Power',mission.resources.power,true)+vital('O₂','Oxygen',mission.resources.oxygen)+vital('♡','Morale',mission.resources.morale)+'<span class="vital-chip" role="img" aria-label="Four crew members safe" title="Crew 4 of 4"><span class="vital-icon" aria-hidden="true">♙</span><b>4/4</b><i style="width:100%"></i></span>';
@@ -701,7 +740,19 @@ renderer.setAnimationLoop(time=> {
   else {
     player.enabled=!paused&&!mission.ended;
     player.obstacles=mission.inside?insideObstacles:[...outsideObstacles,...crew.map(c=>obstacle(c.model.position.x,c.model.position.z,.5,.5))];
-    const moving=player.update(dt,false);if(moving&&$('mission-panel').classList.contains('expanded'))toggleTasks(false);player.position.y=mission.inside?1.88:1.68;
+    const moving=player.update(dt,false);if(moving&&$('mission-panel').classList.contains('expanded'))toggleTasks(false);
+    if(moving){
+      renderNavigation();
+      const nId=getNextTargetStationId(),nTarget=stations.find(s=>s.id===nId);
+      if(nTarget&&!mission.ended){
+        const nDist=distance(nTarget),nRel=relativeToStation(nTarget),isReady=nDist<2.5,trk=$('storm-distance-tracker');
+        if(trk){
+          $('storm-dist-badge').textContent=isReady?`🚀 In reach! ✨ (${nDist.toFixed(1)} m)`:`🚀 ${nRel?nRel.summary:nDist.toFixed(1)+' m'} (${nDist.toFixed(1)} m total)`;
+          $('storm-dist-badge').classList.toggle('ready',isReady);
+        }
+      }
+    }
+    player.position.y=mission.inside?1.88:1.68;
     player.cameraObjects=(mission.inside?interior:exterior).children;
     scene.updateMatrixWorld(true);player.syncCamera(moving&&!reducedMotion?Math.sin(clock*13)*.025:0);
     if(avatar) {
