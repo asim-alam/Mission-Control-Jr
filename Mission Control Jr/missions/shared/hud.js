@@ -49,7 +49,7 @@ export function buildHud({title, place, meters}) {
   <div class="mx-crosshair" aria-hidden="true"></div>
   <div class="mx-edge" id="mx-edge" aria-hidden="true">➤</div>
   <div class="mx-prompt" id="mx-prompt" hidden><button type="button" id="mx-use"><kbd>E</kbd><span id="mx-use-label"></span><i class="mx-hold" id="mx-hold"></i></button></div>
-  <section class="mx-walk" id="walk-dock" aria-label="Walk to a place">
+  <section class="mx-walk" id="walk-dock" aria-label="Walk to a place" hidden style="display: none !important;">
     <div id="walk-next"><button id="mx-next-place" type="button" class="is-next-target" hidden></button></div>
     <details id="walk-places"><summary>🚀 Places to Go (Tap to Walk)</summary><div id="locations"></div></details>
   </section>

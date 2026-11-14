@@ -341,7 +341,7 @@ function renderNavigationRover() {
   const dock = $('walk-dock');
   if (!dock) return;
   const isFoot = !m.aboard && m.started && !m.ended;
-  dock.hidden = !isFoot;
+  dock.hidden = true;
   if (!isFoot) return;
 
   const stations = getStationsRover();

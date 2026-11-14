@@ -6,7 +6,7 @@
 <main id="hud" hidden>
 <header id="topbar"><div class="brand"><b>MC / JR</b><span>MERIDIAN<br><small>TRACKS IN THE DUST</small></span></div><div id="vitals" aria-label="Rover power, crew reserves and return forecast"></div><div class="toolbar"><button id="view">Third person</button><button id="zoom-out" aria-label="Zoom out">−</button><button id="zoom-in" aria-label="Zoom in">+</button><button id="map-button" aria-pressed="false">Map · M</button><button id="help-button">Help · ?</button><button id="journal">Log · J</button><button id="pause">Pause</button></div></header>
 <aside id="mission-panel" class="mission-guidance" aria-label="Current expedition objective"><div class="panel-heading"><p class="eyebrow">OBJECTIVE <span id="stage-count">1 / 8</span></p><button id="tasks-button" aria-controls="tasks" aria-expanded="false">Details</button></div><h2 id="objective"></h2><div class="mission-distance-tracker" id="rover-distance-tracker" aria-live="polite"><span class="task-dest-badge" id="rover-dest-badge">📍 Destination</span><span class="task-dist-badge" id="rover-dist-badge">🚀 — m</span></div><p id="task-distance" aria-live="polite" hidden></p><progress id="objective-progress" value="0" max="7" aria-label="Mission stage progress"></progress><div class="mission-guidance-tools"></div><p id="rover-instruction"></p><p id="phase-note"></p><div id="tasks"></div><div id="mission-actions"></div><p id="inventory"></p><a href="./storm" class="episode-back">← Before the Storm</a></aside>
-<section id="walk-dock" aria-label="Walk to a place" hidden>
+<section id="walk-dock" aria-label="Walk to a place" hidden style="display: none !important;">
   <div id="walk-next"></div>
   <details id="walk-places">
     <summary>🚀 Places to Go (Tap to Walk)</summary>
