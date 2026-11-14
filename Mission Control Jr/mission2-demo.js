@@ -442,10 +442,12 @@ function renderActions(){
   const destName = m.aboard&&['outbound','return'].includes(m.phase)?(m.phase==='return'?'Meridian Outpost':(m.phase==='outbound'&&!m.reports[0]?'Radio Stop 1':!m.reports[1]?'Radio Stop 2':!m.hazard?'Cracked Ground':'Kestrel Ridge')):task.title;
   const rel = targetObj ? relativeToTargetRover(targetObj) : null;
   const isNear = near || (rawDist != null && rawDist <= (task.radius || (m.aboard ? 13 : 2.5)));
-  const distText = distVal!=null?`📍 ${destName} · 🚀 ${rel ? rel.summary : distVal + ' m'} (${distVal} m)${m.aboard?` · 🧭 ${Math.round(bearing)}°`:''}${isNear?' · Ready! ✨':''}`:'Time to choose';
-  $('task-distance').textContent=distText;
-  $('task-distance').classList.toggle('ready', Boolean(isNear));
-  $('task-distance').classList.toggle('is-tracking', distVal != null);
+  const taskDistEl = $('task-distance');
+  if (taskDistEl) {
+    taskDistEl.textContent = '';
+    taskDistEl.hidden = true;
+    taskDistEl.style.setProperty('display', 'none', 'important');
+  }
 
   const tracker = $('rover-distance-tracker');
   if (tracker) {

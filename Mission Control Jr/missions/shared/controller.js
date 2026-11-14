@@ -135,6 +135,17 @@ export async function runMission(spec) {
       if (moving === false) hud.notice('The way is blocked. Walk around the equipment with WASD.', true);
       else if (!spec.rules.getInstruction) hud.toast('Walking… press E when you get there.', 'quiet');
     });
+
+    // Immediate initial HUD sync so the view never hangs on Loading... or empty meters
+    try {
+      const initM = ctx.mission;
+      hud.objective(spec.rules.getObjective(initM), {read: false});
+      if (spec.rules.getInstruction) hud.instruction(spec.rules.getInstruction?.(initM));
+      hud.steps(spec.rules.getSteps(initM));
+      spec.hud?.(ctx);
+    } catch (e) {
+      console.warn('Initial HUD sync notice:', e);
+    }
 function showStepAlertShared(title, text, nextTip, icon = '🎉', onOpenLesson = null) {
   if (!stepAlertElShared) {
     stepAlertElShared = document.createElement('div');

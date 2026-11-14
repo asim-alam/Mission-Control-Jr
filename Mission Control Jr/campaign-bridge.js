@@ -16,3 +16,4 @@ export function connectChapter(id,onHold=()=>{}){
 export function completeChapter(id,result={}){send('complete',{chapter:id,result});}
 export function goToChapter(id){if(!chapterById(id))return;if(embedded)send('next',{target:id});else location.href=routeFor(id);}
 export function openJourney(mode='map'){if(embedded)send(mode);else location.href=mode==='menu'?'./':'./mission-map';}
+export function openTeacherLesson(){if(embedded)send('teacher-lesson');else location.href='./?lesson=all-missions';}

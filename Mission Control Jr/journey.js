@@ -1,9 +1,10 @@
-import {chapterById,readJourney,saveJourney,finishChapter,nextStoryChapter,storyComplete,completionStatus} from './journey-state.js';
+import {chapterById,readJourney,saveJourney,finishChapter,nextStoryChapter,storyComplete,completionStatus,allMissionsComplete} from './journey-state.js';
 import {missionsFor} from './mission-registry.js';
 import {journeyUrl,missionFromUrl} from './mission-routes.js';
 import {restoreOrbit} from './orbital-mission.js';
 import {installHiddenScrollUI} from './scroll-ui.js';
 import {difficultyLevel,setDifficultyLevel} from './simulation/difficulty.js';
+import {openPipLesson,pipLessonOpen} from './professor-pip.js';
 
 installHiddenScrollUI();
 const $=id=>document.getElementById(id),frame=$('scene');
@@ -15,6 +16,25 @@ const persist=()=>{if(!saveJourney(state,storage))$('save-status').textContent='
 function hold(value){frame.inert=value;frame.contentWindow?.postMessage({source:'mission-control-jr-shell',type:'hold',value},location.origin);}
 function stopHomeScene(){homeSceneGeneration++;disposeHomeScene?.();disposeHomeScene=null;$('home-scene').classList.remove('ready');}
 async function startHomeScene(){if(disposeHomeScene||$('journey').hidden)return;const generation=++homeSceneGeneration;try{const {createJourneyScene}=await import('./journey-scene.js');const dispose=await createJourneyScene($('home-scene'));if(generation!==homeSceneGeneration||$('journey').hidden){dispose();return;}disposeHomeScene=dispose;$('home-scene').classList.add('ready');document.body.classList.remove('home-scene-fallback');}catch(error){console.warn('Meridian menu scene unavailable:',error);document.body.classList.add('home-scene-fallback');}}
+
+export function showAllMissionsTeacherLesson() {
+  stopHomeScene();
+  stopPipTypewriter();
+  openPipLesson('all-missions', {
+    deck: 'all-missions',
+    step: 0,
+    autoVoice: true,
+    finishLabel: 'Back to Mission Control 🚀',
+    onFinish: () => {
+      startHomeScene();
+      render();
+    },
+    onClose: () => {
+      startHomeScene();
+      render();
+    }
+  });
+}
 
 const PIP_MESSAGE_SETS = {
   orbit: [
@@ -118,13 +138,42 @@ function stopPipTypewriter() {
 
 function render(){
   const campaign=state.selectedCampaign,chapters=missionsFor(campaign),complete=storyComplete(state,campaign),next=nextStoryChapter(state,campaign),doneCount=chapters.filter(c=>state.completed.includes(c.id)).length;
+  const grandComplete = allMissionsComplete(state);
   $('journey-count').textContent=`⭐ ${doneCount} / ${chapters.length}`;
   $('journey-count').title=`${doneCount} of ${chapters.length} missions done`;
   if($('mission-progress-bar')) $('mission-progress-bar').style.width=`${chapters.length?Math.round(doneCount/chapters.length*100):0}%`;
   
+  // All-Missions Graduation Banner and Header Button
+  const gradBanner = $('all-missions-grad-banner');
+  if (gradBanner) {
+    gradBanner.hidden = !grandComplete;
+    if (grandComplete) {
+      gradBanner.innerHTML = `
+        <div class="grad-banner-card">
+          <span class="grad-icon" aria-hidden="true">🎓</span>
+          <div class="grad-copy">
+            <h3>🎓 All Mars &amp; Moon Missions Complete!</h3>
+            <p>Outstanding Commander! You conquered all 9 missions across Mars and the Moon. Watch Professor Pip’s grand classroom lesson with full voice narration!</p>
+          </div>
+          <button type="button" class="grad-play-btn" id="grad-play-btn">🎓 Play Teacher Lesson (Voice)</button>
+        </div>
+      `;
+      const playBtn = $('grad-play-btn');
+      if (playBtn) playBtn.onclick = showAllMissionsTeacherLesson;
+    }
+  }
+  const headerGradBtn = $('header-teacher-lesson');
+  if (headerGradBtn) {
+    headerGradBtn.hidden = !grandComplete;
+    headerGradBtn.onclick = showAllMissionsTeacherLesson;
+  }
+
   const nextChapter=chapters.find(c=>c.id===next);
   $('continue').disabled=false;
-  if(complete){
+  if(grandComplete){
+    $('continue').textContent='🎓 Complete Teacher Lesson (Voice)';
+    $('continue').title='Watch Professor Pip’s complete Mars & Moon curriculum lesson with voice narration!';
+  } else if(complete){
     $('continue').textContent=campaign==='mars'?'👑 Be the Base Boss':'🌕 Replay Moon Missions';
     $('continue').title=$('continue').textContent;
   } else if(nextChapter){
@@ -901,11 +950,19 @@ window.addEventListener('keydown',e=>{
 
 $('return-active').onclick=resume;
 $('continue').onclick=()=>{
+  if (allMissionsComplete(state)) {
+    showAllMissionsTeacherLesson();
+    return;
+  }
   const next=nextStoryChapter(state,state.selectedCampaign);
   if(next)requestChapter(next);
   else if(state.selectedCampaign==='moon')requestChapter('lunar-sunlight', true);
   else toggleMissionMap(true, {syncPath: true});
 };
+$('settings-teacher-lesson-btn')?.addEventListener('click', () => {
+  if ($('settings-dialog')) $('settings-dialog').hidden = true;
+  showAllMissionsTeacherLesson();
+});
 if($('quick-mission')) $('quick-mission').onclick=()=>requestChapter('storm');
 $('extended-start')?.addEventListener('click',()=>requestChapter('extended'));
 $('transition-begin').onclick=()=>launch(pending);
@@ -956,7 +1013,12 @@ window.addEventListener('message',event=>{
     return;
   }
   if(data?.source!=='mission-control-jr')return;
-  if(data.type==='menu'){menu();return;}
+  if(data.type==='teacher-lesson'){
+    menu({updatePath:false});
+    showAllMissionsTeacherLesson();
+    return;
+  }
+  if(data.type==='menu'||data.type==='journey'){menu();return;}
   if(data.type==='map'){
     menu({updatePath:false});
     toggleMissionMap(true,{syncPath:true,view:'place-map'});
@@ -964,7 +1026,18 @@ window.addEventListener('message',event=>{
   }
   if(data.chapter!==active)return;
   if(data.type==='ready'){$('loading-scene').hidden=true;hold(!$('journey').hidden||!$('transition').hidden);}
-  if(data.type==='complete'&&!activeSampler){finishChapter(state,active,data.result);persist();render();}
+  if(data.type==='complete'&&!activeSampler){
+    const wasAllComplete = allMissionsComplete(state);
+    finishChapter(state,active,data.result);
+    persist();
+    render();
+    const nowAllComplete = allMissionsComplete(state);
+    if(!wasAllComplete && nowAllComplete){
+      setTimeout(()=>{
+        showAllMissionsTeacherLesson();
+      }, 1200);
+    }
+  }
   if(data.type==='next')requestChapter(data.target);
 });
 
@@ -1002,4 +1075,7 @@ if(requested)launch(requested,{updatePath:false,sampler:new URL(location.href).s
 else {
   startHomeScene();
   if(isMissionMapLocation())toggleMissionMap(true);
+  if(new URL(location.href).searchParams.get('lesson')==='all-missions'){
+    showAllMissionsTeacherLesson();
+  }
 }

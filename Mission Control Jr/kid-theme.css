@@ -3823,6 +3823,11 @@ body:has(#space) #flight-lesson .lesson-ok-box { padding: 4px 7px; gap: 5px; }
   gap: 8px;
   margin: 6px 0 10px;
 }
+.mx-task-distance-row[hidden],
+.mission-distance-tracker[hidden],
+.base-boss-distance-row[hidden] {
+  display: none !important;
+}
 .mx-task-dest-badge,
 .task-dest-badge,
 .boss-dest-badge {
@@ -3951,8 +3956,19 @@ body:has(#space) #distance.ready {
 }
 
 /* Hide redundant legacy task-distance; distance is shown via #rover-distance-tracker badges */
-#hud #task-distance {
+#task-distance,
+#hud #task-distance,
+#hud #mission-panel #task-distance,
+#hud #mission-panel:not(.expanded) #task-distance,
+.mission-guidance #task-distance,
+#hud .mission-guidance #task-distance {
   display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 /* Places list distance indicator chip */
@@ -3968,6 +3984,118 @@ body:has(#space) #distance.ready {
   border-radius: 999px;
   margin-left: auto;
   box-shadow: 0 0 6px rgba(255, 210, 63, 0.3);
+}
+
+/* ==========================================================================
+   ALL-MISSIONS TEACHER VIEW LESSON (WITH VOICE NARRATION)
+   Prominent banner, header button, and settings trigger
+   ========================================================================== */
+.all-missions-graduation-banner {
+  margin: 0 auto 20px;
+  max-width: 900px;
+  width: 100%;
+}
+.all-missions-graduation-banner .grad-banner-card {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 16px 22px;
+  background: linear-gradient(135deg, rgba(62, 230, 181, 0.22), rgba(76, 201, 255, 0.26), rgba(255, 210, 63, 0.2));
+  border: 2.5px solid #3ee6b5;
+  border-radius: 24px;
+  box-shadow: 0 8px 30px rgba(62, 230, 181, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  animation: kid-pop-in 0.4s ease-out;
+}
+.all-missions-graduation-banner .grad-icon {
+  font-size: 42px;
+  flex-shrink: 0;
+  filter: drop-shadow(0 4px 10px rgba(62, 230, 181, 0.6));
+}
+.all-missions-graduation-banner .grad-copy {
+  flex: 1;
+}
+.all-missions-graduation-banner .grad-copy h3 {
+  margin: 0 0 4px;
+  font-family: var(--kid-display);
+  font-size: 20px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: 0.02em;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+.all-missions-graduation-banner .grad-copy p {
+  margin: 0;
+  font-family: var(--kid-body);
+  font-size: 14px;
+  color: #d1f7ea;
+  line-height: 1.45;
+}
+.all-missions-graduation-banner .grad-play-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(180deg, #3ee6b5, #22a880) !important;
+  border: 2px solid #a8ffdf !important;
+  color: #0b2e22 !important;
+  font-family: var(--kid-display) !important;
+  font-size: 14px !important;
+  font-weight: 800 !important;
+  padding: 12px 20px !important;
+  border-radius: 999px !important;
+  cursor: pointer !important;
+  box-shadow: 0 6px 18px rgba(62, 230, 181, 0.5) !important;
+  transition: transform 0.15s ease, box-shadow 0.15s ease !important;
+}
+.all-missions-graduation-banner .grad-play-btn:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 8px 24px rgba(62, 230, 181, 0.7) !important;
+}
+
+.header-grad-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, rgba(62, 230, 181, 0.3), rgba(76, 201, 255, 0.3)) !important;
+  border: 1.8px solid #3ee6b5 !important;
+  color: #ffffff !important;
+  font-family: var(--kid-display) !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  padding: 4px 12px !important;
+  border-radius: 999px !important;
+  cursor: pointer !important;
+  box-shadow: 0 0 10px rgba(62, 230, 181, 0.4) !important;
+}
+.header-grad-btn:hover {
+  background: linear-gradient(135deg, rgba(62, 230, 181, 0.5), rgba(76, 201, 255, 0.5)) !important;
+  box-shadow: 0 0 16px rgba(62, 230, 181, 0.8) !important;
+}
+
+.teacher-lesson-section {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+.settings-teacher-btn {
+  display: block;
+  width: 100%;
+  margin: 6px 0;
+  background: linear-gradient(135deg, rgba(62, 230, 181, 0.3), rgba(76, 201, 255, 0.3)) !important;
+  border: 2px solid #3ee6b5 !important;
+  color: #ffffff !important;
+  font-family: var(--kid-display) !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  padding: 10px 16px !important;
+  border-radius: 14px !important;
+  text-align: center;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(62, 230, 181, 0.3);
+}
+.settings-teacher-btn:hover {
+  background: linear-gradient(135deg, rgba(62, 230, 181, 0.5), rgba(76, 201, 255, 0.5)) !important;
+  box-shadow: 0 6px 18px rgba(62, 230, 181, 0.6);
 }
 
 

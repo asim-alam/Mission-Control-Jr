@@ -87,7 +87,7 @@ body:has(#world) #hud.minimal-hud ~ #minimal-forecast { display: block; position
 #hud #mission-panel:not(.expanded) .panel-heading .eyebrow { font: 9px 'JetBrains Mono', monospace; letter-spacing: 1px; }
 #hud #mission-panel:not(.expanded) #objective-progress { width: calc(100% - 58px); margin: 3px 0 0; }
 #hud #mission-panel:not(.expanded) h2 { width: calc(100% - 4px); margin: 4px 0 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 16px; }
-#hud #mission-panel:not(.expanded) #task-distance { width: calc(100% - 2px); margin: 1px 0 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font: 10px 'JetBrains Mono', monospace; }
+#hud #mission-panel:not(.expanded) #task-distance { display: none !important; }
 #hud #mission-panel.expanded { width: min(310px, calc(100vw - 32px)); max-height: min(68dvh, 700px); overflow: auto; border-radius: 12px; background: var(--ui-bg); }
 #hud #mission-panel #tasks-button { margin-left: auto; font-size: 11px; padding: 2px 8px; }
 #hud #mission-panel.expanded #objective { margin: 8px 0; }
@@ -286,7 +286,7 @@ abbr[title] { text-decoration: underline dotted; text-underline-offset: 3px; cur
 #hud #mission-panel:not(.expanded) .panel-heading .eyebrow { margin: 0 !important; text-align: left !important; font: 9px 'JetBrains Mono', monospace; letter-spacing: 1px; }
 
 #hud #mission-panel:not(.expanded) #objective { display: block; width: 100%; margin: 3px 0 0; font-size: 16px; line-height: 1.25; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-#hud #mission-panel:not(.expanded) #task-distance { display: block; width: 100%; margin: 2px 0 0; font: 10px 'JetBrains Mono', monospace; line-height: 1.35; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#hud #mission-panel:not(.expanded) #task-distance { display: none !important; }
 #hud #mission-panel:not(.expanded) #objective-progress { display: block; width: 100%; height: 3px; margin: 6px 0 0; }
 #hud #mission-panel:not(.expanded) #phase-note, #hud #mission-panel:not(.expanded) #tasks, #hud #mission-panel:not(.expanded) #mission-actions, #hud #mission-panel:not(.expanded) #inventory, #hud #mission-panel:not(.expanded) .episode-back { display: none !important; }
 #hud #mission-panel.expanded { max-height: min(68dvh, 700px) !important; overflow-y: auto !important; overscroll-behavior: contain; }
@@ -502,7 +502,7 @@ body:has(#world) #hud #toast {
 #hud #mission-panel.mission-guidance .summary-head { flex-wrap: wrap; white-space: normal; }
 #hud #mission-panel.mission-guidance #forecast { white-space: normal; }
 #hud #mission-panel.mission-guidance:not(.expanded):has(#tasks-toggle-card) { padding-bottom: 17px !important; }
-#hud #mission-panel.mission-guidance:not(.expanded) #task-distance { white-space: normal; }
+#hud #mission-panel.mission-guidance:not(.expanded) #task-distance { display: none !important; }
 #hud #mission-panel.mission-guidance:not(.expanded) #objective { white-space: normal; }
 #hud #mission-panel.mission-guidance #rover-instruction { display: block; margin: 5px 0 0; }
 #hud #rover-instruction { font-size: 13px; line-height: 1.4; }

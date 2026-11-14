@@ -57,7 +57,7 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .mx-prompt kbd { font: 700 .85rem 'Fredoka Variable', system-ui; background: #ffd23f; color: #2b1300; border-radius: 8px; padding: 3px 8px; }
 .mx-hold { position: absolute; left: 0; bottom: 0; height: 5px; width: calc(var(--p, 0) * 100%); background: var(--mx-good); }
 
-.mx-walk { position: fixed; left: 16px; bottom: 16px; max-width: 470px; padding: 10px 14px; border-radius: 20px; background: var(--mx-panel); border: 2px solid var(--mx-line); z-index: 2; }
+.mx-walk { display: none !important; visibility: hidden !important; pointer-events: none !important; }
 .mx-walk #locations { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
 .mx-walk #locations button { font-size: .85rem; padding: .35rem .7rem; min-height: 38px; }
 .mx-keys { margin: 6px 0 0; font-size: .74rem; color: var(--mx-soft); }
@@ -134,7 +134,7 @@ body.mx-details-on .mx-detail { display: block; }
 .mx-notice { color: #9ff0d3; max-height: 4.3em; overflow: auto; }
 .mx-notice.is-warning { color: #ffe7a8; }
 .mx-job:has(#mx-details:not([hidden])) { max-height: min(50dvh, 360px); overflow: auto; }
-.mx-walk { display: flex; align-items: center; gap: 8px; right: auto; padding: 5px 8px; }
+.mx-walk { display: none !important; }
 .mx-walk summary { cursor: pointer; min-height: 44px; padding: 10px 8px; font-size: .85rem; font-weight: 800; }
 .mx-walk #locations { position: absolute; left: 0; bottom: calc(100% + 8px); width: min(420px, calc(100vw - 16px)); max-height: 32dvh; overflow: auto; display: flex; flex-wrap: wrap; background: var(--mx-panel); border: 2px solid var(--mx-line); border-radius: 16px; padding: 8px; }
 .mx-walk #mx-next-place { padding: 5px 10px; font-size: .85rem; min-height: 44px; }

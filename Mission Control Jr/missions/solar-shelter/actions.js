@@ -297,10 +297,20 @@ export function getShelterTask(s) {
 
   const issue = s.checkViewed && blockingIssues(s)[0];
   if (issue) {
-    const [zone, where] = {entrance: ['stack_door', 'at the doorway'], airflow: ['stack_side', 'by the air vent'],
-      water: s.rack.at === 'back_r' ? ['stack_back', 'at the water tap'] : ['stack_side', 'at the water tap']}[issue.id];
-    const bag = zoneBags(s, zone).at(-1);
-    return task(3, `Move a bag ${where}`, 'Press E or tap the prompt to pick up the marked bag. Press Q or use Put item back to clear the spot, then check the door again.', `item:${bag.id}`, 'Bag blocking access');
+    if (issue.id === 'hands') {
+      return task(3, 'Put down what you are carrying', 'Press Q or choose Put item back so your hands are free for the refuge check.', 'check', 'Refuge door');
+    }
+    const issueMap = {
+      entrance: ['stack_door', 'at the doorway'],
+      airflow: ['stack_side', 'by the air vent'],
+      water: s.rack.at === 'back_r' ? ['stack_back', 'at the water tap'] : ['stack_side', 'at the water tap']
+    };
+    const [zone, where] = issueMap[issue.id] || ['stack_door', 'at the doorway'];
+    const bag = zoneBags(s, zone)?.at(-1);
+    if (bag) {
+      return task(3, `Move a bag ${where}`, 'Press E or tap the prompt to pick up the marked bag. Press Q or use Put item back to clear the spot, then check the door again.', `item:${bag.id}`, 'Bag blocking access');
+    }
+    return check;
   }
   if (rackWater(s).length && !s.rack.latched) return task(2, 'Latch the water rack', 'Hold E or hold the prompt at the rack to lock the water in place.', 'rack', 'Water rack');
   const loosePanel = s.items.find(i => i.kind === 'poly' && i.at.startsWith('rail:') && !i.fastened);
@@ -322,7 +332,7 @@ export function getShelterTask(s) {
 export function getObjective(s) {
   if (s.phase === 'brief') return 'Hear the space weather alert';
   if (s.phase === 'debrief') return s.stoppedEarly ? 'Game stopped. Try again from a safe spot.' : 'See how your refuge worked';
-  return getShelterTask(s).title;
+  return getShelterTask(s)?.title || 'Prepare the solar refuge';
 }
 export const getInstruction = getShelterTask;
 

@@ -87,3 +87,49 @@ test('mission map provides a game place map view, view switcher, and interactive
   assert.ok(css.includes('.place-inspector-card'));
   assert.ok(css.includes('.game-place-map-svg'));
 });
+
+test('teacher view lesson with voice is available after ending all Mars and Moon missions', async () => {
+  const {allMissionsComplete, ALL_EXPEDITION_MISSION_IDS} = await import('../journey-state.js');
+  const {pipLessons} = await import('../professor-pip-lessons.js');
+  const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const js = readFileSync(new URL('../journey.js', import.meta.url), 'utf8');
+  const css = readFileSync(new URL('../kid-theme.css', import.meta.url), 'utf8');
+
+  // Verify all 9 missions across Mars and Moon are tracked
+  assert.equal(ALL_EXPEDITION_MISSION_IDS.length, 9);
+  assert.deepEqual(ALL_EXPEDITION_MISSION_IDS, [
+    'orbit', 'storm', 'rover', 'solar-shelter', 'greenhouse', 'earth-delay',
+    'lunar-sunlight', 'lunar-dust', 'lunar-relay'
+  ]);
+
+  // allMissionsComplete logic
+  const incompleteState = {completed: ['orbit', 'storm', 'rover']};
+  assert.equal(allMissionsComplete(incompleteState), false);
+  const completeMarsOnly = {completed: ['orbit', 'storm', 'rover', 'solar-shelter', 'greenhouse', 'earth-delay']};
+  assert.equal(allMissionsComplete(completeMarsOnly), false);
+  const allState = {completed: [...ALL_EXPEDITION_MISSION_IDS]};
+  assert.equal(allMissionsComplete(allState), true);
+
+  // Lesson deck content verification
+  const lesson = pipLessons['all-missions'];
+  assert.ok(lesson, 'all-missions lesson deck must exist');
+  assert.ok(lesson.slides.length >= 10, 'Deck covers all missions plus intro and finale');
+  for (const s of lesson.slides) {
+    assert.ok(s.title && s.summary, 'Every slide must have title and summary');
+  }
+
+  // UI markup in index.html
+  assert.ok(html.includes('id="header-teacher-lesson"'));
+  assert.ok(html.includes('id="all-missions-grad-banner"'));
+  assert.ok(html.includes('id="settings-teacher-lesson-btn"'));
+
+  // Logic in journey.js
+  assert.ok(js.includes('showAllMissionsTeacherLesson'));
+  assert.ok(js.includes('allMissionsComplete'));
+  assert.ok(js.includes('all-missions'));
+
+  // CSS in kid-theme.css
+  assert.ok(css.includes('.all-missions-graduation-banner'));
+  assert.ok(css.includes('.header-grad-btn'));
+  assert.ok(css.includes('.settings-teacher-btn'));
+});

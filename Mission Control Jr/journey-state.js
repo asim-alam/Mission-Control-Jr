@@ -61,3 +61,13 @@ export function finishChapter(state,id,result={}){
 }
 export function nextStoryChapter(state,campaign='mars'){return missionsFor(campaign).find(chapter=>!state.completed.includes(chapter.id))?.id||(campaign==='mars'?'extended':null);}
 export const storyComplete=(state,campaign='mars')=>missionsFor(campaign).every(chapter=>state.completed.includes(chapter.id));
+
+export const ALL_EXPEDITION_MISSION_IDS = [
+  'orbit', 'storm', 'rover', 'solar-shelter', 'greenhouse', 'earth-delay',
+  'lunar-sunlight', 'lunar-dust', 'lunar-relay'
+];
+
+export function allMissionsComplete(state) {
+  if (!state || !Array.isArray(state?.completed)) return false;
+  return ALL_EXPEDITION_MISSION_IDS.every(id => state.completed.includes(id));
+}
