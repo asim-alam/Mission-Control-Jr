@@ -123,9 +123,9 @@ function render(){
   if($('mission-progress-bar')) $('mission-progress-bar').style.width=`${chapters.length?Math.round(doneCount/chapters.length*100):0}%`;
   
   const nextChapter=chapters.find(c=>c.id===next);
-  $('continue').disabled=campaign==='moon'&&complete;
+  $('continue').disabled=false;
   if(complete){
-    $('continue').textContent=campaign==='mars'?'👑 Be the Base Boss':'🌕 Moon missions done!';
+    $('continue').textContent=campaign==='mars'?'👑 Be the Base Boss':'🌕 Replay Moon Missions';
     $('continue').title=$('continue').textContent;
   } else if(nextChapter){
     const num = Number(nextChapter.number) ? `Mission ${Number(nextChapter.number)}` : 'Mission';
@@ -156,7 +156,11 @@ function render(){
     startPipTypewriter(msgList);
   }
 
-  document.querySelectorAll('[data-campaign]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.campaign===campaign)));
+  document.querySelectorAll('[data-campaign]').forEach(b=>{
+    const isSelected = b.dataset.campaign === campaign;
+    b.setAttribute('aria-pressed', String(isSelected));
+    b.classList.toggle('active', isSelected);
+  });
   $('return-active').hidden=!active;
   $('chapters').className='trail-grid';
   $('chapters').replaceChildren();
@@ -182,6 +186,10 @@ function render(){
         ${statusPill}
       </div>
       <h2>${chapter.title}</h2>
+      <div class="chapter-location-row" aria-label="Destination and distance">
+        <span class="chapter-dest-badge" title="Destination">📍 ${chapter.destination || 'Expedition Site'}</span>
+        <span class="chapter-dist-badge" title="Distance">🚀 ${chapter.distance || 'Deep Space'}</span>
+      </div>
       <p>${chapter.description}</p>
       <button type="button" class="chapter-play-btn ${isNext ? 'primary' : ''}">
         ${done ? '↻ Replay' : isNext ? '▶ Play Up Next!' : '▶ Practice'}
@@ -216,6 +224,10 @@ function render(){
         <span class="chapter-star" style="background:var(--kid-yellow); color:#2b1d00">👑 Apex</span>
       </div>
       <h2>Be the Base Boss</h2>
+      <div class="chapter-location-row" aria-label="Destination and distance">
+        <span class="chapter-dest-badge" title="Destination">📍 Meridian Regional Network</span>
+        <span class="chapter-dist-badge" title="Distance">🚀 15 km Circuit · 225M km</span>
+      </div>
       <p>Drive the rover, work outside in your spacesuit, and help the bases keep their water, food, and radio links running.</p>
       <button type="button" class="boss-btn primary">Start expedition ▶</button>
     `;
@@ -240,16 +252,34 @@ function scrollToActiveMission({ smooth = false } = {}){
   const container=$('chapters');
   if(!scrollEl || !container)return;
 
+  if(window.scrollY !== 0) window.scrollTo(0, 0);
+
   const currentTarget=container.querySelector('.chapter.current');
-  if(!currentTarget || currentTarget === container.firstElementChild) {
+  if(!currentTarget) {
+    scrollEl.scrollTo({
+      top: 0,
+      behavior: smooth ? 'smooth' : 'instant'
+    });
+    return;
+  }
+
+  // Calculate target position relative to scrollEl's content top
+  const scrollRect = scrollEl.getBoundingClientRect();
+  const targetRect = currentTarget.getBoundingClientRect();
+  const currentScrollTop = scrollEl.scrollTop;
+  const targetTopRelativeToContent = targetRect.top - scrollRect.top + currentScrollTop;
+
+  // If the target is in the first row or near the top (within 120px of top), show from the very top!
+  if (targetTopRelativeToContent <= 120) {
     scrollEl.scrollTo({
       top: 0,
       behavior: smooth ? 'smooth' : 'instant'
     });
   } else {
-    currentTarget.scrollIntoView({
-      block: 'center',
-      inline: 'nearest',
+    // Scroll so the active mission card is comfortably visible with headroom
+    const desiredTop = Math.max(0, targetTopRelativeToContent - 24);
+    scrollEl.scrollTo({
+      top: desiredTop,
       behavior: smooth ? 'smooth' : 'instant'
     });
   }
@@ -463,6 +493,8 @@ $('return-active').onclick=resume;
 $('continue').onclick=()=>{
   const next=nextStoryChapter(state,state.selectedCampaign);
   if(next)requestChapter(next);
+  else if(state.selectedCampaign==='moon')requestChapter('lunar-sunlight', true);
+  else toggleMissionMap(true, {syncPath: true});
 };
 if($('quick-mission')) $('quick-mission').onclick=()=>requestChapter('storm');
 $('extended-start')?.addEventListener('click',()=>requestChapter('extended'));
@@ -535,7 +567,15 @@ window.addEventListener('popstate',()=>{
   }
 });
 
-document.querySelectorAll('[data-campaign]').forEach(button=>button.onclick=()=>{state.selectedCampaign=button.dataset.campaign;persist();render();});
+document.querySelectorAll('[data-campaign]').forEach(button=>button.onclick=()=>{
+  state.selectedCampaign=button.dataset.campaign;
+  persist();
+  render();
+  if($('mission-map') && !$('mission-map').hidden){
+    const scrollEl=document.querySelector('.mission-map-scroll');
+    if(scrollEl) scrollEl.scrollTo({top: 0, behavior: 'instant'});
+  }
+});
 
 render();
 persist();

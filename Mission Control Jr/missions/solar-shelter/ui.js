@@ -1,5 +1,6 @@
 // "A Place to Hide" (v3) — explainer, alert, refuge tablet, refuge check, event sensors and debrief.
 import {runMission} from '../shared/controller.js';
+import {openPipLesson} from '../../professor-pip.js';
 import {compareTable} from '../shared/hud.js';
 import {readHistory, pushHistory, snapshot} from '../shared/runtime.js';
 import {tuneScenario} from '../../simulation/difficulty.js';
@@ -51,12 +52,24 @@ function brief(ctx) {
     actions: [{label: '▶ Watch the 30-second explainer', primary: true, run: () => explainer(ctx)}, {label: 'Skip to the alert', run: () => alertCard(ctx)}, {label: 'Mission science', run: () => ctx.sourcesDialog(() => brief(ctx))}]});
 }
 function alertCard(ctx) {
-  ctx.briefing({label: 'SPACE WEATHER ALERT · TO ALL CREW', title: 'Particle warning', body: `
+  ctx.briefing({label: 'DESTINATION: MERIDIAN REFUGE · DISTANCE: 225M KM · MARS DAY 18', title: 'Particle warning', body: `
+    <p class="mission-destination-tag">📍 <b>Destination:</b> Meridian Storm Refuge · 🚀 <b>Distance:</b> 225,000,000 km from Earth</p>
     <div class="kid-mission-intro">
       <p><b>Elena:</b> “An eruption on the Sun may send energetic particles our way. ${ctx.mission.scenario.forecastText} We need a safer place for all five of us.”</p>
     </div>
-    <p>Open the refuge tablet first. Use water bags, panels, and cargo to shield the seats where the crew will wait.</p>
-    <p><b>Keep the door, vent, and drinking water tap clear.</b></p>`,
+    <div class="mission-brief-steps">
+      <p>📋 <b>Shelter Construction Checklist:</b></p>
+      <ul>
+        <li>📱 <b>1. Refuge Tablet:</b> Check the map to see where radiation leaks in.</li>
+        <li>🤝 <b>2. Elena’s Help:</b> Choose her assignment (moving heavy water or clearing airflow).</li>
+        <li>💧 <b>3. Water Rack:</b> Bolt the rack frame to the wall and slide water containers in.</li>
+        <li>🧱 <b>4. Plastic Panels:</b> Slide dense polyethylene panels into rails and fasten tight.</li>
+        <li>🎒 <b>5. Supply Bags:</b> Stack cargo bags in designated zones and strap them down.</li>
+        <li>🚪 <b>6. Refuge Check:</b> Ensure door, air vent, and drinking tap are clear, then shelter!</li>
+      </ul>
+    </div>
+    <p>🎮 <b>Controls:</b> WASD or Arrow keys to walk, Drag to look, <b>E</b> to pick up, place, or fasten items.</p>
+    <p>🌟 <i>Stay calm, Cadet! Water and hydrogen block space particles. Mission Control will alert you at every step!</i></p>`,
     actions: [{label: '▶ Let’s get to work', primary: true, run: () => { ctx.act({id: 'begin'}, {quiet: true}); ctx.saveCheckpoint(); ctx.close(); }}, {label: '☀️ Replay the explainer', run: () => explainer(ctx)}]});
 }
 
@@ -181,7 +194,8 @@ function debrief(ctx) {
     <p>🔎 <b>What stayed weaker:</b> ${NAMES[ex.worst]} collected the most. In ${m.scenario.seats[ex.seat].label} the most still came through the <b>${ex.weakest.label.toLowerCase()}</b>.</p>
     ${notes.map(n => `<p class="mx-tip">💡 ${n}</p>`).join('')}${compare}
     <aside class="mx-detail"><b>More details</b><br>These numbers come from a made-up model of this refuge. Real shelters are designed with careful measurements and computer models. Water, plastic and packed supplies all help, and where you put them matters as much as what they are.</aside>`,
-    actions: [{label: '🔁 Try changing one thing', primary: true, run: () => retry(ctx)}, {label: '👀 See the cutaway', run: () => cutaway(ctx)},
+    actions: [{label: '🎓 Pip’s debrief lesson', primary: true, run: () => openPipLesson(ID, {deck: ID, step: 0, autoVoice: true, finishLabel: 'Back to report', onFinish: () => debrief(ctx)})},
+      {label: '🔁 Try changing one thing', run: () => retry(ctx)}, {label: '👀 See the cutaway', run: () => cutaway(ctx)},
       {label: '↺ Start over', run: () => ctx.restart()}, {label: '🗺️ Map', run: ctx.openJourney}, {label: 'Mission science', run: () => ctx.sourcesDialog(() => debrief(ctx))}]});
 }
 function cutaway(ctx) {
@@ -204,7 +218,7 @@ function retry(ctx) {
 }
 
 runMission({
-  id: ID, schema: SHELTER_SCHEMA, title: 'A Place to Hide', place: 'MISSION CONTROL JR. · MARS DAY 18', carryFrom: 'storm',
+  id: ID, schema: SHELTER_SCHEMA, title: 'A Place to Hide', place: 'MISSION CONTROL JR. · MERIDIAN REFUGE · 225M KM FROM EARTH', carryFrom: 'storm',
   migrate: old => migrateSave(old, tuneScenario(ID, shelterScenario)),
   meters: [{id: 'time', icon: '⏱', label: 'Work time used'}, {id: 'shield', icon: '🛡️', label: 'Refuge estimate'}, {id: 'dose', icon: '📈', label: 'Team exposure'}],
   create: carry => createMission({scenario: tuneScenario(ID, shelterScenario), initialCarry: carry}),

@@ -1,5 +1,6 @@
 // "Chasing the Sun" — story, pad choice, base console, 18-day time-lapse and debrief.
 import {runMission} from '../shared/controller.js';
+import {openPipLesson} from '../../professor-pip.js';
 import {planCards, compareTable} from '../shared/hud.js';
 import {readHistory, pushHistory} from '../shared/runtime.js';
 import {tuneScenario} from '../../simulation/difficulty.js';
@@ -20,12 +21,23 @@ function sources(ctx) {
 
 function brief(ctx) {
   const sc = ctx.mission.scenario;
-  ctx.briefing({label: 'MOON · SOUTH POLE · HORIZON BASE', title: 'Chasing the Sun', body: `
+  ctx.briefing({label: 'DESTINATION: SHACKLETON RIM · DISTANCE: 384,400 KM · MOON SOUTH POLE', title: 'Chasing the Sun', body: `
+    <p class="mission-destination-tag">📍 <b>Destination:</b> Moon South Pole (Shackleton) · 🚀 <b>Distance:</b> 384,400 km from Earth (450 m solar tow)</p>
     <div class="kid-mission-intro">
-      <p><b>Elena:</b> “The Sun stays low here, so even a small hill can put our panels in shadow. Let’s get a solar mast above it.”</p>
+      <p><b>Elena:</b> “The Sun skims low along the lunar horizon here, so crater rims cast enormous shadows! Let’s deploy our solar mast above the shadows to catch eternal light!”</p>
     </div>
-    <p>Pick a pad for the cart. Set the supports before raising the mast, then plug the solar panels into Horizon Base.</p>
-    <p>You’ll see how your choice affects the power available to heat the base and run experiments.</p>
+    <div class="mission-brief-steps">
+      <p>📋 <b>Solar Mast Checklist:</b></p>
+      <ul>
+        <li>🛒 <b>1. Pad Position:</b> Pick where to set up the mobile cart (flat ground or high ridge).</li>
+        <li>🦾 <b>2. Stabilizer Legs:</b> Lower the 4 stabilizer support legs before raising the mast.</li>
+        <li>☀️ <b>3. Raise Mast & Wings:</b> Telescope the mast into the sunlight and open the solar wings!</li>
+        <li>🔌 <b>4. Plug In:</b> Run the power cable from the mast cart into Horizon Base.</li>
+        <li>🔬 <b>5. Sun Tracker & Power Plan:</b> Turn on Sun tracking and balance science experiments with base heat during shadows.</li>
+      </ul>
+    </div>
+    <p>🎮 <b>Controls:</b> WASD / Arrows to walk, Drag to look, <b>E</b> to tow the cart, set legs, crank the mast, and connect cables.</p>
+    <p>🌟 <i>Mission Control will alert you and cheer you on as each step is completed!</i></p>
     <aside class="mx-detail"><b>More details</b><br>The panel makes ${sc.panelKW} kW in sunlight. The base needs ${sc.essentialKW} kW to stay warm, and science uses ${sc.scienceKW} kW more. The battery holds ${sc.batteryKWh} kWh.</aside>`,
     actions: [{label: '▶ Let’s go!', primary: true, run: () => { ctx.act({id: 'begin'}, {quiet: true}); planBoard(ctx); }}, {label: 'Is this real?', run: () => ctx.sourcesDialog(() => brief(ctx))}]});
 }
@@ -98,12 +110,13 @@ function debrief(ctx) {
     <p class="mx-tip">💡 ${tip}</p>${compare}
     <aside class="mx-detail"><b>More details</b><br>NASA’s Artemis plans look for “peaks of near-eternal light”: high rims near the pole that are sunny most of the time. Real spots still have some shadow, so a base needs batteries too.</aside>`,
     actions: [
-      {label: '🔁 Try a different plan', primary: true, disabled: !ctx.checkpoint, run: () => ctx.retry(() => planBoard(ctx))},
+      {label: '🎓 Pip’s debrief lesson', primary: true, run: () => openPipLesson(ID, {deck: ID, step: 0, autoVoice: true, finishLabel: 'Back to report', onFinish: () => debrief(ctx)})},
+      {label: '🔁 Try a different plan', disabled: !ctx.checkpoint, run: () => ctx.retry(() => planBoard(ctx))},
       {label: '↺ Play again', run: () => ctx.restart()}, {label: '🗺️ Back to the map', run: ctx.openJourney}, {label: 'Sources', run: () => ctx.sourcesDialog(() => debrief(ctx))}]});
 }
 
 runMission({
-  id: ID, title: 'Chasing the Sun', place: 'MISSION CONTROL JR. · MOON SOUTH POLE',
+  id: ID, title: 'Chasing the Sun', place: 'MISSION CONTROL JR. · MOON SOUTH POLE · 384,400 KM FROM EARTH',
   meters: [{id: 'suit', icon: '🧑‍🚀', label: 'Suit air'}, {id: 'battery', icon: '🔋', label: 'Base battery'}, {id: 'cable', icon: '🔌', label: 'Cable'}],
   create: () => createMission({scenario: tuneScenario(ID, lunarSunScenario), seed: 42 + readHistory(ID).length}),
   rules: {applyAction, getObjective, getInstruction, getSteps},

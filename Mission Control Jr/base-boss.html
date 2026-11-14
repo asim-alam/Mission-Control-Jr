@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#26231e">
   <title>Base Boss · The Meridian Network</title>
+  <link rel="stylesheet" href="./kid-theme.css">
   <link rel="stylesheet" href="./base-boss.css">
 </head>
 <body>
@@ -83,6 +84,32 @@
     <div id="toast" class="panel toast" role="status"></div>
     <p id="loading" class="panel loading" role="status">Preparing the Mars terrain…</p>
   </main>
+
+  <dialog id="welcome-dialog" class="panel reference-panel" aria-labelledby="welcome-title">
+    <form method="dialog"><button type="submit" class="utility close" aria-label="Close welcome briefing">✕</button></form>
+    <span class="panel-label">MERIDIAN NETWORK · APEX EXPEDITION</span>
+    <h2 id="welcome-title">👨‍🚀 Welcome, Base Boss!</h2>
+    <div id="welcome-content" class="welcome-content">
+      <div class="kid-mission-intro">
+        <p><b>Commander Reyes:</b> “Welcome to the Meridian Basin rover fleet! You have full command of the network. Our remote outposts need our help to keep life support, food, water, and radio links running smoothly.”</p>
+      </div>
+      <div class="mission-brief-steps">
+        <p>📋 <b>Commander’s Network Checklist:</b></p>
+        <ul>
+          <li>🗺️ <b>1. Select an Outpost:</b> Click any base on the map (Verdant, Horizon, Ridge Relay).</li>
+          <li>🚙 <b>2. Travel Across Mars:</b> Drive manually with <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or click <b>“Drive there for me”</b> (Autopilot) to cruise safely.</li>
+          <li>🧑‍🚀 <b>3. Step Outside (E):</b> Park at the station, press <kbd>E</kbd> (or tap <b>Step outside</b>), and walk to the gold beacon.</li>
+          <li>📦 <b>4. Complete Jobs:</b> Deliver water recycler valves, transport greenhouse salads, and test Earth radio relays.</li>
+          <li>🏆 <b>5. Final Mission Report:</b> Return to Meridian Base to submit your expedition report to Elena Reyes!</li>
+        </ul>
+      </div>
+      <p>🎮 <b>Rover Controls:</b> <kbd>W</kbd>/<kbd>S</kbd> to accelerate/reverse, <kbd>A</kbd>/<kbd>D</kbd> to steer, <kbd>Space</kbd> to brake, <kbd>E</kbd> to exit/board rover, <kbd>V</kbd> to change camera view.</p>
+      <p>🌟 <i>You’re in command now, Cadet. Let’s keep Mars Base thriving!</i></p>
+      <div class="dialog-actions" style="margin-top: 14px; display: flex; justify-content: flex-end;">
+        <button id="welcome-start" type="button" class="primary" style="padding: 10px 20px; font-size: 16px; border-radius: 12px; cursor: pointer;">▶ Take Command</button>
+      </div>
+    </div>
+  </dialog>
 
   <dialog id="drill-dialog" class="panel drill" aria-labelledby="drill-title">
     <form method="dialog"><button type="submit" class="utility close" aria-label="Close outpost drill">✕</button></form>

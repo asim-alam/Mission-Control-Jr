@@ -1,5 +1,6 @@
 // "The Greenhouse Promise" — story, plan board, day console and birthday-dinner debrief.
 import {runMission} from '../shared/controller.js';
+import {openPipLesson} from '../../professor-pip.js';
 import {planCards, compareTable} from '../shared/hud.js';
 import {readHistory, pushHistory} from '../shared/runtime.js';
 import {tuneScenario} from '../../simulation/difficulty.js';
@@ -20,12 +21,23 @@ function sources(ctx) {
 }
 function brief(ctx) {
   const rested = ctx.mission.crewRested ? '<p>After the Sun storm, the crew is rested and ready to farm.</p>' : '';
-  ctx.briefing({label: 'MARS DAYS 32–34 · THE GREENHOUSE', title: 'A birthday promise', body: `${rested}
+  ctx.briefing({label: 'DESTINATION: VERDANT BIO-DOME · DISTANCE: 225M KM · MARS DAYS 32–34', title: 'A birthday promise', body: `${rested}
+    <p class="mission-destination-tag">📍 <b>Destination:</b> Verdant Bio-Dome · 🚀 <b>Distance:</b> 225,000,000 km from Earth</p>
     <div class="kid-mission-intro">
-      <p><b>Amara:</b> “It’s Elena’s birthday in three days. I promised her a salad. Can you help me get the crops ready?”</p>
+      <p><b>Amara:</b> “It’s Elena’s birthday in three days. I promised her a fresh salad. Can you help me care for the crops and prepare a feast?”</p>
     </div>
-    <p>Choose how to share the available light between lettuce, mizuna greens, and peppers. Water the soil and check that the fan is actually moving air.</p>
-    <p>The crops are already growing. You’ll look after them for two short practice days before the harvest.</p>
+    <div class="mission-brief-steps">
+      <p>📋 <b>Greenhouse Care Checklist:</b></p>
+      <ul>
+        <li>📋 <b>1. Farming Plan:</b> Choose how to share the daily solar light between lettuce, mizuna greens, and peppers.</li>
+        <li>🌀 <b>2. Check the Fan:</b> Verify actual air movement (if the readout says LOW, reset the controller!).</li>
+        <li>💧 <b>3. Water the Beds:</b> Check each bed’s soil moisture and turn valves until moisture is in the green zone.</li>
+        <li>🔧 <b>4. Fix Leaky Hose:</b> If a water pipe drips, close the red valve, replace the hose, and reopen it!</li>
+        <li>🥗 <b>5. Harvest & Birthday Feast:</b> Pick ripe crops with your basket and serve Elena’s birthday dinner!</li>
+      </ul>
+    </div>
+    <p>🎮 <b>Controls:</b> WASD / Arrows to walk, Drag to look, <b>E</b> to adjust light levers, water valves, and carry the harvest basket.</p>
+    <p>🌟 <i>Fresh plants bring oxygen and joy to the crew. Mission Control will guide you every day!</i></p>
     <aside class="mx-detail"><b>NASA study details</b><br>OSD-269 used a 16-hour light / 8-hour dark schedule. The VEG-03A lettuce pillows received about 200 µmol/m²/s of photosynthetically active radiation at the centre of the unit, with a 12:3:1 red:blue:green LED ratio. NASA's VEG-01A and VEG-01B lettuce crops were first harvested after 33 days. This game starts with established plants and skips time; its two practice growing periods are not real seed-to-harvest times. These are measured ISS study conditions; the game's light settings are simplified power choices.</aside>`,
     actions: [{label: '▶ Let’s grow!', primary: true, run: () => { ctx.act({id: 'begin'}, {quiet: true}); planBoard(ctx); }}, {label: 'Is this real?', run: () => ctx.sourcesDialog(() => brief(ctx))}]});
 }
@@ -87,13 +99,14 @@ function debrief(ctx) {
     <p class="mx-tip">💡 ${tip}</p>${compare}
     <aside class="mx-detail"><b>More details</b><br>The fan clue is inspired by the OSD-269 research paper. Its LOW/off anomaly is documented; the reset action, moisture index and stress values in this game are authored. The clean-basket step is a handling reminder, not a test for microbes. A visual check cannot certify food safety. The salad is a fresh-food supplement, not the crew's full diet. Water left in the tank carries on to the next mission, when a pump breaks.</aside>`,
     actions: [
-      {label: '🔁 Try a different plan', primary: true, disabled: !ctx.checkpoint, run: () => ctx.retry(() => planBoard(ctx))},
+      {label: '🎓 Pip’s debrief lesson', primary: true, run: () => openPipLesson(ID, {deck: ID, step: 0, autoVoice: true, finishLabel: 'Back to report', onFinish: () => debrief(ctx)})},
+      {label: '🔁 Try a different plan', disabled: !ctx.checkpoint, run: () => ctx.retry(() => planBoard(ctx))},
       {label: '↺ Play again', run: () => ctx.restart()}, {label: '🗺️ Back to the map', run: ctx.openJourney}, {label: 'Sources', run: () => ctx.sourcesDialog(() => debrief(ctx))}]});
 }
 
 runMission({
   id: ID, schema: GREENHOUSE_SAVE_SCHEMA, migrate: migrateGreenhouseState,
-  title: 'The Greenhouse Promise', place: 'MISSION CONTROL JR. · MARS DAYS 32–34', carryFrom: 'solar-shelter',
+  title: 'The Greenhouse Promise', place: 'MISSION CONTROL JR. · VERDANT BIO-DOME · 225M KM FROM EARTH', carryFrom: 'solar-shelter',
   meters: [{id: 'power', icon: '⚡', label: 'Light power today'}, {id: 'battery', icon: '🔋', label: 'Battery'}, {id: 'water', icon: '💧', label: 'Water tank'}],
   create: carry => createMission({scenario: tuneScenario(ID, greenhouseScenario), initialCarry: carry}),
   rules: {applyAction, getObjective, getInstruction, getSteps},

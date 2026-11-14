@@ -132,10 +132,12 @@ header button, .header-actions button { background: var(--kid-panel-2); border: 
 /* ------------------------------------------------------------------ */
 body.kid-home { background: var(--kid-space); color: var(--kid-ink); }
 body.kid-home #campaign-bar {
+  position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important;
   height: 60px; padding: 0 20px;
   background: rgb(18 15 46 / 92%) !important;
   border-bottom: 2px solid #3a3190 !important;
   backdrop-filter: blur(10px);
+  z-index: 50 !important;
 }
 body.kid-home .wordmark { display: inline-flex; align-items: center; gap: 8px; font-size: 20px; font-weight: 700; letter-spacing: 0; color: var(--kid-ink); }
 body.kid-home .logo-rocket { display: inline-block; font-size: 24px; animation: kid-float 3s ease-in-out infinite; }
@@ -187,12 +189,14 @@ body.kid-home #campaign-bar .header-campaign-selector button:hover {
   color: #ffffff !important;
   background: rgb(255 255 255 / 12%) !important;
 }
-body.kid-home #campaign-bar .header-campaign-selector button[data-campaign="mars"][aria-pressed="true"] {
+body.kid-home #campaign-bar .header-campaign-selector button[data-campaign="mars"][aria-pressed="true"],
+body.kid-home #campaign-bar .header-campaign-selector button[data-campaign="mars"].active {
   background: linear-gradient(180deg, #ff793f, #c0392b) !important;
   color: #ffffff !important; border-color: #ffaa80 !important;
   box-shadow: 0 2px 8px rgb(192 57 43 / 60%) !important;
 }
-body.kid-home #campaign-bar .header-campaign-selector button[data-campaign="moon"][aria-pressed="true"] {
+body.kid-home #campaign-bar .header-campaign-selector button[data-campaign="moon"][aria-pressed="true"],
+body.kid-home #campaign-bar .header-campaign-selector button[data-campaign="moon"].active {
   background: linear-gradient(180deg, #6c5ce7, #4834d4) !important;
   color: #ffffff !important; border-color: #a29bfe !important;
   box-shadow: 0 2px 8px rgb(72 52 212 / 60%) !important;
@@ -282,7 +286,8 @@ body.kid-home .dest-toggle-btn {
   box-shadow: 0 3px 0 #15113d; transition: translate .15s, border-color .15s;
 }
 body.kid-home .dest-toggle-btn:hover { translate: 0 -2px; border-color: var(--kid-yellow) !important; }
-body.kid-home .dest-toggle-btn[aria-pressed="true"] {
+body.kid-home .dest-toggle-btn[aria-pressed="true"],
+body.kid-home .dest-toggle-btn.active {
   border-color: var(--kid-yellow) !important; background: var(--kid-panel-2) !important;
   box-shadow: 0 3px 0 #9e780a, 0 0 0 3px rgb(255 210 63 / 25%);
 }
@@ -294,7 +299,8 @@ body.kid-home .planet-mars { background: radial-gradient(circle at 35% 30%, #ffb
 body.kid-home .planet-mars::after { content: ''; position: absolute; width: 7px; height: 5px; left: 18px; top: 10px; border-radius: 50%; background: #b8401f; }
 body.kid-home .planet-moon { background: radial-gradient(circle at 35% 30%, #fbfbff, #c9c7dd 55%, #8f8ca8); }
 body.kid-home .planet-moon::after { content: ''; position: absolute; width: 6px; height: 6px; left: 18px; top: 9px; border-radius: 50%; background: #a9a6c0; }
-body.kid-home .dest-toggle-btn[aria-pressed="true"] .planet { animation: kid-spin-wobble 3s ease-in-out infinite; }
+body.kid-home .dest-toggle-btn[aria-pressed="true"] .planet,
+body.kid-home .dest-toggle-btn.active .planet { animation: kid-spin-wobble 3s ease-in-out infinite; }
 
 body.kid-home .title-rank-picker {
   display: flex; align-items: center; gap: 8px; margin: 0;
@@ -448,50 +454,74 @@ body.kid-home .settings-gear-btn:hover {
 /* ------------------------------------------------------------------ */
 /* SEPARATE FULL-SCREEN EXPEDITION MAP VIEW                           */
 /* ------------------------------------------------------------------ */
+body.map-open {
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+}
+
 body.kid-home #mission-map {
-  position: fixed; inset: 60px 0 0 !important; z-index: 30;
-  /* Keep the map opaque while it is open. The animated 3D title scene is paused
-     underneath it, so a live blur only adds a costly full-screen pass. */
-  background: rgb(14 11 36 / 98%) !important;
-  backdrop-filter: none;
-  display: flex; flex-direction: column;
+  position: fixed; inset: 60px 0 0 !important; z-index: 30 !important;
+  background: rgb(14 11 36 / 95%) !important;
+  backdrop-filter: blur(12px);
+  display: flex !important; flex-direction: column !important;
+  overflow: hidden !important;
 }
 body.kid-home #mission-map[hidden] { display: none !important; }
-.mx-landing-blocked {
-  padding: 12px 14px;
-  border: 2px solid var(--kid-pink);
-  border-radius: 14px;
-  background: rgb(96 22 48 / 72%);
-  color: #fff !important;
-  font-weight: 800;
-}
 body.kid-home .mission-map-deck {
-  width: 100%; max-width: 1240px; margin: 0 auto; height: 100%;
-  display: flex; flex-direction: column; padding: 0 16px;
-  box-sizing: border-box; overflow: hidden;
+  width: 100% !important; max-width: 100% !important; height: 100% !important;
+  display: flex !important; flex-direction: column !important;
+  min-height: 0 !important;
+  padding: 0 !important; margin: 0 !important;
+  box-sizing: border-box !important; overflow: hidden !important;
 }
 
 /* Scrollable Map View for all Mission Cards */
 body.kid-home .mission-map-scroll {
-  flex: 1;
+  flex: 1 1 auto !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
   overflow-y: auto !important;
   overflow-x: hidden !important;
   scroll-behavior: auto !important;
   -webkit-overflow-scrolling: touch !important;
-  overscroll-behavior-y: contain;
-  padding: 30px 14px 80px;
+  overscroll-behavior-y: contain !important;
+  padding: 24px 20px 140px !important;
+  box-sizing: border-box !important;
+  outline: none;
+  /* Playful glowing scrollbar visible for kids on desktop */
+  scrollbar-width: thin !important;
+  scrollbar-color: #5a4cc0 rgb(14 11 36 / 60%) !important;
 }
+body.kid-home .mission-map-scroll::-webkit-scrollbar {
+  display: block !important;
+  width: 10px !important;
+}
+body.kid-home .mission-map-scroll::-webkit-scrollbar-track {
+  background: rgb(14 11 36 / 70%) !important;
+  border-radius: 999px !important;
+  margin: 16px 0 !important;
+}
+body.kid-home .mission-map-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #5a4cc0, #806cf7) !important;
+  border-radius: 999px !important;
+  border: 2px solid rgb(14 11 36 / 80%) !important;
+}
+body.kid-home .mission-map-scroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #806cf7, var(--kid-yellow)) !important;
+}
+
 /* ------------------------------------------------------------------ */
 /* EXPEDITION MAP: RESPONSIVE MISSION CARDS GRID                     */
 /* ------------------------------------------------------------------ */
 body.kid-home #chapters.trail-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 22px;
-  max-width: 1160px;
+  gap: 24px;
+  max-width: 1200px;
   width: 100%;
   margin: 0 auto;
-  padding: 24px 16px 80px;
+  padding: 8px 16px 60px;
   box-sizing: border-box;
 }
 
@@ -616,6 +646,42 @@ body.kid-home #chapters.trail-grid .chapter h2 {
   line-height: 1.25;
   margin: 0 0 8px;
   color: var(--kid-ink);
+}
+
+body.kid-home #chapters.trail-grid .chapter .chapter-location-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin: -2px 0 10px;
+}
+body.kid-home #chapters.trail-grid .chapter .chapter-dest-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(76, 201, 255, 0.16);
+  border: 1px solid rgba(76, 201, 255, 0.45);
+  color: var(--kid-sky);
+  font-family: var(--kid-display);
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+}
+body.kid-home #chapters.trail-grid .chapter .chapter-dist-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 210, 63, 0.16);
+  border: 1px solid rgba(255, 210, 63, 0.45);
+  color: var(--kid-yellow);
+  font-family: var(--kid-display);
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
 }
 
 body.kid-home #chapters.trail-grid .chapter p {
@@ -771,7 +837,7 @@ body.kid-home #sampler-close {
 
 @media (max-width: 850px) {
   body.kid-home #campaign-bar { height: 56px; padding: 0 12px; }
-  body.kid-home #journey, body.kid-home #transition, body.kid-home #sampler { inset: 56px 0 0 !important; }
+  body.kid-home #journey, body.kid-home #transition, body.kid-home #sampler, body.kid-home #mission-map, body.kid-home #settings-dialog { inset: 56px 0 0 !important; }
   body.kid-home #active-chapter { display: none; }
   body.kid-home .wordmark { font-size: 17px; }
   body.kid-home #journey-count { display: inline-block !important; font-size: 14px; padding: 4px 10px; }
@@ -823,6 +889,34 @@ body.kid-home #journey-count, body.kid-home .wordmark { white-space: nowrap; }
   color: #fff8ee !important;
 }
 .kid-mission-intro p + p { margin-top: 6px !important; }
+
+.mission-brief-steps {
+  background: rgba(30, 25, 75, 0.7);
+  border: 1.5px solid #4a3e9c;
+  border-radius: 16px;
+  padding: 10px 14px;
+  margin: 10px 0;
+}
+.mission-brief-steps p {
+  margin: 0 0 6px 0 !important;
+  color: var(--kid-yellow) !important;
+  font-family: var(--kid-display);
+  font-size: 15px !important;
+  font-weight: 700;
+}
+.mission-brief-steps ul {
+  list-style: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.mission-brief-steps li {
+  font-size: 14px !important;
+  color: #f1edff !important;
+  line-height: 1.35;
+}
 
 .kid-jobs-list {
   list-style: none !important;
@@ -1430,6 +1524,25 @@ body.kid-home #journey-count, body.kid-home .wordmark { white-space: nowrap; }
   color: var(--kid-yellow);
   font-weight: 700;
   margin-top: 2px;
+}
+.mission-step-alert-card .step-alert-lesson-btn {
+  background: linear-gradient(180deg, #ffd23f, #e6b800) !important;
+  color: #1a153b !important;
+  font-family: var(--kid-display) !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  padding: 6px 14px !important;
+  border-radius: 999px !important;
+  border: 1.5px solid #fff5c0 !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+  box-shadow: 0 3px 0 #9e780a, 0 4px 12px rgba(255, 210, 63, 0.4) !important;
+  transition: transform .12s, filter .12s !important;
+}
+.mission-step-alert-card .step-alert-lesson-btn:hover {
+  transform: translateY(-2px) scale(1.03) !important;
+  filter: brightness(1.1) !important;
 }
 .mission-step-alert-card .step-alert-dismiss {
   background: rgba(255, 255, 255, 0.12);

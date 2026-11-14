@@ -7,6 +7,7 @@ const CANDIDATES = [
 ];
 
 function isScrollable(element) {
+  if (element.matches && element.matches('.mission-map-scroll, .native-scroll')) return false;
   const style = getComputedStyle(element);
   const scrollY = ['auto', 'scroll'].includes(style.overflowY) && element.scrollHeight > element.clientHeight + 1;
   const scrollX = ['auto', 'scroll'].includes(style.overflowX) && element.scrollWidth > element.clientWidth + 1;
@@ -47,7 +48,7 @@ export function installHiddenScrollUI() {
   document.addEventListener('scroll', event => syncScroller(event.target), true);
   document.addEventListener('wheel', event => {
     const container = event.target instanceof Element ? event.target.closest('.scroll-hidden') : null;
-    if (!container) return;
+    if (!container || container.matches('.mission-map-scroll, .native-scroll')) return;
     event.preventDefault();
     event.stopPropagation();
     if (container.scrollHeight > container.clientHeight) container.scrollTop += event.deltaY;

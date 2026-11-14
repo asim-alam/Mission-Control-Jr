@@ -1,5 +1,6 @@
 // "Dust Busters" — story, cleaning plan, airlock HUD and debrief.
 import {runMission} from '../shared/controller.js';
+import {openPipLesson} from '../../professor-pip.js';
 import {planCards, compareTable} from '../shared/hud.js';
 import {readHistory, pushHistory} from '../shared/runtime.js';
 import {tuneScenario} from '../../simulation/difficulty.js';
@@ -19,12 +20,23 @@ function sources(ctx) {
 
 function brief(ctx) {
   const sc = ctx.mission.scenario;
-  ctx.briefing({label: 'MOON · HORIZON BASE AIRLOCK', title: 'Dust Busters', body: `
+  ctx.briefing({label: 'DESTINATION: HORIZON AIRLOCK · DISTANCE: 384,400 KM · MOON BASE', title: 'Dust Busters', body: `
+    <p class="mission-destination-tag">📍 <b>Destination:</b> Horizon Base Airlock · 🚀 <b>Distance:</b> 384,400 km from Earth (15 m chamber)</p>
     <div class="kid-mission-intro">
-      <p><b>Luca:</b> “Leave your dusty gear in the airlock. Moon dust can scratch a visor and make the crew cough.”</p>
+      <p><b>Luca:</b> “Leave your dusty moon gear in the airlock! Moon regolith is like tiny jagged glass shards — it clings to everything, can scratch visors, and makes the crew cough.”</p>
     </div>
-    <p>Pick a cleaning plan for your suit, helmet, and gear. You have <b>${sc.powerUnits} power units</b> and <b>${sc.spareFilters} spare filter${sc.spareFilters === 1 ? '' : 's'}</b>.</p>
-    <p>Clear the dust from the air and wait for the safe reading before opening the inner hatch.</p>
+    <div class="mission-brief-steps">
+      <p>📋 <b>Airlock Decontamination Checklist:</b></p>
+      <ul>
+        <li>📋 <b>1. Cleaning Plan:</b> Choose your starting strategy (hand brush, vacuum, or electric shield).</li>
+        <li>🪖 <b>2. Protect the Visor:</b> Use the gentle EDS electric plate or vacuum on the helmet so it doesn’t scratch!</li>
+        <li>🥾 <b>3. Clean Suit & Boots:</b> Brush heavy regolith off your spacesuit fabric, gloves, and boots.</li>
+        <li>🌀 <b>4. Air Scrubber & Filters:</b> Turn on the air vacuum to scrub dust from the room, and swap clogged filters when full.</li>
+        <li>🚪 <b>5. Safe Entry:</b> Wait until the air purity meter shows SAFE before opening the inner hatch to the base!</li>
+      </ul>
+    </div>
+    <p>🎮 <b>Controls:</b> WASD / Arrows to walk, Drag to look, <b>E</b> to swap cleaning tools and scrub contaminated gear.</p>
+    <p>🌟 <i>Take your time and clean thoroughly. Mission Control will alert you at every milestone!</i></p>
     <aside class="mx-detail"><b>More details</b><br>You have ${sc.powerUnits} power units and ${sc.spareFilters} spare filter${sc.spareFilters === 1 ? '' : 's'}. The vacuum uses ${sc.tools.vacuum.power} power each time, the EDS ${sc.tools.eds.power}, the air fan ${sc.scrub.power}.</aside>`,
     actions: [{label: '▶ Let’s bust some dust!', primary: true, run: () => { ctx.act({id: 'begin'}, {quiet: true}); planBoard(ctx); }}, {label: 'Is this real?', run: () => ctx.sourcesDialog(() => brief(ctx))}]});
 }
@@ -72,12 +84,13 @@ function debrief(ctx) {
     <p class="mx-tip">💡 ${tip}</p>${compare}
     <aside class="mx-detail"><b>More details</b><br>Apollo astronauts found Moon dust on everything after their moonwalks. Future Artemis bases will need airlocks, filters and new tools like the EDS to keep it out.</aside>`,
     actions: [
-      {label: '🔁 Try a different plan', primary: true, disabled: !ctx.checkpoint, run: () => ctx.retry(() => planBoard(ctx))},
+      {label: '🎓 Pip’s debrief lesson', primary: true, run: () => openPipLesson(ID, {deck: ID, step: 0, autoVoice: true, finishLabel: 'Back to report', onFinish: () => debrief(ctx)})},
+      {label: '🔁 Try a different plan', disabled: !ctx.checkpoint, run: () => ctx.retry(() => planBoard(ctx))},
       {label: '↺ Play again', run: () => ctx.restart()}, {label: '🗺️ Back to the map', run: ctx.openJourney}, {label: 'Sources', run: () => ctx.sourcesDialog(() => debrief(ctx))}]});
 }
 
 runMission({
-  id: ID, title: 'Dust Busters', place: 'MISSION CONTROL JR. · MOON BASE AIRLOCK',
+  id: ID, title: 'Dust Busters', place: 'MISSION CONTROL JR. · MOON BASE AIRLOCK · 384,400 KM FROM EARTH',
   meters: [{id: 'power', icon: '⚡', label: 'Power'}, {id: 'air', icon: '🌫️', label: 'Dust in the air'}, {id: 'filter', icon: '🌬️', label: 'Filter'}],
   create: () => createMission({scenario: tuneScenario(ID, lunarDustScenario), seed: 42 + readHistory(ID).length}),
   rules: {applyAction, getObjective, getInstruction, getSteps},

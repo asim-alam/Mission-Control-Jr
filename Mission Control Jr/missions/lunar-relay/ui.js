@@ -1,5 +1,6 @@
 // "Over the Hill" — story, trip plan, rover drives, Earth's live help and the debrief.
 import {runMission} from '../shared/controller.js';
+import {openPipLesson} from '../../professor-pip.js';
 import {planCards, compareTable} from '../shared/hud.js';
 import {readHistory, pushHistory} from '../shared/runtime.js';
 import {tuneScenario} from '../../simulation/difficulty.js';
@@ -19,12 +20,23 @@ function sources(ctx) {
 
 function brief(ctx) {
   const sc = ctx.mission.scenario;
-  ctx.briefing({label: 'MOON · SOUTH POLE · HORIZON BASE', title: 'Over the Hill', body: `
+  ctx.briefing({label: 'DESTINATION: SADDLE RIDGE · DISTANCE: 384,400 KM · MOON SOUTH POLE', title: 'Over the Hill', body: `
+    <p class="mission-destination-tag">📍 <b>Destination:</b> Saddle Ridge & Hollow · 🚀 <b>Distance:</b> 384,400 km from Earth (1.2 km rover trip)</p>
     <div class="kid-mission-intro">
-      <p><b>Jin:</b> “Earth wants a soil core from Shadow Hollow. The ridge will block our radio once you drive down.”</p>
+      <p><b>Jin:</b> “Earth scientists requested a deep core soil sample from Shadow Hollow. But once you drive over the ridge and into the crater, the hills will completely block our radio signal!”</p>
     </div>
-    <p>A relay antenna on the ridge can pass messages between the rover and base. Choose whether to set it up or take the faster route without radio coverage in the hollow.</p>
-    <p>Leave enough <b>battery and suit air</b> to get home with your sample.</p>
+    <div class="mission-brief-steps">
+      <p>📋 <b>Expedition Checklist:</b></p>
+      <ul>
+        <li>🗺️ <b>1. Trip Plan:</b> Choose whether to deploy a radio relay antenna on the ridge or drive directly into the hollow.</li>
+        <li>📡 <b>2. Deploy Relay:</b> Set up the tripod radio dish atop Saddle Ridge so you can talk to base from anywhere.</li>
+        <li>🚙 <b>3. Drive into Shadow Hollow:</b> Navigate down the crater slopes while watching your battery reserves.</li>
+        <li>🧪 <b>4. Drill Core Sample:</b> Take the drill off the rover, extract the lunar regolith sample, and stow it securely.</li>
+        <li>🏠 <b>5. Return Safely:</b> Drive back to Horizon Base with plenty of battery and suit oxygen to spare!</li>
+      </ul>
+    </div>
+    <p>🎮 <b>Controls:</b> WASD / Arrows to drive, Space to brake, <b>E</b> to get out, grab the drill, or deploy the relay antenna.</p>
+    <p>🌟 <i>Watch your battery and air meters closely! Mission Control will alert you at every step!</i></p>
     <aside class="mx-detail"><b>More details</b><br>The rover starts at ${sc.batteryStart}% battery and you have ${sc.suitMinutes} minutes of suit air. A message from the Moon reaches Earth in about ${sc.oneWaySeconds} seconds.</aside>`,
     actions: [{label: '▶ Let’s go!', primary: true, run: () => { ctx.act({id: 'begin'}, {quiet: true}); planBoard(ctx); }}, {label: 'Is this real?', run: () => ctx.sourcesDialog(() => brief(ctx))}]});
 }
@@ -93,12 +105,13 @@ function debrief(ctx) {
     <p class="mx-tip">💡 ${tip}</p>${compare}
     <aside class="mx-detail"><b>More details</b><br>The Moon is so close that Earth hears you about ${s.scenario.oneWaySeconds} seconds later, if your radio can reach. Future Artemis crews will use relays and satellites so they can talk from behind hills and craters.</aside>`,
     actions: [
-      {label: '🔁 Try a different plan', primary: true, disabled: !ctx.checkpoint, run: () => ctx.retry(() => planBoard(ctx))},
+      {label: '🎓 Pip’s debrief lesson', primary: true, run: () => openPipLesson(ID, {deck: ID, step: 0, autoVoice: true, finishLabel: 'Back to report', onFinish: () => debrief(ctx)})},
+      {label: '🔁 Try a different plan', disabled: !ctx.checkpoint, run: () => ctx.retry(() => planBoard(ctx))},
       {label: '↺ Play again', run: () => ctx.restart()}, {label: '🗺️ Back to the map', run: ctx.openJourney}, {label: 'Sources', run: () => ctx.sourcesDialog(() => debrief(ctx))}]});
 }
 
 runMission({
-  id: ID, title: 'Over the Hill', place: 'MISSION CONTROL JR. · MOON SOUTH POLE',
+  id: ID, title: 'Over the Hill', place: 'MISSION CONTROL JR. · MOON SOUTH POLE · 384,400 KM FROM EARTH',
   meters: [{id: 'battery', icon: '🔋', label: 'Rover battery'}, {id: 'suit', icon: '🧑‍🚀', label: 'Suit air'}, {id: 'radio', icon: '📶', label: 'Radio'}],
   create: () => createMission({scenario: tuneScenario(ID, lunarRelayScenario), seed: 42 + readHistory(ID).length}),
   rules: {applyAction, getObjective, getInstruction, getSteps},

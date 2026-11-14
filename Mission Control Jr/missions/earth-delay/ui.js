@@ -1,5 +1,6 @@
 // "Message to Earth" — story, plan board, Earth-link console and repair debrief.
 import {runMission} from '../shared/controller.js';
+import {openPipLesson} from '../../professor-pip.js';
 import {planCards, compareTable} from '../shared/hud.js';
 import {readHistory, pushHistory} from '../shared/runtime.js';
 import {tuneScenario} from '../../simulation/difficulty.js';
@@ -19,12 +20,23 @@ function sources(ctx) {
 }
 function brief(ctx) {
   const sc = ctx.mission.scenario, carry = ctx.mission.carryL;
-  ctx.briefing({label: `MARS DAY ${sc.sol} · ALARM!`, title: 'The water machine broke!', body: `
+  ctx.briefing({label: `DESTINATION: MERIDIAN COMMS HUB · DISTANCE: 225M KM · MARS DAY ${sc.sol}`, title: 'The water machine broke!', body: `
+    <p class="mission-destination-tag">📍 <b>Destination:</b> Meridian Comms Hub · 🚀 <b>Distance:</b> 225,000,000 km from Earth (14–20 light min)</p>
     <div class="kid-mission-intro">
-      <p><b>Luca:</b> “Our water recycler stopped. We have <b>${ctx.mission.waterL.toFixed(0)} L</b> left${carry ? `, including ${carry.toFixed(0)} L saved in the greenhouse` : ''}. Switch on Save Water while we work out what broke.”</p>
+      <p><b>Luca:</b> “Our water recycler stopped! We only have <b>${ctx.mission.waterL.toFixed(0)} L</b> left${carry ? `, including ${carry.toFixed(0)} L saved in the greenhouse` : ''}. We need clean water to survive!”</p>
     </div>
-    <p>Decide whether to test it yourself, call Earth, or do both. Each radio message takes about <b>${(sc.oneWaySeconds / 60).toFixed(0)} minutes</b> to reach Earth. The reply takes just as long to come back.</p>
-    <p><b>Before you open the panel, switch off the breaker.</b></p>
+    <div class="mission-brief-steps">
+      <p>📋 <b>Water Recycler Repair Checklist:</b></p>
+      <ul>
+        <li>🚰 <b>1. Save Water Mode:</b> Switch on Save Water immediately on the console to conserve every drop.</li>
+        <li>⚡ <b>2. Safety First:</b> Switch OFF the power breaker before touching any electrical parts!</li>
+        <li>🔬 <b>3. Test Components:</b> Use the multimeter probe to test the pump, valve, and filters.</li>
+        <li>📡 <b>4. Radio Earth:</b> Send your findings to Mission Control on Earth and wait out the real light-speed delay.</li>
+        <li>🔧 <b>5. Swap Spares:</b> Replace the broken parts with good spares from the storage shelf and restart!</li>
+      </ul>
+    </div>
+    <p>🎮 <b>Controls:</b> WASD / Arrows to walk, Drag to look, <b>E</b> to test parts, swap spares, and flip switches.</p>
+    <p>⏱️ <i>Remember: Radio waves travel at light speed! A message to Earth takes about ${(sc.oneWaySeconds / 60).toFixed(0)} minutes each way.</i></p>
     <aside class="mx-detail"><b>More details</b><br>Time runs ${sc.timeScale}× faster here: one real second is ${sc.timeScale} mission seconds. The crew uses ${sc.waterUseLPerMin} L of water a minute, or ${sc.saveUseLPerMin} L in save mode.</aside>`,
     actions: [{label: '▶ Let’s fix it!', primary: true, run: () => { ctx.act({id: 'begin'}, {quiet: true}); planBoard(ctx); }}, {label: 'Is this real?', run: () => ctx.sourcesDialog(() => brief(ctx))}]});
 }
@@ -86,12 +98,13 @@ function debrief(ctx) {
     <p class="mx-tip">💡 ${tip}</p>${compare}
     <aside class="mx-detail"><b>More details</b><br>On the Moon, a message to Earth takes about one second. On Mars it takes many minutes, so Mars crews must be ready to solve problems on their own.</aside>`,
     actions: [
-      {label: '🔁 Try a different plan', primary: true, disabled: !ctx.checkpoint, run: () => ctx.retry(() => planBoard(ctx))},
+      {label: '🎓 Pip’s debrief lesson', primary: true, run: () => openPipLesson(ID, {deck: ID, step: 0, autoVoice: true, finishLabel: 'Back to report', onFinish: () => debrief(ctx)})},
+      {label: '🔁 Try a different plan', disabled: !ctx.checkpoint, run: () => ctx.retry(() => planBoard(ctx))},
       {label: '↺ Play again', run: () => ctx.restart()}, {label: '🗺️ Back to the map', run: ctx.openJourney}, {label: 'Sources', run: () => ctx.sourcesDialog(() => debrief(ctx))}]});
 }
 
 runMission({
-  id: ID, title: 'Message to Earth', place: 'MISSION CONTROL JR. · MARS DAY 35', carryFrom: 'greenhouse',
+  id: ID, title: 'Message to Earth', place: 'MISSION CONTROL JR. · MERIDIAN COMMS HUB · 225M KM TO EARTH', carryFrom: 'greenhouse',
   meters: [{id: 'water', icon: '💧', label: 'Water left'}, {id: 'earth', icon: '📡', label: 'Earth’s answer'}, {id: 'spares', icon: '🔧', label: 'Spare parts'}],
   create: carry => createMission({scenario: tuneScenario(ID, delayScenario), initialCarry: carry, seed: 42 + readHistory(ID).length}),
   rules: {applyAction, getObjective, getInstruction, getSteps, advance: (m, dt) => advanceMission(m, dt)},

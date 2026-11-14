@@ -1,8 +1,8 @@
 // Page controller shared by the expansion missions: HUD, Pip, saving, pause, retry, prompts.
 // Each mission supplies its rules (pure functions), its 3D scene and its story/debrief screens.
 import {buildHud, dialog, closeDialog, dialogOpen, narration} from './hud.js';
-import {openPipMilestone, pipLessonOpen} from '../../professor-pip.js';
-import {trackPipMilestones} from '../../professor-pip-milestones.js';
+import {mountPipLesson, openPipLesson, pipLessonOpen} from '../../professor-pip.js';
+import {pipLessonStep} from '../../professor-pip-lessons.js';
 import {showCameraView} from '../../player.js';
 import {learningMode} from '../../simulation/learning.js';
 import {startPip} from '../../companion.js';
@@ -25,7 +25,17 @@ export async function runMission(spec) {
   let carry = {}; try { carry = spec.carryFrom ? readJourney(localStorage).records[spec.carryFrom]?.carry || {} : {}; } catch {}
   const saved = sampleMode ? {state: null} : loadSaved(spec.id, undefined, {schema: spec.schema, migrate: spec.migrate});
   let paused = false, hudClock = 0;
+  const completedSharedSteps = new Set();
+  let stepAlertElShared = null;
+  let stepAlertTimerShared = null;
   const deck = spec.id === 'orbit' ? 'station' : spec.id;
+  const lessonOptions = () => ({
+    deck,
+    step: pipLessonStep[deck](ctx.mission),
+    onOpen: () => { ctx.view.world.interaction.stopHold(); ctx.setControls(); },
+    onClose: () => ctx.setControls(),
+  });
+
   const ctx = {
     id: spec.id, hud, sampleMode, carry, report, persist, view: null, checkpoint: null,
     mission: saved.state || spec.create(carry),
@@ -50,7 +60,6 @@ export async function runMission(spec) {
       }
       if (result.ok) { persist(ctx.mission, true); ctx.view?.sync?.(); }
       if (ctx.mission.phase === 'debrief') spec.debrief(ctx);
-      if (result.ok) showMilestone();
       return result;
     },
     playing: () => ctx.mission.phase === 'active' && !dialogOpen() && !pipLessonOpen() && !paused && !journeyPaused && !ctx.busy,
@@ -66,10 +75,15 @@ export async function runMission(spec) {
     },
     close() { closeDialog(); ctx.setControls(); },
     dialog,
-    briefing: dialog,
+    briefing(screen) {
+      dialog({...screen, actions: [
+        ...screen.actions,
+        {label: 'Pip’s lesson', run: () => openPipLesson(spec.id, {...lessonOptions(), finishLabel: 'Back to briefing'})},
+      ]});
+    },
     saveCheckpoint() { ctx.checkpoint = snapshot(ctx.mission); },
-    retry(after) { hud.notice(''); ctx.mission = restore(ctx.checkpoint); milestones.reset(ctx.mission); report.reset(); ctx.view.sync?.({animate: false}); after(); },
-    restart() { hud.notice(''); clearSaved(spec.id); ctx.mission = ctx.fresh(); milestones.reset(ctx.mission); report.reset(); ctx.view.sync?.({animate: false}); spec.brief(ctx); },
+    retry(after) { hud.notice(''); completedSharedSteps.clear(); ctx.mission = restore(ctx.checkpoint); report.reset(); ctx.view.sync?.({animate: false}); after(); },
+    restart() { hud.notice(''); completedSharedSteps.clear(); clearSaved(spec.id); ctx.mission = ctx.fresh(); report.reset(); ctx.view.sync?.({animate: false}); spec.brief(ctx); },
     sourcesDialog(back) { dialog({title: 'Where this comes from', body: spec.sources(ctx), actions: [{label: '← Back', run: back}]}); },
     pause() {
       if (dialogOpen() || pipLessonOpen() || ctx.mission.phase !== 'active' || ctx.busy) return;
@@ -79,23 +93,6 @@ export async function runMission(spec) {
     },
     openJourney,
   };
-
-  const milestones = trackPipMilestones(deck, ctx.mission);
-  function showMilestone() {
-    if (!ctx.view || ctx.busy || journeyPaused || document.hidden || pipLessonOpen()) return;
-    const lesson = milestones.update(ctx.mission);
-    if (!lesson) return;
-    const mission = ctx.mission;
-    // Let the interaction finish updating its own screen before showing Pip.
-    queueMicrotask(() => {
-      if (ctx.mission !== mission) return;
-      openPipMilestone(lesson, {
-        finishLabel: dialogOpen() && mission.phase === 'debrief' ? 'See mission report' : 'Continue',
-        onOpen: () => { ctx.view.world.interaction.stopHold(); ctx.setControls(); },
-        onClose: () => ctx.setControls(),
-      });
-    });
-  }
 
   function showPause() {
     dialog({title: 'Paused', body: '<p>The mission clock is stopped.</p>', actions: [
@@ -117,20 +114,8 @@ export async function runMission(spec) {
     world.player.onViewChange = view => showCameraView(viewButton, view);
     showCameraView(viewButton, world.player.view);
     viewButton.onclick = () => world.player.toggleView();
-    let zoomFov = world.camera.fov;
-    const zoom = amount => {
-      if (world.player.view === 'third') {
-        world.player.thirdPersonDistance = Math.max(1.2, Math.min(8, world.player.thirdPersonDistance + amount));
-        world.player.syncCamera();
-      } else {
-        zoomFov = Math.max(42, Math.min(78, zoomFov + amount * 8));
-        world.camera.fov = zoomFov;
-        world.camera.updateProjectionMatrix();
-      }
-    };
-    $('zoom-in').onclick = () => zoom(-.6);
-    $('zoom-out').onclick = () => zoom(.6);
     viewButton.hidden = false;
+    mountPipLesson(document.querySelector('.mx-job-tools'), spec.id, lessonOptions);
     world.interaction.on('focus', f => hud.prompt(f)); world.interaction.on('hold', p => hud.hold(p));
     const use = $('mx-use');
     use.onclick = e => { if (e.detail === 0) world.interaction.use(); }; // keyboard activation
@@ -141,6 +126,56 @@ export async function runMission(spec) {
       if (moving === false) hud.notice('The way is blocked. Walk around the equipment with WASD.', true);
       else if (!spec.rules.getInstruction) hud.toast('Walking… press E when you get there.', 'quiet');
     });
+function showStepAlertShared(title, text, nextTip, icon = '🎉', onOpenLesson = null) {
+  if (!stepAlertElShared) {
+    stepAlertElShared = document.createElement('div');
+    stepAlertElShared.id = 'mission-step-alert';
+    stepAlertElShared.className = 'mission-step-alert-card';
+    stepAlertElShared.setAttribute('role', 'alert');
+    stepAlertElShared.setAttribute('aria-live', 'assertive');
+    stepAlertElShared.innerHTML = `
+      <span class="step-alert-icon" id="shared-step-alert-icon">🎉</span>
+      <div class="step-alert-body">
+        <strong id="shared-step-alert-title"></strong>
+        <p id="shared-step-alert-msg"></p>
+        <span class="step-alert-next" id="shared-step-alert-next"></span>
+      </div>
+      <button type="button" class="step-alert-lesson-btn" id="shared-step-alert-lesson">🎓 Pip’s Lesson</button>
+      <button type="button" class="step-alert-dismiss" aria-label="Dismiss alert">✕</button>
+    `;
+    document.body.appendChild(stepAlertElShared);
+    stepAlertElShared.querySelector('.step-alert-dismiss').onclick = () => {
+      stepAlertElShared.hidden = true;
+    };
+  }
+  stepAlertElShared.querySelector('#shared-step-alert-icon').textContent = icon;
+  stepAlertElShared.querySelector('#shared-step-alert-title').textContent = title;
+  stepAlertElShared.querySelector('#shared-step-alert-msg').textContent = text;
+  stepAlertElShared.querySelector('#shared-step-alert-next').textContent = nextTip ? `👉 Next: ${nextTip}` : '';
+
+  const lessonBtn = stepAlertElShared.querySelector('#shared-step-alert-lesson');
+  if (lessonBtn) {
+    lessonBtn.onclick = () => {
+      stepAlertElShared.hidden = true;
+      if (onOpenLesson) onOpenLesson();
+      else openPipLesson(spec.id, { step: pipLessonStep[spec.id]?.(ctx.mission) || 0, autoVoice: true });
+    };
+  }
+
+  stepAlertElShared.hidden = false;
+  clearTimeout(stepAlertTimerShared);
+  stepAlertTimerShared = setTimeout(() => {
+    if (stepAlertElShared) stepAlertElShared.hidden = true;
+  }, 8500);
+
+  if (narration()) {
+    try {
+      const u = new SpeechSynthesisUtterance(`${title}. ${text}. ${nextTip ? 'Next: ' + nextTip : ''}`);
+      speechSynthesis.speak(u);
+    } catch {}
+  }
+}
+
     world.onFrame(dt => {
       if (ctx.playing()) spec.rules.advance?.(ctx.mission, dt, ctx);
       hudClock += dt;
@@ -148,14 +183,43 @@ export async function runMission(spec) {
         hudClock = 0; const m = ctx.mission;
         hud.objective(spec.rules.getObjective(m), {read: !spec.rules.getInstruction});
         if (spec.rules.getInstruction) hud.instruction(ctx.busy ? {text: 'Watch the scene. The next instruction will appear when it ends.'} : spec.rules.getInstruction?.(m));
-        hud.steps(spec.rules.getSteps(m));
+        const stepsList = spec.rules.getSteps(m);
+        hud.steps(stepsList);
+        if (ctx.playing() && spec.id !== 'orbit' && !sampleMode) {
+          for (let i = 0; i < stepsList.length; i++) {
+            if (stepsList[i].done && !completedSharedSteps.has(i)) {
+              completedSharedSteps.add(i);
+              const nextStep = stepsList.slice(i + 1).find(s => !s.done);
+              const nextTip = nextStep ? nextStep.text : 'Mission objective accomplished!';
+              const stepNum = i + 1;
+              const text = stepsList[i].text;
+              const icon = text.includes('harvest') || text.includes('plants') || text.includes('dinner') ? '🥗'
+                : text.includes('water') || text.includes('leak') ? '💧'
+                : text.includes('Earth') || text.includes('Message') || text.includes('relay') ? '📡'
+                : text.includes('dust') || text.includes('clean') || text.includes('Vacuum') || text.includes('Brush') ? '🧹'
+                : text.includes('Sun') || text.includes('solar') || text.includes('light') || text.includes('mast') ? '☀️'
+                : text.includes('power') || text.includes('battery') ? '⚡'
+                : text.includes('plan') ? '📋'
+                : '🎉';
+              const lessonStep = pipLessonStep[spec.id] ? pipLessonStep[spec.id](ctx.mission) : Math.min(i, 2);
+              showStepAlertShared(
+                `STEP ${stepNum} COMPLETE: ${text}! ✅`,
+                `Great work, Cadet! Step ${stepNum} accomplished.`,
+                nextTip,
+                icon,
+                () => openPipLesson(spec.id, { step: lessonStep, autoVoice: true, onFinish: () => ctx.setControls() })
+              );
+              hud.toast(`🎉 Step ${stepNum} done! Next: ${nextTip}`, 'info');
+              break;
+            }
+          }
+        }
         if (m.notice) {
           if (spec.rules.getInstruction) hud.notice(m.notice, true);
           else hud.toast(m.notice, 'warn');
           m.notice = '';
         }
         spec.hud(ctx);
-        showMilestone();
       }
       hud.edge(world.guideScreen()); persist(ctx.mission); ctx.setControls();
     });

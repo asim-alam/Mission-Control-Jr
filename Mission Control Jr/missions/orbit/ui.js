@@ -1,5 +1,6 @@
 // "Arrival at Mars" — briefing, radio-part and locker choices, landing planner, hatch check and debrief.
-import {pipLessonOpen} from '../../professor-pip.js';
+import {mountPipLesson, openPipLesson, pipLessonOpen} from '../../professor-pip.js';
+import {pipLessonStep} from '../../professor-pip-lessons.js';
 import {runMission} from '../shared/controller.js';
 import {planCards, compareTable} from '../shared/hud.js';
 import {readHistory, pushHistory, snapshot, clearSaved} from '../shared/runtime.js';
@@ -1475,10 +1476,18 @@ function startStationLesson(ctx, stepIndex = 0) {
           </div>
         </div>
       </div>
+      <div class="mission-guidance-tools"></div>
       <div class="lesson-dots" id="station-lesson-dots" aria-hidden="true">
       </div>
     `;
     document.body.appendChild(stationLessonEl);
+    mountPipLesson(stationLessonEl.querySelector('.mission-guidance-tools'), 'orbit', () => ({
+      deck: 'station',
+      step: pipLessonStep.station(stationLessonContext.mission),
+      onOpen: () => stationLessonContext.setControls(),
+      onClose: () => stationLessonContext.setControls(),
+    }));
+
     stationLessonEl.querySelector('#station-lesson-skip-btn').onclick = () => closeStationLesson();
     stationLessonEl.querySelector('#station-action-btn').onclick = () => {
       const step = STATION_PRACTICAL_STEPS[currentStationStep];
@@ -1565,6 +1574,7 @@ function showStepCompletionAlert(step) {
         <p id="step-alert-msg"></p>
         <span class="step-alert-next" id="step-alert-next"></span>
       </div>
+      <button type="button" class="step-alert-lesson-btn" id="orbit-alert-lesson">🎓 Pip’s Lesson</button>
       <button type="button" class="step-alert-dismiss" aria-label="Dismiss alert">✕</button>
     `;
     document.body.appendChild(stepAlertEl);
@@ -1583,11 +1593,19 @@ function showStepCompletionAlert(step) {
   if (msgEl) msgEl.textContent = step.completeMsg;
   if (nextEl) nextEl.textContent = `👉 ${step.nextTip}`;
 
+  const lessonBtn = stepAlertEl.querySelector('#orbit-alert-lesson');
+  if (lessonBtn) {
+    lessonBtn.onclick = () => {
+      stepAlertEl.hidden = true;
+      openPipLesson('station', { step: Math.min(3, Math.max(0, step.num - 1)), autoVoice: true });
+    };
+  }
+
   stepAlertEl.hidden = false;
   clearTimeout(stepAlertTimer);
   stepAlertTimer = setTimeout(() => {
     if (stepAlertEl) stepAlertEl.hidden = true;
-  }, 7500);
+  }, 8500);
 
   speakStationText(`${step.completeTitle}. ${step.completeMsg}`);
 }
@@ -1596,9 +1614,10 @@ function brief(ctx) {
   const legacy = readLegacyOrbit();
   const note = legacy && !legacy.complete ? '<p class="mx-last">We found a game from the old version of this mission. Your journey map is kept, but this new mission starts from the beginning.</p>' : '';
   ctx.briefing({
-    label: 'MARS DAY 11 · ASTERIA ORBITER',
+    label: 'DESTINATION: ASTERIA STATION · DISTANCE: 225M KM · MARS DAY 11',
     title: 'Arrival at Mars',
     body: `${note}
+    <p class="mission-destination-tag">📍 <b>Destination:</b> Mars Orbit (Asteria) · 🚀 <b>Distance:</b> 225,000,000 km from Earth (300 km orbit)</p>
     <div class="kid-mission-intro">
       <p><b>Commander Elena:</b> “Nice docking, Jin. Our radio to Meridian Base is quiet. Find the faulty part so we can get the landing beacon working again.”</p>
     </div>
@@ -1669,25 +1688,13 @@ function planner(ctx) {
 function hatch(ctx) {
   const s = ctx.mission, sc = s.scenario;
   if (!s.site) { ctx.hud.toast('Pick a landing site at the planner table first.', 'warn'); return; }
-  if (s.holding) {
-    const item = s.holding === 'tester' ? 'signal tester' : 'spare amplifier';
-    ctx.dialog({label: 'LANDING CHECK', title: 'Put it away before landing', body: `
-      <p role="alert" class="mx-landing-blocked">🛑 Landing cannot start while you are holding the ${item}.</p>
-      <p>Return it to the <b>🧰 Spares Locker</b>, then come back to the lander hatch.</p>`,
-      actions: [
-        {label: '🧰 Walk to Spares Locker', primary: true, run: () => { ctx.close(); ctx.view?.walk?.('locker'); }},
-        {label: 'Not yet', run: () => ctx.close()}
-      ]});
-    return;
-  }
   const site = sc.sites[s.site], warn = [];
-  const land = async () => {
+  const land = async cameraView => {
     ctx.checkpoint = snapshot(ctx.mission);
     ctx.close(); const r = ctx.act({id: 'board'}); if (!r.ok) return;
     ctx.busy = true; ctx.setControls();
     try {
-      // Arrival uses one clear landing view: an outside, third-person shot.
-      await ctx.view.fly('exterior');
+      await ctx.view.fly(cameraView);
     } finally {
       ctx.busy = false; ctx.setControls();
     }
@@ -1699,9 +1706,10 @@ function hatch(ctx) {
     <p>Site: <b>${site.icon} ${site.label}</b> (${site.ground}).</p>
     ${warn.length ? `<ul class="mx-howto">${warn.map(w => `<li>${w}</li>`).join('')}</ul>` : '<p>✅ Beacon on and hazard camera ready. Everything looks good!</p>'}
     <p class="mx-last">${timeLine(s)}. We undock on that pass.</p>
-    <p>The camera will follow the lander from outside as it descends.</p>`,
+    <p><b>Choose your view:</b> look through the cockpit window, or watch the lander from outside.</p>`,
     actions: [
-      {label: '🚀 Begin landing', primary: true, run: () => land()},
+      {label: '🚀 Land · First person', primary: true, run: () => land('cockpit')},
+      {label: '🎥 Land · Outside camera', run: () => land('exterior')},
       {label: 'Not yet', run: () => ctx.close()}]});
 }
 
@@ -1755,12 +1763,13 @@ function debrief(ctx) {
     <p class="mx-tip">💡 ${tip}</p>${compare}
     <aside class="mx-detail"><b>More details</b><br>The broken part was the <b>${partLabel(ctx.mission, r.fault)}</b>. ${r.usedTester ? 'You found it with the tester.' : r.inspected ? 'You found it by looking closely.' : 'You found it by trying fixes.'} Next, the base gets ready for a dust storm. ${r.comms ? 'Because the radio works, the base heard about the storm early.' : ''}</aside>`,
     actions: [
-      {label: '🔁 Try the landing again', primary: true, disabled: !ctx.checkpoint || !r.completed, run: () => ctx.retry(() => { ctx.view.returnToInterior?.(); ctx.close(); })},
+      {label: '🎓 Pip’s debrief lesson', primary: true, run: () => openPipLesson('station', {deck: 'station', step: 0, autoVoice: true, finishLabel: 'Back to report', onFinish: () => debrief(ctx)})},
+      {label: '🔁 Try the landing again', disabled: !ctx.checkpoint || !r.completed, run: () => ctx.retry(() => { ctx.view.returnToInterior?.(); ctx.close(); })},
       {label: '↺ Play again (new broken part)', run: () => ctx.restart()}, {label: '🗺️ Back to the map', run: ctx.openJourney}, {label: 'Sources', run: () => ctx.sourcesDialog(() => debrief(ctx))}]});
 }
 
 runMission({
-  id: ID, schema: ORBIT_SCHEMA, migrate: () => null, title: 'Arrival at Mars', place: 'MISSION CONTROL JR. · MARS DAY 11 · IN ORBIT',
+  id: ID, schema: ORBIT_SCHEMA, migrate: () => null, title: 'Arrival at Mars', place: 'MISSION CONTROL JR. · MARS ORBIT · 225M KM FROM EARTH',
   meters: [{id: 'power', icon: '⚡', label: 'Power used'}, {id: 'charge', icon: '🔋', label: 'Lander charge'}],
   create: () => createMission({scenario: tuneScenario(ID, arrivalScenario)}),
   rules: {applyAction, getObjective, getSteps},
@@ -1856,7 +1865,6 @@ runMission({
 
 function getStationTarget(s) {
   if (s.stage === 'descent' || s.phase !== 'active') return null;
-  if (s.holding && s.site && s.comms) return {id: 'locker', name: 'Spares Locker', icon: '🧰'};
   if (s.tripped) return {id: 'panel', name: 'Power panel', icon: '⚡'};
   if (!inShadow(s) && minutesToShadow(s) <= 10 && powerUsed(s) > s.scenario.power.shadow) {
     return {id: 'panel', name: 'Power panel', icon: '⚡'};
