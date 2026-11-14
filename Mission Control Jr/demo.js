@@ -407,7 +407,7 @@ function showStepCompletionAlertStorm(step) {
   if (lessonBtn) {
     lessonBtn.onclick = () => {
       stepAlertElStorm.hidden = true;
-      openPipLesson('storm', { step: Math.min(2, Math.max(0, step.num - 1)), autoVoice: true });
+      openPipLesson('storm', { step: Math.min(4, Math.max(0, step.num - 1)), autoVoice: true });
     };
   }
 
@@ -557,12 +557,8 @@ function startMission() {
     {label:'Pip’s lesson',run:()=>openPipLesson('storm',{finishLabel:'Back to briefing'})},
   ], 'DESTINATION: MERIDIAN OUTPOST · DISTANCE: 225M KM · MARS DAY 12');
 }
-function showEnding() {
-  if(endingShown)return;endingShown=true;job=null;toolObject.visible=false;player.release();audio.say(mission.outcome,true);
-  const prepared=mission.outcome==='prepared',evacuated=mission.outcome==='evacuated';completeChapter('storm',{outcome:mission.outcome,attemptCompleted:true,success:mission.outcome!=='evacuated',mastered:mission.outcome==='prepared',carry:{stormOutcome:mission.outcome,allocation:mission.allocation||'none',batteryRecovered:mission.batteryRecovered,batteryInstalled:mission.batteryInstalled,experimentData:mission.experimentData,cleanedCollectors:mission.cleaned.filter(Boolean).length}});
-  // The journal records cause and effect in player language; no game values or outcome rules change here.
-  journal.unshift({speaker:'WHAT HAPPENED',text:`You cleaned ${mission.cleaned.filter(Boolean).length} of 3 panels. Then the storm blocked the Sun, and power fell to ${Math.round(mission.resources.power)}%.`});
-  journal.unshift({speaker:'YOUR CHOICE',text:`${mission.allocation==='life'?'You saved extra air':mission.allocation==='research'?'You kept Amara’s experiment running':'You did not choose yet'}. Air ended at ${Math.round(mission.resources.oxygen)}%.`});
+function showDebriefDialog() {
+  const prepared=mission.outcome==='prepared',evacuated=mission.outcome==='evacuated';
   const detailsMode=(()=>{try{return localStorage.getItem('mission-control-jr.learning-mode.v1')==='details';}catch{return false;}})();
   const stars=prepared?'⭐⭐⭐':evacuated?'⭐':'⭐⭐';
   const starTitle=prepared?'You did it! Outstanding Mission!':evacuated?'Time to leave the base!':'Everyone is safe, just barely!';
@@ -587,12 +583,39 @@ function showEnding() {
       </div>
       <p><b>💡 Your Astronaut Skill:</b> When unexpected storms strike in space, teamwork and prioritizing life support first is what keeps everyone alive!</p>
     </div>`,[
-    {label:`Next mission · ${evacuated?'Rover rescue drive':'Tracks in the Dust'}`,run:()=>goToChapter('rover')},
-    {label:'🎓 Pip’s debrief lesson',run:()=>openPipLesson('storm',{autoVoice:true})},
+    {label:`Next mission · ${evacuated?'Rover rescue drive':'Tracks in the Dust'}`,primary:true,run:()=>goToChapter('rover')},
+    {label:'🎓 Replay Professor Pip’s lesson',run:()=>showPipDebriefLesson()},
     {label:'↺ Play again',run:startMission},{label:'👑 Be the Base Boss',run:()=>goToChapter('extended')},
     {label:'🗺️ Back to mission map',run:openJourney}
   ], 'HOW DID IT GO?');
+}
+
+function showPipDebriefLesson() {
+  closeDialog();
+  let debriefShown = false;
+  const showReportOnce = () => {
+    if (debriefShown) return;
+    debriefShown = true;
+    showDebriefDialog();
+  };
+  openPipLesson('storm', {
+    step: 0,
+    autoVoice: true,
+    finishLabel: 'See Mission Report ➔',
+    onFinish: showReportOnce,
+    onClose: showReportOnce
+  });
+}
+
+function showEnding() {
+  if(endingShown)return;endingShown=true;job=null;toolObject.visible=false;player.release();audio.say(mission.outcome,true);
+  const prepared=mission.outcome==='prepared',evacuated=mission.outcome==='evacuated';completeChapter('storm',{outcome:mission.outcome,attemptCompleted:true,success:mission.outcome!=='evacuated',mastered:mission.outcome==='prepared',carry:{stormOutcome:mission.outcome,allocation:mission.allocation||'none',batteryRecovered:mission.batteryRecovered,batteryInstalled:mission.batteryInstalled,experimentData:mission.experimentData,cleanedCollectors:mission.cleaned.filter(Boolean).length}});
+  // The journal records cause and effect in player language; no game values or outcome rules change here.
+  journal.unshift({speaker:'WHAT HAPPENED',text:`You cleaned ${mission.cleaned.filter(Boolean).length} of 3 panels. Then the storm blocked the Sun, and power fell to ${Math.round(mission.resources.power)}%.`});
+  journal.unshift({speaker:'YOUR CHOICE',text:`${mission.allocation==='life'?'You saved extra air':mission.allocation==='research'?'You kept Amara’s experiment running':'You did not choose yet'}. Air ended at ${Math.round(mission.resources.oxygen)}%.`});
   audio.pause(false);
+  // Launch Professor Pip's cartoon teacher classroom with voice immediately after finishing Mission 2!
+  showPipDebriefLesson();
 }
 $('begin').onclick=startMission;
 addEventListener('pagehide',()=>{audio.stop();audio.context?.close();player.release();renderer.setAnimationLoop(null);renderer.dispose();});

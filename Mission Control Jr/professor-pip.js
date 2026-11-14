@@ -95,8 +95,20 @@ export function openPipLesson(mission, {deck = mission, step = 0, milestone, fin
       try { speech.resume(); } catch {}
     }
     narration = utterance;
+    utterance.lang = 'en-US';
     utterance.rate = 0.95;
     utterance.pitch = 1.18;
+    try {
+      const voices = speech.getVoices?.();
+      if (voices && voices.length) {
+        const preferred = voices.find(v => v.lang?.startsWith('en') && (v.name.includes('Samantha') || v.name.includes('Karen') || v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Daniel') || v.name.includes('Alex')));
+        if (preferred) utterance.voice = preferred;
+        else {
+          const anyEn = voices.find(v => v.lang?.startsWith('en'));
+          if (anyEn) utterance.voice = anyEn;
+        }
+      }
+    } catch {}
     utterance.onstart = () => {
       if (narration === utterance) {
         stage.classList.add('is-talking');

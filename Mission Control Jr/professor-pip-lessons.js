@@ -17,10 +17,12 @@ export const pipLessons = {
     slide('Prepare the lander', 'The lander’s hazard camera helps it steer away from rocks. The camera needs 80% charge in this mission.', 'Use Charger Switch 6 in sunlight. Check the power budget first.'),
     slide('Pick a landing site', 'The oval on the map shows the area where you might land. Look at the terrain across the whole oval.', 'Use the planner, then check the hatch before descent.'),
   ]},
-  storm: {title: 'Prepare Meridian for the storm', slides: [
-    slide('Find out what failed', 'Dust blocks sunlight, so the base has less solar power to share.', 'Follow the green beacon to the base computer. Then check which panels need cleaning.'),
-    slide('Restore a backup', 'Clean panels collect more sunlight, and a spare battery can help when the storm gets darker.', 'Take the spare from the rover and connect it at the power junction.'),
-    slide('Protect the crew', 'Your reserve can support more air or keep the experiment running. Check the supplies before you decide.', 'Make your choice at the computer, then get inside and seal the door.'),
+  storm: {title: 'Mars Dust Storm Science Lessons 🌪️', slides: [
+    slide('Giant Martian Dust Storms! 🌪️', 'Did you know Mars has the biggest dust storms in our entire solar system? Red dust gets swept up by fierce winds and can swallow the whole planet for months, blocking out over 95% of sunlight!', 'In 2018, a real monster dust storm encircled all of Mars! NASA’s Opportunity rover lost solar power because the Martian sky turned as dark as night at noon!'),
+    slide('Brushing Solar Panels Clean ☀️', 'Solar panels turn sunlight into clean electricity for our base. But when fine red dust settles like powdered sugar over the panels, the solar cells cannot catch the light. Brushing them off helps squeeze out every drop of power before the storm hits!', 'NASA engineers design future space panels with slick coatings and wipers so Martian winds and astronauts can keep them shining clean!'),
+    slide('Connecting Backup Batteries 🔋', 'When a dark storm blocks the Sun, solar panels stop making electricity. That is why you brought the spare battery from the rover and plugged it into the base power box! Batteries store energy like a giant water tank, feeding electricity to the base even when the sky is dark.', 'Deep space missions use giant rechargeable batteries and nuclear generators called RTGs so life support never stops running in the dark!'),
+    slide('Air Recycler: Life Support First! 💨', 'Mars has no air to breathe — it is 95% carbon dioxide and freezing cold! The base’s air recycler scrubs carbon dioxide and pumps fresh oxygen for the crew. When power runs low, keeping the crew breathing always comes before running extra science experiments!', 'Astronauts on the International Space Station recycle 98% of all their air and water! In deep space, smart recycling is the superpower that keeps humans alive.'),
+    slide('Sealing the Airlock Doors 🚪', 'Awesome job sealing the habitat! Mars has less than 1% of Earth’s air pressure. An airlock has two airtight doors like a submarine. They let astronauts walk outside without letting all the warm, breathable air leak out into the freezing Martian atmosphere!', 'Always double-check the hatch seals before a storm strikes! Good habits and teamwork make an amazing astronaut.'),
   ]},
   rover: {title: 'A safe trip to Kestrel Ridge', slides: [
     slide('Check the rover before you leave', 'A small fault near the base is much easier to fix than one far from home.', 'Inspect the equipment and practice steering, braking, and parking on the pad.'),
@@ -79,7 +81,7 @@ export const pipLessonStep = {
   orbit: s => s?.docked ? 1 : 0,
   docked: () => 0,
   station: s => s.comms ? (s.site ? 3 : 2) : s.diagnosed || s.fixed ? 1 : 0,
-  storm: s => s?.sheltered || s?.sealed ? 2 : (s?.batteryInstalled || (s?.cleaned && s.cleaned.filter(Boolean).length >= 2)) ? 1 : 0,
+  storm: s => (s?.sheltered || s?.sealed || s?.ended) ? 4 : (s?.allocation) ? 3 : (s?.batteryInstalled || s?.repaired) ? 2 : (s?.cleaned && s.cleaned.filter(Boolean).length >= 1) ? 1 : 0,
   rover: s => s?.returned || (s?.photos && s.photos.length >= 2) ? 3 : (s?.photos && s.photos.length === 1) ? 2 : s?.route ? 1 : 0,
   'solar-shelter': s => s.stage !== 'prep' ? 2 : s.mapViewed ? 1 : 0,
   greenhouse: s => s.day > s.scenario.growDays ? 2 : s.plan ? 1 : 0,
