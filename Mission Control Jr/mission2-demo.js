@@ -270,9 +270,163 @@ function relativeToTargetRover(target) {
     const lrVal = m.aboard || lrDist >= 10 ? `${Math.round(lrDist)} m` : `${lrDist.toFixed(1)} m`;
     if (fbDist >= 0.5) parts.push(`${fbArrow} ${fbWord} ${fbVal}`);
     if (lrDist >= 0.5) parts.push(`${lrArrow} ${lrWord} ${lrVal}`);
-    summary = parts.join(' · ') || `${Math.round(total)} m`;
+    summary = parts.join(' · ') || (m.aboard ? `${Math.round(total)} m` : `${total.toFixed(1)} m`);
   }
   return { total, forward: forwardDist, right: rightDist, fbWord, lrWord, summary, ready };
+}
+
+function navigateToRover(station) {
+  if (!player.enabled || m.aboard) return;
+  const target = station.id === 'rover'
+    ? { x: m.vehicle.x + Math.sin(m.vehicle.heading) * 3, z: m.vehicle.z + Math.cos(m.vehicle.heading) * 3 }
+    : (station.stand || station.point);
+  const found = player.navigate(groundPoint(target.x, target.z, 1.68), groundPoint(station.point.x, station.point.z, 1.2));
+  toast(found ? `Jin is walking to ${station.title}. WASD / arrows take over at any time.` : 'The approach is blocked. Use WASD / arrows to walk around.');
+  renderNavigationRover();
+}
+
+function getStationsRover() {
+  if (m.phase === 'science') {
+    return [
+      { id: 'ridge', title: 'Rock outcrop', point: RIDGE, stand: { x: 39, z: -148 } },
+      { id: 'sample', title: 'Ruler & bonus rock', point: { x: 42, z: -156 }, stand: { x: 42, z: -154 } },
+      { id: 'rover', title: 'Rover Two', point: { x: m.vehicle.x, z: m.vehicle.z }, stand: { x: m.vehicle.x + Math.sin(m.vehicle.heading) * 3, z: m.vehicle.z + Math.cos(m.vehicle.heading) * 3 } }
+    ];
+  }
+  const list = [
+    { id: 'comms', title: 'Base computer', point: SERVICE.comms, stand: { x: 5, z: 10.2 } },
+    { id: 'rover', title: 'Rover Two', point: { x: m.vehicle.x, z: m.vehicle.z }, stand: { x: m.vehicle.x + Math.sin(m.vehicle.heading) * 3, z: m.vehicle.z + Math.cos(m.vehicle.heading) * 3 } },
+    { id: 'spare', title: 'Battery shelf', point: SERVICE.spare, stand: { x: -4, z: 9 } }
+  ];
+  if (m.phase === 'prep') {
+    list.push(
+      { id: 'battery', title: 'Rover battery bay', point: SERVICE.battery, stand: { x: 10, z: 14 } },
+      { id: 'wheels', title: 'Rover wheels', point: SERVICE.wheels, stand: { x: 13.8, z: 10 } },
+      { id: 'camera', title: 'Rover camera mast', point: SERVICE.camera, stand: { x: 10, z: 6 } }
+    );
+  }
+  list.push({ id: 'pad', title: 'Robot rover pad', point: ROVER_PAD, stand: { x: 17.5, z: 16 } });
+  return list;
+}
+
+function getNextTargetStationRover() {
+  if (m.ended || !m.started || m.aboard) return null;
+  if (m.phase === 'briefing') return 'comms';
+  if (m.phase === 'prep') {
+    if (!m.spareCollected) return 'spare';
+    if (!m.checks.battery) return 'battery';
+    if (!m.checks.wheels) return 'wheels';
+    if (!m.checks.camera) return 'camera';
+    if (!m.checks.comms) return 'comms';
+    return 'rover';
+  }
+  if (m.phase === 'planning') return 'rover';
+  if (m.phase === 'science') {
+    if (!m.photos.context) return 'ridge';
+    if (!m.photos.close) return 'sample';
+    if (!m.observation) return null;
+    if (m.sample) return 'rover';
+    return 'sample';
+  }
+  if (m.phase === 'postdrive') {
+    return 'comms';
+  }
+  if (['outbound', 'return'].includes(m.phase) && !m.aboard) {
+    return 'rover';
+  }
+  return null;
+}
+
+function renderNavigationRover() {
+  const dock = $('walk-dock');
+  if (!dock) return;
+  const isFoot = !m.aboard && m.started && !m.ended;
+  dock.hidden = !isFoot;
+  if (!isFoot) return;
+
+  const stations = getStationsRover();
+  const nextId = getNextTargetStationRover();
+  const places = $('walk-places');
+  const next = stations.find(s => s.id === nextId);
+
+  // 1. Shortcut button in #walk-next
+  const walkNextEl = $('walk-next');
+  if (next) {
+    const d = distance(player.position, next.point);
+    const r = relativeToTargetRover(next.point);
+    const isReady = d < 2.5;
+    const text = isReady
+      ? `At ${next.title} · In reach`
+      : `Walk to ${next.title} · ${r ? r.summary : d.toFixed(1) + ' m'}`;
+
+    let btn = walkNextEl.firstElementChild;
+    if (btn && btn.dataset.station === next.id) {
+      if (btn.textContent !== text) {
+        btn.textContent = text;
+      }
+    } else {
+      btn = document.createElement('button');
+      btn.type = 'button';
+      btn.dataset.station = next.id;
+      btn.className = 'is-next-target';
+      btn.textContent = text;
+      btn.onclick = () => {
+        const curDist = distance(player.position, next.point);
+        if (curDist < 2.5) {
+          interact();
+        } else {
+          navigateToRover(next);
+        }
+      };
+      walkNextEl.replaceChildren(btn);
+    }
+    walkNextEl.hidden = false;
+  } else {
+    walkNextEl.replaceChildren();
+    walkNextEl.hidden = true;
+  }
+
+  // 2. Navigation items in #walk-places #navigation
+  const others = stations.filter(s => s !== next);
+  const navEl = $('navigation');
+  if (!navEl) return;
+  const currentNavIds = Array.from(navEl.children).map(b => b.dataset.station).join(',');
+  const newNavIds = others.map(s => s.id).join(',');
+
+  if (currentNavIds === newNavIds) {
+    if (places && places.open) {
+      others.forEach((station, i) => {
+        const btn = navEl.children[i];
+        if (btn) {
+          const chip = btn.querySelector('.place-dist-chip');
+          if (chip) {
+            const d = distance(player.position, station.point);
+            const r = relativeToTargetRover(station.point);
+            const chipText = r ? r.summary : `${d.toFixed(1)} m`;
+            if (chip.textContent !== chipText) chip.textContent = chipText;
+          }
+        }
+      });
+    }
+  } else {
+    const buttons = others.map(station => {
+      const d = distance(player.position, station.point);
+      const r = relativeToTargetRover(station.point);
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.dataset.station = station.id;
+      b.innerHTML = `<span>${station.title}</span> <b class="place-dist-chip">${r ? r.summary : d.toFixed(1) + ' m'}</b>`;
+      b.onclick = () => {
+        const closePlaces = places && places.open;
+        if (places) places.open = false;
+        navigateToRover(station);
+        (closePlaces ? places.querySelector('summary') : $('walk-next').firstElementChild)?.focus();
+      };
+      b.setAttribute('aria-label', `Walk to ${station.title}`);
+      return b;
+    });
+    navEl.replaceChildren(...buttons);
+  }
 }
 
 function renderActions(){
@@ -314,6 +468,8 @@ function renderActions(){
     }
   }
 
+  renderNavigationRover();
+
   $('inspect-exhibit').hidden=m.aboard||!exhibits||distance(player.position,ROVER_PAD)>6;
   const key=[task.action,task.label,near,m.aboard,nearVehicle(),v.parking,m.phase,m.sample,m.checks.brakes,m.dataTransferred,testReady,distance(player.position,SERVICE.comms)<3].join('|');if(key===actionKey)return;actionKey=key;
   const actions=[],panel=[],allChecks=['battery','wheels','camera','comms'].every(id=>m.checks[id]);
@@ -327,7 +483,7 @@ function renderActions(){
   $('action-help').textContent=m.aboard?'P releases / sets the parking brake. Space stops. V changes view.':'WASD / arrows move Jin. Drag to look. E uses the nearest active action.';
 }
 function showEnding(){
-  if(endingShown)return;endingShown=true;clearInput();const a=assessment2(m);completeChapter('rover',{outcome:m.outcome,attemptCompleted:m.outcome!=='suspended',success:m.returned,mastered:m.outcome==='success',score:a.total,assisted:m.assisted,carry:{mission2Outcome:m.outcome,scienceComplete:m.scienceComplete,returnCharge:Math.round(m.battery),returnSuit:Math.round(m.oxygen)}});const titles={success:'Tracks home.',abort:'A prudent return.',margin:'Home, with a lesson.',suspended:'Stop. Understand. Try again.'};
+  if(endingShown)return;endingShown=true;clearInput();if($('walk-dock'))$('walk-dock').hidden=true;const a=assessment2(m);completeChapter('rover',{outcome:m.outcome,attemptCompleted:m.outcome!=='suspended',success:m.returned,mastered:m.outcome==='success',score:a.total,assisted:m.assisted,carry:{mission2Outcome:m.outcome,scienceComplete:m.scienceComplete,returnCharge:Math.round(m.battery),returnSuit:Math.round(m.oxygen)}});const titles={success:'Tracks home.',abort:'A prudent return.',margin:'Home, with a lesson.',suspended:'Stop. Understand. Try again.'};
   try{const old=JSON.parse(localStorage.getItem(SAVE_KEY)||'{}');localStorage.setItem(SAVE_KEY,JSON.stringify({...old,mission2:{outcome:m.outcome,score:a.total,assisted:m.assisted,science:m.scienceComplete,sample:m.sample,battery:m.battery,oxygen:m.oxygen,date:new Date().toISOString()}}));}catch{/* Storage is optional; a debrief must still work. */}
   const tip=m.outcome==='suspended'?'If the wheels spin but you do not move, stop pressing go. Look at the ground, then back out slowly.':m.outcome==='margin'?'Keep enough battery to get home. Sand, long paths and extra jobs all use battery.':!m.scienceComplete?'You kept the crew safe! Next time, try to take the wide photo and the close photo too.':m.collisions?'Drive slower near rocks, and start stopping earlier.':'You changed the plan when you saw a problem, and brought everyone home with great photos!';
   const detail=(()=>{try{return localStorage.getItem('mission-control-jr.learning-mode.v1')==='details';}catch{return false;}})();
@@ -584,6 +740,7 @@ addEventListener('keydown',e=>{
   // Player already owns Escape even while disabled in vehicle mode.
   if(!$('dialog').hidden)return;
   if(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code)&&$('mission-panel').classList.contains('expanded'))toggleTasks(false);
+  if(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown'].includes(e.code)&&!m.aboard) player.route=[];
   if(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)&&m.aboard){e.preventDefault();document.activeElement?.blur();keys.add(e.code);if(m.vehicle.parking&&!e.repeat&&['KeyW','KeyS','ArrowUp','ArrowDown'].includes(e.code))toast('The parking brake is on. Press P, then drive with WASD or arrows.');}
   if(e.repeat)return;
   if(e.code==='KeyV'&&!e.repeat&&m.aboard)toggleView();
@@ -601,6 +758,8 @@ renderer.domElement.addEventListener('pointerdown',e=>{if(m.aboard&&enabled()&&e
 renderer.domElement.addEventListener('pointermove',e=>{if(!drag||!m.aboard)return;orbitYaw-=(e.clientX-drag.x)*.004;pitch=THREE.MathUtils.clamp(pitch+(e.clientY-drag.y)*.003,-.4,.65);drag={x:e.clientX,y:e.clientY};});renderer.domElement.addEventListener('pointerup',()=>{drag=null;});
 $('begin').onclick=start;$('pause').onclick=togglePause;$('view').onclick=toggleView;$('map-button').onclick=openMap;$('expand-map').onclick=openMap;$('journal').onclick=openJournal;$('parking-toggle').onclick=toggleParking;$('eco').onclick=()=>{m.eco=!m.eco;$('eco').blur();};$('capture-photo').onclick=capture;$('cancel-photo').onclick=()=>{closePhoto();setInput();};$('skip-voice').onclick=()=>audio.skip();$('replay-voice').onclick=()=>audio.replay();
 $('map-button').onclick=toggleMap;$('tasks-button').onclick=toggleTasks;$('help-button').onclick=help;$('zoom-in').onclick=()=>zoom(-1);$('zoom-out').onclick=()=>zoom(1);$('details-toggle').onclick=()=>{const p=$('target-description');p.hidden=!p.hidden;$('details-toggle').setAttribute('aria-expanded',String(!p.hidden));};$('inspect-exhibit').onclick=inspectExhibit;
+$('walk-places')?.addEventListener('toggle',()=>{if($('walk-places').open)renderNavigationRover();});
+document.addEventListener('pointerdown',e=>{const places=$('walk-places');if(places&&places.open&&!places.contains(e.target))places.open=false;});
 installHudPresentation({hud:$('hud'),toolbar:document.querySelector('#topbar .toolbar'),onHelp:help,onJourney:openJourney,menuItems:['zoom-out','zoom-in','help-button','journal']});
 renderer.domElement.addEventListener('wheel',e=>{if(enabled()){e.preventDefault();zoom(Math.sign(e.deltaY));}},{passive:false});
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
