@@ -53,39 +53,38 @@ test('every orbital briefing subtitle has a bundled Vorbis voice clip',()=>{
   for(const [id,line]of Object.entries(lines)){assert.ok(line.text.length>30);assert.equal(line.speaker,'Elena Reyes · Commander');const audio=readFileSync(new URL(`../assets/audio-orbit/${id}.ogg`,import.meta.url));assert.equal(audio.subarray(0,4).toString(),'OggS');assert.ok(audio.length>20000,id);}
 });
 
-test('mission map provides a game place map view, view switcher, and interactive inspector',()=>{
+test('mission map directly presents scrollable mission cards for both campaigns without diagram map or switcher',()=>{
   const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
   const js = readFileSync(new URL('../journey.js', import.meta.url), 'utf8');
   const css = readFileSync(new URL('../kid-theme.css', import.meta.url), 'utf8');
 
-  // DOM markup check
-  assert.ok(html.includes('id="tab-place-map"'));
-  assert.ok(html.includes('id="tab-card-list"'));
-  assert.ok(html.includes('id="expedition-place-map"'));
-  assert.ok(html.includes('id="place-map-viewport"'));
-  assert.ok(html.includes('id="place-inspector-card"'));
-  assert.ok(html.includes('id="mission-map-scroller"'));
+  // DOM markup check: diagram map and switcher tabs are removed
+  assert.ok(!html.includes('id="tab-place-map"'));
+  assert.ok(!html.includes('id="tab-card-list"'));
+  assert.ok(!html.includes('id="expedition-place-map"'));
+  assert.ok(!html.includes('id="place-map-viewport"'));
+  assert.ok(!html.includes('id="place-inspector-card"'));
 
-  // Logic check in journey.js
-  assert.ok(js.includes('renderPlaceMap'));
-  assert.ok(js.includes('generateMarsMapSvg'));
-  assert.ok(js.includes('generateMoonMapSvg'));
-  assert.ok(js.includes('renderInspector'));
-  assert.ok(js.includes('setMapView'));
-  assert.ok(js.includes('Meridian Base Outpost'));
-  assert.ok(js.includes('Jezero · Kestrel Ridge'));
-  assert.ok(js.includes('Meridian Storm Refuge'));
-  assert.ok(js.includes('Verdant Bio-Dome'));
-  assert.ok(js.includes('Meridian Comms Hub'));
-  assert.ok(js.includes('Moon South Pole (Shackleton)'));
-  assert.ok(js.includes('Horizon Base Airlock'));
-  assert.ok(js.includes('Saddle Ridge & Hollow'));
+  // Clean mission map scroller & chapters container exist
+  assert.ok(html.includes('id="mission-map"'));
+  assert.ok(html.includes('class="mission-map-scroll native-scroll"'));
+  assert.ok(html.includes('id="chapters"'));
 
-  // Styles check
-  assert.ok(css.includes('.map-view-switcher'));
-  assert.ok(css.includes('.expedition-place-map'));
-  assert.ok(css.includes('.place-inspector-card'));
-  assert.ok(css.includes('.game-place-map-svg'));
+  // Logic check in journey.js: diagram generators removed
+  assert.ok(!js.includes('renderPlaceMap'));
+  assert.ok(!js.includes('generateMarsMapSvg'));
+  assert.ok(!js.includes('generateMoonMapSvg'));
+  assert.ok(!js.includes('renderInspector'));
+  assert.ok(!js.includes('setMapView'));
+  assert.ok(js.includes('toggleMissionMap'));
+  assert.ok(js.includes('scrollToActiveMission'));
+
+  // Styles check: switcher and diagram styles removed, scroller retained
+  assert.ok(!css.includes('.map-view-switcher'));
+  assert.ok(!css.includes('.expedition-place-map'));
+  assert.ok(!css.includes('.place-inspector-card'));
+  assert.ok(!css.includes('.game-place-map-svg'));
+  assert.ok(css.includes('.mission-map-scroll'));
 });
 
 test('teacher view lesson with voice is available after ending all Mars and Moon missions', async () => {

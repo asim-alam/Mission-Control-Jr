@@ -120,20 +120,7 @@
   <!-- DEDICATED FULL-SCREEN EXPEDITION MAP VIEW (SEPARATE PAGE/VIEW) -->
   <section id="mission-map" class="ui-scrim ui-scrim--below-header" role="dialog" aria-modal="true" aria-labelledby="map-title" hidden>
     <div class="mission-map-deck">
-      <!-- View mode switch: Game Place Map vs Mission Cards -->
-      <div class="map-view-switcher" role="tablist" aria-label="Map view mode">
-        <button type="button" id="tab-place-map" class="map-view-tab active" role="tab" aria-selected="true" aria-controls="expedition-place-map">🗺️ Game Place Map</button>
-        <button type="button" id="tab-card-list" class="map-view-tab" role="tab" aria-selected="false" aria-controls="mission-map-scroller">📋 Mission Cards</button>
-      </div>
-
-      <!-- 1. GRAPHICAL GAME PLACE MAP VIEW -->
-      <div id="expedition-place-map" class="expedition-place-map" role="tabpanel" aria-labelledby="tab-place-map">
-        <div id="place-map-viewport" class="place-map-viewport" role="region" aria-label="Planetary map of expedition sites"></div>
-        <aside id="place-inspector-card" class="place-inspector-card" aria-label="Place inspection details" hidden></aside>
-      </div>
-
-      <!-- 2. SCROLLABLE MISSION CARDS VIEW -->
-      <div id="mission-map-scroller" class="mission-map-scroll native-scroll" tabindex="0" role="tabpanel" aria-labelledby="tab-card-list" hidden>
+      <div class="mission-map-scroll native-scroll" tabindex="0" role="region" aria-label="Mission map scroller">
         <section id="chapters" aria-label="Mission chapters" class="trail-grid"></section>
       </div>
     </div>
