@@ -2547,7 +2547,36 @@ body:has(#space) #flight-lesson .lesson-ok-box { padding: 4px 7px; gap: 5px; }
 #hud #vitals .vital-chip { width: 68px !important; height: 46px !important; padding: 4px 8px !important; }
 #hud #vitals .vital-chip b { font-family: var(--kid-display) !important; font-size: 14px !important; font-weight: 800 !important; }
 #hud #vitals .vital-chip .vital-icon { font-size: 15px !important; }
-#hud #objective-marker { font-family: var(--kid-display) !important; font-size: 13.5px !important; font-weight: 800 !important; border-radius: 12px !important; border: 2px solid var(--kid-yellow) !important; background: rgba(18, 15, 46, 0.94) !important; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5) !important; }
+#objective-marker,
+.world-objective-marker,
+#world-labels #objective-marker,
+#hud #objective-marker {
+  position: absolute;
+  z-index: 10;
+  transform: translate(-50%, -100%);
+  font-family: var(--kid-display) !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  border-radius: 999px !important;
+  border: 2px solid var(--kid-yellow) !important;
+  background: rgba(18, 15, 46, 0.94) !important;
+  color: #fff9ea !important;
+  padding: 5px 12px !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5), 0 0 10px rgba(255, 210, 63, 0.4) !important;
+  white-space: nowrap !important;
+  pointer-events: none !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6) !important;
+  line-height: 1.35 !important;
+}
+#objective-marker.ready,
+.world-objective-marker.ready,
+#world-labels #objective-marker.ready {
+  background: linear-gradient(135deg, rgba(62, 230, 181, 0.45), rgba(76, 201, 255, 0.35)) !important;
+  border-color: #3ee6b5 !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 18px rgba(62, 230, 181, 0.8) !important;
+  animation: pulse-ready 1.4s infinite alternate ease-in-out !important;
+}
 
 /* Astronaut Logbook & Badges Modal */
 .badges-card {

@@ -242,21 +242,44 @@ export async function createWorld({container, preset = 'interior', bounds, start
   canvas.addEventListener('pointerup', e => { if (e.button !== 0 || (player.drag?.distance || 0) > 8) { interaction.stopHold(); return; } const r = canvas.getBoundingClientRect(); pointer.set((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1); const item = pick(pointer); if (item && !(holdOf(item) > 0)) { setFocus(item); item.onUse(); } interaction.stopHold(); });
   canvas.addEventListener('pointerdown', e => { if (e.button !== 0) return; const r = canvas.getBoundingClientRect(); pointer.set((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1); const item = pick(pointer); if (item && holdOf(item) > 0) { setFocus(item); holdState = {id: item.id, start: performance.now()}; } });
 
-  // ---- guide arrow: a bouncing chevron above the next target -----------------------------
+  // ---- guide arrow & destination ground beacon (highlight like Mission 2) -----------------
   const arrow = new THREE.Group();
   const arrowMat = new THREE.MeshStandardMaterial({color: 0xffd23f, emissive: 0xffa21f, emissiveIntensity: 1.2, roughness: .4});
   const cone = new THREE.Mesh(new THREE.ConeGeometry(.16, .32, 4), arrowMat); cone.rotation.x = Math.PI; arrow.add(cone);
   const stem = new THREE.Mesh(new THREE.BoxGeometry(.08, .22, .08), arrowMat); stem.position.y = .25; arrow.add(stem);
-  arrow.visible = false; scene.add(arrow); let guideTarget = null, guideLift = .5;
+  arrow.visible = false; scene.add(arrow);
+
+  const ringGeo = new THREE.RingGeometry(0.55, 0.72, 36);
+  const ringMat = new THREE.MeshBasicMaterial({color: 0x3ee6b5, side: THREE.DoubleSide, transparent: true, opacity: 0.75, depthWrite: false});
+  const guideRing = new THREE.Mesh(ringGeo, ringMat);
+  guideRing.rotation.x = -Math.PI / 2;
+  guideRing.visible = false;
+  scene.add(guideRing);
+
+  let guideTarget = null, guideLift = .5;
   function updateGuidePosition(t = elapsed) {
-    if (!guideTarget) return;
+    if (!guideTarget) {
+      guideRing.visible = false;
+      return;
+    }
     const box = new THREE.Box3().setFromObject(guideTarget);
-    if (box.isEmpty()) return;
-    arrow.position.set((box.min.x + box.max.x) / 2, box.max.y + guideLift + Math.sin(t * 3.5) * .12, (box.min.z + box.max.z) / 2);
+    if (box.isEmpty()) {
+      guideRing.visible = false;
+      return;
+    }
+    const centerX = (box.min.x + box.max.x) / 2;
+    const centerZ = (box.min.z + box.max.z) / 2;
+    arrow.position.set(centerX, box.max.y + guideLift + Math.sin(t * 3.5) * .12, centerZ);
     arrow.rotation.y = t * 1.6;
     const d = arrow.position.distanceTo(camera.position); arrow.scale.setScalar(Math.max(1, d / 7));
+
+    guideRing.visible = true;
+    guideRing.position.set(centerX, Math.max(0.02, box.min.y + 0.025), centerZ);
+    const pulse = 1 + Math.sin(t * 4) * 0.12;
+    guideRing.scale.set(pulse, pulse, pulse);
+    ringMat.opacity = 0.55 + Math.sin(t * 4) * 0.25;
   }
-  function guide(object, lift = .5) { guideTarget = object; guideLift = lift; arrow.visible = !!object; updateGuidePosition(); }
+  function guide(object, lift = .5) { guideTarget = object; guideLift = lift; arrow.visible = !!object; guideRing.visible = !!object; updateGuidePosition(); }
   onFrame((dt, t) => {
     updateGuidePosition(t);
   });

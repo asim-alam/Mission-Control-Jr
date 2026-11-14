@@ -519,7 +519,7 @@ function renderMission() {
       : mission.insideAge < 5 ? 'Stay inside. Send message home unlocks when it’s safe.' : 'At Door console, choose Send message home.',
   };
   const baseInstruction = instructions[nextId] || `Walk to ${nextTarget?.title}. Choose Clean the panel and stay nearby.`;
-  $('next-action').textContent = mission.ended ? '' : `${baseInstruction}${nextDist != null ? ` (${nextDist.toFixed(1)} m away)` : ''}`;
+  $('next-action').textContent = mission.ended ? '' : baseInstruction;
   renderNavigation();
   const completeCount=tasks.filter(([,done])=>done).length;$('mission-panel').style.setProperty('--mission-progress',`${completeCount/tasks.length*100}%`);
   const vital=(icon,label,value,essential=false)=>{const n=Math.round(value),state=n<20?'danger':n<40?'warning':'healthy';return `<span class="vital-chip ${essential?'vital-essential':''}" data-state="${state}" role="img" aria-label="${label} ${n} percent" title="${label} ${n}%"><span class="vital-icon" aria-hidden="true">${icon}</span><b>${n}%</b><i style="width:${n}%"></i></span>`;};
@@ -831,6 +831,25 @@ renderer.setAnimationLoop(time=> {
       beaconRing.material.opacity=0.6+pulse*0.35;
     } else if(beaconGroup){
       beaconGroup.visible=false;
+    }
+    const objMarker = $('objective-marker');
+    if (objMarker) {
+      if (activeStation && mission.started && !mission.ended) {
+        const markerPos = new THREE.Vector3(activeStation.point.x, (mission.inside ? 0.18 : 0) + 2.5, activeStation.point.z).project(camera);
+        const visible = markerPos.z < 1 && markerPos.z > -1 && Math.abs(markerPos.x) < 0.96 && Math.abs(markerPos.y) < 0.92;
+        objMarker.hidden = !visible;
+        if (visible) {
+          const isNear = distance(activeStation) < 2.5;
+          const currentRel = relativeToTarget(activeStation.point);
+          const distStr = `${distance(activeStation).toFixed(1)} m`;
+          objMarker.textContent = `🎯 ${activeStation.title} · ${isNear ? '✨ In reach!' : (currentRel ? currentRel.summary : distStr)}`;
+          objMarker.classList.toggle('ready', isNear);
+          objMarker.style.left = `${(markerPos.x * 0.5 + 0.5) * innerWidth}px`;
+          objMarker.style.top = `${(-markerPos.y * 0.5 + 0.5) * innerHeight}px`;
+        }
+      } else {
+        objMarker.hidden = true;
+      }
     }
   }
   if(mission.storm&&!mission.inside&&!paused&&!mission.ended){alarmClock+=dt;if(alarmClock>12){audio.effect('alarm');alarmClock=0;}}

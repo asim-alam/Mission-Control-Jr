@@ -248,8 +248,8 @@ runMission({
     hud.meter('shield', {value: (1 - avg) * 100, max: 70, text: `${Math.round((1 - avg) * 100)}% blocked`, warn: .3});
     hud.meter('dose', {value: Math.max(0, 12 - teamExposure(m)), max: 12, text: teamExposure(m).toFixed(1), warn: .3});
     sensorPanel(ctx);
-    $('sx-put-back').hidden = !m.held || m.stage !== 'prep';
-    $('sx-report').hidden = m.phase !== 'active' || m.stage !== 'after';
+    const pbBtn = $('sx-put-back'); if (pbBtn) pbBtn.hidden = !m.held || m.stage !== 'prep';
+    const repBtn = $('sx-report'); if (repBtn) repBtn.hidden = m.phase !== 'active' || m.stage !== 'after';
     if (m.phase === 'active' && m.stage === 'after' && !ctx.allClearShown && !ctx.busy) {
       ctx.allClearShown = true;
       ctx.dialog({label: 'ALL CLEAR', title: 'The sensors are back to normal', body: '<p>The particle levels have dropped back to normal. Everyone can come out of the refuge.</p>',

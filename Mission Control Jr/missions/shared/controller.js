@@ -287,6 +287,9 @@ function showStepAlertShared(title, text, nextTip, icon = '🎉', onOpenLesson =
           destName = bestTarget.label.replace(/^[^\p{L}]+/u, '');
         }
       }
+      if (!destName) {
+        destName = currentInst?.title || spec.rules.getObjective(ctx.mission);
+      }
       const placeDists = {};
       if (ctx.view?.walkTargets) {
         for (const wt of ctx.view.walkTargets) {
@@ -297,14 +300,36 @@ function showStepAlertShared(title, text, nextTip, icon = '🎉', onOpenLesson =
           }
         }
       }
+      const isNear = destDist != null && destDist < 2.5;
       hud.updateDistanceTracker?.({
         targetId: targetStationId || bestTarget?.id,
-        destination: destName,
+        destination: destDist != null ? destName : null,
         distance: destDist,
         relative: relNav,
-        ready: destDist != null && destDist < 2.5,
+        ready: isNear,
         places: placeDists,
       });
+
+      // Floating 3D objective marker highlight at destination (like Mission 2)
+      const objMarker = $('objective-marker');
+      if (objMarker) {
+        if (guideInfo && guideInfo.target && destDist != null && ctx.playing()) {
+          const screen = guideInfo.screen;
+          if (screen && screen.onScreen && !screen.behind) {
+            objMarker.hidden = false;
+            objMarker.style.left = `${screen.x * innerWidth}px`;
+            objMarker.style.top = `${screen.y * innerHeight}px`;
+            const distLabel = isNear ? '✨ In reach!' : (relNav?.summary ? relNav.summary : `${destDist.toFixed(1)} m`);
+            objMarker.textContent = `🎯 ${destName} · ${distLabel}`;
+            objMarker.classList.toggle('ready', isNear);
+          } else {
+            objMarker.hidden = true;
+          }
+        } else {
+          objMarker.hidden = true;
+        }
+      }
+
       hud.edge(world.guideScreen()); persist(ctx.mission); ctx.setControls();
     });
     if (saved.migrated) hud.toast(ctx.mission.notice || 'Your saved game was updated to the new version.', 'quiet');

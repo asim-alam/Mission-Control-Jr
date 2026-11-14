@@ -28,13 +28,7 @@
 }
 
 /* Label the current objective even when equipment blocks the 3D arrow. */
-.sx-target {
-  position: absolute; z-index: 2; left: 50%; top: 82px;
-  translate: -50% 0; pointer-events: none; white-space: nowrap;
-  background: #1b1744f2; color: #fff8ee; border: 2px solid #ffd23f;
-  padding: .3rem .65rem; border-radius: 999px;
-  font: 600 .9rem 'Fredoka Variable', system-ui; box-shadow: 0 3px 10px #0008;
-}
+.sx-target { display: none !important; }
 .sx-target[hidden] { display: none; }
 .sx-target-in-world { left: var(--sx-x); top: var(--sx-y); translate: -50% -100%; }
 .mx-walk, #walk-dock, #walk-places { display: none !important; visibility: hidden !important; pointer-events: none !important; }
