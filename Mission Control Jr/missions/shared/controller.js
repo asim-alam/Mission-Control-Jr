@@ -104,6 +104,7 @@ export async function runMission(spec) {
   function showPause() {
     dialog({title: 'Paused', body: '<p>The mission clock is stopped.</p>', actions: [
       {label: 'Keep playing', primary: true, run: () => { paused = false; ctx.close(); }},
+      {label: '🗺️ Mission Map / Main Menu', run: () => { ctx.close(); openJourney(); }},
       {label: `Read aloud: ${narration() ? 'On' : 'Off'}`, run: () => { hud.toggleNarration(); showPause(); }},
       {label: `Science details: ${learningMode() === 'details' ? 'On' : 'Off'}`, run: () => { hud.toggleScience(); showPause(); }},
       {label: 'Sources', run: () => ctx.sourcesDialog(showPause)},

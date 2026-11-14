@@ -120,7 +120,9 @@ function togglePause() {
     <label><span>Mute all audio</span><input id="master-mute" type="checkbox" ${audio.muted?'checked':''}></label>
     <label><span>Reduce motion and particles</span><input id="reduce-motion" type="checkbox" ${reducedMotion?'checked':''}></label>
     <p><b>Move:</b> WASD or arrows. <b>Look:</b> Drag. <b>Use:</b> E. <b>Change view:</b> V. <b>To-do:</b> T.</p>`,[
-    {label:'Keep playing',run:closeDialog},{label:'Start over',run:()=>startMission()}]);
+    {label:'Keep playing',run:closeDialog},
+    {label:'🗺️ Mission Map / Main Menu',run:()=>{closeDialog();openJourney();}},
+    {label:'Start over',run:()=>startMission()}]);
   $('dialog-body').querySelectorAll('[data-volume]').forEach(input=>input.oninput=()=>audio.settings({[input.dataset.volume]:Number(input.value)}));
   $('master-mute').onchange=e=>audio.setMuted(e.target.checked);$('reduce-motion').onchange=e=>{reducedMotion=e.target.checked;};
 }

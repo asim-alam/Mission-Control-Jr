@@ -548,11 +548,11 @@ window.addEventListener('message',event=>{
     return;
   }
   if(data?.source!=='mission-control-jr')return;
+  if(data.type==='menu'){menu();return;}
   if(data.chapter!==active)return;
   if(data.type==='ready'){$('loading-scene').hidden=true;hold(!$('journey').hidden||!$('transition').hidden);}
   if(data.type==='complete'&&!activeSampler){finishChapter(state,active,data.result);persist();render();}
   if(data.type==='next')requestChapter(data.target);
-  if(data.type==='menu')menu();
 });
 
 function isMissionMapLocation(){

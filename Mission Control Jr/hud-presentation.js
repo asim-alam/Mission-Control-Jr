@@ -20,7 +20,10 @@ export function installHudPresentation({ hud, toolbar, onHelp, onJourney, menu, 
       menu.hidden = !open;
       toggle.setAttribute('aria-expanded', String(open));
     };
-    toggle.onclick = () => setMenu(menu.hidden);
+    toggle.onclick = event => {
+      event?.stopPropagation();
+      setMenu(menu.hidden);
+    };
     menu.addEventListener('click', event => {
       if (event.target.closest('button')) setMenu(false);
     });
@@ -65,10 +68,10 @@ export function installHudPresentation({ hud, toolbar, onHelp, onJourney, menu, 
   }
   syncCampaignFrame();
 
-  if (toolbar && window.parent !== window) {
+  if (toolbar) {
     const journey = document.createElement('button');
     journey.type = 'button';
-    journey.textContent = 'Journey';
+    journey.textContent = '🗺️ Mission Map';
     journey.title = 'Open the connected expedition menu';
     journey.setAttribute('aria-label', 'Open the connected expedition menu');
     journey.addEventListener('click', () => onJourney?.());

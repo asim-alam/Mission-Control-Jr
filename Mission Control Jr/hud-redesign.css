@@ -225,12 +225,12 @@ body:has(#space) #objective, body:has(#space) #orbital-radio, body:has(#space) #
 abbr[title] { text-decoration: underline dotted; text-underline-offset: 3px; cursor: help; }
 #hud #toast { top: 118px; background: var(--ui-bg) !important; }
 #hud:has(#radio:not([hidden])) #toast { display: none; }
-#hud .toolbar, body:has(#space) nav { max-width: none; overflow: visible; }
+#hud .toolbar, body:has(#space) nav { position: relative; max-width: none; overflow: visible; }
 #hud .toolbar { flex-wrap: nowrap; }
 .mission-tools {
   position: absolute;
   top: calc(100% + 6px);
-  right: 8px;
+  right: 0;
   display: grid;
   grid-template-columns: repeat(2, minmax(90px, 1fr));
   width: min(260px, calc(100vw - 16px));
@@ -239,8 +239,17 @@ abbr[title] { text-decoration: underline dotted; text-underline-offset: 3px; cur
   background: var(--ui-bg);
   border: 1px solid var(--ui-line);
   border-radius: 12px;
+  z-index: 100;
+  pointer-events: auto;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
 }
-.mission-tools[hidden] { display: none; }
+.mission-tools[hidden] { display: none !important; }
+.mission-tools button {
+  min-height: 40px;
+  font-size: 11px;
+  white-space: nowrap;
+  pointer-events: auto;
+}
 #hud .toolbar::-webkit-scrollbar, body:has(#space) nav::-webkit-scrollbar { display: none; }
 @media (max-width: 650px) {
   #hud #topbar { gap: 4px; padding-inline: 6px; }

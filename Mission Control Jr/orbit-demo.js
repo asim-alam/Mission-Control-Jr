@@ -119,10 +119,19 @@ let detailsCollapseTimer,controlsFadeTimer;
 function scheduleDetailsCollapse(){clearTimeout(detailsCollapseTimer);if(details)detailsCollapseTimer=setTimeout(()=>{details=false;$('objective').classList.remove('expanded');$('details').setAttribute('aria-expanded','false');renderHud();},5000);}
 $('objective').addEventListener('pointermove',()=>{if(details)scheduleDetailsCollapse();});
 $('objective').addEventListener('focusin',()=>{if(details)scheduleDetailsCollapse();});
-$('menu-toggle').onclick=()=>{const group=$('menu-controls'),open=group.hidden;group.hidden=!open;$('menu-toggle').setAttribute('aria-expanded',String(open));if(open)group.querySelector('button:not([hidden])')?.focus();};
+$('menu-toggle').onclick = event => {
+  event?.stopPropagation();
+  const group = $('menu-controls'), open = group.hidden;
+  group.hidden = !open;
+  $('menu-toggle').setAttribute('aria-expanded', String(open));
+  if (open) group.querySelector('button:not([hidden])')?.focus();
+};
 document.addEventListener('click', event => {
   const menu = $('menu-controls'), toggle = $('menu-toggle');
-  if (!menu.hidden && !toggle.contains(event.target)) toggle.click();
+  if (!menu.hidden && !menu.contains(event.target) && !toggle.contains(event.target)) {
+    menu.hidden = true;
+    toggle.setAttribute('aria-expanded', 'false');
+  }
 });
 const player=new Player(camera,renderer.domElement,interact,togglePause,()=>{},()=>{view=player.view;if(view==='third'){camera.fov=52;camera.updateProjectionMatrix();}showCameraView($('view'), view);});
 player.position.set(0,1.68,14);player.yaw=0;player.view='third';player.thirdPersonDistance=zoom;player.bounds={minX:-10.6,maxX:10.6,minZ:-17.5,maxZ:17.5};player.obstacles=station.colliders;player.cameraObjects=station.cameraObjects;
