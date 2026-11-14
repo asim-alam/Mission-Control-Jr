@@ -503,10 +503,29 @@ $('field-log').onclick = () => {
   const content = $('log-content');
   content.replaceChildren(element('p', `${entries.length} of ${Object.keys(quests).length} jobs completed.`));
   if (!entries.length) content.append(element('p', 'Completed jobs and their outcomes will appear here.'));
-  if (state.debriefed) content.append(
-    element('h3', 'Meridian Network ready'),
-    element('p', 'Reyes signed your field report. A repaired water recycler helped grow food for another base. The relay brought the crews back in touch. The shelter gave the field team a safe place to wait.'),
-  );
+  if (state.debriefed) {
+    content.append(
+      element('h3', 'Meridian Network ready'),
+      element('p', 'Reyes signed your field report. A repaired water recycler helped grow food for another base. The relay brought the crews back in touch. The shelter gave the field team a safe place to wait.'),
+    );
+    const debriefBox = document.createElement('div');
+    debriefBox.className = 'kid-lesson-box';
+    debriefBox.innerHTML = `
+      <span class="lesson-badge">🎓 Space Science Lesson</span>
+      <h3>What We Learned Running Meridian Outposts</h3>
+      <p><b>🌟 The Big Space Idea:</b> A real Mars colony is an interconnected ecosystem! Outposts share food from greenhouses, relay radio signals over mountains, filter water, and shield against solar storms together.</p>
+      <div class="lesson-fact">
+        <b>🚀 Real NASA Science:</b> NASA’s Moon-to-Mars Architecture uses interoperable systems so habitats, rovers, and life support built by different teams can connect and share resources across deep space!
+      </div>
+      <p><b>💡 Commander Skill:</b> Balancing power, air, routes, and emergency repairs kept all four Meridian outposts alive!</p>
+      <button type="button" class="primary pip-lesson-button" style="margin-top: 10px;">🎓 Pip’s voice lesson</button>
+    `;
+    debriefBox.querySelector('button').onclick = () => {
+      closeModal(logDialog);
+      openPipLesson('extended', { autoVoice: true });
+    };
+    content.append(debriefBox);
+  }
   for (const [id, outcome] of entries) {
     content.append(element('h3', quests[id].title), element('p', outcome));
   }
@@ -616,12 +635,19 @@ function frame(now) {
     renderStation();
   }
   if (movedSinceSave && now - lastSave > 2600) persist();
+  const isMoving = Math.abs(motion.speed) > 0.01 || held.size > 0 || touch.size > 0 || Boolean(trip);
+  if (isMoving) {
+    refreshReadout();
+    updateObjective();
+  }
   if (now - lastMap > 180) {
     if (destination && !trip && Math.hypot(state.x - plannedFrom.x, state.z - plannedFrom.z) >= 6) recalculate(true);
     const remaining = trip ? {points: [state, ...trip.points.slice(trip.index)]} : plan;
     map.draw(state, remaining, eva);
-    refreshReadout();
-    updateObjective();
+    if (!isMoving) {
+      refreshReadout();
+      updateObjective();
+    }
     lastMap = now;
   }
   world?.render(state, motion, dt, drill.open ? 'verdant' : survey, eva, currentSite, cameraView);
