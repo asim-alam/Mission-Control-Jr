@@ -71,6 +71,7 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--ui-warn); outli
 #hud #vehicle-instruments>div:nth-child(2) { min-width: 0; font-size: 9px; }
 #hud #map-panel { right: 16px; bottom: 16px; width: min(190px, 30vw); border: 1px solid var(--ui-line); border-radius: 14px; background: var(--ui-bg); }
 #hud #map-panel button { min-width: 44px; min-height: 44px; }
+#hud:has(#interaction:not([hidden])) #map-panel { display: none !important; }
 #hud #radio { left: auto; right: 16px; top: 60px; bottom: auto; transform: none; width: min(390px, calc(100vw - 32px)); padding: 10px 13px; border: 1px solid var(--ui-line); border-left: 2px solid var(--ui-accent); border-radius: 14px; background: var(--ui-bg); }
 #hud #radio button { min-height: 44px; }
 #hud #controls { display: block; height: auto; min-height: 0; bottom: 5px; left: 50%; right: auto; transform: translateX(-50%); width: max-content; max-width: calc(100vw - 32px); padding: 7px 11px; border: 1px solid var(--ui-line); border-radius: 999px; background: rgb(9 19 26 / 72%); font-size: 9px; letter-spacing: .3px; opacity: 1; transition: opacity 1s; }
