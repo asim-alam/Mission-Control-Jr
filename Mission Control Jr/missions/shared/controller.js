@@ -94,6 +94,12 @@ export async function runMission(spec) {
     openJourney,
   };
 
+  // A restored game has already completed its earlier objectives. Seed the
+  // transition tracker so reopening a save does not replay an old completion popup.
+  for (const [i, step] of spec.rules.getSteps(ctx.mission).entries()) {
+    if (step.done) completedSharedSteps.add(i);
+  }
+
   function showPause() {
     dialog({title: 'Paused', body: '<p>The mission clock is stopped.</p>', actions: [
       {label: 'Keep playing', primary: true, run: () => { paused = false; ctx.close(); }},

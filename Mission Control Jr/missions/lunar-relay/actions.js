@@ -177,7 +177,7 @@ export function getObjective(s) {
     if (s.stowed) return 'Drive home to the base';
     if (s.relay === 'rover' && s.plan === 'relay') return 'Lift the relay off the rover';
     if (s.relay === 'ground' && s.relayAt === 'saddle') {
-      if (!s.legs) return 'Put the relay’s legs out: hold E on it';
+      if (!s.legs) return 'Unfold the relay tripod legs';
       const hop = relayHops(s, 'hollow');
       if (!hop.field && s.stages < sc.relay.stages) return 'Raise the mast: press E on the green ▲';
       if (!s.aimed) return 'Aim the dish at the base: hold E on the dish';
@@ -200,7 +200,9 @@ export function getInstruction(s) {
     : {place: 'relay', marker: 'yellow setup ring', text: 'Follow the arrow to the yellow setup ring. Stand beside it and press E to set down the relay.'};
   if (s.hand === 'drill') {
     if (s.cores >= (s.earthAsked ? 2 : 1)) return {place: 'rover', text: 'Use the rear cargo deck to put the drill away.'};
-    return {place: 'drill', text: s.cores ? 'Use the second glowing X to set down the drill.' : 'Use the first glowing X to set down the drill.'};
+    return {place: 'drill', text: s.cores
+      ? 'Follow the arrow to the blue X. Press E to set the drill down there.'
+      : 'Follow the arrow to the yellow X. Press E to set the drill down there.'};
   }
   if (s.hand === 'core') return {place: 'rover', text: 'Use the sample box on the rover to store the core.'};
   const drive = to => ({place: 'rover', text: `Use the rover seat, then choose ${s.scenario.stops[to].name} on the drive screen.`});
@@ -213,7 +215,7 @@ export function getInstruction(s) {
     if (s.stowed) return drive('base');
     if (s.plan === 'relay' && s.relay === 'rover') return {place: 'rover', text: 'Use the rear cargo deck to lift off the relay.'};
     if (s.relay === 'ground' && s.relayAt === 'saddle') {
-      if (!s.legs) return {place: 'relay', text: 'Hold E or hold the prompt on the relay frame to lower its legs.'};
+      if (!s.legs) return {place: 'relay', text: 'Stand beside the relay. Hold E on its tripod frame until the stabilizer legs unfold.'};
       if (!relayHops(s, 'hollow').field && s.stages < s.scenario.relay.stages) return {place: 'relay', text: 'Use the green ▲ until the mast can reach the hollow.'};
       if (!s.aimed) return {place: 'relay', text: 'Aim at the dish. Hold E or hold the prompt until the relay finds the base.'};
     }
