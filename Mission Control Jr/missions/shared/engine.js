@@ -126,7 +126,7 @@ export async function createWorld({container, preset = 'interior', bounds, start
 
   // ---- interaction: look (or point) at a registered thing and press E / click -------------
   const raycaster = new THREE.Raycaster(), center = new THREE.Vector2(0, 0), pointer = new THREE.Vector2(), tmp = new THREE.Vector3();
-  const items = new Map(); let focused = null, holdState = null, pointerAim = null;
+  const items = new Map(); let focused = null, holdState = null, pointerAim = null, preferred = null, preferredRequiresFacing = true, suppressOtherTargets = false;
   const listeners = {focus: () => {}, hold: () => {}};
   const holdOf = item => typeof item.holdSeconds === 'function' ? item.holdSeconds() : item.holdSeconds;
   const highlight = new THREE.Color(0xffd23f);
@@ -150,6 +150,16 @@ export async function createWorld({container, preset = 'interior', bounds, start
     items.set(item.id, item); return () => { if (focused === item) setFocus(null); items.delete(item.id); };
   }
   function distanceTo(item) { item.object.getWorldPosition(tmp); return Math.hypot(tmp.x - player.position.x, tmp.z - player.position.z); }
+  function withinReach(item) { return item.object.visible && item.enabled() && distanceTo(item) <= item.range; }
+  function preferredInReach() {
+    const item = preferred && items.get(preferred());
+    if (item && (preferredRequiresFacing ? frontScore(item) < Infinity : withinReach(item))) return item;
+    return null;
+  }
+  function preferredItem() {
+    const item = preferred && items.get(preferred());
+    return item?.enabled() ? item : null;
+  }
   function pick(ndc) {
     raycaster.setFromCamera(ndc, camera); raycaster.far = 6 + player.cameraDistance;
     const targets = [...items.values()].filter(i => i.object.visible && i.enabled()).map(i => i.object);
@@ -184,8 +194,9 @@ export async function createWorld({container, preset = 'interior', bounds, start
   }
   onFrame((dt, t) => {
     if (!player.enabled) { setFocus(null); return; }
-    const aimed = (pointerAim && pick(pointerAim)) || pick(center);
-    const item = holdState && focused && frontScore(focused) < Infinity ? focused : aimed || nearestInFront();
+    const guided = preferredItem();
+    const item = holdState && focused && frontScore(focused) < Infinity ? focused
+      : preferredInReach() || (guided && suppressOtherTargets ? null : (pointerAim && pick(pointerAim)) || pick(center) || nearestInFront());
     setFocus(item);
     if (focused) { setGlow(focused, .35 + Math.sin(t * 6) * .2); listeners.focus({id: focused.id, label: focused.label(), hold: holdOf(focused) > 0}); }
     if (!holdState && eDown && !eCompleted && focused && holdOf(focused) > 0) holdState = {id: focused.id, start: performance.now()};
@@ -198,11 +209,19 @@ export async function createWorld({container, preset = 'interior', bounds, start
       }
     }
   });
+  function useItem(item) {
+    if (!player.enabled || !item || !withinReach(item)) return false;
+    setFocus(item);
+    if (holdOf(item) > 0) { holdState ||= {id: item.id, start: performance.now()}; return true; }
+    item.onUse();
+    return true;
+  }
   const interaction = {
-    use() { if (!player.enabled || !focused) return false; if (holdOf(focused) > 0) { holdState ||= {id: focused.id, start: performance.now()}; return true; } focused.onUse(); return true; },
+    use() { return useItem((!preferredRequiresFacing && preferredInReach()) || focused); },
     stopHold() { if (holdState) { holdState = null; listeners.hold(0); } },
-    useById(id) { const item = items.get(id); if (!item || !item.enabled() || distanceTo(item) > item.range) return false; setFocus(item); return interaction.use(); },
+    useById(id) { return useItem(items.get(id)); },
     on(event, fn) { listeners[event] = fn; },
+    preferTarget(getId, {requiresFacing = true, suppressOtherTargets: suppress = false} = {}) { preferred = getId; preferredRequiresFacing = requiresFacing; suppressOtherTargets = suppress; },
     get focused() { return focused?.id || null; },
   };
   // Hold E (or hold the pointer) for held actions.
@@ -223,17 +242,23 @@ export async function createWorld({container, preset = 'interior', bounds, start
   const cone = new THREE.Mesh(new THREE.ConeGeometry(.16, .32, 4), arrowMat); cone.rotation.x = Math.PI; arrow.add(cone);
   const stem = new THREE.Mesh(new THREE.BoxGeometry(.08, .22, .08), arrowMat); stem.position.y = .25; arrow.add(stem);
   arrow.visible = false; scene.add(arrow); let guideTarget = null, guideLift = .5;
-  function guide(object, lift = .5) { guideTarget = object; guideLift = lift; arrow.visible = !!object; }
-  onFrame((dt, t) => {
+  function updateGuidePosition(t = elapsed) {
     if (!guideTarget) return;
     const box = new THREE.Box3().setFromObject(guideTarget);
     if (box.isEmpty()) return;
     arrow.position.set((box.min.x + box.max.x) / 2, box.max.y + guideLift + Math.sin(t * 3.5) * .12, (box.min.z + box.max.z) / 2);
     arrow.rotation.y = t * 1.6;
     const d = arrow.position.distanceTo(camera.position); arrow.scale.setScalar(Math.max(1, d / 7));
+  }
+  function guide(object, lift = .5) { guideTarget = object; guideLift = lift; arrow.visible = !!object; updateGuidePosition(); }
+  onFrame((dt, t) => {
+    updateGuidePosition(t);
   });
   function guideScreen() {
     if (!guideTarget) return null;
+    updateGuidePosition();
+    camera.updateWorldMatrix(true, false);
+    arrow.updateMatrixWorld(true);
     const v = arrow.position.clone().project(camera);
     const behind = v.z > 1; return {x: (v.x + 1) / 2, y: (1 - v.y) / 2, behind, onScreen: !behind && Math.abs(v.x) < .92 && Math.abs(v.y) < .92};
   }

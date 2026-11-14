@@ -1,4 +1,4 @@
-import {HOME,RIDGE,HAZARD,ROUTES,distance,returnForecast,surfaceAt} from './expedition-terrain.js';
+import {HOME,RIDGE,HAZARD,ROUTES,distance,returnForecast,routeEnergy,routeLength,surfaceAt} from './expedition-terrain.js';
 import {createRoverState} from './rover-controller.js';
 import {createMessage,updateMessage} from './simulation/messages.js';
 export const SAVE_KEY='mission-control-jr.episodes.v1';
@@ -14,6 +14,11 @@ export function event(m,type,text){m.events.push({type,text,time:m.elapsed,x:m.v
 export function checkpoint(m){if(!m.vehicle.parking||Math.abs(m.vehicle.speed)>.05||surfaceAt(m.vehicle.x,m.vehicle.z)==='loose')return;const {checkpoint:old,...data}=m;m.checkpoint=JSON.parse(JSON.stringify(data));}
 export function retry(m){if(!m.checkpoint)return null;const next=JSON.parse(JSON.stringify(m.checkpoint));next.assisted=true;next.ended=false;next.outcome=null;next.vehicle.speed=0;next.vehicle.parking=true;next.checkpoint=JSON.parse(JSON.stringify(m.checkpoint));event(next,'retry','Back to your last safe spot. Your supplies are how they were then.');return next;}
 export function forecast(m,seconds=0,charge=0){return returnForecast(m.vehicle,m.battery,m.oxygen,seconds,charge,m.eco,m.drainScale??1);}
+export function routeForecast(m,route){
+  const seconds=routeLength(route.points)/(m.eco?2:2.6)+75;
+  const charge=routeEnergy(route.points)*(m.eco?.83:1)*(m.drainScale??1);
+  return forecast({...m,vehicle:RIDGE},seconds,charge);
+}
 export function task2(m){
   const task=(stage,title,instruction,action,label,target=null,radius=3)=>({stage,title,instruction,action,label,target,radius});
   if(m.phase==='test')m.phase='planning';
@@ -77,22 +82,28 @@ export function act2(m,type,value){
   }else if(type==='board'){
     if(m.aboard)return no('You are already in the rover.');if(!['battery','wheels','camera','comms'].every(id=>m.checks[id]))return no('Finish the four rover checks first.');
     if(Math.abs(m.vehicle.speed)>.05||!m.vehicle.parking)return no('Stop, then press P for the parking brake.');
-    m.aboard=true;m.driving=true;if(m.phase==='prep')m.phase='planning';message='You are driving! Amara is with you. Choose a route on the map, or take a short drive first.';
+    m.aboard=true;m.driving=true;if(m.phase==='prep')m.phase='planning';message='You are in! Amara is with you. Choose a route to start driving.';
   }else if(type==='exit'){
     if(!m.aboard)return no('You are already outside.');if(Math.abs(m.vehicle.speed)>.05||!m.vehicle.parking)return no('Stop and press P before you get out.');
     m.aboard=false;m.driving=false;message='You climbed out. Amara stays with the rover and talks by radio.';
   }else if(type==='brakeTest'){
-    return no('The test drive is optional. Choose a route whenever you are ready.');
+    return no('Choose a route to begin driving.');
   }else if(type==='plan'){
     if(m.phase!=='planning'||!nearBase)return no('Choose a route while parked near the base.');
     if(!['battery','wheels','camera','comms'].every(id=>m.checks[id]))return no('Finish the rover checks before choosing a route.');
     if(Math.abs(m.vehicle.speed)>.05||!m.vehicle.parking)return no('Park before you look at the paths.');m.phase='planning';message='Look at each path: how long, how bumpy, and how much battery it uses.';line='route';
   }else if(type==='launch'){
-    if(m.phase!=='planning'||!ROUTES[value?.route])return no('Choose one of the paths shown on the trip map.');
+    const routeId=value?.route;
+    if(m.phase!=='planning'||!Object.hasOwn(ROUTES,routeId))return no('Choose one of the paths shown on the trip map.');
     if(!nearBase||!parked)return no('Go back near the base, stop, and press P before you leave.');
     if(!m.aboard)return no('Get in the rover with Amara first.');
     if(!['battery','wheels','camera','comms'].every(id=>m.checks[id]))return no('Some rover checks are not done yet.');
-    m.route=value.route;m.reason=true;m.marginReviewed=true;m.phase='outbound';m.waypoint=1;m.trail=[{x:m.vehicle.x,z:m.vehicle.z}];m.earthStatus=earthPacket('departure-status',m.elapsed,'Departure status');checkpoint(m);message='We are off! Follow your path. If you see something strange, you can change the plan.';line='departure';
+    if(routeId==='direct')return no('Direct line crosses the marked patch of uncertain ground. The wheels could sink in soft sand. Choose a route on firmer ground.');
+    if(routeId==='rim')return no('Rim track crosses rocky slopes where the wheels can slip and use more power. Choose a route with gentler ground.');
+    const reserve=m.returnReserve||20;
+    const {battery,oxygen}=routeForecast(m,ROUTES[routeId]);
+    if(battery<reserve||oxygen<reserve)return no(`This route leaves less than ${reserve}% ${battery<reserve&&oxygen<reserve?'battery and air':battery<reserve?'battery':'air'} for the return. Review the reserve estimate before leaving.`);
+    m.route=routeId;m.reason=true;m.marginReviewed=true;m.phase='outbound';m.waypoint=1;m.trail=[{x:m.vehicle.x,z:m.vehicle.z}];m.earthStatus=earthPacket('departure-status',m.elapsed,'Departure status');checkpoint(m);message='We are off! Follow your path. If you see something strange, you can change the plan.';line='departure';
   }else if(type==='report'){
     const i=m.reports.findIndex(done=>!done);if(m.phase!=='outbound'||i<0)return no('You already radioed from both stops.');
     if(distance(m.vehicle,reportStations(m)[i])>13)return no('Drive to the next radio stop marker.');

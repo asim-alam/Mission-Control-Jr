@@ -180,8 +180,12 @@ export async function createRelayScene({container, getState, act, onPause, onDri
   const nearRover = () => !driving;
   world.register({id: 'crate', object: crateHit, range: 2.6, enabled: () => active() && (s().relay === 'crate' && !s().hand || s().relay === 'hand' && s().at === 'base'),
     label: () => s().relay === 'crate' ? 'Pick up the radio relay' : 'Put the relay back in its crate', onUse: () => act({id: s().relay === 'crate' ? 'takeRelay' : 'putRelayBack'})});
-  world.register({id: 'cargo', object: cargoHit, range: 2.8, enabled: () => active() && nearRover() && (s().relay === 'hand' || (s().relay === 'rover' && !s().hand && s().at !== 'base') || s().hand === 'drill' || (s().drill === 'rover' && !s().hand && s().at === 'hollow')),
-    label: () => s().relay === 'hand' ? 'Put the relay on the cargo deck' : s().hand === 'drill' ? 'Put the drill back on the rover' : s().relay === 'rover' && s().at !== 'hollow' ? 'Lift the relay off the rover' : s().drill === 'rover' && s().relay !== 'rover' ? 'Take the drill off the rover' : 'Take the relay or the drill',
+  world.register({id: 'cargo', object: cargoHit, range: 2.8, enabled: () => active() && nearRover() && ((s().relay === 'hand' && !s().scenario.stops[s().at].relaySpot) || (s().relay === 'rover' && !s().hand && s().at !== 'base') || s().hand === 'drill' || (s().drill === 'rover' && !s().hand && s().at === 'hollow')),
+    label: () => s().relay === 'hand' ? 'Put the relay on the cargo deck'
+      : s().hand === 'drill' ? 'Put the drill back on the rover'
+      : s().at === 'hollow' && s().drill === 'rover' ? 'Take the drill off the rover'
+      : s().relay === 'rover' && s().at !== 'base' ? 'Lift the relay off the rover'
+      : s().drill === 'rover' ? 'Take the drill off the rover' : 'Use the rover cargo deck',
     onUse: () => { const st = s(); if (st.relay === 'hand') act({id: 'stowRelay'}); else if (st.hand === 'drill') act({id: 'packDrill'}); else if (st.at === 'hollow' && st.drill === 'rover') act({id: 'takeDrill'}); else act({id: 'takeRelay'}); }});
   world.register({id: 'seat', object: seatHit, range: 2.8, enabled: () => active() && !s().hand, label: () => '🚙 Get in and drive', onUse: () => onDrive()});
   world.register({id: 'radio', object: radioHit, range: 2.6, enabled: () => active() && s().stowed > s().messages.length, label: () => hasLink(s()) ? '📶 Send the data' : '📵 Send the data (no signal here)', onUse: () => act({id: 'sendData'})});
@@ -205,6 +209,24 @@ export async function createRelayScene({container, getState, act, onPause, onDri
     onUse: () => { dust.rate = 0; const st = s(); if (st.cores < (st.earthAsked ? 2 : 1) && !(st.drillAt === 'a' && st.cores)) act({id: 'drillCore'}); else act({id: 'takeDrill'}); }});
   world.register({id: 'core', object: coreHit, range: 2.6, enabled: () => active() && s().coreReady && !s().hand, label: () => 'Take the core sample', onUse: () => act({id: 'takeCore'})});
   world.register({id: 'hatch', object: hatchHit, range: 3.2, enabled: () => active() && s().at === 'base' && !s().hand, label: () => s().stowed ? '🚪 Go inside with your cores' : '🚪 Go inside (no cores yet)', onUse: () => act({id: 'finish'})});
+
+  // Prefer the object that completes the current task when hit areas overlap.
+  world.interaction.preferTarget(() => {
+    const st = s();
+    if (!active()) return null;
+    if (st.hand === 'relay') return st.at !== 'base' && st.scenario.stops[st.at].relaySpot ? 'ring' : 'cargo';
+    if (st.hand === 'drill') return st.cores < (st.earthAsked ? 2 : 1) ? `x:${st.earthAsked && st.cores ? 'b' : 'a'}` : 'cargo';
+    if (st.hand === 'core') return 'box';
+    if (st.relay === 'ground' && st.relayAt === st.at) {
+      if (!st.legs) return 'relay';
+      if (!relayHops(st, 'hollow').field && st.stages < st.scenario.relay.stages) return 'mastUp';
+      if (!st.aimed) return 'dish';
+    }
+    if (st.at === 'hollow' && st.drill === 'rover' && st.cores < (st.earthAsked ? 2 : 1)) return 'cargo';
+    if (st.drill === 'ground' && !st.hand && !st.coreReady) return 'drill';
+    if (st.coreReady && !st.hand) return 'core';
+    return null;
+  }, {requiresFacing: false});
 
   const dust = world.particles({count: 80, color: 0xb9b2a6, size: .07, opacity: .8, gravity: -1.2, life: [.6, 1.2], spawn(p, v) { const d = new THREE.Vector3(); drill.getWorldPosition(d); p.set(d.x + (Math.random() - .5) * .2, d.y + .05, d.z + (Math.random() - .5) * .2); v.set((Math.random() - .5) * 1.4, .8 + Math.random() * 1.2, (Math.random() - .5) * 1.4); }});
   function aimYaw() {
@@ -378,16 +400,22 @@ export async function createRelayScene({container, getState, act, onPause, onDri
   world.onFrame(() => world.guide(guideTarget(), .45));
 
   const walkTargets = [
-    {id: 'rover', label: '🚙 Rover'}, {id: 'relay', label: '📡 Relay'}, {id: 'drill', label: '🔩 Drill / X'}, {id: 'hatch', label: '🚪 Base hatch'},
+    {id: 'rover', label: '🚙 Rover'}, {id: 'relay', label: '📡 Relay / setup ring'}, {id: 'drill', label: '🔩 Drill / X'}, {id: 'hatch', label: '🚪 Base hatch'},
   ];
   const worldOf = o => { const v = new THREE.Vector3(); o.getWorldPosition(v); return v; };
   return {world, sync, idle: () => syncQueue, drive, walkTargets, NEXT,
     walk(id) {
       if (id === 'hatch') return player.navigate({x: 7.2, z: 0}, worldOf(hatchHit));
       const st = s();
-      const target = id === 'rover' ? worldOf(seatHit) : id === 'relay' ? worldOf(st.relay === 'crate' ? crate : relay) : worldOf(st.drill === 'ground' ? drill : xMarks[st.earthAsked && st.cores ? 'b' : 'a']);
+      const relaySpot = st.hand === 'relay' && st.scenario.stops[st.at].relaySpot;
+      const target = id === 'rover' ? worldOf(seatHit) : id === 'relay' && relaySpot
+        ? new THREE.Vector3(relaySpot.x, groundHeight(relaySpot.x, relaySpot.z), relaySpot.z)
+        : id === 'relay' ? worldOf(st.relay === 'crate' ? crate : relay) : worldOf(st.drill === 'ground' ? drill : xMarks[st.earthAsked && st.cores ? 'b' : 'a']);
       const from = new THREE.Vector2(player.position.x - target.x, player.position.z - target.z); const d = Math.max(.01, from.length());
-      return player.navigate({x: target.x + from.x / d * 1.8, z: target.z + from.y / d * 1.8}, {x: target.x, z: target.z});
+      // Rover interaction points sit inside the rover's collision footprint.
+      // Stop outside the blocked area while remaining within interaction range.
+      const approach = id === 'rover' ? 2.4 : 1.8;
+      return player.navigate({x: target.x + from.x / d * approach, z: target.z + from.y / d * approach}, {x: target.x, z: target.z});
     },
     teleport(x, z, lookX, lookZ, pitch = -.2) { player.position.set(x, groundHeight(x, z) + 1.62, z); player.yaw = yawToward(lookX - x, lookZ - z); player.pitch = pitch; player.syncCamera(); },
     roverPosition: () => ({x: roverPos.x, z: roverPos.y, yaw: roverYaw}),

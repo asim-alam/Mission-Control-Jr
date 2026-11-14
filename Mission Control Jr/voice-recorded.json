@@ -23,7 +23,7 @@
  "m2": {
   "brief": "Meridian survived the storm. On sol sixteen, your next qualification is a short rover traverse to the Kestrel outcrop. Bring back useful evidence, and bring both crew home.",
   "spare": "The habitat power pack stays connected. A separate, charged rover spare is seated and secured.",
-  "checks": "Before departure, check the wheel pin, navigation camera, cargo latch, radio, and brakes. Report what you find before you clear each item.",
+  "checks": "Before departure, check the rover battery, wheel pin, camera, suits, tools, and radio. Fix anything that needs attention.",
   "ready": "Both suits are ready. Keep enough oxygen and battery for the return, plus a reserve for delays.",
   "route": "Compare the terrain along each route with the reserve you will need to get home. The shortest line may cost more than it saves.",
   "departure": "Meridian, Rover Two is rolling with Amara aboard. We will call out changes and reassess the route as we go.",

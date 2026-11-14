@@ -26,3 +26,31 @@
   body:has(.sx-sensors:not([hidden])) .mx-job { bottom: auto; top: 160px; }
   body:has(.sx-sensors:not([hidden])) .sx-sensors { bottom: 68px; max-height: 38dvh; overflow: auto; }
 }
+
+/* Label the current objective even when equipment blocks the 3D arrow. */
+.sx-target {
+  position: absolute; z-index: 2; left: 50%; top: 82px;
+  translate: -50% 0; pointer-events: none; white-space: nowrap;
+  background: #1b1744f2; color: #fff8ee; border: 2px solid #ffd23f;
+  padding: .3rem .65rem; border-radius: 999px;
+  font: 600 .9rem 'Fredoka Variable', system-ui; box-shadow: 0 3px 10px #0008;
+}
+.sx-target[hidden] { display: none; }
+.sx-target-in-world { left: var(--sx-x); top: var(--sx-y); translate: -50% -100%; }
+body:has(.sx-sensors:not([hidden])) .mx-walk { display: none; }
+@media (max-width: 860px) {
+  body:has(.sx-sensors:not([hidden])) .mx-job { top: 128px; bottom: auto; }
+  body:has(.sx-sensors:not([hidden])) .sx-sensors { bottom: 8px; max-height: 32dvh; overflow: auto; }
+  .sx-target { top: 114px; font-size: .76rem; }
+  .sx-target-in-world { top: var(--sx-y); }
+}
+@media (max-width: 520px) {
+  .sx-target { top: 136px; }
+  .sx-target-in-world { top: var(--sx-y); }
+}
+
+/* The watch panel must never cover the all-clear dialog or its report button. */
+body:has(#sx-sensors) #dialog { z-index: 45; }
+@media (max-width: 520px) {
+  body:has(.sx-sensors:not([hidden])) .mx-job { top: auto; bottom: calc(32dvh + 18px); }
+}

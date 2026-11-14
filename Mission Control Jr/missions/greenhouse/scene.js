@@ -4,7 +4,7 @@ import {createWorld, loadModel, part} from '../shared/engine.js';
 import {missionAsset} from '../shared/assets.js';
 import {makeCrew} from '../shared/crew.js';
 import {BEDS} from './state.js';
-import {isReady, isFull, moistureState, dryLitBed, bedToDim, noHarvest} from './actions.js';
+import {isReady, isFull, moistureState, dryLitBed, bedToDim, bedToSetLight, noHarvest, needsFreeHandsForHose} from './actions.js';
 
 const BED_X = {a: -4.6, b: -1.1, c: 2.4}, BED_Z = -3.95;
 const CROP_MODEL = {lettuce: 'lettuce-plant', mizuna: 'mizuna-plant', pepper: 'pepper-plant'};
@@ -118,15 +118,46 @@ export async function createGreenhouseScene({container, getState, act, onPause, 
   hoseMount.add(mountHit);
   world.register({id: 'mount', object: mountHit, range: 2.4, holdSeconds: 1.5, enabled: () => playing() && s().leak === 'hose-off' && s().holding === 'hose',
     label: () => 'Fit the new hose and tighten the clamps', onUse: () => act({id: 'fitHose'})});
-  world.register({id: 'spare', object: spare, range: 2.4, enabled: () => playing() && s().leak === 'hose-off' && !s().holding, label: () => 'Take the spare hose', onUse: () => act({id: 'takeSpare'})});
+  world.register({id: 'spare', object: shelf, range: 2.4,
+    enabled: () => playing() && s().leak === 'hose-off' && !s().holding,
+    label: () => 'Take the spare hose', onUse: () => act({id: 'takeSpare'})});
+  const tableAction = () => needsFreeHandsForHose(s()) || s().day <= s().scenario.growDays
+    ? 'returnBasket' : s().harvestChecked ? 'serve' : 'inspectHarvest';
   world.register({id: 'basket', object: basket, range: 2.4, enabled: () => playing() && s().basket === 'table' && !s().holding, label: () => 'Pick up the harvest basket', onUse: () => act({id: 'takeBasket'})});
   world.register({id: 'table', object: table, range: 2.4, enabled: () => playing() && s().holding === 'basket',
-    label: () => s().day > s().scenario.growDays ? (s().harvestChecked ? 'Serve dinner!' : 'Check leaf surfaces and clean basket') : 'Put the basket down',
-    onUse: () => act({id: s().harvestChecked ? 'serve' : 'inspectHarvest'})});
+    label: () => ({returnBasket: 'Put the basket back', serve: 'Serve dinner!', inspectHarvest: 'Check leaf surfaces and clean basket'}[tableAction()]),
+    onUse: () => act({id: tableAction()})});
   world.register({id: 'console', object: consoleM, range: 2.4, enabled: () => playing(), label: () => s().day > s().scenario.growDays ? 'Check the greenhouse screen' : 'Plan power and end the day', onUse: onConsole});
   world.register({id: 'airflow-fan', object: fanUnit, range: 2.5, enabled: () => playing() && !s().fanRunning,
     label: () => s().airflowChecked ? 'Reset the fan controller' : 'Check airflow at the vent',
     onUse: () => act({id: s().airflowChecked ? 'resetFan' : 'checkAirflow'})});
+  world.interaction.preferTarget(() => {
+    const st = s();
+    if (!playing()) return null;
+    if (st.holding === 'hose') return 'mount';
+    if (st.leak === 'leaking' || st.leak === 'hose-fitted') return 'iso';
+    if (st.leak === 'isolated') return 'oldhose';
+    if (needsFreeHandsForHose(st)) return 'table';
+    if (st.leak === 'hose-off') return 'spare';
+    if (!st.airflowChecked || !st.fanRunning) return 'airflow-fan';
+    if (st.day > st.scenario.growDays) {
+      if (noHarvest(st)) return 'console';
+      if (st.holding !== 'basket') return 'basket';
+      const ready = BEDS.find(id => isReady(st, id));
+      return ready ? `plants:${ready}` : 'table';
+    }
+    const dim = bedToDim(st);
+    if (dim) return `lever:${dim}`;
+    const nextLight = bedToSetLight(st);
+    if (nextLight) return `lever:${nextLight}`;
+    const dry = st.tankL > 0 && dryLitBed(st);
+    if (dry) return `valve:${dry}`;
+    if (BEDS.every(id => st.beds[id].light === 'off')) {
+      const first = BEDS.find(id => !st.beds[id].harvested);
+      return first ? `lever:${first}` : 'console';
+    }
+    return 'console';
+  }, {requiresFacing: false, suppressOtherTargets: true});
 
   // ---- per-frame look --------------------------------------------------------------------
   const pink = new THREE.Color(0xff2a5a), night = new THREE.Color(0x4c5cff), day = new THREE.Color(0xfff1d6);
@@ -148,7 +179,7 @@ export async function createGreenhouseScene({container, getState, act, onPause, 
         p.leaves.rotation.x = Math.sin(t * 1.3 + p.model.rotation.y) * .03 + droop * .3;
         p.leaves.position.y = -droop * .02;
         for (const {m, base} of p.leafMats) m.color.copy(base).lerp(new THREE.Color(mood === 'soggy' ? 0xc9b84a : 0x8a6a3a), Math.min(.75, bed.stress));
-        if (p.fruit) { p.fruit.visible = b.shown.progress >= crop.ready * st.scenario.babyHarvest; p.fruit.traverse(o => { if (o.isMesh) o.material.color.set(isFull(st, id) ? 0xe2382b : 0x5aa83a); }); }
+        if (p.fruit) { p.fruit.visible = isReady(st, id); p.fruit.traverse(o => { if (o.isMesh) o.material.color.set(isFull(st, id) ? 0xe2382b : 0x5aa83a); }); }
         if (p.flowers) p.flowers.visible = !p.fruit?.visible;
       }
     }
@@ -193,14 +224,16 @@ export async function createGreenhouseScene({container, getState, act, onPause, 
     if (st.holding === 'hose') return mountHit;
     if (st.leak === 'leaking' || st.leak === 'hose-fitted') return isoValve;
     if (st.leak === 'isolated') return hoseHit;
+    if (needsFreeHandsForHose(st)) return table;
     if (st.leak === 'hose-off') return spare;
     if (!st.airflowChecked || !st.fanRunning) return fanUnit;
-    if (noHarvest(st)) return consoleM;
+    if (noHarvest(st)) return part(consoleM, 'screen');
     if (st.day > st.scenario.growDays) { const ready = BEDS.find(id => isReady(st, id)); if (st.holding !== 'basket') return basket; return ready ? beds[ready].plants[0].model : table; }
     const dim = bedToDim(st); if (dim) return beds[dim].lever;
+    const nextLight = bedToSetLight(st); if (nextLight) return beds[nextLight].lever;
     const dry = st.tankL > 0 && dryLitBed(st);
     if (dry) return beds[dry].valve;
-    return BEDS.every(id => st.beds[id].light === 'off') ? null : consoleM;
+    return consoleM;
   };
   world.onFrame(() => world.guide(guideTarget(), .3));
 

@@ -257,71 +257,85 @@ export function applyBlueprint(s, blueprint) {
 }
 
 // ---- HUD text -----------------------------------------------------------------------------
+// One task supplies the HUD, the in-world marker and the walk shortcut.
+const task = (step, title, text, place, marker) => ({step, title, text, place, marker});
+const supplyAt = i => i.at === 'store' || i.at === 'trolley';
+const installed = i => i.at === 'rack' || i.at.startsWith('rail:') || i.at.startsWith('zone:');
+export function getShelterTask(s) {
+  if (s.phase !== 'active') return null;
+  if (s.stage === 'cover') return task(4, 'The crew is sheltered', 'Stay inside. The sensor watch starts when the particle levels rise.');
+  if (s.stage === 'event') return s.coverLeft > 0
+    ? task(4, 'The crew is heading inside', 'Particles are rising. Wait for everyone to reach the refuge.')
+    : task(4, 'Compare the sensor readings', 'Look at the Outside and Refuge numbers below. Which is lower? Use Faster to reach the all-clear sooner.');
+  if (s.stage === 'after') return task(5, 'All clear! See how you did', 'Choose See the report to see how much protection your layout gave the crew.');
+
+  const held = s.held && item(s, s.held);
+  const check = task(3, 'Run the refuge check', 'At the marked door, press E or tap the prompt. Check the map for weak spots. Add more cover if you have time, then bring the crew inside.', 'check', 'Refuge door');
+  const mount = task(2, 'Build a rack for the water', 'Go inside the refuge. Hold E or hold the prompt at the marked wall mount to bolt on the rack.', 'mount:back_l', 'Wall mount');
+  if (held?.kind === 'water') return s.rack.built
+    ? task(2, 'Load the water into the rack', 'Go to the marked rack. Press E or tap the prompt to slide the container in.', 'rack', 'Water rack')
+    : task(2, 'Put the water container back', 'Press Q or choose Put item back. Build the rack before carrying water.');
+  if (held?.kind === 'poly') {
+    const rail = ['roof_l', 'roof_r', 'back_l', 'back_r'].find(r => railPanels(s, r).length < s.scenario.poly.rails[r]);
+    return rail ? task(2, 'Slide the panel into a rail', 'Go inside the refuge. Hold E or hold the prompt at the marked rail. Other open rails work too.', `rail:${rail}`, s.scenario.surfaces[rail].label + ' rail')
+      : task(2, 'Put the panel back', 'The rails are full. Press Q or choose Put item back.');
+  }
+  if (held?.kind === 'bag') {
+    if (s.checkViewed && /^zone:stack_(door|side|back)$/.test(held.from)) {
+      return task(3, 'Put the blocking bag back', 'Press Q or choose Put item back to return this bag to the supply shelf.');
+    }
+    const zone = ['shelf_r', 'shelf_l', 'stack_back', 'stack_side'].find(z =>
+      zoneBags(s, z).length < s.scenario.bags.zones[z].cap &&
+      !(z === 'stack_side' && (s.rack.at === 'side_l' || (s.assist !== 'airflow' && zoneBags(s, z).length + 1 >= s.scenario.ventBlockBags))) &&
+      !(z === 'stack_back' && s.rack.at === 'back_r'));
+    return zone ? task(2, 'Put the bag on a shelf or pad', 'Go to the marked spot and follow its prompt. Keep the door, air vent, and water tap clear.', `zone:${zone}`, s.scenario.bags.zones[zone].label)
+      : task(2, 'Put the supply bag back', 'There is no clear spot for this bag. Press Q or choose Put item back.');
+  }
+
+  if (!s.mapViewed) return task(0, 'Open the refuge map', 'Follow the gold marker to the tablet. Press E or tap the prompt to see which seats need more cover.', 'tablet', 'Refuge tablet');
+  if (!s.assist) return task(1, 'Give Elena a job', 'Go to Elena. Press E or tap the prompt, then choose the water trolley or the air vent.', 'elena', 'Elena');
+
+  const issue = s.checkViewed && blockingIssues(s)[0];
+  if (issue) {
+    const [zone, where] = {entrance: ['stack_door', 'at the doorway'], airflow: ['stack_side', 'by the air vent'],
+      water: s.rack.at === 'back_r' ? ['stack_back', 'at the water tap'] : ['stack_side', 'at the water tap']}[issue.id];
+    const bag = zoneBags(s, zone).at(-1);
+    return task(3, `Move a bag ${where}`, 'Press E or tap the prompt to pick up the marked bag. Press Q or use Put item back to clear the spot, then check the door again.', `item:${bag.id}`, 'Bag blocking access');
+  }
+  if (rackWater(s).length && !s.rack.latched) return task(2, 'Latch the water rack', 'Hold E or hold the prompt at the rack to lock the water in place.', 'rack', 'Water rack');
+  const loosePanel = s.items.find(i => i.kind === 'poly' && i.at.startsWith('rail:') && !i.fastened);
+  if (loosePanel) return task(2, 'Fasten the loose panel', 'Hold E or hold the prompt at the marked panel until the knobs are tight.', `item:${loosePanel.id}`, 'Loose panel');
+  const looseStack = Object.keys(s.zones).find(z => zoneBags(s, z).length && !s.zones[z].strapped);
+  if (looseStack) return task(2, 'Strap down the supply bags', 'Hold E or hold the prompt at the marked stack so the bags stay put.', `zone:${looseStack}`, 'Loose bag stack');
+  if (s.checkViewed) return check;
+  const water = s.items.find(i => i.kind === 'water' && supplyAt(i));
+  const panel = s.items.find(i => i.kind === 'poly' && supplyAt(i));
+  const bag = s.items.find(i => i.kind === 'bag' && supplyAt(i));
+  if (!s.items.some(installed) && water) return s.rack.built
+    ? task(2, 'Pick up a water container', `The water is ${water.at === 'trolley' ? 'on Elena’s trolley' : 'at the water station'}. Press E or tap the prompt at the marked container.`, `item:${water.id}`, 'Water container')
+    : mount;
+  if (panel && !s.items.some(i => i.kind === 'poly' && installed(i))) return task(2, 'Pick up a plastic panel', 'At the marked panel, press E or tap the prompt. A panel adds cover where water can’t go.', `item:${panel.id}`, 'Plastic panel');
+  if (bag && !s.items.some(i => i.kind === 'bag' && installed(i))) return task(2, 'Pick up a supply bag', 'At the marked bag, press E or tap the prompt. It can add cover without blocking the doorway.', `item:${bag.id}`, 'Supply bag');
+  return check;
+}
+
 export function getObjective(s) {
   if (s.phase === 'brief') return 'Hear the space weather alert';
   if (s.phase === 'debrief') return s.stoppedEarly ? 'Game stopped. Try again from a safe spot.' : 'See how your refuge worked';
-  if (s.stage === 'cover') return 'Wait with the crew for the sensors';
-  if (s.stage === 'event') return s.coverLeft > 0 ? 'Everyone is hurrying into the refuge' : 'Watch the outside and refuge sensors';
-  if (s.stage === 'after') return 'All clear! Open your report';
-  if (!s.mapViewed) return 'Look at the refuge map on the tablet';
-  if (!s.assist) return 'Ask Elena for one kind of help';
-  const held = s.held && item(s, s.held);
-  if (held) return {water: s.rack.built ? 'Load the water container into the rack' : 'Put the water down to build the rack', poly: 'Slide the plastic panel into a rail', bag: 'Stack the supply bag in a stacking spot'}[held.kind];
-  if (s.checkViewed && blockingIssues(s).length) return 'Clear the blocked area';
-  if (s.rack.built && !s.items.some(i => i.at === 'rack' || i.at.startsWith('rail:') || i.at.startsWith('zone:'))) return 'Pick up a water container';
-  if (rackWater(s).length && !s.rack.latched) return 'Latch the water rack';
-  if (s.items.some(i => i.kind === 'poly' && i.at.startsWith('rail:') && !i.fastened)) return 'Fasten the loose panel';
-  if (Object.keys(s.zones).some(z => zoneBags(s, z).length && !s.zones[z].strapped)) return 'Strap down the supply bags';
-  return 'Build cover for the crew';
+  return getShelterTask(s).title;
 }
-export function getInstruction(s) {
-  if (s.phase !== 'active') return null;
-  if (s.stage === 'cover') return {text: 'Stay with the crew. The watch starts automatically when the particles rise.'};
-  if (s.stage === 'event') return {text: 'Compare Outside sensor with Refuge sensor. The all-clear appears when the event ends.'};
-  if (s.stage === 'after') return {text: 'Choose See the report to find out what your shelter blocked.'};
-  if (!s.mapViewed) return {place: 'console', text: 'Open Refuge map. Look for higher percentages where more particles get through.'};
-  if (!s.assist) return {place: 'elena', text: 'Use E or tap Elena. Choose help moving water or clearing the air vent.'};
-  const held = s.held && item(s, s.held);
-  if (held?.kind === 'water') return s.rack.built
-    ? {place: 'rack', text: 'Use the water rack to slide the container in.'}
-    : {text: 'Press Q or choose Put item back. Bolt a rack to a wall before carrying water.'};
-  if (held?.kind === 'poly') return {text: 'Choose an open wall or roof rail. Hold E or hold the prompt to slide the panel in.'};
-  if (held?.kind === 'bag') return {text: 'Choose a shelf or stack spot and follow its Use prompt. Keep the doorway and vent clear.'};
-  const issue = s.checkViewed && blockingIssues(s)[0];
-  if (issue) return {place: 'refuge', text: issue.fix};
-  if (rackWater(s).length && !s.rack.latched) return {place: 'rack', text: 'Aim at the rack bars. Hold E or hold the prompt to latch them.'};
-  if (s.items.some(i => i.kind === 'poly' && i.at.startsWith('rail:') && !i.fastened)) return {text: 'Aim at a loose panel. Hold E or hold the prompt to fasten its knobs.'};
-  if (Object.keys(s.zones).some(z => zoneBags(s, z).length && !s.zones[z].strapped)) return {text: 'Aim at a loose bag stack. Hold E or hold the prompt to strap it down.'};
-  if (!s.items.some(i => i.at === 'rack' || i.at.startsWith('rail:') || i.at.startsWith('zone:'))) {
-    return s.rack.built
-      ? {place: 'store-water', text: 'Use a water container from the supply shelf or Elena’s trolley to pick it up.'}
-      : {text: 'Hold E or hold a wall mount’s prompt to bolt on a rack. You can also start with a panel or bag.'};
-  }
-  return {place: 'refuge', text: 'Keep adding cover, or use the refuge door to run the safety check.'};
-}
+export const getInstruction = getShelterTask;
 
 export function getSteps(s) {
-  const water = rackWater(s).length, panels = s.items.filter(i => i.kind === 'poly' && i.at.startsWith('rail:')).length, bags = s.items.filter(i => i.kind === 'bag' && i.at.startsWith('zone:')).length;
-  const list = [
-    {text: 'Look at the refuge map', done: s.mapViewed},
-    {text: 'Pick Elena’s job', done: !!s.assist},
-    {text: `Water rack · ${water}/${s.scenario.water.count}${s.rack.latched ? ' · latched' : ''}`, done: water > 0 && s.rack.latched},
-    {text: `Plastic panels · ${panels}/${s.scenario.poly.count}`, done: panels > 0 && s.items.every(i => i.kind !== 'poly' || !i.at.startsWith('rail:') || i.fastened)},
-    {text: `Supply bags · ${bags}/${s.scenario.bags.count}`, done: bags > 0 && Object.keys(s.zones).every(z => !zoneBags(s, z).length || s.zones[z].strapped)},
-    {text: 'Run the refuge check', done: s.stage !== 'prep'},
-    {text: 'Wait out the event', done: s.stage === 'after' || s.phase === 'debrief'},
-  ];
-  if (s.phase === 'active') {
-    const build = s.held && item(s, s.held)?.kind;
-    const ready = s.stage !== 'prep';
-    const next = ready ? 6 : !s.mapViewed ? 0 : !s.assist ? 1
-      : s.checkViewed && blockingIssues(s).length ? 5
-        : build ? {water: 2, poly: 3, bag: 4}[build]
-          : rackWater(s).length && !s.rack.latched ? 2
-            : !list[3].done && panels ? 3 : !list[4].done && bags ? 4 : 5;
-    list[next].now = true;
-  }
-  return list;
+  const current = getShelterTask(s)?.step, done = s.phase === 'debrief' && !s.stoppedEarly;
+  return [
+    ['Open the refuge map', s.mapViewed],
+    ['Give Elena a job', !!s.assist],
+    ['Add and secure shielding', done || s.stage !== 'prep' || current === 3],
+    ['Run the refuge check and shelter', s.readyAt != null],
+    ['Watch the sensors until all-clear', s.stage === 'after'],
+    ['See the mission report', done],
+  ].map(([text, completed], i) => ({text, done: i !== current && completed, now: i === current}));
 }
 export const teamExposure = s => PEOPLE.reduce((a, p) => a + s.exposure[p], 0) / PEOPLE.length;
 /** Compare with what the crew would have collected waiting in the plain habitat. */

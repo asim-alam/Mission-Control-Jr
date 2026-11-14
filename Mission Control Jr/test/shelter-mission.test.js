@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createMission, migrateSave, PEOPLE, SHELTER_SCHEMA} from '../missions/solar-shelter/state.js';
-import {applyAction, applyBlueprint, advanceMission, getResult, getObjective, checkRefuge, blockingIssues, estimate, outsideRate, personRate, seatTransmission, serializeSnapshot, restoreSnapshot} from '../missions/solar-shelter/actions.js';
+import {applyAction, applyBlueprint, advanceMission, getResult, getShelterTask, getSteps, checkRefuge, blockingIssues, estimate, outsideRate, personRate, seatTransmission, serializeSnapshot, restoreSnapshot} from '../missions/solar-shelter/actions.js';
 import {shelterScenario} from '../missions/solar-shelter/scenario.js';
 import {saveActiveAttempt, loadActiveAttempt} from '../simulation/mission-storage.js';
 // Same logic as missions/shared/runtime.js loadSaved (that module needs a browser window).
@@ -86,8 +86,41 @@ test('saves round-trip through the storage validator, and old shelter saves migr
   assert.deepEqual(restoreSnapshot(serializeSnapshot(m)).items, m.items);
 });
 
-test('objectives guide without giving away the best layout', () => {
-  const m = start('trolley'); const o = getObjective(m);
-  assert.doesNotMatch(o, /roof|water|best/i);
-  assert.equal(createMission().scenario.id, shelterScenario.id);
+test('guidance leads from the tablet and Elena through the first secured shielding and the safety check', () => {
+  const m = createMission();
+  const at = (place, step) => {
+    const task = getShelterTask(m);
+    assert.equal(task.place, place, task.text);
+    assert.equal(getSteps(m).findIndex(s => s.now), step);
+    if (place) assert.ok(task.marker);
+  };
+  ok(m, {id: 'begin'}); at('tablet', 0);
+  ok(m, {id: 'openMap'}); at('elena', 1);
+  ok(m, {id: 'chooseAssist', payload: 'trolley'}); at('mount:back_l', 2);
+  ok(m, {id: 'buildRack', payload: 'back_l'}); at('item:water-1', 2);
+  assert.match(getShelterTask(m).text, /trolley/);
+  ok(m, {id: 'pickUp', targetId: 'water-1'}); at('rack', 2);
+  ok(m, {id: 'loadRack'}); at('rack', 2);
+  ok(m, {id: 'latchRack'}); at('item:poly-1', 2);
+  ok(m, {id: 'pickUp', targetId: 'poly-1'}); at('rail:roof_l', 2);
+  ok(m, {id: 'slidePanel', targetId: 'roof_l'}); at('item:poly-1', 2);
+  ok(m, {id: 'fastenPanel', targetId: 'poly-1'}); at('item:bag-1', 2);
+  ok(m, {id: 'pickUp', targetId: 'bag-1'}); at('zone:shelf_r', 2);
+  ok(m, {id: 'placeBag', targetId: 'shelf_r'}); at('zone:shelf_r', 2);
+  ok(m, {id: 'strapZone', targetId: 'shelf_r'}); at('check', 3);
+  ok(m, {id: 'ready'}); at(undefined, 4);
+  advanceMission(m, 1000); advanceMission(m, 1000); at(undefined, 5);
+  assert.equal(m.scenario.id, shelterScenario.id);
+});
+
+test('after a failed refuge check the guide marks the actual blockage and returns to the door after cleanup', () => {
+  const m = start('airflow');
+  carry(m, 'bag-1', {id: 'placeBag', targetId: 'stack_door'});
+  ok(m, {id: 'runCheck'});
+  assert.equal(getShelterTask(m).place, 'item:bag-1');
+  assert.match(getShelterTask(m).title, /doorway/);
+  ok(m, {id: 'pickUp', targetId: 'bag-1'});
+  assert.match(getShelterTask(m).text, /Put item back/);
+  ok(m, {id: 'putBack'});
+  assert.equal(getShelterTask(m).place, 'check');
 });

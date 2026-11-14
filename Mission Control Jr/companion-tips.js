@@ -22,7 +22,6 @@ export const PIP_TIPS={
   [/radio stop/i,'Radio stops tell the base where we are. If something goes wrong, they know where to look.'],
   [/suits|tools/i,'Check everything before driving. A small problem is easy to fix at home.'],
   [/get in/i,'Everyone rides together. Never leave a friend behind!'],
-  [/test drive/i,'Practice near the base first. Learn to stop before the real drive.'],
   [/path/i,'The shortest way is not always the safest. Look at the ground on each path.'],
   [/strange ground|what should we do/i,'Cracked ground can hide soft sand. A real NASA rover called Spirit got stuck in sand on Mars!'],
   [/kestrel|explore/i,'The striped rocks were made in layers, long ago. Layers are like pages in a history book.'],
@@ -53,21 +52,20 @@ export const PIP_TIPS={
   [/hatch/i,'Check everything before you go. The lander cannot fly back up!']
  ],
  'solar-shelter':[
-  [/space weather alert/i,'Forecasters on Earth watch the Sun and warn crews when particles might come.'],
-  [/refuge map/i,'The map is an estimate from what is built. It shows which walls and seats are weaker.'],
-  [/elena for one kind/i,'Elena can save you time with the water, or make the side wall safe to stack against.'],
-  [/load the water container/i,'Water is full of hydrogen, which slows fast particles. Each container helps a bit.'],
-  [/rack frame/i,'The rack can stand against the back wall or the side wall. Which seats does that protect?'],
-  [/slide the plastic panel/i,'Plastic panels are light and strong. Fasten them so they stay put.'],
-  [/stack the supply bag/i,'Packed food and clothes help too. Keep the door, the vent and the water tap clear.'],
-  [/fix the refuge/i,'The check found a problem. Fix it, then run the check again.'],
-  [/strengthen the refuge/i,'There is not time for everything. Pick what protects the people who need it most.'],
-  [/wait with the crew/i,'Nobody knows the exact time. Sensors will show when the particles rise.'],
-  [/hurrying into the refuge/i,'Getting inside slows down new exposure. It cannot undo what was already collected.'],
-  [/outside and refuge sensors/i,'Compare the two numbers. The difference is what your refuge is blocking.'],
-  [/all clear/i,'The levels are back to normal. Let us see how each person did.'],
-  [/refuge worked/i,'Look at who collected the most, and which wall let the most through.'],
-  [/stopped/i,'That is OK! Real crews practise many times.']
+  [/space weather alert/i,'Forecasters watch the Sun and warn crews when particles might come.'],
+  [/refuge map/i,'The map estimates protection. Higher percentages mean more particles can get through.'],
+  [/elena.*job|elena for one kind/i,'Elena can bring the water closer or keep the air vent clear.'],
+  [/water.*rack|rack.*water|rack frame|water container/i,'Water slows fast particles. Each container helps protect the seats behind it.'],
+  [/plastic panel|loose panel|panel into a rail|put the panel/i,'Panels add cover above and behind the seats. Fastening them keeps them in place.'],
+  [/supply bag|bag on a shelf|strap down/i,'Packed food and clothes help too. Straps stop supplies from sliding during the wait.'],
+  [/move a bag|blocking bag|fix the refuge/i,'The crew needs to reach the door, vent, and drinking water. Clear the marked spot and check again.'],
+  [/refuge check|strengthen the refuge/i,'Check that everyone can get in, breathe, and reach drinking water.'],
+  [/crew is sheltered|wait with the crew/i,'The warning is an estimate. The sensors show when particles actually arrive.'],
+  [/heading inside|hurrying into the refuge/i,'Getting inside slows down new exposure. It cannot undo what people already collected.'],
+  [/sensor readings|outside and refuge sensors/i,'Compare the two numbers. The difference is what your refuge is blocking.'],
+  [/all clear/i,'The levels are back to normal. Let’s see how each person did.'],
+  [/refuge worked/i,'Look at who collected the most and which wall let the most through.'],
+  [/stopped/i,'Real crews practise many times. You can try again.']
  ],
 
  greenhouse:[

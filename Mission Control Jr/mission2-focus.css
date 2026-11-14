@@ -11,3 +11,24 @@
 .route-hint{margin:10px 0;padding:10px 12px;border:1px solid #7768c9;border-radius:12px;background:#171d2d}
 .route-hint summary{color:#ffd23f;font-weight:800;cursor:pointer}
 .route-hint p{margin:8px 0 0;line-height:1.5;color:#dfe8e4}
+#dialog #plan-map{width:min(340px,100%,44dvh)}
+#dialog .dialog-card:has(#plan-map){scroll-padding-bottom:9rem}
+#dialog .dialog-card:has(#plan-map) #dialog-actions{
+  position:sticky;
+  bottom:0;
+  z-index:1;
+  flex-shrink:0;
+  padding:12px;
+  border:1px solid #7768c9;
+  border-radius:12px;
+  background:#201c3e;
+}
+#dialog .route-feedback{
+  flex-basis:100%;
+  padding:8px 12px;
+  border-left:3px solid #ffad91;
+  background:#402436;
+  color:#ffe3db;
+  font-size:14px;
+  line-height:1.45;
+}

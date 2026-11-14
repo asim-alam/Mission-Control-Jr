@@ -8,6 +8,6 @@ export function readiness(m=createExpedition()){
   return m;
 }
 // State-machine fixtures place actors deliberately. The integration test drives every metre.
-export function prepared(){const m=readiness();act2(m,'board');m.vehicle.distance=6;m.vehicle.steeringTravel=1;assert.ok(act2(m,'brakeTest').ok);assert.ok(act2(m,'plan').ok);assert.ok(act2(m,'launch',{route:'wash',reason:'evidence'}).ok);return m;}
+export function prepared(){const m=readiness();assert.ok(act2(m,'board').ok);assert.ok(act2(m,'launch',{route:'wash'}).ok);return m;}
 export function fieldArrival(m){for(const p of reportStations(m)){Object.assign(m.vehicle,p);assert.ok(act2(m,'report').ok);}Object.assign(m.vehicle,inspectionPoint(m));assert.ok(act2(m,'hazard').ok);assert.ok(act2(m,'terrainDecision','perimeter').ok);Object.assign(m.vehicle,RIDGE);return m;}
 export function postdrive(m){assert.ok(act2(m,'dock').ok);assert.equal(m.ended,false);assert.ok(act2(m,'exit').ok);m.walker={...SERVICE.comms};assert.ok(act2(m,'transfer').ok);assert.ok(act2(m,'crew').ok);}

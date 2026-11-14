@@ -6,8 +6,8 @@ This combines the supplied **Tracks in the Dust** proposal with **The Ground Rem
 
 - **Title / continuity:** Tracks in the Dust, Sol 16, after the prepared Mission 1 ending. Jin pilots Rover Two; Amara accompanies him. Elena and Luca provide local radio support.
 - **Battery:** Use an identified spare charged during recovery. The habitat retains the battery used in Mission 1; no new power emergency or instant charging.
-- **Departure:** Inspect the spare pack, correct a retaining pin and dusty lens, secure the field kit and radio, and perform an actual steering/brake test.
-- **Plan:** Compare direct, north-wash, and rim corridors; justify the choice and check projected home reserves. Routes differ in terrain, length, and uncertainty.
+- **Departure:** Collect and install the spare pack, correct a retaining pin and dusty lens, and check the field kit, suits, and radio.
+- **Plan:** On boarding, choose a direct, north-wash, or rim corridor and review its terrain, distance, and projected home reserves before driving.
 - **Drive:** Manual acceleration, steering, braking, reverse, parking brake, follow/driver-eye views, visible seated crew, map, breadcrumbs, heading, speed, slope, slip, eco mode, and reserve projection.
 - **Complication:** Visible suspect ground near Kestrel Ridge. Players may inspect and avoid it; entry can cause recoverable slip. Continued forcing or depleted reserves suspends training, with an explicitly labeled checkpoint retry.
 - **Science:** Park, exit as Jin, photograph both rock units and a scaled close view, describe the contact, optionally collect a labeled fragment if reserves permit. No automatic proof of water or life.
@@ -33,7 +33,7 @@ Playable `/mission2.html`, source, generated GLBs/audio, full tests/build result
 ## Implemented scope
 
 The separate episode, controller, authored terrain, three routes, map/breadcrumbs,
-readiness faults, brake test, two rover views, on-foot observation camera, image
+readiness faults, three rover routes, two rover views, on-foot observation camera, image
 thumbnails, optional sample, resource forecasts, four endings, checkpoint practice,
 local completion record, and competency debrief are implemented. Four original
 GLBs and nineteen episode-specific Kokoro clips are bundled. Mission 1's prepared

@@ -9,6 +9,26 @@ test('departure planning cannot launch a moving rover or a rover outside the apr
   const m=readiness();act2(m,'board');m.vehicle.distance=6;m.vehicle.steeringTravel=1;act2(m,'brakeTest');assert.ok(act2(m,'plan').ok);m.vehicle.parking=false;assert.equal(act2(m,'launch',{route:'wash',reason:'evidence'}).ok,false);m.vehicle.parking=true;Object.assign(m.vehicle,RIDGE);assert.equal(act2(m,'launch',{route:'wash',reason:'evidence'}).ok,false);Object.assign(m.vehicle,HOME);assert.ok(act2(m,'launch',{route:'wash',reason:'evidence'}).ok);assert.equal(act2(m,'plan').ok,false);
 });
 
+test('route confirmation explains terrain or reserve problems and allows another choice',()=>{
+  const m=readiness();
+  assert.ok(act2(m,'board').ok);
+  for(const [route,reason] of [['direct',/soft sand/],['rim',/rocky slopes/]]){
+    const result=act2(m,'launch',{route});
+    assert.equal(result.ok,false);
+    assert.match(result.message,reason);
+    assert.equal(m.phase,'planning');
+    assert.equal(m.route,null);
+    assert.equal(m.aboard,true);
+  }
+  m.battery=20;
+  assert.match(act2(m,'launch',{route:'wash'}).message,/less than 20% battery/);
+  assert.equal(m.phase,'planning');
+  m.battery=100;
+  assert.ok(act2(m,'launch',{route:'wash'}).ok);
+  assert.equal(m.route,'wash');
+  assert.equal(m.phase,'outbound');
+});
+
 test('briefing and physical readiness cannot be completed remotely or aboard',()=>{
   const m=createExpedition();act2(m,'start');assert.equal(act2(m,'spare').ok,false);assert.equal(task2(m).stage,1);
   act2(m,'acceptBrief');assert.equal(act2(m,'spare').ok,false);m.walker={...SERVICE.spare};assert.ok(act2(m,'spare').ok);

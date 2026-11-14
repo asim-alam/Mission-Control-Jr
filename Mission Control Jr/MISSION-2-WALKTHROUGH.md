@@ -29,18 +29,13 @@ Use the printed preview URL and `/mission2.html`.
    arrows take over immediately. Equipment actions require proximity on foot.
    The terminal also offers an optional rotatable **3D Mars reference archive**
    containing all three supplied models, with source/creator/license credits.
-3. Click **Drive Rover Two · board (E)**. Click **Release brake · P** or press P.
-   While on foot, WASD and arrows move Jin; they cannot drive an unboarded rover.
-   The game warns if throttle is applied with parking set. Drive at least five metres and steer;
-   use Space to stop, then P to park. Click **Verify steering & stop test**.
-   Stay on the service apron; the habitat is a real obstacle.
-4. Open **Compare routes**. Compare three routes, select a reason using
-   ground evidence and the return forecast, then log departure. North Wash is the
-   suggested first run. Follow the selected orange beacons and the map bearing.
-5. Drive manually with WASD/arrows. W accelerates; S brakes before reversing.
+3. Click **Drive Rover Two · board (E)**. The route picker opens as soon as you
+   board. Choose a path before driving; there is no test-drive step. North Wash is
+   the gentler route for a first trip. Follow the selected orange beacons and map bearing.
+4. Drive manually with WASD/arrows. W accelerates; S brakes before reversing.
    Release and reapply S after stopping to reverse. V shows the driver-eye view;
    V again shows both suited astronauts in third person. Shift enables Eco.
-6. Stop and set P at **both named report stations**, then explicitly transmit each
+5. Stop and set P at **both named report stations**, then explicitly transmit each
    report. Arrival alone never completes the task. Read the actual ground, heading
    and forecast reserves in the feedback/journal. Missed reports remain required.
    At the marked observation point, inspect the uncertain ground, then open the
@@ -50,23 +45,23 @@ Use the printed preview URL and `/mission2.html`.
    The revised bearing guides the vehicle. The hazard is avoidable. If entered, stop adding throttle;
    a shallow edge allows a checked low-speed retreat. Continued forcing can
    suspend training. A checkpoint retry is clearly labeled as assisted practice.
-7. Reach the Kestrel parking area. Stop, set P, select **Park · start field science**,
+6. Reach the Kestrel parking area. Stop, set P, select **Park · start field science**,
    and exit. Amara remains at the rover. Walk to the scale marker in front of the
    outcrop. Walking is intentionally slower than driving.
-8. Use **Frame context image**. Drag to place both units inside the field-camera
+7. Use **Frame context image**. Drag to place both units inside the field-camera
    box and capture. Walk closer (within 12 m) for **Frame contact + scale**.
    Its lens is narrower. Include the contact and scale; adjust your aim and capture.
    Camera captures produce real scene thumbnails for the debrief.
-9. Write the evidence-based description: dark unit below pale layers; boundary
+8. Write the evidence-based description: dark unit below pale layers; boundary
    mapped; formation uncertain. Appearance alone does not prove water or life.
-10. Review the optional fragment. Collection requires standing within 4 m of its
+9. Review the optional fragment. Collection requires standing within 4 m of its
     marker and sufficient forecast reserves. It costs 18 simulated seconds and
     one charge unit. A complete observation record needs no physical sample.
     You can close the review, approach the marker, and reopen it.
-11. Choose **Return**, reboard, and follow the homeward wash shown on the map.
+10. Choose **Return**, reboard, and follow the homeward wash shown on the map.
     The route approaches the apron around the habitat. Read distance, bearing,
     and local map coordinates. Drive the vehicle yourself; there is no autopilot.
-12. At Meridian, stop, set P, and **Secure Rover Two at Meridian**. This begins
+11. At Meridian, stop, set P, and **Secure Rover Two at Meridian**. This begins
     post-drive work. Exit, walk to the operations terminal, **Transfer expedition
     record**, then **Confirm both crew · debrief**. Review the actual path,
     competencies, reserves, photographs and science record. Answer the reflection

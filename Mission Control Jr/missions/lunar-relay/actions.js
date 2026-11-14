@@ -197,7 +197,7 @@ export function getInstruction(s) {
   if (!s.plan) return {text: 'Choose whether to carry a relay or send the data after you get back over the ridge.'};
   if (s.hand === 'relay') return s.at === 'base' || !s.scenario.stops[s.at].relaySpot
     ? {place: 'rover', text: 'Use the rover’s rear cargo deck to load the relay.'}
-    : {text: 'Aim at the yellow ring on the ground and use it to set the relay down.'};
+    : {place: 'relay', marker: 'yellow setup ring', text: 'Follow the arrow to the yellow setup ring. Stand beside it and press E to set down the relay.'};
   if (s.hand === 'drill') {
     if (s.cores >= (s.earthAsked ? 2 : 1)) return {place: 'rover', text: 'Use the rear cargo deck to put the drill away.'};
     return {place: 'drill', text: s.cores ? 'Use the second glowing X to set down the drill.' : 'Use the first glowing X to set down the drill.'};

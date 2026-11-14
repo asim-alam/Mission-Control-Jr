@@ -69,7 +69,9 @@ function alertCard(ctx) {
       </ul>
     </div>
     <p>🎮 <b>Controls:</b> WASD or Arrow keys to walk, Drag to look, <b>E</b> to pick up, place, or fasten items.</p>
-    <p>🌟 <i>Stay calm, Cadet! Water and hydrogen block space particles. Mission Control will alert you at every step!</i></p>`,
+    <p>🌟 <i>Stay calm, Cadet! Water and hydrogen block space particles. Mission Control will alert you at every step!</i></p>
+    <p><b>Your first job:</b> Follow the gold marker to the refuge tablet and open the map. The next instruction will appear after each job.</p>
+    <p><b>Controls:</b> WASD to walk, drag to look, and E to use. You can also use the Walk to button and tap or hold the on-screen prompt.</p>`,
     actions: [{label: '▶ Let’s get to work', primary: true, run: () => { ctx.act({id: 'begin'}, {quiet: true}); ctx.saveCheckpoint(); ctx.close(); }}, {label: '☀️ Replay the explainer', run: () => explainer(ctx)}]});
 }
 
@@ -104,7 +106,7 @@ function tablet(ctx, picked = null) {
     ${canMove ? `<p>${picked ? `Now tap a seat for <b>${NAMES[picked]}</b>.` : 'To change seats, tap a person below, then a seat.'}</p>
     <div class="sx-people">${PEOPLE.map(p => `<button type="button" data-person="${p}" class="${p === picked ? 'picked' : ''}">${NAMES[p]} · ${m.seats[p]} · est. ${est[p]}</button>`).join('')}</div>` : ''}
     <p class="sx-small">Waiting in the plain habitat would be about <b>${est.habitat}</b> units each (estimate).</p>`,
-    actions: [{label: 'Close', primary: true, run: () => ctx.close()}, {label: 'Mission science', run: () => ctx.sourcesDialog(() => tablet(ctx, picked))}],
+    actions: [{label: canMove && !m.assist ? 'Next: Talk to Elena' : 'Back to the mission', primary: true, run: () => ctx.close()}, {label: 'Mission science', run: () => ctx.sourcesDialog(() => tablet(ctx, picked))}],
     onOpen: body => {
       body.querySelectorAll('[data-person]').forEach(b => { b.onclick = () => tablet(ctx, b.dataset.person === picked ? null : b.dataset.person); });
       body.querySelectorAll('[data-seat]').forEach(g => { const go = () => { if (!picked || !canMove) return; ctx.act({id: 'moveCrew', targetId: picked, payload: g.dataset.seat}); tablet(ctx); }; g.onclick = go; g.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') go(); }; });
@@ -122,13 +124,17 @@ function elena(ctx) {
 // ---- refuge check --------------------------------------------------------------------------------
 function check(ctx) {
   ctx.act({id: 'runCheck'}, {quiet: true});
-  const list = checkRefuge(ctx.mission), block = blockingIssues(ctx.mission), est = estimate(ctx.mission);
+  const m = ctx.mission, list = checkRefuge(m), block = blockingIssues(m), est = estimate(m);
+  const lowCover = 1 - PEOPLE.reduce((sum, p) => sum + est[p], 0) / (PEOPLE.length * est.habitat) < m.scenario.ratings.ok;
+  const tip = block.length ? 'Follow the gold marker to the first thing you need to move.'
+    : lowCover ? 'The way in is clear, but the crew still has little cover. If you have time, fasten another panel on the other side of the roof.'
+      : 'Ready to shelter? Bring everyone inside and compare the sensors. You can keep building if you want more cover.';
   ctx.dialog({label: 'REFUGE CHECK', title: block.length ? 'Not ready yet' : 'Ready when you are', body: `
     <ul class="sx-check">${list.map(c => `<li class="${c.ok ? 'ok' : c.blocking ? 'bad' : 'warn'}"><b>${c.ok ? '✅' : c.blocking ? '⛔' : '⚠️'} ${c.label}</b>${c.fix ? `<br><span>${c.fix}</span>` : ''}</li>`).join('')}</ul>
     <p>Estimated total for each person: ${PEOPLE.map(p => `${NAMES[p]} <b>${est[p]}</b>`).join(' · ')} <span class="sx-small">(the plain habitat: ${est.habitat})</span></p>
-    <p class="sx-small">Starting the watch closes the refuge. You can keep building instead; the particles may start rising before you finish.</p>`,
-    actions: [{label: '🚪 Close up and watch the sensors', primary: true, disabled: !!block.length, title: block.length ? block[0].fix : '', run: () => { ctx.act({id: 'ready'}); ctx.close(); }},
-      {label: '🔧 Keep working', run: () => ctx.close()}, {label: '📋 Map', run: () => tablet(ctx)}]});
+    <p class="sx-small">${tip}</p>`,
+    actions: [{label: '🚪 Close up and watch the sensors', primary: !block.length, disabled: !!block.length, title: block.length ? block[0].fix : '', run: () => { if (ctx.act({id: 'ready'}).ok) ctx.close(); }},
+      {label: block.length ? 'Fix the marked problem' : 'Keep building', primary: !!block.length, run: () => ctx.close()}, {label: '📋 Map', run: () => tablet(ctx)}]});
 }
 
 // ---- event sensors panel ---------------------------------------------------------------------------
@@ -139,12 +145,13 @@ function ensurePanel(ctx) {
     <table class="sx-people-table"><thead><tr><th></th><th>rate now</th><th>total so far</th></tr></thead><tbody id="sx-rows"></tbody></table>
     <div class="sx-tools"><button type="button" id="sx-overlay" aria-pressed="false">✨ Illustration</button><button type="button" id="sx-speed" aria-pressed="false">⏩ Faster</button><button type="button" id="sx-science">🔬 Science</button></div>
     <p class="sx-illus" id="sx-illus" hidden>ILLUSTRATION · real particles are invisible</p></section>
-    <div class="sx-tablet-btn"><button type="button" id="sx-tablet">📋 Refuge map</button><button type="button" id="sx-explain">☀️ What is this?</button><button type="button" id="sx-put-back" hidden>Put item back</button></div>`);
+    <div class="sx-tablet-btn"><button type="button" id="sx-tablet">📋 Refuge map</button><button type="button" id="sx-explain">☀️ What is this?</button><button type="button" id="sx-put-back" hidden>Put item back</button><button type="button" id="sx-report" hidden>See the report</button></div>`);
   $('sx-overlay').onclick = () => ctx.act({id: 'toggleOverlay'});
   $('sx-speed').onclick = () => { speed = speed === 1 ? 3 : 1; $('sx-speed').setAttribute('aria-pressed', String(speed > 1)); };
   $('sx-science').onclick = () => ctx.sourcesDialog(() => ctx.close());
   $('sx-tablet').onclick = () => { if (ctx.mission.phase === 'active') tablet(ctx); };
   $('sx-put-back').onclick = () => { if (ctx.playing()) ctx.act({id: 'putBack'}); };
+  $('sx-report').onclick = () => { if (ctx.playing()) ctx.act({id: 'finish'}); };
   $('sx-explain').onclick = () => explainer(ctx, 0, () => ctx.close());
 }
 function sensorPanel(ctx) {
@@ -242,6 +249,7 @@ runMission({
     hud.meter('dose', {value: Math.max(0, 12 - teamExposure(m)), max: 12, text: teamExposure(m).toFixed(1), warn: .3});
     sensorPanel(ctx);
     $('sx-put-back').hidden = !m.held || m.stage !== 'prep';
+    $('sx-report').hidden = m.phase !== 'active' || m.stage !== 'after';
     if (m.phase === 'active' && m.stage === 'after' && !ctx.allClearShown && !ctx.busy) {
       ctx.allClearShown = true;
       ctx.dialog({label: 'ALL CLEAR', title: 'The sensors are back to normal', body: '<p>The particle levels have dropped back to normal. Everyone can come out of the refuge.</p>',

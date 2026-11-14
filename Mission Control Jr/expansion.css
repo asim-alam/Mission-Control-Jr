@@ -38,6 +38,7 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .mx-job[hidden], .mx-steps[hidden] { display: none; }
 .mx-job-heading { display: flex; align-items: center; gap: 6px; }
 .mx-job-heading .mx-eyebrow { margin-right: auto; }
+.mx-job-tools { display: flex; align-items: center; gap: 6px; }
 .mx-job-heading button { padding: 3px 8px; font-size: .78rem; min-height: 32px; }
 .mx-job:has(.mx-steps:not([hidden])) { max-height: min(45dvh, 360px); overflow: auto; }
 .mx-job h2 { margin: 4px 0 6px; font: 600 1.15rem/1.25 'Fredoka Variable', system-ui; }

@@ -30,7 +30,9 @@ export function buildHud({title, place, meters}) {
   <section class="mx-job mission-guidance" aria-label="Your job">
     <div class="mx-job-heading">
       <p class="mx-eyebrow" id="mx-job-count">Your job now</p>
-      <button id="mx-job-details" type="button" aria-expanded="false" aria-controls="mx-details">Details</button>
+      <div class="mx-job-tools">
+        <button id="mx-job-details" type="button" aria-expanded="false" aria-controls="mx-details">Details</button>
+      </div>
     </div>
     <div id="objective"><h2>Loading…</h2></div>
     <p class="mx-instruction" id="mx-instruction" aria-live="polite" hidden></p>
@@ -91,7 +93,7 @@ export function buildHud({title, place, meters}) {
       line.hidden = !text;
       currentPlace = instruction?.place;
       const target = destinations.find(t => t.id === currentPlace);
-      const label = target ? `Walk to ${target.label.replace(/^[^\p{L}]+/u, '')}` : '';
+      const label = target ? `Walk to ${(instruction.marker || target.label).replace(/^[^\p{L}]+/u, '')}` : '';
       if (label !== nextPlace.textContent) nextPlace.textContent = label;
       nextPlace.hidden = !target;
       for (const button of $('locations').children) {

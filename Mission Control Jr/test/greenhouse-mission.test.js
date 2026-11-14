@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createMission, migrateGreenhouseState, GREENHOUSE_SAVE_SCHEMA} from '../missions/greenhouse/state.js';
-import {applyAction, getResult, getObjective, getSteps, serializeSnapshot, restoreSnapshot, batteryNeeded, leafSurfaceState} from '../missions/greenhouse/actions.js';
+import {applyAction, getResult, getObjective, getSteps, serializeSnapshot, restoreSnapshot, batteryNeeded, leafSurfaceState, isReady, getInstruction} from '../missions/greenhouse/actions.js';
 import {greenhouseScenario} from '../missions/greenhouse/scenario.js';
 import {tuneScenario} from '../simulation/difficulty.js';
 
@@ -80,12 +80,26 @@ test('snapshots restore a checkpoint for "try a different plan"', () => {
 
 test('steps and objectives follow the mission and Cadet tuning is gentler', () => {
   const m = start('salad');
-  assert.equal(getSteps(m).find(s => s.now).text, 'Day 1: lights + water');
+  assert.equal(getSteps(m).find(s => s.now).text, 'Day 1: set lights, water soil to Good, end day');
   assert.equal(getObjective(m), 'Day 1: set the lights, water, then end the day');
   must(m, 'setLight', 'a', 'full'); m.beds.a.moisture = .5; assert.equal(getObjective(m), 'Day 1: water the dry beds');
   const cadet = tuneScenario('greenhouse', greenhouseScenario, 'cadet');
   assert.ok(cadet.batteryKWh > greenhouseScenario.batteryKWh); assert.ok(cadet.leakLPerDay < greenhouseScenario.leakLPerDay);
   assert.ok(cadet.moistureBand[1] - cadet.moistureBand[0] > greenhouseScenario.moistureBand[1] - greenhouseScenario.moistureBand[0]);
+});
+
+test('partly grown established crops are harvestable on harvest day', () => {
+  const m = start('salad');
+  m.day = m.scenario.growDays + 1;
+  m.beds.a.progress = m.scenario.crops.a.ready * .67;
+  m.beds.b.progress = m.scenario.crops.b.ready * .4;
+  m.beds.c.progress = m.scenario.crops.c.ready * .7;
+  assert.ok(['a', 'b'].every(bed => isReady(m, bed)));
+  assert.equal(isReady(m, 'c'), false, 'peppers still need mature fruit');
+  must(m, 'takeBasket');
+  for (const bed of ['a', 'b']) assert.ok(act(m, 'harvest', bed).ok);
+  assert.match(getInstruction(m).text, /table/);
+  assert.equal(m.basketContents.length, 2);
 });
 
 test('the fan readout can say LOW while the fan is off; checking the vent reveals the mismatch', () => {

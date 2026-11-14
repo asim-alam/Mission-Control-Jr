@@ -1,4 +1,5 @@
-import {mountPipLesson, openPipLesson, pipLessonOpen} from './professor-pip.js';
+import {mountPipLesson, openPipLesson, openPipMilestone, pipLessonOpen} from './professor-pip.js';
+import {trackPipMilestones} from './professor-pip-milestones.js';
 import {startPip} from './companion.js';startPip('rover');
 import * as THREE from 'three';
 import {connectChapter,completeChapter,goToChapter,openJourney,journeyPaused} from './campaign-bridge.js';
@@ -10,7 +11,7 @@ import {ExpeditionAudio} from './mission2-audio.js';
 import {HOME,RIDGE,HAZARD,BOUNDS,ROUTES,ROCKS,OUTPOST_SOLIDS,heightAt,surfaceAt,slopeAt,distance,routeLength,routeEnergy,safeReturnPoints} from './expedition-terrain.js';
 import {stepRover,blocked} from './rover-controller.js';
 import {chapterTuning} from './simulation/difficulty.js';
-import {SAVE_KEY,SERVICE,TRAVERSE_QUESTION,applyStormCarry,reportStations,inspectionPoint,task2,createExpedition,act2,advance2,forecast,assessment2,retry,event} from './mission2.js';
+import {SAVE_KEY,SERVICE,TRAVERSE_QUESTION,applyStormCarry,reportStations,inspectionPoint,task2,createExpedition,act2,advance2,forecast,routeForecast,assessment2,retry,event} from './mission2.js';
 import {readJourney} from './journey-state.js';
 import {MARS_VISUALS as palette} from './mars-visuals.js';
 import {addScenery} from './expedition-scenery.js';
@@ -21,7 +22,7 @@ import {installHiddenScrollUI} from './scroll-ui.js';
 installHiddenScrollUI();
 
 const $=id=>document.getElementById(id),keys=new Set(),labels=[],mixers=[],beacons=[];
-let m=createExpedition(chapterTuning('rover')),ready=false,view='third',orbitYaw=0,pitch=.15,drag=null,reduced=false,photo=null,planRoute='wash',endingShown=false,actionKey='',hazeSaid=false,hazardSaid=false,slipSaid=false,marginWarned=false,accumulator=0,last=performance.now(),toastTimer,frame=0,inputLockUntil=0,slowFrames=0,performanceMode=false,lastHud=0;
+let m=createExpedition(chapterTuning('rover')),ready=false,view='third',orbitYaw=0,pitch=.15,drag=null,reduced=false,photo=null,planRoute=null,endingShown=false,actionKey='',hazeSaid=false,hazardSaid=false,slipSaid=false,marginWarned=false,accumulator=0,last=performance.now(),toastTimer,frame=0,inputLockUntil=0,slowFrames=0,performanceMode=false,lastHud=0;
 try{applyStormCarry(m,readJourney(localStorage).records.storm?.carry);}catch{/* Storage is optional; the standalone training starts at full rover charge. */}
 const journal=[];
 let scenery,exhibits,disposeReference,referenceGeneration=0,footSolids=[],cameraBlockers=[],roverZoom=9,walkZoom=5.2,viewFov=57,roverFootprint={minX:8.6,maxX:11.4,minZ:8,maxZ:12};
@@ -68,15 +69,41 @@ function showDialog(title,html,actions,eyebrow='MERIDIAN OPERATIONS'){
   if(eyebrow==='EXPEDITION DEBRIEF'&&Object.keys(m.frames).length){const gallery=document.createElement('div');gallery.className='observation-gallery';for(const[id,src]of Object.entries(m.frames)){const figure=document.createElement('figure'),img=document.createElement('img'),caption=document.createElement('figcaption');img.src=src;img.alt=id==='context'?'Your captured context image of the Kestrel rock units':'Your captured scaled view of the geological contact';caption.textContent=id==='context'?'CONTEXT / TWO ROCK UNITS':'DETAIL / CONTACT + SCALE';figure.append(img,caption);gallery.append(figure);}$('dialog-body').append(gallery);}
 }
 function closeDialog(){referenceGeneration++;disposeReference?.();disposeReference=null;clearInput();$('dialog').hidden=true;$('hud').inert=false;audio.pause(false);setInput();}
-function togglePause(){if(pipLessonOpen()||!m.started||m.ended)return;if(!$('dialog').hidden){closeDialog();return;}photo=null;$('photo-frame').hidden=true;showDialog('Expedition paused',`${Object.entries(audio.volumes).map(([key,value])=>`<label>${key} volume <input data-volume="${key}" type="range" min="0" max="1" step=".05" value="${value}"></label>`).join('')}<label>Reduce camera motion <input id="reduced" type="checkbox" ${reduced?'checked':''}></label><p>WASD or arrows drive. Space stops. P is the parking brake. E gets in or out. V changes the view. Shift saves battery. M opens the map when parked.</p>`,[{label:'Resume',run:closeDialog},{label:'Restart expedition',run:()=>location.reload()}]);$('dialog-body').querySelectorAll('[data-volume]').forEach(i=>i.oninput=()=>audio.settings({[i.dataset.volume]:Number(i.value)}));$('reduced').onchange=e=>{reduced=e.target.checked;};}
+function togglePause(){if(pipLessonOpen()||!m.started||m.ended)return;if(!$('dialog').hidden){if(!$('plan-map'))closeDialog();return;}photo=null;$('photo-frame').hidden=true;showDialog('Expedition paused',`${Object.entries(audio.volumes).map(([key,value])=>`<label>${key} volume <input data-volume="${key}" type="range" min="0" max="1" step=".05" value="${value}"></label>`).join('')}<label>Reduce camera motion <input id="reduced" type="checkbox" ${reduced?'checked':''}></label><p>WASD or arrows drive. Space stops. P is the parking brake. E gets in or out. V changes the view. Shift saves battery. M opens the map when parked.</p>`,[{label:'Resume',run:closeDialog},{label:'Restart expedition',run:()=>location.reload()}]);$('dialog-body').querySelectorAll('[data-volume]').forEach(i=>i.oninput=()=>audio.settings({[i.dataset.volume]:Number(i.value)}));$('reduced').onchange=e=>{reduced=e.target.checked;};}
+const roverMilestones = trackPipMilestones('rover', m);
+function showRoverMilestone() {
+  const lesson = roverMilestones.update(m);
+  if (!lesson) return;
+  queueMicrotask(() => openPipMilestone(lesson, {
+    finishLabel: m.ended ? 'See mission report' : 'Continue',
+    onOpen: () => { clearInput(); setInput(); audio.pause(true); },
+    onClose: () => { setInput(); audio.pause(journeyPaused || (!m.ended && !$('dialog').hidden)); },
+  }));
+}
 function run(type,value){
   if(photo&&type!=='photo')closePhoto();
   m.walker={x:player.position.x,z:player.position.z};const beforeAboard=m.aboard,result=act2(m,type,value);toast(result.message);if(result.line&&!m.ended)audio.say(result.line,['launch','science','return','dock'].includes(type));if(result.ok&&type==='launch')audio.say('ready');if(result.ok&&type==='check'&&value==='battery')audio.say('checks');audio.effect();actionKey='';
   if(result.ok)clearInput();
-  if(result.ok&&['brakeTest','launch'].includes(type)){$('target-description').hidden=true;$('details-toggle').setAttribute('aria-expanded','false');if(type==='brakeTest')toast('Driving test passed! Next: pick a path and tell us why.');}
-  if(result.ok&&type==='board'){view='third';orbitYaw=0;pitch=.18;inputLockUntil=performance.now()+200;if(m.phase==='test'){$('target-description').hidden=false;$('details-toggle').setAttribute('aria-expanded','true');toast('DRIVING TEST: press P → drive a little and steer → Space to stop → P to park.');}applyZoom();}
-  if(result.ok&&beforeAboard&&!m.aboard){const side=m.vehicle.heading+Math.PI/2;const x=m.vehicle.x+Math.cos(side)*3,z=m.vehicle.z-Math.sin(side)*3;if(blocked(x,z)){m.aboard=true;m.driving=true;toast('Something is in the way. Park on clear, firm ground.');}else{player.position.copy(groundPoint(x,z,1.68));player.yaw=m.vehicle.heading-Math.PI/2;player.pitch=-.12;player.view=view;}}
-  setInput();renderActions();if(m.ended)showEnding();return result;
+  if(result.ok&&type==='launch'){$('target-description').hidden=true;$('details-toggle').setAttribute('aria-expanded','false');}
+  if(result.ok&&type==='board'){view='third';orbitYaw=0;pitch=.18;inputLockUntil=performance.now()+200;applyZoom();}
+  if (result.ok && beforeAboard && !m.aboard) {
+    const {x, z, heading} = m.vehicle;
+    const side = heading + Math.PI / 2;
+    const exit = [3, -3, 3.6, -3.6].map(offset => ({
+      x: x + Math.cos(side) * offset, z: z - Math.sin(side) * offset,
+    })).find(point => !blocked(point.x, point.z) && !isBlocked(point.x, point.z, player.obstacles, .45));
+    if (!exit) {
+      m.aboard = true;
+      m.driving = true;
+      toast('Something is in the way. Park on clear, firm ground.');
+    } else {
+      player.position.copy(groundPoint(exit.x, exit.z, 1.68));
+      player.yaw = heading - Math.PI / 2;
+      player.pitch = -.12;
+      player.view = view;
+    }
+  }
+  setInput();renderActions();if(result.ok&&type==='board'&&m.phase==='planning')showPlan();if(m.ended)showEnding();else if(result.ok)showRoverMilestone();return result;
 }
 function start(){audio.start();completedRoverSteps.clear();$('landing').hidden=true;$('hud').hidden=false;$('mission-panel').hidden=false;toggleTasks(false);$('controls').classList.remove('controls-faded');setTimeout(()=>{if(m.started)$('controls').classList.add('controls-faded');},30000);run('start');showBriefing();setInput();renderActions();}
 function showBriefing(){
@@ -87,17 +114,16 @@ function showBriefing(){
     <p class="mission-destination-tag">📍 <b>Destination:</b> Jezero Crater · Kestrel Ridge · 🚀 <b>Distance:</b> 4.8 km Rover Drive (225M km from Earth)</p>
     <div class="briefing-transcript">
       <p><b>Elena Reyes:</b> “Jin, take Amara to Kestrel Ridge. Photograph the rock layers and bring everyone home safely.”</p>
-      <p>Start with the rover inspection and driving test, then pick a route. If the ground looks strange, stop and check it.</p>
+      <p>Check the rover, board with Amara, and choose a safe route before driving. If the ground looks strange, stop and check it.</p>
       <p>Take a wide shot of both rock layers and a close-up with the ruler for scale. The photos show the layers. On their own, they can’t tell you how the layers formed.</p>
     </div>
     <div class="mission-brief-steps">
       <p>📋 <b>Rover Mission Checklist:</b></p>
       <ul>
         <li>🔍 <b>1. Pre-Drive Check:</b> Inspect battery, 6 wheels, camera, and antenna.</li>
-        <li>🏎️ <b>2. Test Drive:</b> Release parking brake (P), drive 5m, steer, and brake (Space).</li>
-        <li>🗺️ <b>3. Plan Your Route:</b> Choose a safe path across Jezero Crater.</li>
-        <li>📸 <b>4. Science Photos:</b> Take wide and close-up photos at Kestrel Ridge.</li>
-        <li>🏠 <b>5. Drive Home & Plug In:</b> Return to base with reserve power and recharge!</li>
+        <li>🗺️ <b>2. Choose a Route:</b> Board with Amara, compare the ground and return reserves, then pick a path.</li>
+        <li>📸 <b>3. Science Photos:</b> Take wide and close-up photos at Kestrel Ridge.</li>
+        <li>🏠 <b>4. Drive Home & Plug In:</b> Return to base with reserve power and recharge!</li>
       </ul>
     </div>
     <p>🎮 <b>Driving Controls:</b> <kbd>W</kbd> / <kbd>S</kbd> drive forward/reverse, <kbd>A</kbd> / <kbd>D</kbd> steer, <kbd>Space</kbd> brake, <kbd>P</kbd> parking brake, <kbd>E</kbd> board/exit, <kbd>Shift</kbd> eco mode.</p>
@@ -118,11 +144,76 @@ function requireNear(fn){if(!nearVehicle()){toast('Walk to the rover first.');re
 function toggleParking(){document.activeElement?.blur();if(!m.aboard){toast('You are walking. Choose Drive the rover to get in.');return;}if(Math.abs(m.vehicle.speed)>.15){toast('Hold Space to stop first. Then press P.');return;}m.vehicle.parking=!m.vehicle.parking;actionKey='';toast(m.vehicle.parking?'Parking brake set.':'Brake off! Use WASD or arrows to drive.');}
 function plan(){const r=run('plan');if(!r.ok)return;showPlan();}
 function showPlan(){
-  showDialog('Pick a path. Plan the trip home.',`<p>There are three paths to Kestrel Ridge. The map shows the land. But it cannot tell you if the ground is soft.</p><canvas id="plan-map" class="plan-map" width="450" height="380" aria-label="Map of three rover routes and uncertain ground"></canvas><div class="route-grid">${Object.entries(ROUTES).map(([id,r])=>`<button class="route-card ${id===planRoute?'active':''}" data-route="${id}"><b>${r.name}</b><span>${Math.round(routeLength(r.points))} m there · uses about ${Math.ceil(routeEnergy(r.points))}% battery</span><span>${r.surface}</span><span>${r.note}</span></button>`).join('')}</div><p class="reserve-rule">Save at least <strong>${m.returnReserve||20}%</strong> battery and air for when you get home. The numbers are made simple for the game.</p><label for="reason">Why this path?</label><select id="reason" class="reason-select"><option value="evidence">I looked at the ground and hills. I will have battery left, and a backup path.</option><option value="shortest">The shortest path always uses the least battery.</option><option value="longest">The longest path is always the safest.</option><option value="map">The map promises the ground is hard.</option></select><p class="fine-print">When you leave, a message goes to Earth. It takes 12 minutes to get there.</p>`,[{label:'Go! Start driving',run:()=>{const r=run('launch',{route:planRoute,reason:$('reason').value});if(r.ok)closeDialog();}},{label:'Back to the rover',run:()=>{m.phase='prep';closeDialog();actionKey='';}}], 'PLAN YOUR TRIP');
-  const prompt=new Option('Pick a reason…','',true,true);$('reason').prepend(prompt);
-  const projection=document.createElement('p');projection.id='plan-projection';projection.className='reserve-rule';$('reason').before(projection);
-  const updateProjection=()=>{const r=ROUTES[planRoute],f=forecast({...m,vehicle:RIDGE},routeLength(r.points)/2.6+75,routeEnergy(r.points));projection.textContent=`When you get home you will have about ${f.battery.toFixed(0)}% battery and ${f.oxygen.toFixed(0)}% air. Soft ground can use more.`;};
-  $('dialog-body').querySelectorAll('[data-route]').forEach(b=>b.onclick=()=>{planRoute=b.dataset.route;$('dialog-body').querySelectorAll('[data-route]').forEach(c=>c.classList.toggle('active',c===b));drawMap($('plan-map'),true);updateProjection();});drawMap($('plan-map'),true);updateProjection();
+  planRoute=null;
+  const startRoute=()=>{
+    const result=run('launch',{route:planRoute,reason:$('reason').value});
+    if(result.ok){
+      closeDialog();
+      return;
+    }
+    feedback.textContent=result.message;
+    feedback.hidden=false;
+    confirm.focus();
+  };
+  showDialog('Choose a route to Kestrel Ridge',`
+    <p>Choose firm ground and leave enough battery and air for the trip home.</p>
+    <canvas id="plan-map" class="plan-map" width="450" height="380" aria-label="Map of three rover routes and uncertain ground"></canvas>
+    <p id="plan-selection" aria-live="polite">Select a route to highlight it on the map.</p>
+    <label for="reason">Why this path?</label>
+    <select id="reason" class="reason-select"><option value="evidence">I looked at the ground and hills. I will leave battery and keep a backup path.</option><option value="shortest">The shortest path always uses the least battery.</option><option value="longest">The longest path is always the safest.</option><option value="map">The map promises the ground is hard.</option></select>
+    <div class="route-grid">${Object.entries(ROUTES).map(([id,route])=>`
+      <button class="route-card" data-route="${id}" aria-pressed="false">
+        <b>Select ${route.name}</b>
+        <span>${Math.round(routeLength(route.points))} m there · uses about ${Math.ceil(routeEnergy(route.points))}% battery</span>
+        <span>${route.surface}</span><span>${route.note}</span>
+      </button>`).join('')}</div>
+    <p id="plan-projection" class="reserve-rule" hidden></p>
+    <details class="route-hint"><summary>Help me choose</summary>
+      <p>Look for a path around the circle marked “Uncertain.” Rocky slopes can make the wheels slip. Look for gentler ground.</p>
+    </details>
+    <p class="reserve-rule">Keep at least <strong>${m.returnReserve||20}%</strong> battery and air for the trip home.</p>
+  `,[{label:'Confirm and drive',run:startRoute,disabled:true}], 'PLAN YOUR TRIP');
+
+  const map=$('plan-map');
+  const projection=$('plan-projection');
+  const reasonPrompt=new Option('Pick a reason…','',true,true);
+  $('reason').prepend(reasonPrompt);
+  const actions=$('dialog-actions');
+  const confirm=actions.querySelector('button');
+  confirm.classList.add('primary');
+  const feedback=document.createElement('div');
+  feedback.className='route-feedback';
+  feedback.setAttribute('role','alert');
+  feedback.hidden=true;
+  actions.prepend(feedback);
+
+  const cards=$('dialog-body').querySelectorAll('[data-route]');
+  for(const card of cards){
+    card.onclick=()=>{
+      planRoute=card.dataset.route;
+      const route=ROUTES[planRoute];
+      for(const option of cards){
+        const selected=option===card;
+        option.classList.toggle('active',selected);
+        option.setAttribute('aria-pressed',String(selected));
+      }
+      feedback.hidden=true;
+      feedback.textContent='';
+      confirm.disabled=false;
+      confirm.textContent=`Confirm and drive · ${route.name}`;
+      $('plan-selection').textContent=`${route.name} selected · shown in gold on the map.`;
+      map.setAttribute('aria-label',`Rover route map. ${route.name} is highlighted.`);
+      const {battery,oxygen}=routeForecast(m,route);
+      projection.textContent=`Estimated reserves back at base: ${Math.max(0,Math.floor(battery))}% battery and ${Math.max(0,Math.floor(oxygen))}% air.`;
+      $('reason').disabled=false;
+      projection.hidden=false;
+      drawMap(map,true);
+    };
+  }
+  drawMap(map,true);
+  $('dialog-title').tabIndex=-1;
+  $('reason').disabled=true;
+  $('dialog-title').focus();
 }
 function openMap(){if(Math.abs(m.vehicle.speed)>.05||!m.vehicle.parking){toast('Stop and press P before you open the map.');return;}const f=forecast(m);showDialog('Trip map',`<canvas id="large-map" class="plan-map" width="500" height="460"></canvas><p>Orange: your path. Green: where you drove. Striped circle: ground that might be soft. North is up. The way home is light blue.</p><p class="reserve-rule">At home you will have about <strong>${Math.max(0,f.battery).toFixed(0)}% battery and ${Math.max(0,f.oxygen).toFixed(0)}% air</strong>. Home is ${Math.round(f.metres)} m away. This is a guess, not a promise.</p>`,[{label:'Back to driving',run:closeDialog}]);drawMap($('large-map'),false);}
 function openJournal(){if(m.aboard&&Math.abs(m.vehicle.speed)>.05){toast('Park before you read the diary.');return;}showDialog('Trip diary',`<p>Your science jobs: a wide photo of both rocks, a close photo with the ruler, and one thing you saw. Picking up a rock is extra.</p>${m.events.slice(-12).reverse().map(e=>`<div class="event-row">${Math.floor(e.time/60)}:${String(Math.floor(e.time%60)).padStart(2,'0')} · ${e.text}</div>`).join('')}${journal.slice(0,8).map(l=>`<div class="journal-entry"><b>${l.speaker}</b><p>${l.text}</p></div>`).join('')}`, [{label:'Continue expedition',run:closeDialog}]);}
@@ -187,8 +278,14 @@ function drawMap(canvas,all=false){
   if(!canvas)return;const c=canvas.getContext('2d'),w=canvas.width,h=canvas.height;c.clearRect(0,0,w,h);c.fillStyle='#142b33';c.fillRect(0,0,w,h);const sx=w/215,sz=h/240,xy=p=>[(p.x+100)*sx,(p.z+198)*sz];
   c.strokeStyle='#35515a';c.lineWidth=.7;for(let x=-100;x<115;x+=25){c.beginPath();c.moveTo(...xy({x,z:-198}));c.lineTo(...xy({x,z:42}));c.stroke();}for(let z=-198;z<42;z+=25){c.beginPath();c.moveTo(...xy({x:-100,z}));c.lineTo(...xy({x:115,z}));c.stroke();}
   const line=(points,color,width,dash=[])=>{if(!points.length)return;c.strokeStyle=color;c.lineWidth=width;c.setLineDash(dash);c.beginPath();points.forEach((p,i)=>i?c.lineTo(...xy(p)):c.moveTo(...xy(p)));c.stroke();c.setLineDash([]);};
-  if(all)for(const[id,r]of Object.entries(ROUTES))line(r.points,id===planRoute?'#f2ba7c':'#657d86',id===planRoute?3:1.5);
-  else if(m.route)line(ROUTES[m.route].points,'#e3a977',2,[4,3]);
+  if(all){
+    for(const [id,route] of Object.entries(ROUTES)){
+      if(id!==planRoute)line(route.points,'#657d86',1.5);
+    }
+    if(planRoute)line(ROUTES[planRoute].points,'#ffd166',4);
+  }else if(m.route){
+    line(ROUTES[m.route].points,'#ffd166',3);
+  }
   if(m.phase==='return'||m.ended)line(safeReturnPoints(m.vehicle),'#a9d2e5',2,[3,3]);line(m.trail,'#9ee6ca',2);
   for(const r of ROCKS){c.fillStyle='#7a8988';c.beginPath();c.arc(...xy(r),Math.max(2,r.r*sx),0,Math.PI*2);c.fill();}
   const [hx,hy]=xy(HAZARD);c.strokeStyle=m.hazard?'#f8a66d':'#c6b68c';c.fillStyle='#d3ad792c';c.beginPath();c.arc(hx,hy,HAZARD.r*sx,0,Math.PI*2);c.fill();c.stroke();c.font=`${Math.max(8,w/37)}px system-ui`;c.fillStyle='#d7c797';if(w>300)c.fillText('UNCERTAIN',hx-30,hy-17);
