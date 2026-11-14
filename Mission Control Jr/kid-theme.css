@@ -2196,7 +2196,6 @@ body:has(#space) #flight-lesson .lesson-ok-box { padding: 4px 7px; gap: 5px; }
 #hud #tasks-toggle-card { font-family: var(--kid-display) !important; font-size: 13px !important; font-weight: 800 !important; }
 #hud #subtitle { font-family: var(--kid-body) !important; font-size: 16px !important; line-height: 1.45 !important; color: #fff8ee !important; }
 #hud #speaker { font-family: var(--kid-display) !important; font-size: 14px !important; font-weight: 800 !important; color: var(--kid-yellow) !important; }
-#hud #task-distance { font-family: var(--kid-display) !important; font-size: 14px !important; font-weight: 800 !important; color: var(--kid-mint) !important; }
 #hud #stage-count { font-family: var(--kid-display) !important; font-size: 14px !important; font-weight: 800 !important; color: var(--kid-yellow) !important; }
 #hud .toolbar button { font-family: var(--kid-display) !important; font-size: 13px !important; font-weight: 700 !important; }
 #hud #controls { font-family: var(--kid-display) !important; font-size: 13px !important; font-weight: 700 !important; }
@@ -3606,29 +3605,9 @@ body:has(#space) #distance.ready {
   animation: pulse-ready 1.4s infinite alternate ease-in-out !important;
 }
 
-/* Highlighting for Mission 3 Task Distance Badge */
+/* Hide redundant legacy task-distance; distance is shown via #rover-distance-tracker badges */
 #hud #task-distance {
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 5px !important;
-  background: linear-gradient(135deg, rgba(255, 210, 63, 0.3), rgba(255, 138, 61, 0.22)) !important;
-  border: 1.8px solid #ffd23f !important;
-  color: #fff9ea !important;
-  font-family: var(--kid-display) !important;
-  font-size: 13px !important;
-  font-weight: 800 !important;
-  padding: 4px 12px !important;
-  border-radius: 999px !important;
-  margin: 6px 0 !important;
-  box-shadow: 0 0 14px rgba(255, 210, 63, 0.5), 0 2px 6px rgba(0, 0, 0, 0.35) !important;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6) !important;
-}
-#hud #task-distance.ready {
-  background: linear-gradient(135deg, rgba(62, 230, 181, 0.48), rgba(76, 201, 255, 0.36)) !important;
-  border-color: #3ee6b5 !important;
-  color: #ffffff !important;
-  box-shadow: 0 0 18px rgba(62, 230, 181, 0.75) !important;
-  animation: pulse-ready 1.4s infinite alternate ease-in-out !important;
+  display: none !important;
 }
 
 /* Places list distance indicator chip */
